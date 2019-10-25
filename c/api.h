@@ -1,26 +1,38 @@
-typedef long int uint64;
-typedef int uint32;
-typedef short uint16;
-typedef unsigned char byte;
+#ifndef API_H
+#define API_H
+
+#include <stdint.h>
+#include <stdio.h> // debug
+
+#define true 1
+#define false 0
+#define ARRAYSIZE(a) sizeof(a)/sizeof(a[0])
+
+typedef uint64_t uint64;
+typedef uint32_t uint32;
+typedef uint16_t uint16;
+typedef uint8_t byte;
+typedef byte bool;
 typedef int error;
 
+typedef struct record_t record;
+
 typedef struct {
-  char *p;
+  byte *buf;
   int len;
   int cap;
 } slice;
 
 typedef struct {
   uint64 (*size)(void *source);
-  error (*read_block)(void* source, slice* dest, uint64 off, size uint32)
-  (*close)(void *source);
+  error (*read_block)(void* source, slice* dest, uint64 off, uint32 size);
+  void (*close)(void *source);
+} block_source_ops;
+
+typedef struct {
+  block_source_ops *ops;
 } block_source;
 
-
-typedef struct  {
-  record_ops *ops;
-} record;
-   
 typedef struct  {
   void (*key)(record *rec, slice *dest);
   byte (*type)(record *rec);
@@ -30,13 +42,18 @@ typedef struct  {
   int (*decode)(record *rec, slice *src);
 } record_ops;
 
+typedef struct record_t {
+  record_ops *ops;
+} record;
+   
+
 typedef struct {
   bool unpadded ;
   uint32 block_size;
   uint32 min_update_index;
   uint32 max_update_index;
   bool index_objects;
-  restart_interval int;
+  int restart_interval;
 } write_options;
 
 typedef struct {
@@ -69,10 +86,11 @@ typedef struct {
 } obj_record;
 
 typedef struct {
-  int (*next)(*record);
+  int (*next)(record *rec);
 } iterator_ops;
 
 typedef struct {
   iterator_ops ops;
 } iterator;
 
+#endif
