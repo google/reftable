@@ -29,6 +29,7 @@ type record interface {
 	String() string
 
 	valType() uint8
+	// XXX negative n == error.s
 	encode(buf []byte) (n int, fits bool)
 	decode(buf []byte, key string, valType uint8) (n int, ok bool)
 }
@@ -48,6 +49,7 @@ type Iterator struct {
 }
 
 // Options define write options for reftables.
+// XXX WriteOptions?
 type Options struct {
 	// If set,  do not pad blocks to blocksize.
 	Unpadded bool
@@ -72,7 +74,8 @@ type RefRecord struct {
 
 // LogRecord is a Record from the reflog database.
 type LogRecord struct {
-	RefName  string
+	RefName string
+	// XXX
 	TS       uint64
 	New      []byte
 	Old      []byte
