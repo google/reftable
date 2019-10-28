@@ -1,10 +1,17 @@
 
 cc_library(
 	name= "reftable",
-	srcs = ["record.c"],
+	srcs = ["record.c",
+	"basics.c",
+	"slice.c",
+	"block.c",
+	],
 	hdrs = ["api.h",
+	"block.h",
+	"constants.h",
+	"basics.h",
 	"record.h",
-
+	"slice.h"
 	],
 )
 
@@ -17,5 +24,11 @@ cc_library(
 cc_test(
 	name= "record_test",
 	srcs = ["record_test.c"],
+	deps = [ ":testlib", ":reftable" ],
+)
+
+cc_test(
+	name= "block_test",
+	srcs = ["block_test.c"],
 	deps = [ ":testlib", ":reftable" ],
 )

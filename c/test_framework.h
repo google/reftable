@@ -16,9 +16,9 @@
 
 #define assert(c) \
   if (!(c)) { \
-    fprintf(stderr, "%s: %d: failed assertion %s", __FILE__, __LINE__, #c); \
     fflush(stderr);\
     fflush(stdout);\
+    fprintf(stderr, "%s: %d: failed assertion %s", __FILE__, __LINE__, #c); \
     abort();\
 }
 

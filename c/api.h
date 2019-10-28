@@ -4,24 +4,11 @@
 #include <stdint.h>
 #include <stdio.h> // debug
 
-#define true 1
-#define false 0
-#define ARRAYSIZE(a) sizeof(a)/sizeof(a[0])
-
-typedef uint64_t uint64;
-typedef uint32_t uint32;
-typedef uint16_t uint16;
-typedef uint8_t byte;
-typedef byte bool;
-typedef int error;
+#include "basics.h"
+#include "slice.h"
+#include "constants.h"
 
 typedef struct record_t record;
-
-typedef struct {
-  byte *buf;
-  int len;
-  int cap;
-} slice;
 
 typedef struct {
   uint64 (*size)(void *source);
@@ -34,19 +21,19 @@ typedef struct {
 } block_source;
 
 typedef struct  {
-  void (*key)(record *rec, slice *dest);
-  byte (*type)(record *rec);
-  void (*copy_from)(record *rec, record *src);
-  byte (*val_type)(record *rec);
-  int (*encode)(record* rec, slice *dest);
-  int (*decode)(record *rec, slice *src);
+  void (*key)(slice *dest, const record *rec);
+  byte (*type)();
+  void (*copy_from)(record *rec, const record *src);
+  byte (*val_type)(const record *rec);
+  int (*encode)(const record *rec, slice dest); 
+  int (*decode)(record *rec, slice key, byte extra, slice src);
+  void (*free)(record *rec);
 } record_ops;
 
 typedef struct record_t {
   record_ops *ops;
 } record;
    
-
 typedef struct {
   bool unpadded ;
   uint32 block_size;
@@ -60,8 +47,8 @@ typedef struct {
   record record;
   char* ref_name;
   uint64 update_index;
-  char* value;
-  char* target_value;
+  byte* value;
+  byte* target_value;
   char* target;
 } ref_record;
 
