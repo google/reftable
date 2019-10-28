@@ -210,6 +210,7 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 		block = out.Bytes()
 		fullBlockSize = uint32(before - buf.Len())
 	} else if fullBlockSize == 0 {
+		// unaligned table.
 		fullBlockSize = sz
 	}
 	block = block[:sz]
@@ -232,7 +233,7 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 
 // restart returns the offset within the block of the i-th key
 // restart.
-func (br *blockReader) restart(i int) uint32 {
+func (br *blockReader) restartOffset(i int) uint32 {
 	return getU24(br.restartBytes[3*i:])
 }
 
@@ -270,7 +271,7 @@ func (br *blockReader) seek(key string) (*blockIter, error) {
 	// Find the first restart key beyond the wanted key.
 	j := sort.Search(int(br.restartCount),
 		func(i int) bool {
-			rkey, err := decodeRestartKey(br.block, br.restart(i))
+			rkey, err := decodeRestartKey(br.block, br.restartOffset(i))
 			if err != nil {
 				decodeErr = err
 			}
@@ -287,7 +288,7 @@ func (br *blockReader) seek(key string) (*blockIter, error) {
 	if j > 0 {
 		// We have a restart beyond the key, go one back to be before the wanted key
 		j--
-		it.nextOffset = br.restart(j)
+		it.nextOffset = br.restartOffset(j)
 	} else {
 		it.nextOffset = br.headerOff + 4
 	}

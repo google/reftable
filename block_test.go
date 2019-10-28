@@ -221,10 +221,10 @@ func TestBlockRestart(t *testing.T) {
 		t.Fatalf("newBlockReader: %v", err)
 	}
 
-	if br.restart(0) != headerOff+4 {
+	if br.restartOffset(0) != headerOff+4 {
 		t.Fatalf("expected a restart at 4")
 	}
-	rkey, err := decodeRestartKey(block, br.restart(0))
+	rkey, err := decodeRestartKey(block, br.restartOffset(0))
 	if err != nil {
 		t.Fatalf("decodeRestartKey %v", err)
 	}
