@@ -5,13 +5,15 @@ cc_library(
 	"basics.c",
 	"slice.c",
 	"block.c",
+	"writer.c",
 	],
 	hdrs = ["api.h",
 	"block.h",
 	"constants.h",
 	"basics.h",
 	"record.h",
-	"slice.h"
+	"slice.h",
+	"writer.h",
 	],
 )
 

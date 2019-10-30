@@ -21,7 +21,7 @@ typedef struct {
 } block_source;
 
 typedef struct  {
-  void (*key)(slice *dest, const record *rec);
+  void (*key)(const record *rec, slice *dest);
   byte (*type)();
   void (*copy_from)(record *rec, const record *src);
   byte (*val_type)(const record *rec);
@@ -44,7 +44,7 @@ typedef struct {
 } write_options;
 
 typedef struct {
-  record record;
+  record_ops *ops;
   char* ref_name;
   uint64 update_index;
   byte* value;
@@ -53,7 +53,7 @@ typedef struct {
 } ref_record;
 
 typedef struct {
-  record record;
+  record_ops *ops;
   char *ref_name;
   uint64 update_index;
   char *new_hash;
@@ -66,7 +66,12 @@ typedef struct {
 } log_record;
 
 typedef struct {
-  record record;
+  slice last_key;
+  uint64 offset;
+} index_record;
+
+typedef struct {
+  record_ops *ops;
   char *hash_prefix;
   uint64 *offsets;
   int offsets_len;
@@ -79,5 +84,25 @@ typedef struct {
 typedef struct {
   iterator_ops ops;
 } iterator;
+
+typedef struct {
+  int entries;
+  int restarts;
+  int blocks;
+  int index_blocks;
+  int max_index_level;
+
+  uint64 offset;
+  uint64 index_offset;
+} block_stats;
+
+typedef struct {
+  int blocks;
+  block_stats ref_stats;
+  block_stats obj_stats;
+  block_stats idx_stats;
+  // todo: log stats.
+  int object_id_len;
+} stats;
 
 #endif

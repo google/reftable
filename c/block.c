@@ -5,20 +5,6 @@
 #include "block.h"
 #include "api.h"
 
-struct _block_writer {
-  byte *buf;
-  uint32 block_size;
-  uint32 header_off;
-  int restart_interval;
-
-  uint32 next;
-  uint32 *restarts;
-  uint32 restart_len ;
-  uint32 restart_cap ;
-  slice last_key;
-  int entries;
-};
-
 int block_writer_register_restart(block_writer *w, int n, bool restart, slice key);
 
 block_writer *new_block_writer(byte typ, byte *buf, uint32 block_size, uint32 header_off) {
@@ -52,7 +38,7 @@ int block_writer_add(block_writer *w, record *rec) {
   
   bool restart = false;
   slice key  = {};
-  rec->ops->key(&key, rec);
+  rec->ops->key(rec, &key);
   int n = encode_key(&restart, out, last, key, rec->ops->val_type(rec));
   if (n <0 ){ goto err; }
   out.buf += n;
@@ -115,7 +101,7 @@ int block_writer_finish(block_writer *w) {
   w->next += 2;
   put_u24(w->buf + 1 + w->header_off, w->next);
 
-  // do log compression here.
+  // TODO - do log compression here.
 
   return w->next;
 }
@@ -171,8 +157,6 @@ block_reader* new_block_reader(byte *block,  uint32 header_off , uint32 table_bl
 uint32 block_reader_restart_offset(block_reader* br, int i) {
   return get_u24(br->restart_bytes +  3*i);
 }
-
-
 
 int block_reader_start(block_reader* br, block_iter* it) {
   it->br = br;

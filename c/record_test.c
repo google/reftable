@@ -38,8 +38,8 @@ void test_common_prefix() {
   for (int i =0;i < ARRAYSIZE(cases); i++) {
     slice a = {};
     slice b = {};
-    slice_init_from_string(&a, cases[i].a);
-    slice_init_from_string(&b, cases[i].b);
+    slice_set_string(&a, cases[i].a);
+    slice_set_string(&b, cases[i].b);
     
     int got = common_prefix_size(a, b);
     assert(got == cases[i].want);
@@ -108,8 +108,8 @@ void test_key_roundtrip() {
   slice dest={}, last_key={}, key={}, roundtrip={};
 
   slice_resize(&dest, 1024);
-  slice_init_from_string( &last_key, "refs/heads/master");
-  slice_init_from_string( &key, "refs/tags/bla");
+  slice_set_string( &last_key, "refs/heads/master");
+  slice_set_string( &key, "refs/tags/bla");
 
   bool restart;
   byte extra = 6;

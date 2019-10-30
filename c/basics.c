@@ -10,6 +10,21 @@ uint32 get_u24(byte *in) {
   return (uint32)(in[0])<<16 | (uint32)(in[1])<<8 | (uint32)(in[2]);
 }
 
+void put_u64(byte *out, uint64 v) {
+  for (int i = sizeof(uint64); i--; ) {
+    out[i] = (byte) (v & 0xff);
+    v >>= 8;
+  }
+}
+
+uint64 get_u64(byte *out) {
+  uint64 v = 0;
+  for (int i = 0; i < sizeof(uint64); i++) {
+    v = (v<<8)|(byte) (out[i] & 0xff);
+  }
+  return v;
+}
+
 
 void put_u16(byte *out, uint16 i) {
   out[0] = (byte)((i >> 8) & 0xff);

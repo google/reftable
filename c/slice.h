@@ -9,7 +9,7 @@ typedef struct {
   int cap;
 } slice;
 
-void slice_init_from_string(slice* dest, const char *);
+void slice_set_string(slice* dest, const char *);
 char *slice_to_string(slice src);
 void slice_free(slice *s);
 bool slice_equal(slice a, slice b);

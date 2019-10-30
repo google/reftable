@@ -101,9 +101,9 @@ byte ref_record_type() {
   return BLOCK_TYPE_REF;
 }
 
-void ref_record_key(slice *dest, const record *r) {
+void ref_record_key(const record *r, slice *dest) {
   ref_record * rec = (ref_record*) r;
-  slice_init_from_string(dest, rec->ref_name);
+  slice_set_string(dest, rec->ref_name);
 }
 
 void ref_record_copy_from(record* rec, const record *src_rec) {
@@ -228,7 +228,9 @@ int ref_record_decode(record *rec, slice key, byte val_type,  slice in) {
   in.buf += n;
   in.len -= n;
 
-  r->ref_name = slice_to_string(key);
+  r->ref_name = realloc(r->ref_name, key.len+1);
+  memcpy(r->ref_name, key.buf, key.len);
+  r->ref_name[key.len] = 0;
   switch (val_type) {
   case 1:
   case 2:
@@ -322,7 +324,7 @@ record* new_record(byte typ) {
   case BLOCK_TYPE_REF:
     {
       ref_record *r = calloc(1, sizeof(ref_record));
-      r->record.ops = &ref_record_ops;
+      r->ops = &ref_record_ops;
       return (record*) r;
     }
   }

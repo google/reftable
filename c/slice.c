@@ -4,7 +4,7 @@
 
 #include "slice.h"
 
-void slice_init_from_string(slice *s, const char *str) {
+void slice_set_string(slice *s, const char *str) {
   int l = strlen(str);
   l++; // \0
   slice_resize(s, l);

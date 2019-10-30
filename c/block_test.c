@@ -41,15 +41,17 @@ void test_binsearch() {
 }
 
 void test_block_read_write() {
+  const int header_off = 21; // random
   const int N = 30;
   char * names[N];
-  byte * block  = calloc(1024, 1);
+  const int block_size = 1024;
+  byte * block = calloc(block_size ,1);
   
-  block_writer *bw = new_block_writer(BLOCK_TYPE_REF, block, 1024, 0);
+  block_writer *bw = new_block_writer(BLOCK_TYPE_REF, block, block_size, header_off);
   record *rec = new_record(BLOCK_TYPE_REF);
   ref_record *ref = (ref_record*) rec;
 
-  for (int i = 0  ; i  < 30; i++ ) {
+  for (int i = 0  ; i  < N; i++ ) {
     char name[100];
     sprintf(name, "branch%02d", i);
     
@@ -62,7 +64,7 @@ void test_block_read_write() {
   int n = block_writer_finish(bw);
   assert(n > 0);
 
-  block_reader *br = new_block_reader(block, 0, 1024);
+  block_reader *br = new_block_reader(block, header_off, block_size);
 
   block_iter it = {};
   block_reader_start(br, &it);
@@ -76,6 +78,34 @@ void test_block_read_write() {
     }
     assert(0 == strcmp(names[j], ref->ref_name));
     j++;
+  }
+
+  slice want = {};
+  for (int i = 0; i < N; i++) {
+    slice_set_string(&want, names[i]);
+    int n = block_reader_seek(br, &it, want);
+    assert(n == 0);
+
+    n = block_iter_next(&it, (record*)ref);
+    assert(n == 0);
+    
+    assert(strcmp(names[i], ref->ref_name)== 0);
+
+    want.len--;
+    n = block_reader_seek(br, &it, want);
+    assert(n == 0);
+
+    n = block_iter_next(&it, (record*)ref);
+    assert(n == 0);
+    assert(strcmp(names[10* (i/10)], ref->ref_name)== 0);
+  }
+
+  free(block);
+  free(slice_yield(&want));
+  ref->ops->free(rec);
+  free(ref);
+  for (int i = 0; i < N; i++) {
+    free(names[i]);
   }
 }
 
