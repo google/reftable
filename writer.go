@@ -55,7 +55,10 @@ type Writer struct {
 	lastKey string
 	lastRec string
 
-	next  uint64
+	// offset where to write next block.
+	next uint64
+
+	// write options
 	opts  Options
 	block []byte
 
@@ -134,23 +137,22 @@ func (w *Writer) headerBytes() []byte {
 	return buf.Bytes()
 }
 
-func (w *Writer) indexObject(r *RefRecord) {
+// XXX indexHash
+func (w *Writer) indexHash(hash []byte) {
 	if !w.opts.IndexObjects {
 		return
 	}
 	off := w.next
-	for _, hash := range [][]byte{r.Value, r.TargetValue} {
-		if hash == nil {
-			continue
-		}
-		str := string(hash)
-		l := w.objIndex[str]
-		if len(l) > 0 && l[len(l)-1] == off {
-			continue
-		}
-
-		w.objIndex[str] = append(l, off)
+	if hash == nil {
+		return
 	}
+	str := string(hash)
+	l := w.objIndex[str]
+	if len(l) > 0 && l[len(l)-1] == off {
+		return
+	}
+
+	w.objIndex[str] = append(l, off)
 }
 
 // AddRef adds a RefRecord to the table. AddRef must be called in ascending order. AddRef cannot be called after AddLog is called.
@@ -165,7 +167,8 @@ func (w *Writer) AddRef(r *RefRecord) error {
 	if err := w.add(r); err != nil {
 		return err
 	}
-	w.indexObject(r)
+	w.indexHash(r.Value)
+	w.indexHash(r.TargetValue)
 	return nil
 }
 
