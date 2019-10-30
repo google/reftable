@@ -266,6 +266,8 @@ func (br *blockReader) start() *blockIter {
 // seek returns an iterator positioned just before the given key
 func (br *blockReader) seek(key string) (*blockIter, error) {
 	var decodeErr error
+
+	// Find the first restart key beyond the wanted key.
 	j := sort.Search(int(br.restartCount),
 		func(i int) bool {
 			rkey, err := decodeRestartKey(br.block, br.restart(i))
@@ -283,6 +285,7 @@ func (br *blockReader) seek(key string) (*blockIter, error) {
 	}
 
 	if j > 0 {
+		// We have a restart beyond the key, go one back to be before the wanted key
 		j--
 		it.nextOffset = br.restart(j)
 	} else {
