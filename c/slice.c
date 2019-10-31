@@ -24,13 +24,6 @@ void slice_resize(slice *s, int l) {
   s->len = l;
 }
 
-void slice_free(slice *s){
-  free(s->buf);
-  s->buf = NULL;
-  s->cap = 0;
-  s->len = 0;
-}
-
 byte *slice_yield(slice *s) {
   byte* p = s->buf;
   s->buf = NULL;

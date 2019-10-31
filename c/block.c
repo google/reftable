@@ -56,11 +56,11 @@ int block_writer_add(block_writer *w, record *rec) {
     goto err;
   }
   
-  slice_free(&key);
+  free(slice_yield(&key));
   return 1;
   
  err:
-  slice_free(&key);
+  free(slice_yield(&key));
   return -1;
 }
 
@@ -255,7 +255,7 @@ int block_reader_seek(block_reader* br, block_iter* it, slice want) {
       goto exit;
     }
 
-    rec->ops->key(&key, rec);
+    rec->ops->key(rec, &key);
     if (ok > 0 || slice_compare(key, want) >= 0 ) {
       result = 0;
       goto exit;
@@ -268,4 +268,11 @@ int block_reader_seek(block_reader* br, block_iter* it, slice want) {
   rec->ops->free(rec);
   free(rec);
   return result;
+}
+
+void block_writer_free(block_writer *bw) {
+  free(bw->restarts);
+  free(slice_yield(&bw->last_key));
+  free(bw);
+  // the block is not owned.
 }

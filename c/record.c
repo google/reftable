@@ -261,7 +261,7 @@ int ref_record_decode(record *rec, slice key, byte val_type,  slice in) {
       in.len -= n;
       
       r->target = slice_to_string(dest);
-      slice_free(&dest);
+      free(slice_yield(&dest));
     }
     break;
   }

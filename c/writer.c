@@ -137,7 +137,7 @@ void writer_index_hash(writer *w, slice hash) {
   }
 
   node->offsets[node->offset_len++] = off;
-  slice_free(&want.hash);
+  free(slice_yield(&want.hash));
 }
 
 
@@ -177,7 +177,7 @@ int writer_add_record(writer*w, record*rec) {
 
   result = 0;
  exit:
-  slice_free(&key);
+  free(slice_yield(&key));
   return result;
 }
 
@@ -211,7 +211,7 @@ int writer_add_ref(writer * w, ref_record* ref) {
   return 0;
 }
 
-int writer_finish_public_section(w) {
+int writer_finish_public_section(writer *w) {
   // XXX TODO
   return 0;
 }
@@ -223,11 +223,11 @@ int writer_close(writer *w) {
   byte *p = footer;
   writer_write_header(w, footer);
   p += 24;
-  put_u64(p, w->stats->ref_stats->index_offset);
+  put_u64(p, w->stats.ref_stats.index_offset);
   p += 8;
-  put_u64(p, (w->stats->obj_stats->offset) << 5 | w->stat->object_id_len);
+  put_u64(p, (w->stats.obj_stats.offset) << 5 | w->stats.object_id_len);
   p += 8;
-  put_u64(p, w->stats->obj_stats->index_offset);
+  put_u64(p, w->stats.obj_stats.index_offset);
   p += 8;
   put_u64(p, 0);
   p += 8;
@@ -237,9 +237,13 @@ int writer_close(writer *w) {
   // XXX compute CRC-32.
   put_u32(p, 0);
   p += 4;
-  w->padded_writer->pending_padding = 0;
+  w->pending_padding = 0;
 
-  int n = padded_write(&w->padded_writer, footer, sizeof(footer));
+  slice out= {
+	      .buf = footer,
+	      .len = sizeof(footer),
+  };
+  int n = padded_write(w, out, 0);
   if (n < 0) {
     return n;
   }
@@ -264,11 +268,11 @@ int writer_flush_block(writer *w) {
   block_stats *bstats =NULL;
   switch (typ) {
   case 'r':
-    bstats =  &w->stats->ref_stats;
+    bstats =  &w->stats.ref_stats;
   case 'o':
-    bstats =  &w->stats->obj_stats;
+    bstats =  &w->stats.obj_stats;
   case 'i':
-    bstats =  &w->stats->idx_stats;
+    bstats =  &w->stats.idx_stats;
   }
 
   if (bstats->blocks == 0) {
@@ -280,26 +284,26 @@ int writer_flush_block(writer *w) {
     return raw_bytes;
   }
 
-  int padding = w->opts->block_size - raw_bytes;
-  if (w->opts->unpadded || typ == BLOCK_TYPE_LOG) {
+  int padding = w->opts.block_size - raw_bytes;
+  if (w->opts.unpadded || typ == BLOCK_TYPE_LOG) {
     padding = 0;
   }
 
   bstats->entries += w->block_writer->entries;
-  bstats->restarts += w->block_writer->restarts;
+  bstats->restarts += w->block_writer->restart_len;
   bstats->blocks++;
-  w->stats->blocks++;
+  w->stats.blocks++;
 
   if (debug) {
-    fprintf(stderr, "block %c off %d sz %d (%d)",
-			typ, w->next, raw_bytes, getU24(w->block + w->block_writer->header_off+1))
+    fprintf(stderr, "block %c off %ld sz %d (%d)",
+	    typ, w->next, raw_bytes, get_u24(w->block + w->block_writer->header_off+1));
   }
 
   slice out = {
 	       .buf = w->block,
 	       .len = raw_bytes,
   };
-  int n = padded_write(w->padded_writer, out, padding);
+  int n = padded_write(w, out, padding);
   if (n < 0) {
     return n;
   }
@@ -308,8 +312,13 @@ int writer_flush_block(writer *w) {
     w->index_cap = 2*w->index_cap + 1;
     w->index = realloc(w->index, w->index_cap);
   }
-  w->index[w->index_len] = w->next;
-  free(w->block_writer);
+
+  index_record ir = {
+		     .offset = w->next,
+  };
+  slice_copy(&ir.last_key, w->block_writer->last_key);
+  w->index[w->index_len] = ir;
+  block_writer_free(w->block_writer);
   w->block_writer = NULL;
   return 0;
 }

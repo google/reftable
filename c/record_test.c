@@ -44,8 +44,8 @@ void test_common_prefix() {
     int got = common_prefix_size(a, b);
     assert(got == cases[i].want);
 
-    slice_free(&a);
-    slice_free(&b);
+    free(slice_yield(&a));
+    free(slice_yield(&b));
   }  
 }
 

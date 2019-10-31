@@ -1,4 +1,3 @@
-
 cc_library(
 	name= "reftable",
 	srcs = ["record.c",
@@ -15,6 +14,7 @@ cc_library(
 	"slice.h",
 	"writer.h",
 	],
+    copts = [ "-Wall", "-Werror" ],
 )
 
 cc_library(

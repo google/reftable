@@ -40,5 +40,6 @@ int block_reader_start(block_reader* br, block_iter* it);
 int block_iter_next(block_iter *it, record* rec);
 int block_reader_seek(block_reader* br, block_iter* it, slice want);
 byte block_writer_type(block_writer *bw);
+void block_writer_free(block_writer *bw);
 
 #endif

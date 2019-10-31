@@ -11,7 +11,6 @@ typedef struct {
 
 void slice_set_string(slice* dest, const char *);
 char *slice_to_string(slice src);
-void slice_free(slice *s);
 bool slice_equal(slice a, slice b);
 byte *slice_yield(slice *s);
 void slice_copy(slice *dest, slice src);

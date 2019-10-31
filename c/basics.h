@@ -15,9 +15,15 @@ typedef byte bool;
 typedef int error;
 
 void put_u24(byte *out, uint32 i) ;
+uint32 get_u24(byte *in) ;
+
 uint64 get_u64(byte *in) ;
 void put_u64(byte *out, uint64 i) ;
-uint32 get_u24(byte *in) ;
+
+void put_u32(byte *out, uint32 i) ;
+uint32 get_u32(byte *in) ;
+
+
 void put_u16(byte *out, uint16 i) ;
 uint16 get_u16(byte *in) ;
 int binsearch(int sz, int (*f)(int k, void *args), void*args);
