@@ -55,9 +55,10 @@ void test_block_read_write() {
     char name[100];
     sprintf(name, "branch%02d", i);
     
-    ref->ref_name = strdup(name);
-    names[i] = ref->ref_name;
+    ref->ref_name = name;
+    names[i] = strdup(name);
     int n = block_writer_add(bw, rec);
+    ref->ref_name = NULL;
     assert(n > 0);
   }
 

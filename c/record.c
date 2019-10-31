@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "api.h"
+#include "record.h"
 
 int is_block_type(byte typ) {
   switch (typ) {
@@ -107,8 +108,8 @@ void ref_record_key(const record *r, slice *dest) {
 }
 
 void ref_record_copy_from(record* rec, const record *src_rec) {
-  assert (src_rec->ops->type() == BLOCK_TYPE_REF);
-  assert (rec->ops->type() == BLOCK_TYPE_REF);
+  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
+  assert(rec->ops->type() == BLOCK_TYPE_REF);
 
   ref_record *ref =(ref_record*) rec;
   ref_record *src =(ref_record*) src_rec;
@@ -218,7 +219,7 @@ int decode_string(slice *dest, slice in) {
   return start_len - in.len;
 }
 
-int ref_record_decode(record *rec, slice key, byte val_type,  slice in) {
+int ref_record_decode(record *rec, slice key, byte val_type, slice in) {
   ref_record *r = (ref_record*)rec;
 
   slice start = in;

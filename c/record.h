@@ -10,7 +10,8 @@ int common_prefix_size(slice a, slice b);
 
 int is_block_type(byte typ);
 int ref_record_encode(const record *rec, slice s);
-int ref_record_decode(record *rec, slice s, byte val_type);
+int ref_record_decode(record *rec, slice key, byte val_type, slice in);
+void ref_record_key(const record *r, slice *dest);
 record* new_record(byte typ);
 
 int encode_key(bool *restart, slice dest, slice prev_key, slice key, byte extra);

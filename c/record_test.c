@@ -76,8 +76,12 @@ void test_ref_record_roundtrip() {
       in.target = "target";
       break;
     }
-      
+
+    in.ref_name =  "refs/heads/master";
     byte buf[1024];
+    slice key = {};
+    ref_record_key((record*)&in, &key);
+  
     slice dest = {
 		  .buf = buf,
 		  .len = sizeof(buf),
@@ -86,12 +90,13 @@ void test_ref_record_roundtrip() {
     assert(n > 0);
 
     ref_record out={};
-    n = ref_record_decode((record*)&out, dest, i);
+    n = ref_record_decode((record*)&out, key, i, dest);
     assert(n > 0);
 
     assert((out.value != NULL) == (in.value != NULL));
     assert((out.target_value != NULL) == (in.target_value != NULL));
     assert((out.target != NULL) == (in.target != NULL));
+    free(slice_yield(&key));
   }
 }
 
