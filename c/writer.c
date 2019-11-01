@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <search.h>
 
 #include "record.h"
 #include "block.h"
 #include "api.h"
 #include "writer.h"
+#include "tree.h"
 
 typedef struct _writer {
   int (*write)(void*, byte *, int);
@@ -25,10 +25,24 @@ typedef struct _writer {
   int index_cap;
 
   // tree for use with tsearch
-  void *obj_index_tree;
+  tree_node *obj_index_tree;
 
   stats stats;
 } writer;
+
+
+block_stats *writer_block_stats(writer* w, byte typ) {
+  switch (typ) {
+  case 'r':
+    return  &w->stats.ref_stats;
+  case 'o':
+    return  &w->stats.obj_stats;
+  case 'i':
+    return  &w->stats.idx_stats;
+  }
+  assert(false);
+}
+ 
 
 int padded_write(writer*w, slice out, int padding )  {
   if (w->pending_padding > 0) {
@@ -107,7 +121,7 @@ typedef struct {
 
 int obj_index_tree_node_compare(const void *a, const void *b) {
   return slice_compare(((const obj_index_tree_node*)a)->hash,
-    ((const obj_index_tree_node*)b)->hash);
+		       ((const obj_index_tree_node*)b)->hash);
 }
 
 void writer_index_hash(writer *w, slice hash) {
@@ -120,26 +134,27 @@ void writer_index_hash(writer *w, slice hash) {
   obj_index_tree_node want= {};
   slice_copy(&want.hash, hash);
 
-  obj_index_tree_node *node = tfind(&want, w->obj_index_tree, &obj_index_tree_node_compare);
+  tree_node *node = tree_search(&want, &w->obj_index_tree, &obj_index_tree_node_compare, 0);
   if (node == NULL) {
-    node = calloc(sizeof(obj_index_tree_node), 1);
-    slice_copy(&node->hash, hash);
-    tsearch(node, w->obj_index_tree, &obj_index_tree_node_compare);
+    obj_index_tree_node* tree_key = calloc(sizeof(obj_index_tree_node), 1);
+    slice_copy(&tree_key->hash, hash);
+    tree_search((void*) tree_key, &w->obj_index_tree, &obj_index_tree_node_compare, 1);
   }
 
-  if (node->offset_len > 0 && node->offsets[node->offset_len-1] == off) {
+  obj_index_tree_node * key  = node->key;
+  
+  if (key->offset_len > 0 && key->offsets[key->offset_len-1] == off) {
     return;
   }
       
-  if (node->offset_len == node->offset_cap) {
-    node->offset_cap = 2*node->offset_cap + 1;
-    node->offsets = realloc(node->offsets, node->offset_cap);
+  if (key->offset_len == key->offset_cap) {
+    key->offset_cap = 2*key->offset_cap + 1;
+    key->offsets = realloc(key->offsets, key->offset_cap);
   }
 
-  node->offsets[node->offset_len++] = off;
+  key->offsets[key->offset_len++] = off;
   free(slice_yield(&want.hash));
 }
-
 
 int writer_add_record(writer*w, record*rec) {
   int result  = -1;
@@ -211,10 +226,156 @@ int writer_add_ref(writer * w, ref_record* ref) {
   return 0;
 }
 
-int writer_finish_public_section(writer *w) {
-  // XXX TODO
+int writer_finish_section(writer*w) {
+  w->last_key.len = 0;
+  byte typ = block_writer_type(w->block_writer);
+  int err  = writer_flush_block(w);
+  if (err < 0) {
+    return err;
+  }
+
+  uint64 index_start = 0;
+  int max_level = 0;
+  int threshold = 3;
+  if (w->opts.unpadded) {
+    threshold = 1;
+  }
+
+  int before_blocks = w->stats.idx_stats.blocks;
+  while (w->index_len > threshold) {
+    max_level ++;
+    index_start = w->next;
+    w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_INDEX);
+    index_record *idx=  w->index;
+    int idx_len = w->index_len;
+
+    w->index = NULL;
+    w->index_len = 0;
+    for (int i = 0; i < idx_len; i++) {
+      if (block_writer_add(w->block_writer, (record*)(idx + i)) == 0) {
+	continue;
+      }
+
+      int err = writer_flush_block(w);
+      if (err < 0) { return err; }
+      w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_INDEX);
+
+      err = block_writer_add(w->block_writer, (record*)(idx + i));
+      assert(i == 0);
+    }
+
+    free(idx);
+  }
+
+  free(w->index);
+  w->index= NULL;
+
+  err = writer_flush_block(w);
+  if (err < 0) { return err; }
+
+  block_stats *bstats = writer_block_stats(w, typ);
+  bstats->index_blocks = w->stats.idx_stats.blocks - before_blocks;
+  bstats->index_offset = index_start;
+  bstats->max_index_level = max_level;
+  
   return 0;
 }
+
+typedef struct {
+  slice *last;
+  int    max;
+} common_prefix_arg;
+
+void update_common(void *void_arg, void *key) {
+  common_prefix_arg* arg = (common_prefix_arg*)void_arg;
+  obj_index_tree_node*entry =(obj_index_tree_node*)key;
+  if (arg->last != NULL) {
+    int n = common_prefix_size(entry->hash, *arg->last);
+    if (n > arg->max) {
+      arg->max = n;
+    }
+  }
+  arg->last = &entry->hash;
+}
+
+typedef struct {
+  writer *w;
+  int err;
+  
+} write_record_arg;
+
+void write_object_record(void *void_arg, void*key) {
+  write_record_arg* arg  = (write_record_arg*)void_arg;
+  obj_index_tree_node* entry = (obj_index_tree_node*) key;
+
+  if (arg->err < 0 ) {
+    return ;
+  }
+  
+  obj_record rec = {
+		    .ops = &obj_record_ops,
+		    .hash_prefix = entry->hash.buf,
+		    .hash_prefix_len = arg->w->stats.object_id_len,
+		    .offsets = entry->offsets,
+		    .offset_len =entry->offset_len,
+  };
+  int err = block_writer_add(arg->w->block_writer, (record*)&rec);
+  if (err == 0) {
+    return;
+  }
+  
+  err = writer_flush_block(arg->w);
+  if (err  < 0) {
+    arg->err = err;
+    return;
+  }
+
+  arg->w->block_writer  = writer_new_block_writer(arg->w, BLOCK_TYPE_OBJ);
+  err = block_writer_add(arg->w->block_writer, (record*)&rec);
+  if (err== 0) {
+    return;
+  }
+  free(rec.offsets);
+  rec.offsets = NULL;
+  rec.offset_len = 0;
+
+  err = block_writer_add(arg->w->block_writer, (record*)&rec);
+  assert(err== 0);
+}
+
+int writer_dump_object_index(writer *w) {
+  common_prefix_arg common = {};
+  infix_walk(w->obj_index_tree, &update_common, &common);
+  w->stats.object_id_len = common.max+1;
+
+  w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_OBJ);
+
+  write_record_arg closure={.w = w};
+  infix_walk(w->obj_index_tree, &write_object_record, &closure);
+  if (closure.err < 0 ) {
+    return closure.err;
+  }
+  return writer_finish_section(w);
+}
+
+int writer_finish_public_section(writer *w) {
+  if (w->block_writer == NULL) {
+    return 0;
+  }
+
+  byte typ = block_writer_type(w->block_writer);
+  int err = writer_finish_section(w);
+  if (err < 0) { return err; }
+  if (typ == BLOCK_TYPE_REF && w->opts.index_objects) {
+    int err = writer_dump_object_index(w);
+    if (err < 0) { return err; }
+  }
+
+  block_writer_free(w->block_writer);
+  w->block_writer = NULL;
+  return 0;
+}
+
 
 int writer_close(writer *w) {
   writer_finish_public_section(w);
@@ -265,16 +426,7 @@ int writer_flush_block(writer *w) {
 
   byte typ  = block_writer_type(w->block_writer);
 
-  block_stats *bstats =NULL;
-  switch (typ) {
-  case 'r':
-    bstats =  &w->stats.ref_stats;
-  case 'o':
-    bstats =  &w->stats.obj_stats;
-  case 'i':
-    bstats =  &w->stats.idx_stats;
-  }
-
+  block_stats *bstats = writer_block_stats(w, typ);
   if (bstats->blocks == 0) {
     bstats->offset = w->next;
   }

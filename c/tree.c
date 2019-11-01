@@ -25,3 +25,13 @@ tree_node *tree_search(void *key, tree_node **rootp,
   }
   return n;
 }
+
+void infix_walk(tree_node*t, void (*action)(void *arg, void *key), void*arg) {
+  if (t->left!=NULL) {
+    infix_walk(t->left, action, arg);
+  }
+  action(arg, t->key);
+  if (t->right!=NULL) {
+    infix_walk(t->right, action, arg);
+  }
+}

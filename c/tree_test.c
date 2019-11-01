@@ -8,6 +8,18 @@ static int test_compare(const void *a, const void*b) {
   return a - b;
 }
 
+struct curry {
+  void *last;
+};
+
+void check_increasing(void*arg, void *key) {
+  struct curry *c = (struct curry*) arg;
+  if (c->last != NULL) {
+    assert(test_compare(c->last, key) < 0);
+  }
+  c->last = key;
+}
+
 void test_tree() {
   tree_node* root  = NULL;
 
@@ -23,6 +35,9 @@ void test_tree() {
     assert(values +i == nodes[i]->key);
     assert(nodes[i] == tree_search(values +i, &root, &test_compare, 0));
   }
+
+  struct curry c = {};
+  infix_walk(root, check_increasing, &c);
 }
 
 int main() {

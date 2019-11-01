@@ -5,6 +5,7 @@ cc_library(
 	"slice.c",
 	"block.c",
 	"writer.c",
+                "tree.c",
 	],
 	hdrs = ["api.h",
 	"block.h",
@@ -12,6 +13,7 @@ cc_library(
 	"basics.h",
 	"record.h",
 	"slice.h",
+                "tree.h",
 	"writer.h",
 	],
     copts = [ "-Wall", "-Werror" ],
@@ -26,6 +28,12 @@ cc_library(
 cc_test(
 	name= "record_test",
 	srcs = ["record_test.c"],
+	deps = [ ":testlib", ":reftable" ],
+)
+
+cc_test(
+	name= "tree_test",
+	srcs = ["tree_test.c"],
 	deps = [ ":testlib", ":reftable" ],
 )
 

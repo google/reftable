@@ -70,6 +70,28 @@ int common_prefix_size(slice a, slice b)  {
   return p;
 }
 
+int decode_string(slice *dest, slice in) {
+  int start_len = in.len;
+  uint64 tsize = 0;
+  int n = get_var_int( &tsize, in);
+  if (n <= 0) {
+    return -1;
+  }
+  in.buf += n;
+  in.len -= n;
+  if (in.len < tsize){
+    return -1;
+  }
+
+  slice_resize(dest, tsize+1);
+  dest->buf[tsize] = 0;
+  memcpy(dest->buf, in.buf, tsize);
+  in.buf += tsize;
+  in.len -= tsize;
+
+  return start_len - in.len;
+}
+
 int encode_key(bool *restart, slice dest, slice prev_key, slice key, byte extra) {
   slice start = dest;
   int prefix_len = common_prefix_size(prev_key, key);
@@ -197,28 +219,6 @@ int ref_record_encode(const record *rec, slice s) {
 }
 
 
-int decode_string(slice *dest, slice in) {
-  int start_len = in.len;
-  uint64 tsize = 0;
-  int n = get_var_int( &tsize, in);
-  if (n <= 0) {
-    return -1;
-  }
-  in.buf += n;
-  in.len -= n;
-  if (in.len < tsize){
-    return -1;
-  }
-
-  slice_resize(dest, tsize+1);
-  dest->buf[tsize] = 0;
-  memcpy(dest->buf, in.buf, tsize);
-  in.buf += tsize;
-  in.len -= tsize;
-
-  return start_len - in.len;
-}
-
 int ref_record_decode(record *rec, slice key, byte val_type, slice in) {
   ref_record *r = (ref_record*)rec;
 
@@ -320,6 +320,143 @@ record_ops ref_record_ops =
    .free = &ref_record_free,
   };
 
+
+
+byte obj_record_type() {
+  return BLOCK_TYPE_OBJ;
+}
+
+void obj_record_key(const record *r, slice *dest) {
+  obj_record * rec = (obj_record*) r;
+  slice_resize(dest, rec->hash_prefix_len);
+  memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
+}
+
+void obj_record_copy_from(record* rec, const record *src_rec) {
+  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
+  assert(rec->ops->type() == BLOCK_TYPE_REF);
+
+  obj_record *ref = (obj_record*) rec;
+  obj_record *src = (obj_record*) src_rec;
+
+  *ref = *src;
+  ref->hash_prefix = malloc(ref->hash_prefix_len);
+  memcpy(ref->hash_prefix, src->hash_prefix, ref->hash_prefix_len);
+
+  int olen = ref->offset_len * sizeof(uint64);
+  ref->offsets = malloc(olen);
+  memcpy(ref->offsets, src->offsets, olen);
+}  
+
+void obj_record_free(record* rec) {
+  obj_record *ref =(obj_record*) rec;
+  free(ref->hash_prefix);
+  free(ref->offsets);
+  memset(ref, 0, sizeof(obj_record));
+}
+
+byte obj_record_val_type(const record *rec) {
+  obj_record *r = (obj_record*) rec;
+  if (r->offset_len > 0 &&r->offset_len < 8 ) {
+    return r->offset_len;
+  }
+  return 0;
+}
+
+int obj_record_encode(const record *rec, slice s) {
+  obj_record *r = (obj_record*)rec;
+  slice start = s;
+  if (r->offset_len == 0 || r->offset_len >= 8) {
+    int n = put_var_int(s, r->offset_len);
+    if (n < 0) { return -1; }
+    s.buf += n;
+    s.len -= n;
+  }
+  if (r->offset_len == 0) {
+    return start.len - s.len;
+  }
+  int n = put_var_int(s, r->offsets[0]);
+  if (n < 0) { return -1; }
+  s.buf += n;
+  s.len -= n;
+
+  uint64 last = r->offsets[0];
+  for (int i= 1; i < r->offset_len; i++) {
+    int n = put_var_int(s, r->offsets[i] - last);
+    if (n < 0) { return -1; }
+    s.buf += n;
+    s.len -= n;
+    last = r->offsets[i];
+  }
+  
+  return start.len - s.len;
+}
+
+
+int obj_record_decode(record *rec, slice key, byte val_type, slice in) {
+  slice start = in;
+  obj_record *r = (obj_record*)rec;
+  
+  r->hash_prefix = malloc(key.len);
+  memcpy(r->hash_prefix, key.buf, key.len);
+  r->hash_prefix_len = key.len;
+
+  uint64 count;
+  if (val_type == 0) {
+    int n = get_var_int(&count, in);
+    if (n < 0) {
+      return n;
+    }
+    
+    in.buf += n;
+    in.len -= n;
+  } else {
+    count = val_type;
+  }
+
+  r->offsets = NULL;
+  r->offset_len = 0;
+  if (count == 0) {
+    return start.len - in.len;
+  }
+
+  r->offsets = malloc(count  * sizeof(uint64));
+  r->offset_len = count;
+
+  int n = get_var_int(&r->offsets[0], in);
+  if (n < 0) { return n; }
+    
+  in.buf += n;
+  in.len -= n;
+
+  uint64 last = r->offsets[0];
+
+  int j = 1;
+  while (j < count) {
+    uint64 delta; 
+    int n = get_var_int(&delta, in);
+    if (n < 0) { return n; }
+    
+    in.buf += n;
+    in.len -= n;
+    
+    last = r->offsets[j] = (delta  + last);
+    j++;
+  }
+  return start.len - in.len;
+}
+
+record_ops obj_record_ops =
+  {
+   .key = &obj_record_key,
+   .type = &obj_record_type,
+   .copy_from = &obj_record_copy_from,
+   .val_type = &obj_record_val_type,
+   .encode = &obj_record_encode,
+   .decode = &obj_record_decode,
+   .free = &obj_record_free,
+  };
+
 record* new_record(byte typ) {
   switch (typ) {
   case BLOCK_TYPE_REF:
@@ -331,3 +468,75 @@ record* new_record(byte typ) {
   }
   assert(0);  
 }
+
+
+byte index_record_type() {
+  return BLOCK_TYPE_INDEX;
+}
+
+void index_record_key(const record *r, slice *dest) {
+  index_record * rec = (index_record*) r;
+  slice_copy(dest, rec->last_key);
+}
+
+void index_record_copy_from(record* rec, const record *src_rec) {
+  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
+  assert(rec->ops->type() == BLOCK_TYPE_REF);
+
+  index_record *dst = (index_record*) rec;
+  index_record *src = (index_record*) src_rec;
+
+  slice_copy(&dst->last_key, src->last_key);
+  dst->offset = src->offset;
+}
+
+void index_record_free(record* rec) {
+  index_record *idx =(index_record*) rec;
+  free(slice_yield(&idx->last_key));
+}
+
+byte index_record_val_type(const record *rec) {
+  return 0;
+}
+
+int index_record_encode(const record *rec, slice out) {
+  index_record *r = (index_record*)rec;
+  slice start = out;
+
+  int n = put_var_int(out, r->offset);
+  if (n <0 ) {
+    return n;
+  }
+
+  out.buf += n;
+  out.len -= n;
+  
+  return start.len - out.len;
+}
+
+int index_record_decode(record *rec, slice key, byte val_type, slice in) {
+  slice start = in;
+  index_record *r = (index_record*)rec;
+
+  slice_copy(&r->last_key, key);
+  
+  int n = get_var_int(&r->offset, in);
+  if (n < 0) {
+    return n;
+  }
+    
+  in.buf += n;
+  in.len -= n;
+  return start.len - in.len;
+}
+
+record_ops index_record_ops =
+  {
+   .key = &index_record_key,
+   .type = &index_record_type,
+   .copy_from = &index_record_copy_from,
+   .val_type = &index_record_val_type,
+   .encode = &index_record_encode,
+   .decode = &index_record_decode,
+   .free = &index_record_free,
+  };

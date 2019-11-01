@@ -1,3 +1,4 @@
+#include <string.h>
 
 #include "basics.h"
 #include "api.h"
@@ -130,11 +131,98 @@ void test_key_roundtrip() {
   assert(rt_extra == extra);
 }
 
+
+
+void test_obj_record_roundtrip() {
+  byte testHash1[HASH_SIZE]={};
+  set_hash(testHash1, 1);
+  uint64 till9[] = {1, 2, 3, 4, 500, 600, 700, 800, 9000};
+  
+  obj_record recs[3]= {
+		       {
+			.hash_prefix = testHash1,
+			.hash_prefix_len = 5,
+			.offsets = till9,
+			.offset_len = 3,
+		       },
+		       {
+			.hash_prefix = testHash1,
+			.hash_prefix_len = 5,
+			.offsets = till9,
+			.offset_len = 9,
+		       },
+		       {
+			.hash_prefix = testHash1,
+			.hash_prefix_len = 5,
+		       }
+
+  };
+  for (int i = 0; i < ARRAYSIZE(recs); i++) {
+    printf("subtest %d\n", i);
+    obj_record in  = recs[i];
+    byte buf[1024];
+    slice key = {};
+    obj_record_key((record*)&in, &key);
+  
+    slice dest = {
+		  .buf = buf,
+		  .len = sizeof(buf),
+    };
+    int n = obj_record_encode((record*)&in, dest);
+    assert(n > 0);
+
+    byte extra = obj_record_val_type((record*)&in);
+    obj_record out={};
+    n = obj_record_decode((record*)&out, key, extra, dest);
+    assert(n > 0);
+
+    assert(in.hash_prefix_len == out.hash_prefix_len);
+    assert(in.offset_len == out.offset_len);
+    
+    assert(0 == memcmp(in.hash_prefix,out.hash_prefix, in.hash_prefix_len));
+    assert(0 == memcmp(in.offsets, out.offsets, sizeof(uint64) * in.offset_len));
+    free(slice_yield(&key));
+  }
+}
+
+void test_index_record_roundtrip() {
+  index_record in = {
+		      .offset = 42
+  };
+
+  slice_set_string(&in.last_key, "refs/heads/master");
+  
+  slice key = {};
+  index_record_key((record*)&in, &key);
+
+  assert(0 == slice_compare(key, in.last_key));
+  
+  byte buf[1024];
+  slice dest = {
+		.buf = buf,
+		.len = sizeof(buf),
+  };
+  int n = index_record_encode((record*)&in, dest);
+  assert(n > 0);
+
+  byte extra = index_record_val_type((record*)&in);
+  index_record out={};
+  n = index_record_decode((record*)&out, key, extra, dest);
+  assert(n > 0);
+
+  assert(in.offset == out.offset);
+
+  free(slice_yield(&key));
+  free(slice_yield(&in.last_key));
+}
+
 int main() {
   add_test_case("varint_roundtrip", &varint_roundtrip);
   add_test_case("test_key_roundtrip", &test_key_roundtrip);
   add_test_case("test_common_prefix", &test_common_prefix);
   add_test_case("test_ref_record_roundtrip", &test_ref_record_roundtrip);
+  add_test_case("test_obj_record_roundtrip", &test_obj_record_roundtrip);
+  add_test_case("test_obj_record_roundtrip", &test_index_record_roundtrip);
   add_test_case("test_u24_roundtrip", &test_u24_roundtrip);
   test_main();
 }

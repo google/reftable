@@ -65,17 +65,7 @@ typedef struct {
   char *message;
 } log_record;
 
-typedef struct {
-  slice last_key;
-  uint64 offset;
-} index_record;
 
-typedef struct {
-  record_ops *ops;
-  char *hash_prefix;
-  uint64 *offsets;
-  int offsets_len;
-} obj_record;
 
 typedef struct {
   int (*next)(record *rec);
@@ -104,5 +94,7 @@ typedef struct {
   // todo: log stats.
   int object_id_len;
 } stats;
+
+extern record_ops ref_record_ops;
 
 #endif
