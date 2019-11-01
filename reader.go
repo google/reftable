@@ -19,7 +19,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
-	"io"
 	"log"
 )
 
@@ -64,20 +63,12 @@ type Reader struct {
 }
 
 func (r *Reader) getBlock(off uint64, sz uint32) ([]byte, error) {
-	if off == r.size {
+	if off >= r.size {
 		return nil, nil
-	}
-	if off > r.size {
-		return nil, io.EOF
 	}
 
 	if off+uint64(sz) > r.size {
 		sz = uint32(r.size - off)
-	}
-
-	if sz == 0 {
-		// XXX what if someone makes an unaligned reftable of size > 4Gb?
-		return r.src.ReadBlock(off, int(r.size-off))
 	}
 
 	return r.src.ReadBlock(off, int(sz))
