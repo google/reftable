@@ -12,7 +12,8 @@ typedef struct record_t record;
 
 typedef struct {
   uint64 (*size)(void *source);
-  error (*read_block)(void* source, slice* dest, uint64 off, uint32 size);
+  int (*read_block)(void* source, byte **dest, uint64 off, uint32 size);
+  int (*return_block)(void *source, byte *block);
   void (*close)(void *source);
 } block_source_ops;
 
@@ -96,5 +97,9 @@ typedef struct {
 } stats;
 
 extern record_ops ref_record_ops;
+
+
+#define IO_ERROR -2
+#define FORMAT_ERROR -3
 
 #endif
