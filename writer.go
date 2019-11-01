@@ -384,7 +384,7 @@ func (w *Writer) finishSection() error {
 	maxLevel := 0
 
 	threshold := 3
-	if w.opts.BlockSize == 0 {
+	if w.opts.Unpadded {
 		// always write index for unaligned files.
 		threshold = 1
 	}
