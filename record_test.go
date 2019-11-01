@@ -159,6 +159,8 @@ func TestRecordRoundTripObj(t *testing.T) {
 	}, &objRecord{
 		HashPrefix: []byte("prefix/next"),
 		Offsets:    []uint64{1, 25, 239, 4932, 5000, 6000, 7000, 8000},
+	}, &objRecord{
+		HashPrefix: []byte("prefix/next"),
 	}}
 
 	testRecordRoundTrip(t, inputs)

@@ -266,7 +266,7 @@ func (r *objRecord) valType() uint8 {
 func (r *objRecord) encode(buf []byte) (n int, fits bool) {
 	start := buf
 
-	if len(r.Offsets) >= 8 {
+	if len(r.Offsets) == 0 || len(r.Offsets) >= 8 {
 		s, ok := putVarInt(buf, uint64(len(r.Offsets)))
 		if !ok {
 			return
@@ -274,6 +274,9 @@ func (r *objRecord) encode(buf []byte) (n int, fits bool) {
 		buf = buf[s:]
 	}
 
+	if len(r.Offsets) == 0 {
+		return len(start) - len(buf), true
+	}
 	s, ok := putVarInt(buf, uint64(r.Offsets[0]))
 	if !ok {
 		return
