@@ -1,12 +1,12 @@
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "record.h"
-#include "block.h"
 #include "api.h"
-#include "writer.h"
+#include "block.h"
+#include "record.h"
 #include "tree.h"
+#include "writer.h"
 
 typedef struct {
   bool present;
@@ -16,8 +16,8 @@ typedef struct {
 
 typedef struct {
   block_source_ops *block_ops;
-  void *  block_source_arg ;
-  
+  void *block_source_arg;
+
   uint32 block_size;
   uint64 min_update_index;
   uint64 max_update_index;
@@ -28,7 +28,7 @@ typedef struct {
   reader_offsets log_offsets;
 } reader;
 
-int reader_get_block(reader * r, byte **dest, uint64 off, sz uint32) {
+int reader_get_block(reader *r, byte **dest, uint64 off, sz uint32) {
   if (off >= r->size) {
     return NULL;
   }
@@ -40,8 +40,8 @@ int reader_get_block(reader * r, byte **dest, uint64 off, sz uint32) {
   return block_ops->read_block(r->block_source_arg, dest, off, sz);
 }
 
-int new_reader(reader **dest, block_source_ops* ops, void *block_source_arg) {
-  reader *r = calloc(sizeof(reader),1);
+int new_reader(reader **dest, block_source_ops *ops, void *block_source_arg) {
+  reader *r = calloc(sizeof(reader), 1);
   r->size = ops->size(block_source_arg) - FOOTER_SIZE;
   r->block_source_arg = block_source_arg;
   r->block_source_ops = ops;
@@ -57,7 +57,7 @@ int new_reader(reader **dest, block_source_ops* ops, void *block_source_arg) {
     return FORMAT_ERROR;
   }
   f += 4;
-  byte version  = *f++;
+  byte version = *f++;
   if (version != 1) {
     return FORMAT_ERROR;
   }
@@ -65,18 +65,18 @@ int new_reader(reader **dest, block_source_ops* ops, void *block_source_arg) {
 
   f += 3;
   r->min_update_index = get_u64(f);
-  f+=8;
+  f += 8;
   r->max_update_index = get_u64(f);
-  f+=8;
+  f += 8;
 
   uint64 ref_index_off = get_u64(f);
   f += 8;
   uint64 obj_off = get_u64(f);
   f += 8;
 
-  r->object_id_len = obj_off & ((1<<5)-1);
+  r->object_id_len = obj_off & ((1 << 5) - 1);
   obj_off >>= 5;
-  
+
   uint64 obj_index_off = get_u64(f);
   f += 8;
   uint64 log_off = get_u64(f);
@@ -85,7 +85,7 @@ int new_reader(reader **dest, block_source_ops* ops, void *block_source_arg) {
   f += 8;
 
   byte *header;
-  int n = reader_get_block(r, &header, 0, HEADER_SIZE+1);
+  int n = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
   if (n != HEADER_SIZE) {
     return IO_ERROR;
   }
@@ -106,5 +106,5 @@ int new_reader(reader **dest, block_source_ops* ops, void *block_source_arg) {
   ops->return_block(block_source_arg, footer);
   ops->return_block(block_source_arg, header);
   *dest = r;
-  return 0; 
+  return 0;
 }
