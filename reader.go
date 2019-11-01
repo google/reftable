@@ -113,7 +113,7 @@ func NewReader(src BlockSource) (*Reader, error) {
 		log.Panicf("footer size %d", footBuf.Len())
 	}
 
-	// XXX This is a deficiency of the format: we should be able
+	// This is a deficiency of the format: we should be able
 	// to tell from the footer if where the refs start
 	headBlock, err := src.ReadBlock(0, headerSize+1)
 	if err != nil {
@@ -147,8 +147,8 @@ func NewReader(src BlockSource) (*Reader, error) {
 		},
 	}
 
-	// XXX in case of blocksize==0, should read the entire thing
-	// into a ByteBlockSource
+	// In case of blocksize==0, should read the entire thing
+	// into a ByteBlockSource?
 
 	return r, nil
 }
@@ -209,19 +209,19 @@ func (i *tableIter) Next(rec Record) (bool, error) {
 }
 
 // blockSize returns the block size from the block header
-func (r *Reader) blockSize(off uint64) (uint32, error) {
+func (r *Reader) blockSize(off uint64) (typ byte, size uint32, err error) {
 	if off == 0 {
 		off = 24
 	}
 
 	header, err := r.getBlock(off, 4)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	if !isBlockType(header[0]) {
-		return 0, nil
+		return 0, 0, nil
 	}
-	return getU24(header[1:]), nil
+	return header[0], getU24(header[1:]), nil
 }
 
 // newBlockReader opens a block of the given type, starting at
@@ -233,9 +233,15 @@ func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err 
 		return
 	}
 
-	blockSize, err := r.blockSize(nextOff)
+	// XXX we are accessing the block twice. Would be better to do it just
+	// once.
+	blockTyp, blockSize, err := r.blockSize(nextOff)
 	if err != nil {
 		return nil, err
+	}
+
+	if blockTyp != typ {
+		return nil, nil
 	}
 
 	// This assumes that the size of the compressed log block is
@@ -254,11 +260,7 @@ func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err 
 		headerOff = headerSize
 	}
 
-	br, err = newBlockReader(next, headerOff, r.Header.BlockSize)
-	if br.getType() != typ {
-		return nil, nil
-	}
-	return br, nil
+	return newBlockReader(next, headerOff, r.Header.BlockSize)
 }
 
 // nextBlock moves to the next block, or returns false fi there is none.f
@@ -272,6 +274,7 @@ func (i *tableIter) nextBlock() (bool, error) {
 		i.bi = nil
 		return false, nil
 	}
+	// XXX return block
 	i.bi = br.start()
 	i.blockOff = nextBlockOff
 	return true, nil
@@ -299,7 +302,7 @@ func (r *Reader) tabIterAt(off uint64) (*tableIter, error) {
 	if off == 0 {
 		headerOffset = headerSize
 	}
-	blockSize, err := r.blockSize(off)
+	typ, blockSize, err := r.blockSize(off)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +318,7 @@ func (r *Reader) tabIterAt(off uint64) (*tableIter, error) {
 
 	return &tableIter{
 		r:        r,
-		typ:      br.getType(),
+		typ:      typ,
 		blockOff: off,
 		bi:       br.start(),
 	}, nil
