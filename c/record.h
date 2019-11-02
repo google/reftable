@@ -48,6 +48,7 @@ void record_clear(record rec);
 void *record_yield(record *rec);
 void record_from_obj(record*rec, obj_record *objrec);
 void record_from_index(record*rec, index_record *idxrec);
+bool record_is_start(record want);
 
 #endif
 

@@ -602,3 +602,19 @@ void*record_yield(record *rec){
   rec->data = NULL;
   return p;
 }
+
+bool record_is_start(record want) {
+  slice want_key;
+  record_key(want, &want_key);
+
+  record start = new_record(record_type(want));
+  slice start_key;
+  record_key(start, &start_key);
+
+  bool is_start = slice_compare(start_key, want_key) == 0;
+
+  free(slice_yield(&start_key));
+  free(slice_yield(&want_key));
+  free(record_yield(&start));
+  return is_start;
+}

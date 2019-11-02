@@ -214,6 +214,10 @@ int block_iter_next(block_iter *it, record rec) {
   return 0;
 }
 
+int block_iter_seek(block_iter *it, slice want) {
+  return block_reader_seek(it->br, it, want);
+}
+
 int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   restart_find_args args = {
       .key = want,

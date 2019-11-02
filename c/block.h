@@ -47,6 +47,7 @@ typedef struct {
 } block_iter;
 
 int block_iter_next(block_iter *it, record rec);
+int block_iter_seek(block_iter *it, slice want);
 
 int block_reader_init(block_reader* br, byte *block,  uint32 header_off , uint32 table_block_size);
 void block_reader_start(block_reader* br, block_iter* it);
