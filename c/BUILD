@@ -15,6 +15,7 @@ cc_library(
         "basics.h",
         "block.h",
         "constants.h",
+        "reader.h",
         "record.h",
         "slice.h",
         "tree.h",
@@ -28,13 +29,23 @@ cc_library(
 
 cc_library(
     name = "testlib",
-    srcs = ["test_framework.c"],
-    hdrs = ["test_framework.h"],
+    deps = [ ":reftable", ],
+    srcs = ["test_framework.c", "bytes.c",],
+    hdrs = ["test_framework.h", "bytes.h"],
 )
 
 cc_test(
     name = "record_test",
     srcs = ["record_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+)
+
+cc_test(
+    name = "reftable_test",
+    srcs = ["reftable_test.c"],
     deps = [
         ":reftable",
         ":testlib",

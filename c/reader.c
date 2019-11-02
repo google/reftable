@@ -5,28 +5,23 @@
 #include "block.h"
 #include "record.h"
 #include "tree.h"
-#include "writer.h"
+#include "reader.h"
 
-typedef struct {
-  bool present;
-  uint64 offset;
-  uint64 index_offset;
-} reader_offsets;
+uint64 block_source_size(block_source source) {
+  return source.ops->size(source.arg);
+}
 
-typedef struct {
-  block_source_ops *block_ops;
-  void *block_source_arg;
+int block_source_read_block(block_source source, byte **dest, uint64 off, uint32 size) {
+  return source.ops->read_block(source.arg, dest,  off,  size);
+}
 
-  uint64 size;
-  uint32 block_size;
-  uint64 min_update_index;
-  uint64 max_update_index;
-  int object_id_len;
+void block_source_return_block(block_source source, byte *block) {
+  source.ops->return_block(source.arg, block);
+}
 
-  reader_offsets ref_offsets;
-  reader_offsets obj_offsets;
-  reader_offsets log_offsets;
-} reader;
+void block_source_close(block_source source) {
+  source.ops->close(source.arg);
+}
 
 reader_offsets* reader_offsets_for(reader* r, byte typ) {
   switch (typ) {
@@ -49,18 +44,17 @@ int reader_get_block(reader *r, byte **dest, uint64 off, uint32 sz) {
     sz = r->size - off;
   }
 
-  return r->block_ops->read_block(r->block_source_arg, dest, off, sz);
+  return block_source_read_block(r->source, dest, off, sz);
 }
 
 void reader_return_block(reader *r, byte*p) {
-  r->block_ops->return_block(r->block_source_arg, p);
+  block_source_return_block(r->source, p);
 }
 
-int init_reader(reader *r, block_source_ops *ops, void *block_source_arg) {
+int init_reader(reader *r, block_source source) {
   memset(r, 0, sizeof(reader));
-  r->size = ops->size(block_source_arg) - FOOTER_SIZE;
-  r->block_source_arg = block_source_arg;
-  r->block_ops = ops;
+  r->size = block_source_size(source) - FOOTER_SIZE;
+  r->source = source;
 
   byte *footer = NULL;
   int n = reader_get_block(r, &footer, r->size, FOOTER_SIZE);
@@ -119,8 +113,8 @@ int init_reader(reader *r, block_source_ops *ops, void *block_source_arg) {
   r->obj_offsets.offset = obj_off;
   r->obj_offsets.index_offset = obj_index_off;
 
-  ops->return_block(block_source_arg, footer);
-  ops->return_block(block_source_arg, header);
+  block_source_return_block(r->source, footer);
+  block_source_return_block(r->source, header);
   return 0;
 }
 

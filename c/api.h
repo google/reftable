@@ -13,14 +13,20 @@ typedef struct record_t record;
 typedef struct {
   uint64 (*size)(void *source);
   int (*read_block)(void* source, byte **dest, uint64 off, uint32 size);
-  int (*return_block)(void *source, byte *block);
-  void (*close)(void *source);
+  void (*return_block)(void *source, byte *block);
+  void (*close)(void *source); 
 } block_source_ops;
+
 
 typedef struct {
   block_source_ops *ops;
+  void *arg;
 } block_source;
 
+uint64 block_source_size(block_source source);
+int block_source_read_block(block_source source, byte **dest, uint64 off, uint32 size);
+void block_source_return_block(block_source source, byte *block);
+void block_source_close(block_source source); 
 
 
 typedef struct {
@@ -101,5 +107,12 @@ typedef struct {
 
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
+
+typedef struct _writer writer;
+
+writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
+                   write_options *opts);
+int writer_add_ref(writer *w, ref_record *ref) ;
+int writer_close(writer *w);
 
 #endif
