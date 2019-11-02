@@ -127,15 +127,12 @@ int encode_key(bool *restart, slice dest, slice prev_key, slice key,
 
 byte ref_record_type() { return BLOCK_TYPE_REF; }
 
-void ref_record_key(const record *r, slice *dest) {
-  ref_record *rec = (ref_record *)r;
+void ref_record_key(const void *r, slice *dest) {
+  const ref_record *rec = (const ref_record *)r;
   slice_set_string(dest, rec->ref_name);
 }
 
-void ref_record_copy_from(record *rec, const record *src_rec) {
-  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
-  assert(rec->ops->type() == BLOCK_TYPE_REF);
-
+void ref_record_copy_from(void *rec, const void *src_rec) {
   ref_record *ref = (ref_record *)rec;
   ref_record *src = (ref_record *)src_rec;
 
@@ -159,7 +156,7 @@ void ref_record_copy_from(record *rec, const record *src_rec) {
   }
 }
 
-void ref_record_free(record *rec) {
+void ref_record_clear(void *rec) {
   ref_record *ref = (ref_record *)rec;
   free(ref->ref_name);
   free(ref->target);
@@ -168,8 +165,8 @@ void ref_record_free(record *rec) {
   memset(ref, 0, sizeof(ref_record));
 }
 
-byte ref_record_val_type(const record *rec) {
-  ref_record *r = (ref_record *)rec;
+byte ref_record_val_type(const void *rec) {
+  const ref_record *r = (const ref_record *)rec;
   if (r->value != NULL) {
     if (r->target_value != NULL) {
       return 2;
@@ -182,8 +179,8 @@ byte ref_record_val_type(const record *rec) {
   return 0;
 }
 
-int ref_record_encode(const record *rec, slice s) {
-  ref_record *r = (ref_record *)rec;
+int ref_record_encode(const void *rec, slice s) {
+  const ref_record *r = (const ref_record *)rec;
   slice start = s;
   int n = put_var_int(s, r->update_index);
   if (n < 0) {
@@ -229,7 +226,7 @@ int ref_record_encode(const record *rec, slice s) {
   return start.len - s.len;
 }
 
-int ref_record_decode(record *rec, slice key, byte val_type, slice in) {
+int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
   ref_record *r = (ref_record *)rec;
 
   slice start = in;
@@ -326,23 +323,20 @@ record_ops ref_record_ops = {
     .val_type = &ref_record_val_type,
     .encode = &ref_record_encode,
     .decode = &ref_record_decode,
-    .free = &ref_record_free,
+    .clear = &ref_record_clear,
 };
 
 byte obj_record_type() { return BLOCK_TYPE_OBJ; }
 
-void obj_record_key(const record *r, slice *dest) {
-  obj_record *rec = (obj_record *)r;
+void obj_record_key(const void *r, slice *dest) {
+  const obj_record *rec = (const obj_record *)r;
   slice_resize(dest, rec->hash_prefix_len);
   memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
 }
 
-void obj_record_copy_from(record *rec, const record *src_rec) {
-  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
-  assert(rec->ops->type() == BLOCK_TYPE_REF);
-
+void obj_record_copy_from(void *rec, const void *src_rec) {
   obj_record *ref = (obj_record *)rec;
-  obj_record *src = (obj_record *)src_rec;
+  const obj_record *src = (const obj_record *)src_rec;
 
   *ref = *src;
   ref->hash_prefix = malloc(ref->hash_prefix_len);
@@ -353,14 +347,14 @@ void obj_record_copy_from(record *rec, const record *src_rec) {
   memcpy(ref->offsets, src->offsets, olen);
 }
 
-void obj_record_free(record *rec) {
+void obj_record_clear(void *rec) {
   obj_record *ref = (obj_record *)rec;
   free(ref->hash_prefix);
   free(ref->offsets);
   memset(ref, 0, sizeof(obj_record));
 }
 
-byte obj_record_val_type(const record *rec) {
+byte obj_record_val_type(const void *rec) {
   obj_record *r = (obj_record *)rec;
   if (r->offset_len > 0 && r->offset_len < 8) {
     return r->offset_len;
@@ -368,7 +362,7 @@ byte obj_record_val_type(const record *rec) {
   return 0;
 }
 
-int obj_record_encode(const record *rec, slice s) {
+int obj_record_encode(const void *rec, slice s) {
   obj_record *r = (obj_record *)rec;
   slice start = s;
   if (r->offset_len == 0 || r->offset_len >= 8) {
@@ -403,7 +397,7 @@ int obj_record_encode(const record *rec, slice s) {
   return start.len - s.len;
 }
 
-int obj_record_decode(record *rec, slice key, byte val_type, slice in) {
+int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
   slice start = in;
   obj_record *r = (obj_record *)rec;
 
@@ -467,43 +461,42 @@ record_ops obj_record_ops = {
     .val_type = &obj_record_val_type,
     .encode = &obj_record_encode,
     .decode = &obj_record_decode,
-    .free = &obj_record_free,
+    .clear = &obj_record_clear,
 };
 
-record *new_record(byte typ) {
+record new_record(byte typ) {
+  record rec;
   switch (typ) {
   case BLOCK_TYPE_REF: {
     ref_record *r = calloc(1, sizeof(ref_record));
-    r->ops = &ref_record_ops;
-    return (record *)r;
+    record_from_ref(&rec, r);
+    return rec;
   }
 
   case BLOCK_TYPE_OBJ: {
     obj_record* r = calloc(1, sizeof(obj_record));
-    r->ops = &obj_record_ops;
-    return (record*)r;
+    record_from_obj(&rec, r);
+    return rec;
   }
 
   case BLOCK_TYPE_INDEX: {
     index_record* r = calloc(1, sizeof(index_record));
-    r->ops = &index_record_ops;
-    return (record*)r;
+    record_from_index(&rec, r);
+    return rec;
   }
   }
   abort();
+  return rec;
 }
 
 byte index_record_type() { return BLOCK_TYPE_INDEX; }
 
-void index_record_key(const record *r, slice *dest) {
+void index_record_key(const void *r, slice *dest) {
   index_record *rec = (index_record *)r;
   slice_copy(dest, rec->last_key);
 }
 
-void index_record_copy_from(record *rec, const record *src_rec) {
-  assert(src_rec->ops->type() == BLOCK_TYPE_REF);
-  assert(rec->ops->type() == BLOCK_TYPE_REF);
-
+void index_record_copy_from(void *rec, const void *src_rec) {
   index_record *dst = (index_record *)rec;
   index_record *src = (index_record *)src_rec;
 
@@ -511,15 +504,15 @@ void index_record_copy_from(record *rec, const record *src_rec) {
   dst->offset = src->offset;
 }
 
-void index_record_free(record *rec) {
+void index_record_clear(void *rec) {
   index_record *idx = (index_record *)rec;
   free(slice_yield(&idx->last_key));
 }
 
-byte index_record_val_type(const record *rec) { return 0; }
+byte index_record_val_type(const void *rec) { return 0; }
 
-int index_record_encode(const record *rec, slice out) {
-  index_record *r = (index_record *)rec;
+int index_record_encode(const void *rec, slice out) {
+  const index_record *r = (const index_record *)rec;
   slice start = out;
 
   int n = put_var_int(out, r->offset);
@@ -533,7 +526,7 @@ int index_record_encode(const record *rec, slice out) {
   return start.len - out.len;
 }
 
-int index_record_decode(record *rec, slice key, byte val_type, slice in) {
+int index_record_decode(void *rec, slice key, byte val_type, slice in) {
   slice start = in;
   index_record *r = (index_record *)rec;
 
@@ -556,5 +549,56 @@ record_ops index_record_ops = {
     .val_type = &index_record_val_type,
     .encode = &index_record_encode,
     .decode = &index_record_decode,
-    .free = &index_record_free,
+    .clear = &index_record_clear,
 };
+
+void record_key(record rec, slice *dest) {
+  rec.ops->key(rec.data, dest);
+}
+
+byte record_type(record rec) {
+  return rec.ops->type();
+}
+
+int record_encode(record rec, slice dest) {
+  return rec.ops->encode(rec.data, dest);
+}
+
+void record_copy_from(record rec, record src) {
+  assert(src.ops->type() == rec.ops->type());
+  
+  rec.ops->copy_from(rec.data, src.data);
+}
+
+byte record_val_type(record rec) {
+  return rec.ops->val_type(rec.data);
+}
+
+int record_decode(record rec, slice key, byte extra, slice src) {
+  return rec.ops->decode(rec.data, key, extra, src);
+}
+
+void record_clear(record rec) {
+  return rec.ops->clear(rec.data);
+}
+
+void record_from_ref(record *rec, ref_record *ref_rec) {
+  rec->data = ref_rec;
+  rec->ops = &ref_record_ops;
+}
+
+void record_from_obj(record*rec, obj_record *obj_rec) {
+  rec->data = obj_rec;
+  rec->ops = &obj_record_ops;
+}
+
+void record_from_index(record*rec, index_record *index_rec) {
+  rec->data = index_rec;
+  rec->ops = &index_record_ops;
+}
+
+void*record_yield(record *rec){
+  void *p = rec->data;
+  rec->data = NULL;
+  return p;
+}

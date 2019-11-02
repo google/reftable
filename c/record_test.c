@@ -85,21 +85,26 @@ void test_ref_record_roundtrip() {
       in.target = "target";
       break;
     }
-
     in.ref_name = "refs/heads/master";
+
+    record rec ={};
+    record_from_ref(&rec, &in);
+    
     byte buf[1024];
     slice key = {};
-    ref_record_key((record *)&in, &key);
+    record_key(rec, &key);
 
     slice dest = {
         .buf = buf,
         .len = sizeof(buf),
     };
-    int n = ref_record_encode((record *)&in, dest);
+    int n = record_encode(rec, dest);
     assert(n > 0);
 
     ref_record out = {};
-    n = ref_record_decode((record *)&out, key, i, dest);
+    record rec_out = {};
+    record_from_ref(&rec_out, &out);
+    n = record_decode(rec_out, key, i, dest);
     assert(n > 0);
 
     assert((out.value != NULL) == (in.value != NULL));
@@ -139,6 +144,17 @@ void test_key_roundtrip() {
   assert(rt_extra == extra);
 }
 
+void print_bytes(byte *p, int l) {
+  for (int i = 0; i < l;i++) {
+    byte c = *p;
+    if (c < 32) {
+      c = '.';
+    }
+    printf("%02x[%c] ", p[i], c);
+  }
+  printf("(%d)\n", l);
+}
+
 void test_obj_record_roundtrip() {
   byte testHash1[HASH_SIZE] = {};
   set_hash(testHash1, 1);
@@ -166,19 +182,21 @@ void test_obj_record_roundtrip() {
     printf("subtest %d\n", i);
     obj_record in = recs[i];
     byte buf[1024];
+    record rec = {};
+    record_from_obj(&rec, &in);
     slice key = {};
-    obj_record_key((record *)&in, &key);
-
+    record_key(rec, &key);
     slice dest = {
         .buf = buf,
         .len = sizeof(buf),
     };
-    int n = obj_record_encode((record *)&in, dest);
+    int n = record_encode(rec, dest);
     assert(n > 0);
-
-    byte extra = obj_record_val_type((record *)&in);
+    byte extra = record_val_type(rec);
     obj_record out = {};
-    n = obj_record_decode((record *)&out, key, extra, dest);
+    record rec_out = {};
+    record_from_obj(&rec_out, &out);
+    n = record_decode(rec_out, key, extra, dest);
     assert(n > 0);
 
     assert(in.hash_prefix_len == out.hash_prefix_len);
@@ -197,7 +215,9 @@ void test_index_record_roundtrip() {
   slice_set_string(&in.last_key, "refs/heads/master");
 
   slice key = {};
-  index_record_key((record *)&in, &key);
+  record rec = {};
+  record_from_index(&rec, &in);
+  record_key(rec, &key);
 
   assert(0 == slice_compare(key, in.last_key));
 
@@ -206,12 +226,14 @@ void test_index_record_roundtrip() {
       .buf = buf,
       .len = sizeof(buf),
   };
-  int n = index_record_encode((record *)&in, dest);
+  int n = record_encode(rec, dest);
   assert(n > 0);
 
-  byte extra = index_record_val_type((record *)&in);
+  byte extra = record_val_type(rec);
   index_record out = {};
-  n = index_record_decode((record *)&out, key, extra, dest);
+  record out_rec;
+  record_from_index(&out_rec, &out);
+  n = record_decode(out_rec, key, extra, dest);
   assert(n > 0);
 
   assert(in.offset == out.offset);

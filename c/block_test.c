@@ -48,17 +48,18 @@ void test_block_read_write() {
 
   block_writer bw = {};
   block_writer_init(&bw, BLOCK_TYPE_REF, block, block_size, header_off);
-  record *rec = new_record(BLOCK_TYPE_REF);
-  ref_record *ref = (ref_record *)rec;
+  ref_record ref = {};
+  record rec = {};
+  record_from_ref(&rec, &ref);
 
   for (int i = 0; i < N; i++) {
     char name[100];
     sprintf(name, "branch%02d", i);
 
-    ref->ref_name = name;
+    ref.ref_name = name;
     names[i] = strdup(name);
     int n = block_writer_add(&bw, rec);
-    ref->ref_name = NULL;
+    ref.ref_name = NULL;
     assert(n > 0);
   }
 
@@ -78,7 +79,7 @@ void test_block_read_write() {
     if (r > 0) {
       break;
     }
-    assert(0 == strcmp(names[j], ref->ref_name));
+    assert(0 == strcmp(names[j], ref.ref_name));
     j++;
   }
 
@@ -88,24 +89,23 @@ void test_block_read_write() {
     int n = block_reader_seek(&br, &it, want);
     assert(n == 0);
 
-    n = block_iter_next(&it, (record *)ref);
+    
+    n = block_iter_next(&it, rec);
     assert(n == 0);
 
-    assert(strcmp(names[i], ref->ref_name) == 0);
+    assert(strcmp(names[i], ref.ref_name) == 0);
 
     want.len--;
     n = block_reader_seek(&br, &it, want);
     assert(n == 0);
 
-    n = block_iter_next(&it, (record *)ref);
+    n = block_iter_next(&it, rec);
     assert(n == 0);
-    assert(strcmp(names[10 * (i / 10)], ref->ref_name) == 0);
+    assert(strcmp(names[10 * (i / 10)], ref.ref_name) == 0);
   }
 
   free(block);
   free(slice_yield(&want));
-  ref->ops->free(rec);
-  free(ref);
   for (int i = 0; i < N; i++) {
     free(names[i]);
   }

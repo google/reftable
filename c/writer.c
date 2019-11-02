@@ -155,10 +155,10 @@ void writer_index_hash(writer *w, slice hash) {
   free(slice_yield(&want.hash));
 }
 
-int writer_add_record(writer *w, record *rec) {
+int writer_add_record(writer *w, record rec) {
   int result = -1;
   slice key = {};
-  rec->ops->key(rec, &key);
+  record_key(rec, &key);
   if (slice_compare(w->last_key, key) >= 0) {
     goto exit;
   }
@@ -166,10 +166,10 @@ int writer_add_record(writer *w, record *rec) {
   slice_copy(&w->last_key, key);
 
   if (w->block_writer == NULL) {
-    writer_reinit_block_writer(w, rec->ops->type());
+    writer_reinit_block_writer(w, record_type(rec));
   }
 
-  assert(block_writer_type(w->block_writer) == rec->ops->type());
+  assert(block_writer_type(w->block_writer) == record_type(rec));
 
   if (block_writer_add(w->block_writer, rec) == 0) {
     result = 0;
@@ -201,8 +201,10 @@ int writer_add_ref(writer *w, ref_record *ref) {
     return -1;
   }
 
+  record rec ={};
+  record_from_ref(&rec, ref);
   ref->update_index -= w->opts.min_update_index;
-  int err = writer_add_record(w, (record *)ref);
+  int err = writer_add_record(w, rec);
   if (err < 0) {
     return err;
   }
@@ -251,7 +253,9 @@ int writer_finish_section(writer *w) {
     w->index = NULL;
     w->index_len = 0;
     for (int i = 0; i < idx_len; i++) {
-      if (block_writer_add(w->block_writer, (record *)(idx + i)) == 0) {
+      record rec = {};
+      record_from_index(&rec, idx +i);
+      if (block_writer_add(w->block_writer, rec) == 0) {
         continue;
       }
 
@@ -261,7 +265,7 @@ int writer_finish_section(writer *w) {
       }
       writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
-      err = block_writer_add(w->block_writer, (record *)(idx + i));
+      err = block_writer_add(w->block_writer, rec);
       assert(i == 0);
     }
 
@@ -315,14 +319,15 @@ void write_object_record(void *void_arg, void *key) {
     return;
   }
 
-  obj_record rec = {
-      .ops = &obj_record_ops,
+  obj_record obj_rec = {
       .hash_prefix = entry->hash.buf,
       .hash_prefix_len = arg->w->stats.object_id_len,
       .offsets = entry->offsets,
       .offset_len = entry->offset_len,
   };
-  int err = block_writer_add(arg->w->block_writer, (record *)&rec);
+  record rec = {};
+  record_from_obj(&rec, &obj_rec);
+  int err = block_writer_add(arg->w->block_writer, rec);
   if (err == 0) {
     return;
   }
@@ -334,16 +339,17 @@ void write_object_record(void *void_arg, void *key) {
   }
 
   writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
-  err = block_writer_add(arg->w->block_writer, (record *)&rec);
+  err = block_writer_add(arg->w->block_writer, rec);
   if (err == 0) {
     return;
   }
-  free(rec.offsets);
-  rec.offsets = NULL;
-  rec.offset_len = 0;
-
-  err = block_writer_add(arg->w->block_writer, (record *)&rec);
+  obj_rec.offset_len = 0;
+  err = block_writer_add(arg->w->block_writer, rec);
   assert(err == 0);
+
+  free(entry->offsets);
+  entry->offsets = NULL;
+  free(slice_yield(&entry->hash));
 }
 
 int writer_dump_object_index(writer *w) {

@@ -23,7 +23,7 @@ typedef struct _block_writer  block_writer;
 
 void block_writer_init(block_writer*bw, byte typ, byte *buf, uint32 block_size, uint32 header_off);
 byte block_writer_type(block_writer *bw);
-int block_writer_add(block_writer *w, record *rec);
+int block_writer_add(block_writer *w, record rec);
 int block_writer_finish(block_writer *w);
 void block_writer_reset(block_writer*bw);
 void block_writer_free(block_writer *bw);
@@ -46,7 +46,7 @@ typedef struct {
   uint32 next_off;
 } block_iter;
 
-int block_iter_next(block_iter *it, record* rec);
+int block_iter_next(block_iter *it, record rec);
 
 int block_reader_init(block_reader* br, byte *block,  uint32 header_off , uint32 table_block_size);
 void block_reader_start(block_reader* br, block_iter* it);

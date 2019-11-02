@@ -137,10 +137,10 @@ void table_iter_copy_from(table_iter *dst , table_iter *src) {
   *dst->bi = *src->bi;
 }
 
-int table_iter_next_in_block(table_iter* ti, record*rec) {
+int table_iter_next_in_block(table_iter* ti, record rec) {
   int res = block_iter_next(ti->bi, rec);
-  if (res == 0 && rec->ops->type() == BLOCK_TYPE_REF) {
-    ((ref_record*)rec)->update_index += ti->r->min_update_index;
+  if (res == 0 && record_type(rec) == BLOCK_TYPE_REF) {
+    ((ref_record*)rec.data)->update_index += ti->r->min_update_index;
   }
 
   return res;
@@ -225,7 +225,7 @@ int table_iter_next_block(table_iter *ti) {
   return 0;
 }
 
-int table_iter_next(table_iter* ti, record *rec) {
+int table_iter_next(table_iter* ti, record rec) {
   if (ti->bi == NULL) {
     return 1;
   }
@@ -272,3 +272,21 @@ int reader_start(reader* r, table_iter *ti, byte typ , bool index ) {
 
   return reader_table_iter_at(r, ti,  off, typ);
 }
+
+int reader_seek_internal(reader* r, iterator* it, record rec) {
+  // XXX
+  return 0;
+}
+
+int reader_seek(reader* r, iterator* it, record rec) {
+  byte typ = record_type(rec);
+  
+  reader_offsets *offs = reader_offsets_for(r, typ);
+  if (!offs->present) {
+    iterator_set_empty(it);
+    return 0;
+  }
+
+  return reader_seek_internal(r, it, rec);
+}
+

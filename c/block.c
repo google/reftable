@@ -21,7 +21,7 @@ void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32 block_size,
 
 byte block_writer_type(block_writer *bw) { return bw->buf[bw->header_off]; }
 
-int block_writer_add(block_writer *w, record *rec) {
+int block_writer_add(block_writer *w, record rec) {
   slice last = w->last_key;
   if (w->entries % w->restart_interval == 0) {
     last.len = 0;
@@ -36,15 +36,15 @@ int block_writer_add(block_writer *w, record *rec) {
 
   bool restart = false;
   slice key = {};
-  rec->ops->key(rec, &key);
-  int n = encode_key(&restart, out, last, key, rec->ops->val_type(rec));
+  record_key(rec, &key);
+  int n = encode_key(&restart, out, last, key, record_val_type(rec));
   if (n < 0) {
     goto err;
   }
   out.buf += n;
   out.len -= n;
 
-  n = rec->ops->encode(rec, out);
+  n = record_encode(rec, out);
   if (n < 0) {
     goto err;
   }
@@ -183,7 +183,7 @@ int key_less(int idx, void *args) {
 }
 
 // return < 0 for error, 0 for OK, > 0 for EOF.
-int block_iter_next(block_iter *it, record *rec) {
+int block_iter_next(block_iter *it, record rec) {
   if (it->next_off >= it->br->block_len) {
     return 1;
   }
@@ -202,7 +202,7 @@ int block_iter_next(block_iter *it, record *rec) {
 
   in.buf += n;
   in.len -= n;
-  n = rec->ops->decode(rec, key, extra, in);
+  n = record_decode(rec, key, extra, in);
   if (n < 0) {
     return -1;
   }
@@ -232,7 +232,7 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
     it->next_off = br->header_off + 4;
   }
 
-  record *rec = new_record(block_reader_type(br));
+  record rec = new_record(block_reader_type(br));
   slice key = {};
   int result = 0;
   while (true) {
@@ -243,7 +243,7 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
       goto exit;
     }
 
-    rec->ops->key(rec, &key);
+    record_key(rec, &key);
     if (ok > 0 || slice_compare(key, want) >= 0) {
       result = 0;
       goto exit;
@@ -253,8 +253,8 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   }
 
 exit:
-  rec->ops->free(rec);
-  free(rec);
+  record_clear(rec);
+  free(record_yield(&rec));
   return result;
 }
 

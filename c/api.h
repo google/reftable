@@ -21,20 +21,8 @@ typedef struct {
   block_source_ops *ops;
 } block_source;
 
-typedef struct  {
-  void (*key)(const record *rec, slice *dest);
-  byte (*type)();
-  void (*copy_from)(record *rec, const record *src);
-  byte (*val_type)(const record *rec);
-  int (*encode)(const record *rec, slice dest); 
-  int (*decode)(record *rec, slice key, byte extra, slice src);
-  void (*free)(record *rec);
-} record_ops;
 
-typedef struct record_t {
-  record_ops *ops;
-} record;
-   
+
 typedef struct {
   bool unpadded ;
   uint32 block_size;
@@ -45,7 +33,6 @@ typedef struct {
 } write_options;
 
 typedef struct {
-  record_ops *ops;
   char* ref_name;
   uint64 update_index;
   byte* value;
@@ -54,7 +41,6 @@ typedef struct {
 } ref_record;
 
 typedef struct {
-  record_ops *ops;
   char *ref_name;
   uint64 update_index;
   char *new_hash;
@@ -66,16 +52,33 @@ typedef struct {
   char *message;
 } log_record;
 
+typedef struct _record_ops record_ops;
 
+// value type
+typedef struct record_t {
+  void *data;
+  record_ops *ops;
+} record;
+
+void record_free(record rec);
+void record_from_ref(record*rec, ref_record *refrec);
+void record_from_log(record*rec, log_record *objrec);
 
 typedef struct {
-  int (*next)(record *rec);
+  int (*next)(void *iter_arg, record rec);
+  void (*close)(void *iter_arg);
 } iterator_ops;
 
 typedef struct {
-  iterator_ops ops;
+  iterator_ops *ops;
+  void *iter_arg;
 } iterator;
 
+// < 0: error, 0 = OK, > 0: end of iteration
+int iterator_next(iterator it, record rec);
+void iterator_close(iterator it);
+void iterator_set_empty(iterator *it);
+			
 typedef struct {
   int entries;
   int restarts;
@@ -95,9 +98,6 @@ typedef struct {
   // todo: log stats.
   int object_id_len;
 } stats;
-
-extern record_ops ref_record_ops;
-
 
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
