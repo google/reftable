@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "api.h"
 #include "block.h"
@@ -8,17 +9,14 @@
 int block_writer_register_restart(block_writer *w, int n, bool restart,
                                   slice key);
 
-block_writer *new_block_writer(byte typ, byte *buf, uint32 block_size,
-                               uint32 header_off) {
-  block_writer *bw = calloc(sizeof(block_writer), 1);
-
+void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32 block_size,
+		       uint32 header_off) {
   bw->buf = buf;
-  bw->header_off = header_off;
   bw->block_size = block_size;
+  bw->header_off = header_off;
   bw->buf[header_off] = typ;
   bw->next = header_off + 4;
   bw->restart_interval = 16;
-  return bw;
 }
 
 byte block_writer_type(block_writer *bw) { return bw->buf[bw->header_off]; }
@@ -109,31 +107,21 @@ int block_writer_finish(block_writer *w) {
   return w->next;
 }
 
-struct _block_reader {
-  uint32 header_off;
-  byte *block;
-  uint32 block_len;
-  byte *restart_bytes;
-  uint32 full_block_size;
-  uint16 restart_count;
-};
-
 byte block_reader_type(block_reader *r) { return r->block[r->header_off]; }
 
-// newBlockWriter prepares for reading a block.
-block_reader *new_block_reader(byte *block, uint32 header_off,
-                               uint32 table_block_size) {
+int block_reader_init(block_reader *br, byte *block, uint32 header_off,
+		      uint32 table_block_size) {
   uint32 full_block_size = table_block_size;
   byte typ = block[header_off];
 
   if (!is_block_type(typ)) {
-    return NULL;
+    return FORMAT_ERROR;
   }
 
   uint32 sz = get_u24(block + header_off + 1);
 
   if (typ == BLOCK_TYPE_LOG) {
-    assert(0);
+    abort();
 
     /* TODO: decompress log block, record how many bytes consumed. */
   } else if (full_block_size == 0) {
@@ -145,7 +133,6 @@ block_reader *new_block_reader(byte *block, uint32 header_off,
 
   byte *restart_bytes = block + restart_start;
 
-  block_reader *br = calloc(sizeof(block_reader), 1);
   br->block = block;
   br->block_len = restart_start;
   br->full_block_size = full_block_size;
@@ -153,18 +140,17 @@ block_reader *new_block_reader(byte *block, uint32 header_off,
   br->restart_count = restart_count;
   br->restart_bytes = restart_bytes;
 
-  return br;
+  return 0;
 }
 
 uint32 block_reader_restart_offset(block_reader *br, int i) {
   return get_u24(br->restart_bytes + 3 * i);
 }
 
-int block_reader_start(block_reader *br, block_iter *it) {
+void block_reader_start(block_reader *br, block_iter *it) {
   it->br = br;
   slice_resize(&it->last_key, 0);
   it->next_off = br->header_off + 4;
-  return 0;
 }
 
 typedef struct {
@@ -272,9 +258,13 @@ exit:
   return result;
 }
 
+void block_writer_reset(block_writer *bw) {
+  bw->restart_len = 0;
+  bw->last_key.len = 0;
+}
+
 void block_writer_free(block_writer *bw) {
   free(bw->restarts);
   free(slice_yield(&bw->last_key));
-  free(bw);
   // the block is not owned.
 }

@@ -18,6 +18,7 @@ int encode_key(bool *restart, slice dest, slice prev_key, slice key, byte extra)
 int decode_key(slice* key, byte *extra, slice last_key, slice in);
 
 typedef struct {
+  record_ops *ops;
   slice last_key;
   uint64 offset;
 } index_record;

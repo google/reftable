@@ -46,8 +46,8 @@ void test_block_read_write() {
   const int block_size = 1024;
   byte *block = calloc(block_size, 1);
 
-  block_writer *bw =
-      new_block_writer(BLOCK_TYPE_REF, block, block_size, header_off);
+  block_writer bw = {};
+  block_writer_init(&bw, BLOCK_TYPE_REF, block, block_size, header_off);
   record *rec = new_record(BLOCK_TYPE_REF);
   ref_record *ref = (ref_record *)rec;
 
@@ -57,18 +57,19 @@ void test_block_read_write() {
 
     ref->ref_name = name;
     names[i] = strdup(name);
-    int n = block_writer_add(bw, rec);
+    int n = block_writer_add(&bw, rec);
     ref->ref_name = NULL;
     assert(n > 0);
   }
 
-  int n = block_writer_finish(bw);
+  int n = block_writer_finish(&bw);
   assert(n > 0);
 
-  block_reader *br = new_block_reader(block, header_off, block_size);
+  block_reader br = {};
+  block_reader_init(&br, block, header_off, block_size);
 
   block_iter it = {};
-  block_reader_start(br, &it);
+  block_reader_start(&br, &it);
 
   int j = 0;
   while (true) {
@@ -84,7 +85,7 @@ void test_block_read_write() {
   slice want = {};
   for (int i = 0; i < N; i++) {
     slice_set_string(&want, names[i]);
-    int n = block_reader_seek(br, &it, want);
+    int n = block_reader_seek(&br, &it, want);
     assert(n == 0);
 
     n = block_iter_next(&it, (record *)ref);
@@ -93,7 +94,7 @@ void test_block_read_write() {
     assert(strcmp(names[i], ref->ref_name) == 0);
 
     want.len--;
-    n = block_reader_seek(br, &it, want);
+    n = block_reader_seek(&br, &it, want);
     assert(n == 0);
 
     n = block_iter_next(&it, (record *)ref);

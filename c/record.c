@@ -477,8 +477,20 @@ record *new_record(byte typ) {
     r->ops = &ref_record_ops;
     return (record *)r;
   }
+
+  case BLOCK_TYPE_OBJ: {
+    obj_record* r = calloc(1, sizeof(obj_record));
+    r->ops = &obj_record_ops;
+    return (record*)r;
   }
-  assert(0);
+
+  case BLOCK_TYPE_INDEX: {
+    index_record* r = calloc(1, sizeof(index_record));
+    r->ops = &index_record_ops;
+    return (record*)r;
+  }
+  }
+  abort();
 }
 
 byte index_record_type() { return BLOCK_TYPE_INDEX; }

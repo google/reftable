@@ -20,6 +20,7 @@ typedef struct _writer {
 
   byte *block;
   block_writer *block_writer;
+  block_writer block_writer_data;
   index_record *index;
   int index_len;
   int index_cap;
@@ -76,16 +77,15 @@ int writer_write_header(writer *w, byte *dest) {
   return 24;
 }
 
-block_writer *writer_new_block_writer(writer *w, byte typ) {
+void writer_reinit_block_writer(writer *w, byte typ) {
   int block_start = 0;
   if (w->next == 0) {
     block_start = writer_write_header(w, w->block);
   }
 
-  block_writer *bw =
-      new_block_writer(typ, w->block, w->opts.block_size, block_start);
-  bw->restart_interval = w->opts.restart_interval;
-  return bw;
+  block_writer_init(&w->block_writer_data, typ, w->block, w->opts.block_size, block_start);
+  w->block_writer = &w->block_writer_data;
+  w->block_writer->restart_interval = w->opts.restart_interval;
 }
 
 writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
@@ -99,7 +99,7 @@ writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
   wp->write = writer_func;
   wp->write_arg = writer_arg;
   wp->opts = *opts;
-  wp->block_writer = writer_new_block_writer(wp, BLOCK_TYPE_REF);
+  writer_reinit_block_writer(wp, BLOCK_TYPE_REF);
 
   return wp;
 }
@@ -166,7 +166,7 @@ int writer_add_record(writer *w, record *rec) {
   slice_copy(&w->last_key, key);
 
   if (w->block_writer == NULL) {
-    w->block_writer = writer_new_block_writer(w, rec->ops->type());
+    writer_reinit_block_writer(w, rec->ops->type());
   }
 
   assert(block_writer_type(w->block_writer) == rec->ops->type());
@@ -244,7 +244,7 @@ int writer_finish_section(writer *w) {
   while (w->index_len > threshold) {
     max_level++;
     index_start = w->next;
-    w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_INDEX);
+    writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
     index_record *idx = w->index;
     int idx_len = w->index_len;
 
@@ -259,7 +259,7 @@ int writer_finish_section(writer *w) {
       if (err < 0) {
         return err;
       }
-      w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_INDEX);
+      writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
       err = block_writer_add(w->block_writer, (record *)(idx + i));
       assert(i == 0);
@@ -333,7 +333,7 @@ void write_object_record(void *void_arg, void *key) {
     return;
   }
 
-  arg->w->block_writer = writer_new_block_writer(arg->w, BLOCK_TYPE_OBJ);
+  writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
   err = block_writer_add(arg->w->block_writer, (record *)&rec);
   if (err == 0) {
     return;
@@ -351,7 +351,7 @@ int writer_dump_object_index(writer *w) {
   infix_walk(w->obj_index_tree, &update_common, &common);
   w->stats.object_id_len = common.max + 1;
 
-  w->block_writer = writer_new_block_writer(w, BLOCK_TYPE_OBJ);
+  writer_reinit_block_writer(w, BLOCK_TYPE_OBJ);
 
   write_record_arg closure = {.w = w};
   infix_walk(w->obj_index_tree, &write_object_record, &closure);
@@ -378,7 +378,6 @@ int writer_finish_public_section(writer *w) {
     }
   }
 
-  block_writer_free(w->block_writer);
   w->block_writer = NULL;
   return 0;
 }
@@ -476,7 +475,7 @@ int writer_flush_block(writer *w) {
   };
   slice_copy(&ir.last_key, w->block_writer->last_key);
   w->index[w->index_len] = ir;
-  block_writer_free(w->block_writer);
+  block_writer_reset(&w->block_writer_data);
   w->block_writer = NULL;
   return 0;
 }
