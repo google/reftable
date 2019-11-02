@@ -153,13 +153,6 @@ func NewReader(src BlockSource) (*Reader, error) {
 	return r, nil
 }
 
-type emptyIterator struct {
-}
-
-func (e *emptyIterator) Next(Record) (bool, error) {
-	return false, nil
-}
-
 // tableIter iterates over a section in the file. It is a value type,
 // which can be copied with copyFrom.
 type tableIter struct {

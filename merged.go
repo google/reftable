@@ -15,7 +15,6 @@
 package reftable
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"sort"
@@ -133,47 +132,6 @@ func (m *Merged) MaxUpdateIndex() uint64 {
 // MinUpdateIndex implements the Table interface.
 func (m *Merged) MinUpdateIndex() uint64 {
 	return m.stack[0].MinUpdateIndex()
-}
-
-// filteringRefIterator applies filtering for `oid` to the block
-type filteringRefIterator struct {
-	// The object ID to filter for
-	oid []byte
-
-	// doubleCheck if set, will cause the refs to be checked
-	// against the table in `tab`.
-	doubleCheck bool
-	tab         Table
-
-	// mutable
-	it Iterator
-}
-
-// Next implements the Iterator interface.
-func (it *filteringRefIterator) Next(rec Record) (bool, error) {
-	ref := rec.(*RefRecord)
-	for {
-		ok, err := it.it.Next(ref)
-		if !ok || err != nil {
-			return false, err
-		}
-
-		if it.doubleCheck {
-			it, err := it.tab.Seek(ref)
-			if err != nil {
-				return false, err
-			}
-
-			ok, err := it.Next(ref)
-			if !ok || err != nil {
-				return false, err
-			}
-		}
-
-		if bytes.Compare(ref.Value, it.oid) == 0 || bytes.Compare(ref.TargetValue, it.oid) == 0 {
-			return true, err
-		}
-	}
 }
 
 // RefsFor returns the refs that point to the given oid
