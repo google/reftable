@@ -159,13 +159,8 @@ type tableIter struct {
 	r        *Reader
 	typ      byte
 	blockOff uint64
-	bi       *blockIter
-}
-
-func (i *tableIter) copyFrom(src *tableIter) {
-	bi := *src.bi
-	*i = *src
-	i.bi = &bi
+	bi       blockIter
+	finished bool
 }
 
 // nextInBlock advances the block iterator, or returns false we are
@@ -183,7 +178,7 @@ func (i *tableIter) nextInBlock(rec Record) (bool, error) {
 
 // Next implements the Iterator interface
 func (i *tableIter) Next(rec Record) (bool, error) {
-	if i.bi == nil {
+	if i.finished {
 		return false, nil
 	}
 
@@ -264,11 +259,10 @@ func (i *tableIter) nextBlock() (bool, error) {
 		return false, err
 	}
 	if br == nil {
-		i.bi = nil
+		i.finished = true
 		return false, nil
 	}
-	// XXX return block
-	i.bi = br.start()
+	br.start(&i.bi)
 	i.blockOff = nextBlockOff
 	return true, nil
 }
@@ -295,12 +289,13 @@ func (r *Reader) tabIterAt(off uint64, wantTyp byte) (*tableIter, error) {
 		return nil, err
 	}
 
-	return &tableIter{
+	ti := &tableIter{
 		r:        r,
 		typ:      br.getType(),
 		blockOff: off,
-		bi:       br.start(),
-	}, nil
+	}
+	br.start(&ti.bi)
+	return ti, nil
 }
 
 // Seek returns an iterator pointed to just before the key specified
@@ -393,7 +388,7 @@ func (r *Reader) seekLinear(tabIter *tableIter, want Record) (bool, error) {
 	// skip blocks
 	var last tableIter
 	for {
-		last.copyFrom(tabIter)
+		last = *tabIter
 
 		ok, err := tabIter.nextBlock()
 		if err != nil {
@@ -417,7 +412,7 @@ func (r *Reader) seekLinear(tabIter *tableIter, want Record) (bool, error) {
 	}
 
 	// within the block, skip the right key
-	tabIter.copyFrom(&last)
+	*tabIter = last
 	var err error
 	err = tabIter.bi.seek(wantKey)
 	if err != nil {
@@ -445,13 +440,14 @@ type indexedTableRefIter struct {
 	// mutable
 
 	// block offsets of remaining refblocks to look into
-	offsets []uint64
-	cur     *blockIter
+	offsets  []uint64
+	cur      blockIter
+	finished bool
 }
 
 func (i *indexedTableRefIter) nextBlock() error {
-	i.cur = nil
 	if len(i.offsets) == 0 {
+		i.finished = true
 		return nil
 	}
 	nextOff := i.offsets[0]
@@ -465,7 +461,7 @@ func (i *indexedTableRefIter) nextBlock() error {
 		return fmt.Errorf("reftable: indexed block does not exist")
 	}
 
-	i.cur = br.start()
+	br.start(&i.cur)
 	return nil
 }
 
@@ -481,7 +477,7 @@ func (i *indexedTableRefIter) Next(rec Record) (bool, error) {
 			if err := i.nextBlock(); err != nil {
 				return false, err
 			}
-			if i.cur == nil {
+			if i.finished {
 				return false, nil
 			}
 		}

@@ -249,8 +249,10 @@ func TestBlockPadding(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newBlockReader: %v", err)
 	}
-	bi := br.start()
-	res, err := readIter(bi.br.getType(), bi)
+
+	var bi blockIter
+	br.start(&bi)
+	res, err := readIter(bi.br.getType(), &bi)
 	if err != nil {
 		t.Fatalf("readBlockIter: %v", err)
 	}

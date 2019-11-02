@@ -257,8 +257,8 @@ func (bi *blockIter) seek(key string) error {
 }
 
 // start returns an iterator positioned at the start of the block.
-func (br *blockReader) start() *blockIter {
-	return &blockIter{
+func (br *blockReader) start(bi *blockIter) {
+	*bi = blockIter{
 		br:         br,
 		nextOffset: uint32(br.headerOff + 4),
 	}
