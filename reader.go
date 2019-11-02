@@ -240,7 +240,7 @@ func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err 
 		return nil, err
 	}
 
-	if blockTyp != typ {
+	if typ != blockTypeAny && blockTyp != typ {
 		return nil, nil
 	}
 
@@ -263,7 +263,7 @@ func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err 
 	return newBlockReader(next, headerOff, r.Header.BlockSize)
 }
 
-// nextBlock moves to the next block, or returns false fi there is none.f
+// nextBlock moves to the next block, or returns false fi there is none.
 func (i *tableIter) nextBlock() (bool, error) {
 	nextBlockOff := i.blockOff + uint64(i.bi.br.fullBlockSize)
 	br, err := i.r.newBlockReader(nextBlockOff, i.typ)
@@ -288,37 +288,23 @@ func (r *Reader) start(typ byte, index bool) (*tableIter, error) {
 	if index {
 		off = r.offsets[typ].IndexOffset
 		typ = BlockTypeIndex
-
 		if off == 0 {
 			return nil, nil
 		}
 	}
-	return r.tabIterAt(off)
+	return r.tabIterAt(off, typ)
 }
 
 // tabIterAt returns a tableIter for the data at given offset.
-func (r *Reader) tabIterAt(off uint64) (*tableIter, error) {
-	var headerOffset uint32
-	if off == 0 {
-		headerOffset = headerSize
-	}
-	typ, blockSize, err := r.blockSize(off)
-	if err != nil {
-		return nil, err
-	}
-	block, err := r.getBlock(off, blockSize)
-	if err != nil {
-		return nil, err
-	}
-
-	br, err := newBlockReader(block, headerOffset, r.Header.BlockSize)
-	if err != nil {
+func (r *Reader) tabIterAt(off uint64, wantTyp byte) (*tableIter, error) {
+	br, err := r.newBlockReader(off, wantTyp)
+	if err != nil || br == nil {
 		return nil, err
 	}
 
 	return &tableIter{
 		r:        r,
-		typ:      typ,
+		typ:      br.getType(),
 		blockOff: off,
 		bi:       br.start(),
 	}, nil
@@ -384,7 +370,7 @@ func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
 			return nil, err
 		}
 
-		tabIter, err := r.tabIterAt(rec.Offset)
+		tabIter, err := r.tabIterAt(rec.Offset, blockTypeAny)
 		if err != nil {
 			return nil, err
 		}

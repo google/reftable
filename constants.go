@@ -25,5 +25,6 @@ const BlockTypeLog = 'g'
 const BlockTypeIndex = 'i'
 const BlockTypeRef = 'r'
 const BlockTypeObj = 'o'
+const blockTypeAny = 0
 
 const maxRestarts = (1 << 16) - 1
