@@ -57,7 +57,7 @@ int block_writer_add(block_writer *w, record rec) {
   }
 
   free(slice_yield(&key));
-  return 1;
+  return 0;
 
 err:
   free(slice_yield(&key));

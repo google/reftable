@@ -89,7 +89,7 @@ void test_ref_record_roundtrip() {
 
     record rec ={};
     record_from_ref(&rec, &in);
-    
+    assert(record_val_type(rec) == i);
     byte buf[1024];
     slice key = {};
     record_key(rec, &key);
@@ -104,8 +104,8 @@ void test_ref_record_roundtrip() {
     ref_record out = {};
     record rec_out = {};
     record_from_ref(&rec_out, &out);
-    n = record_decode(rec_out, key, i, dest);
-    assert(n > 0);
+    int m = record_decode(rec_out, key, i, dest);
+    assert(n == m);
 
     assert((out.value != NULL) == (in.value != NULL));
     assert((out.target_value != NULL) == (in.target_value != NULL));
@@ -196,8 +196,8 @@ void test_obj_record_roundtrip() {
     obj_record out = {};
     record rec_out = {};
     record_from_obj(&rec_out, &out);
-    n = record_decode(rec_out, key, extra, dest);
-    assert(n > 0);
+    int m = record_decode(rec_out, key, extra, dest);
+    assert(n == m);
 
     assert(in.hash_prefix_len == out.hash_prefix_len);
     assert(in.offset_len == out.offset_len);
@@ -233,8 +233,8 @@ void test_index_record_roundtrip() {
   index_record out = {};
   record out_rec;
   record_from_index(&out_rec, &out);
-  n = record_decode(out_rec, key, extra, dest);
-  assert(n > 0);
+  int m = record_decode(out_rec, key, extra, dest);
+  assert(m == n);
 
   assert(in.offset == out.offset);
 

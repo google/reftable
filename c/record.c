@@ -272,6 +272,9 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
     r->target = slice_to_string(dest);
     free(slice_yield(&dest));
   } break;
+  default:
+    abort();
+    break;
   }
 
   return start.len - in.len;
@@ -299,7 +302,7 @@ int decode_key(slice *key, byte *extra, slice last_key, slice in) {
   in.buf += n;
   in.len -= n;
 
-  *extra = (byte)(suffix_len & 0xf);
+  *extra = (byte)(suffix_len & 0x7);
   suffix_len >>= 3;
 
   if (in.len < suffix_len) {

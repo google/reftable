@@ -30,8 +30,8 @@ cc_library(
 cc_library(
     name = "testlib",
     deps = [ ":reftable", ],
-    srcs = ["test_framework.c", "bytes.c",],
-    hdrs = ["test_framework.h", "bytes.h"],
+    srcs = ["test_framework.c", ],
+    hdrs = ["test_framework.h", ],
 )
 
 cc_test(

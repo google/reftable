@@ -10,7 +10,7 @@
 
 typedef struct record_t record;
 
-typedef struct {
+typedef struct  {
   uint64 (*size)(void *source);
   int (*read_block)(void* source, byte **dest, uint64 off, uint32 size);
   void (*return_block)(void *source, byte *block);
@@ -18,10 +18,12 @@ typedef struct {
 } block_source_ops;
 
 
-typedef struct {
+struct _block_source {
   block_source_ops *ops;
   void *arg;
-} block_source;
+};
+
+typedef struct _block_source block_source;
 
 uint64 block_source_size(block_source source);
 int block_source_read_block(block_source source, byte **dest, uint64 off, uint32 size);

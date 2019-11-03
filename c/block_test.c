@@ -56,11 +56,15 @@ void test_block_read_write() {
     char name[100];
     sprintf(name, "branch%02d", i);
 
+    byte hash[20];
+    memset(hash, i, sizeof(hash));
+      
     ref.ref_name = name;
+    ref.value = hash;
     names[i] = strdup(name);
     int n = block_writer_add(&bw, rec);
     ref.ref_name = NULL;
-    assert(n > 0);
+    assert(n == 0);
   }
 
   int n = block_writer_finish(&bw);

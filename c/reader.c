@@ -57,19 +57,29 @@ int init_reader(reader *r, block_source source) {
   r->source = source;
 
   byte *footer = NULL;
-  int n = reader_get_block(r, &footer, r->size, FOOTER_SIZE);
-  if (n != FOOTER_SIZE) {
-    return IO_ERROR;
+  int err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
+  if (err != FOOTER_SIZE) {
+    err = IO_ERROR;
+    goto exit;
   }
 
+  byte *header = NULL;
+  err = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
+  if (err != HEADER_SIZE + 1) {
+    err = IO_ERROR;
+    goto exit;
+  }
+  
   byte *f = footer;
   if (memcmp(f, "REFT", 4)) {
-    return FORMAT_ERROR;
+    err= FORMAT_ERROR;
+    goto exit;
   }
   f += 4;
   byte version = *f++;
   if (version != 1) {
-    return FORMAT_ERROR;
+    err= FORMAT_ERROR;
+    goto exit;
   }
   r->block_size = get_u24(f);
 
@@ -94,12 +104,6 @@ int init_reader(reader *r, block_source source) {
   uint64 log_index_off = get_u64(f);
   f += 8;
 
-  byte *header;
-  n = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
-  if (n != HEADER_SIZE) {
-    return IO_ERROR;
-  }
-
   byte first_block_typ = header[HEADER_SIZE];
   r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
   r->ref_offsets.offset = 0;
@@ -113,9 +117,11 @@ int init_reader(reader *r, block_source source) {
   r->obj_offsets.offset = obj_off;
   r->obj_offsets.index_offset = obj_index_off;
 
+  err = 0;
+ exit:
   block_source_return_block(r->source, footer);
   block_source_return_block(r->source, header);
-  return 0;
+  return err;
 }
 
 typedef struct {
@@ -152,23 +158,22 @@ int32 reader_block_size(reader *r, byte *typ, uint64 off) {
     off = 24;
   }
 
-  byte *head;
+  byte *head = NULL;
   int err = reader_get_block(r, &head, off, 4);
     if (err < 0) {
       return err;
     }
-  int32 result;
+    int32 result = 0;
   if (!is_block_type(head[0])) {
     result = 0;
     goto exit;
   }
-
+  *typ = head[0];
   result = get_u24(head + 1);
  exit:
   reader_return_block(r, head);
   return result;
 }
-
 
 int reader_init_block_reader(reader* r, block_reader* br, uint64 next_off, byte typ) {
   if (next_off > r->size){
@@ -195,24 +200,26 @@ int reader_init_block_reader(reader* r, block_reader* br, uint64 next_off, byte 
     header_off = HEADER_SIZE;
   }
 
-  block_reader_init(br, block, header_off, r->block_size);
-  return 0;
+  return block_reader_init(br, block, header_off, r->block_size);
 }
 
-int table_iter_next_block(table_iter *ti) {
-  uint64 next_block_off = ti->block_off + ti->bi.br->full_block_size;
+int table_iter_next_block(table_iter *dest, table_iter *src) {
+  uint64 next_block_off = src->block_off + src->bi.br->full_block_size;
 
   block_reader br = {};
-  int err = reader_init_block_reader(ti->r, &br, next_block_off, ti->typ);
+  int err = reader_init_block_reader(src->r, &br, next_block_off, src->typ);
   if (err != 0) {
     return err;
   }
 
   block_reader* brp = malloc(sizeof(block_reader));
   *brp = br;
-  table_iter_block_done(ti);
-  block_reader_start(brp, &ti->bi);
-  ti->block_off = next_block_off;
+
+  dest->r = src->r;
+  dest->typ = src->typ;
+  dest->block_off = next_block_off;
+  dest->finished = false;
+  block_reader_start(brp, &dest->bi);
   return 0;
 }
 
@@ -226,11 +233,16 @@ int table_iter_next(table_iter* ti, record rec) {
     return err;
   }
 
-  err = table_iter_next_block(ti);
-  if (err < 0) {
+  table_iter next;
+  err = table_iter_next_block(&next, ti);
+  if (err != 0) {
+    ti->finished = true;
+  }
+  table_iter_block_done(ti);
+  if (err != 0) {
     return err;
   }
-
+  *ti = next;
   return block_iter_next(&ti->bi, rec);
 }
 
@@ -255,7 +267,7 @@ void iterator_from_table_iter(iterator*it, table_iter*ti) {
 }
   
 int reader_table_iter_at(reader *r, table_iter *ti,  uint64 off, byte typ) {
-  block_reader br;
+  block_reader br = {};
   int err = reader_init_block_reader(r, &br, off, typ);
   if (err != 0) {
     return err;
@@ -291,10 +303,9 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
   record_key(rec, &want_key);
   int err = -1;
   
-  table_iter last = {}; 
+  table_iter next = {}; 
   while (true) {
-    last = *ti;
-    err = table_iter_next_block(ti);
+    err = table_iter_next_block(&next, ti);
     if (err < 0) {
       goto exit;
     }
@@ -308,18 +319,20 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
       goto exit;
     }
 
-    if (err == 0) {
+    if (err > 0) {
       abort(); // read from fresh block failed.
     }
 
     record_key(rec, &got_key);
-
     if (slice_compare(got_key, want_key) > 0) {
+      table_iter_block_done(&next);
       break;
     }
+
+    table_iter_block_done(ti);
+    *ti = next;
   }
 
-  *ti = last;
   err = block_iter_seek(&ti->bi, want_key);
   if (err < 0) {
     goto exit;
@@ -339,13 +352,15 @@ int reader_seek_indexed(reader* r, iterator* it, record rec) {
 }
 
 int reader_seek_internal(reader* r, iterator* it, record rec) {
+  // todo skip linear/indexed if rec is start.
+  
   reader_offsets *offs = reader_offsets_for(r, record_type(rec));
   uint64 idx = offs->index_offset;
   if (false && idx > 0) {
     return reader_seek_indexed(r, it, rec);
   }
 
-  table_iter ti;
+  table_iter ti = {};
   int err = reader_start(r, &ti, record_type(rec), false);
   if (err < 0) {
     return err;

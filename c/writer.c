@@ -8,29 +8,6 @@
 #include "tree.h"
 #include "writer.h"
 
-typedef struct _writer {
-  int (*write)(void *, byte *, int);
-  void *write_arg;
-  int pending_padding;
-
-  slice last_key;
-
-  uint64 next;
-  write_options opts;
-
-  byte *block;
-  block_writer *block_writer;
-  block_writer block_writer_data;
-  index_record *index;
-  int index_len;
-  int index_cap;
-
-  // tree for use with tsearch
-  tree_node *obj_index_tree;
-
-  stats stats;
-} writer;
-
 block_stats *writer_block_stats(writer *w, byte typ) {
   switch (typ) {
   case 'r':
@@ -71,6 +48,7 @@ void options_set_defaults(write_options *opts) {
 
 int writer_write_header(writer *w, byte *dest) {
   strcpy((char *)dest, "REFT");
+  dest[4] = 1; // version
   put_u24(dest + 5, w->opts.block_size);
   put_u64(dest + 8, w->opts.min_update_index);
   put_u64(dest + 16, w->opts.max_update_index);
@@ -164,12 +142,12 @@ int writer_add_record(writer *w, record rec) {
   }
 
   slice_copy(&w->last_key, key);
-
+  byte typ  = record_type(rec);
   if (w->block_writer == NULL) {
-    writer_reinit_block_writer(w, record_type(rec));
+    writer_reinit_block_writer(w, typ);
   }
 
-  assert(block_writer_type(w->block_writer) == record_type(rec));
+  assert(block_writer_type(w->block_writer) == typ);
 
   if (block_writer_add(w->block_writer, rec) == 0) {
     result = 0;
@@ -182,6 +160,7 @@ int writer_add_record(writer *w, record rec) {
     goto exit;
   }
 
+  writer_reinit_block_writer(w, typ);
   err = block_writer_add(w->block_writer, rec);
   if (err < 0) {
     // XXX error code.
@@ -425,7 +404,7 @@ int writer_close(writer *w) {
   return 0;
 }
 
-const int debug = 0;
+const int debug = 1;
 
 int writer_flush_block(writer *w) {
   if (w->block_writer == NULL) {
@@ -458,7 +437,7 @@ int writer_flush_block(writer *w) {
   w->stats.blocks++;
 
   if (debug) {
-    fprintf(stderr, "block %c off %ld sz %d (%d)", typ, w->next, raw_bytes,
+    fprintf(stderr, "block %c off %ld sz %d (%d)\n", typ, w->next, raw_bytes,
             get_u24(w->block + w->block_writer->header_off + 1));
   }
 
@@ -481,6 +460,7 @@ int writer_flush_block(writer *w) {
   };
   slice_copy(&ir.last_key, w->block_writer->last_key);
   w->index[w->index_len] = ir;
+  w->next += n;  
   block_writer_reset(&w->block_writer_data);
   w->block_writer = NULL;
   return 0;
