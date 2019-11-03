@@ -35,7 +35,7 @@ typedef struct {
   uint32 block_size;
   uint32 min_update_index;
   uint32 max_update_index;
-  bool index_objects;
+  bool skip_index_objects;
   int restart_interval;
 } write_options;
 

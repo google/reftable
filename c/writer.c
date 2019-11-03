@@ -106,7 +106,7 @@ int obj_index_tree_node_compare(const void *a, const void *b) {
 }
 
 void writer_index_hash(writer *w, slice hash) {
-  if (!w->opts.index_objects) {
+  if (w->opts.skip_index_objects) {
     return;
   }
 
@@ -117,14 +117,16 @@ void writer_index_hash(writer *w, slice hash) {
 
   tree_node *node =
       tree_search(&want, &w->obj_index_tree, &obj_index_tree_node_compare, 0);
+  obj_index_tree_node *key = NULL;
   if (node == NULL) {
-    obj_index_tree_node *tree_key = calloc(sizeof(obj_index_tree_node), 1);
-    slice_copy(&tree_key->hash, hash);
-    tree_search((void *)tree_key, &w->obj_index_tree,
+    key = calloc(sizeof(obj_index_tree_node), 1);
+    slice_copy(&key->hash, hash);
+    tree_search((void *)key, &w->obj_index_tree,
                 &obj_index_tree_node_compare, 1);
+  } else {
+    key = node->key;
   }
 
-  obj_index_tree_node *key = node->key;
 
   if (key->offset_len > 0 && key->offsets[key->offset_len - 1] == off) {
     return;
@@ -132,7 +134,7 @@ void writer_index_hash(writer *w, slice hash) {
 
   if (key->offset_len == key->offset_cap) {
     key->offset_cap = 2 * key->offset_cap + 1;
-    key->offsets = realloc(key->offsets, key->offset_cap);
+    key->offsets = realloc(key->offsets, sizeof(uint64) * key->offset_cap);
   }
 
   key->offsets[key->offset_len++] = off;
@@ -364,7 +366,7 @@ int writer_finish_public_section(writer *w) {
   if (err < 0) {
     return err;
   }
-  if (typ == BLOCK_TYPE_REF && w->opts.index_objects) {
+  if (typ == BLOCK_TYPE_REF && w->opts.skip_index_objects) {
     int err = writer_dump_object_index(w);
     if (err < 0) {
       return err;

@@ -346,7 +346,7 @@ int reader_seek_linear(reader *r, table_iter *ti, record want) {
   err = 0;
 
 exit:
-  // XXX delete next content.
+  block_iter_close(&next.bi);
   record_clear(rec);
   free(record_yield(&rec));
   free(slice_yield(&want_key));
