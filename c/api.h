@@ -116,5 +116,6 @@ writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
                    write_options *opts);
 int writer_add_ref(writer *w, ref_record *ref) ;
 int writer_close(writer *w);
+void writer_free(writer *w);
 
 #endif

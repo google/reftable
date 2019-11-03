@@ -132,6 +132,12 @@ typedef struct {
   bool finished;
 } table_iter;
 
+
+void table_iter_copy_from(table_iter *dest, table_iter *src) {
+  *dest = *src;
+  block_iter_copy_from(&dest->bi, &src->bi);
+}
+
 int table_iter_next_in_block(table_iter* ti, record rec) {
   int res = block_iter_next(&ti->bi, rec);
   if (res == 0 && record_type(rec) == BLOCK_TYPE_REF) {
@@ -233,7 +239,7 @@ int table_iter_next(table_iter* ti, record rec) {
     return err;
   }
 
-  table_iter next;
+  table_iter next = {};
   err = table_iter_next_block(&next, ti);
   if (err != 0) {
     ti->finished = true;
@@ -242,7 +248,7 @@ int table_iter_next(table_iter* ti, record rec) {
   if (err != 0) {
     return err;
   }
-  *ti = next;
+  table_iter_copy_from(ti, &next);
   return block_iter_next(&ti->bi, rec);
 }
 
@@ -330,7 +336,7 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
     }
 
     table_iter_block_done(ti);
-    *ti = next;
+    table_iter_copy_from(ti, &next);
   }
 
   err = block_iter_seek(&ti->bi, want_key);
@@ -341,6 +347,9 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
   err = 0;
 
  exit:
+  // XXX delete next content.
+  record_clear(rec);
+  free(record_yield(&rec));
   free(slice_yield(&want_key));
   free(slice_yield(&got_key));
   return err;
@@ -389,3 +398,6 @@ int reader_seek(reader* r, iterator* it, record rec) {
   return reader_seek_internal(r, it, rec);
 }
 
+void reader_close(reader *r) {
+  block_source_close(r->source);
+}

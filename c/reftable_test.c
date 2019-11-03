@@ -63,12 +63,15 @@ void test_table_read_write() {
   }
   int n = writer_close(w);
   assert(n == 0);
-
+  
   for (int i = 0; i < w->stats.ref_stats.blocks; i++) {
     int off = i * opts.block_size;
     if (off == 0 ) {off = HEADER_SIZE;}
     assert(buf.buf[off] == 'r');
   }
+
+  writer_free(w);
+  w = NULL;
   
   reader rd;
   block_source source = {};
@@ -79,13 +82,12 @@ void test_table_read_write() {
   
   ref_record ref = {};
   record rec= {};
-  
   record_from_ref(&rec, &ref);
 
   iterator it = {};
   err = reader_seek(&rd, &it, rec);
   assert(err == 0);
-  
+
   int j = 0;
   while (true) {
     int r = iterator_next(it, rec);
@@ -97,6 +99,12 @@ void test_table_read_write() {
     j++;
   }
   assert(j == N);
+  iterator_close(it);
+  record_clear(rec);
+  free(slice_yield(&buf));
+  for (int i = 0; i < N; i++) {
+    free(names[i]);
+  }
 }
 
 int main() {

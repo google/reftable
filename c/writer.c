@@ -231,6 +231,7 @@ int writer_finish_section(writer *w) {
 
     w->index = NULL;
     w->index_len = 0;
+    w->index_cap = 0;
     for (int i = 0; i < idx_len; i++) {
       record rec = {};
       record_from_index(&rec, idx +i);
@@ -247,12 +248,13 @@ int writer_finish_section(writer *w) {
       err = block_writer_add(w->block_writer, rec);
       assert(i == 0);
     }
-
+    for (int i = 0; i < idx_len; i++) {
+      free(slice_yield(&idx[i].last_key));
+    }
     free(idx);
   }
 
-  free(w->index);
-  w->index = NULL;
+  writer_clear_index(w);
 
   err = writer_flush_block(w);
   if (err < 0) {
@@ -401,7 +403,22 @@ int writer_close(writer *w) {
 
   assert(n == sizeof(footer));
 
+  // free up memory.
+  block_writer_clear(&w->block_writer_data);
+  writer_clear_index(w);
+
   return 0;
+}
+
+void writer_clear_index(writer *w) {
+  for (int i = 0; i < w->index_len; i++) {
+    free(slice_yield(&w->index[i].last_key));
+  }
+    
+  free(w->index);
+  w->index = NULL;
+  w->index_len = 0;
+  w->index_cap = 0;
 }
 
 const int debug = 1;
@@ -452,7 +469,7 @@ int writer_flush_block(writer *w) {
 
   if (w->index_cap == w->index_len) {
     w->index_cap = 2 * w->index_cap + 1;
-    w->index = realloc(w->index, w->index_cap);
+    w->index = realloc(w->index, sizeof(index_record) * w->index_cap);
   }
 
   index_record ir = {
@@ -460,6 +477,7 @@ int writer_flush_block(writer *w) {
   };
   slice_copy(&ir.last_key, w->block_writer->last_key);
   w->index[w->index_len] = ir;
+  w->index_len++;
   w->next += n;  
   block_writer_reset(&w->block_writer_data);
   w->block_writer = NULL;

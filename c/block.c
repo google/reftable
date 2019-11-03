@@ -103,7 +103,6 @@ int block_writer_finish(block_writer *w) {
   put_u24(w->buf + 1 + w->header_off, w->next);
 
   // TODO - do log compression here.
-
   return w->next;
 }
 
@@ -179,7 +178,16 @@ int key_less(int idx, void *args) {
     return -1;
   }
 
-  return slice_compare(a->key, rkey);
+  int result = slice_compare(a->key, rkey);
+
+  free(slice_yield(&rkey));
+  return result;
+}
+
+void block_iter_copy_from(block_iter* dest, block_iter* src) {
+  dest->br = src->br;
+  dest->next_off = src->next_off;
+  slice_copy(&dest->last_key, src->last_key);    
 }
 
 // return < 0 for error, 0 for OK, > 0 for EOF.
@@ -211,11 +219,16 @@ int block_iter_next(block_iter *it, record rec) {
 
   slice_copy(&it->last_key, key);
   it->next_off += start.len - in.len;
+  free(slice_yield(&key));
   return 0;
 }
 
 int block_iter_seek(block_iter *it, slice want) {
   return block_reader_seek(it->br, it, want);
+}
+
+void block_iter_close(block_iter *it) {
+  free(slice_yield(&it->last_key));
 }
 
 int block_reader_seek(block_reader *br, block_iter *it, slice want) {
@@ -229,6 +242,7 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
     return -1;
   }
 
+  it->br = br;
   if (i > 0) {
     i--;
     it->next_off = block_reader_restart_offset(br, i);
@@ -239,8 +253,10 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   record rec = new_record(block_reader_type(br));
   slice key = {};
   int result = 0;
+  block_iter next = {};
   while (true) {
-    block_iter next = *it;
+    block_iter_copy_from(&next, it);
+
     int ok = block_iter_next(&next, rec);
     if (ok < 0) {
       result = -1;
@@ -253,10 +269,12 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
       goto exit;
     }
 
-    *it = next;
+    block_iter_copy_from(it, &next);
   }
 
 exit:
+  free(slice_yield(&key));
+  free(slice_yield(&next.last_key));
   record_clear(rec);
   free(record_yield(&rec));
   return result;
@@ -267,8 +285,9 @@ void block_writer_reset(block_writer *bw) {
   bw->last_key.len = 0;
 }
 
-void block_writer_free(block_writer *bw) {
+void block_writer_clear(block_writer *bw) {
   free(bw->restarts);
+  bw->restarts = NULL;
   free(slice_yield(&bw->last_key));
   // the block is not owned.
 }

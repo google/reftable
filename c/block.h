@@ -27,7 +27,7 @@ byte block_writer_type(block_writer *bw);
 int block_writer_add(block_writer *w, record rec);
 int block_writer_finish(block_writer *w);
 void block_writer_reset(block_writer*bw);
-void block_writer_free(block_writer *bw);
+void block_writer_clear(block_writer *bw);
 
 struct _block_reader {
   uint32 header_off;
@@ -50,7 +50,9 @@ struct _block_iter {
   uint32 next_off;
 };
 
+void block_iter_copy_from(block_iter* dest, block_iter* src);
 int block_iter_next(block_iter *it, record rec);
 int block_iter_seek(block_iter *it, slice want);
+void block_iter_close(block_iter *it);
 
 #endif

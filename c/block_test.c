@@ -64,12 +64,15 @@ void test_block_read_write() {
     names[i] = strdup(name);
     int n = block_writer_add(&bw, rec);
     ref.ref_name = NULL;
+    ref.value = NULL;
     assert(n == 0);
   }
 
   int n = block_writer_finish(&bw);
   assert(n > 0);
 
+  block_writer_clear(&bw);
+  
   block_reader br = {};
   block_reader_init(&br, block, header_off, block_size);
 
@@ -86,13 +89,16 @@ void test_block_read_write() {
     assert(0 == strcmp(names[j], ref.ref_name));
     j++;
   }
+  record_clear(rec);
+  block_iter_close(&it);
 
   slice want = {};
   for (int i = 0; i < N; i++) {
     slice_set_string(&want, names[i]);
+    
+    block_iter it = {};
     int n = block_reader_seek(&br, &it, want);
     assert(n == 0);
-
     
     n = block_iter_next(&it, rec);
     assert(n == 0);
@@ -106,8 +112,11 @@ void test_block_read_write() {
     n = block_iter_next(&it, rec);
     assert(n == 0);
     assert(strcmp(names[10 * (i / 10)], ref.ref_name) == 0);
+
+    block_iter_close(&it);
   }
 
+  record_clear(rec);
   free(block);
   free(slice_yield(&want));
   for (int i = 0; i < N; i++) {

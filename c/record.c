@@ -248,14 +248,18 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
       return -1;
     }
 
-    r->value = malloc(HASH_SIZE);
+    if (r->value == NULL) {
+      r->value = malloc(HASH_SIZE);
+    }
     memcpy(r->value, in.buf, HASH_SIZE);
     in.buf += HASH_SIZE;
     in.len -= HASH_SIZE;
     if (val_type == 1) {
       break;
     }
-    r->target_value = malloc(HASH_SIZE);
+    if (r->target_value == NULL) {
+      r->target_value = malloc(HASH_SIZE);
+    }
     memcpy(r->target_value, in.buf, HASH_SIZE);
     in.buf += HASH_SIZE;
     in.len -= HASH_SIZE;
@@ -269,6 +273,9 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
     in.buf += n;
     in.len -= n;
 
+    if (r->target != NULL) {
+      free(r->target);
+    }
     r->target = slice_to_string(dest);
     free(slice_yield(&dest));
   } break;

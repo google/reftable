@@ -111,6 +111,7 @@ void test_ref_record_roundtrip() {
     assert((out.target_value != NULL) == (in.target_value != NULL));
     assert((out.target != NULL) == (in.target != NULL));
     free(slice_yield(&key));
+    record_clear(rec_out);
   }
 }
 
@@ -139,9 +140,13 @@ void test_key_roundtrip() {
   byte rt_extra;
   int m = decode_key(&roundtrip, &rt_extra, last_key, dest);
   assert(n == m);
-  printf("%s\n", slice_to_string(roundtrip));
   assert(slice_equal(key, roundtrip));
   assert(rt_extra == extra);
+
+  free(slice_yield(&last_key));
+  free(slice_yield(&key));
+  free(slice_yield(&dest));
+  free(slice_yield(&roundtrip));
 }
 
 void print_bytes(byte *p, int l) {
@@ -206,6 +211,7 @@ void test_obj_record_roundtrip() {
     assert(0 ==
            memcmp(in.offsets, out.offsets, sizeof(uint64) * in.offset_len));
     free(slice_yield(&key));
+    record_clear(rec_out);
   }
 }
 
@@ -238,6 +244,7 @@ void test_index_record_roundtrip() {
 
   assert(in.offset == out.offset);
 
+  record_clear(out_rec);
   free(slice_yield(&key));
   free(slice_yield(&in.last_key));
 }

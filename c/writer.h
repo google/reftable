@@ -26,4 +26,4 @@ typedef struct _writer {
 } writer;
 
 int writer_flush_block(writer *w);
-
+void writer_clear_index(writer *w);
