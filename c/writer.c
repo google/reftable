@@ -33,7 +33,12 @@ int padded_write(writer *w, slice out, int padding) {
   }
 
   w->pending_padding = padding;
-  return w->write(w->write_arg, out.buf, out.len);
+  int n = w->write(w->write_arg, out.buf, out.len);
+  if (n < 0) {
+    return n;
+  }
+  n += padding;
+  return n;
 }
 
 void options_set_defaults(write_options *opts) {
