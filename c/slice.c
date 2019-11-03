@@ -10,7 +10,7 @@ void slice_set_string(slice *s, const char *str) {
     s->len = 0;
     return;
   }
-  
+
   int l = strlen(str);
   l++; // \0
   slice_resize(s, l);
@@ -77,13 +77,13 @@ int slice_compare(slice a, slice b) {
 }
 
 int slice_write(slice *b, byte *data, int sz) {
-  if  (b->len + sz > b->cap) {
-    int newcap =  2*b->cap + 1;
+  if (b->len + sz > b->cap) {
+    int newcap = 2 * b->cap + 1;
     if (newcap < b->len + sz) {
       newcap = (b->len + sz);
     }
     b->buf = realloc(b->buf, newcap);
-    b->cap  = newcap;
+    b->cap = newcap;
   }
 
   memcpy(b->buf + b->len, data, sz);
@@ -92,32 +92,27 @@ int slice_write(slice *b, byte *data, int sz) {
 }
 
 int slice_write_void(void *b, byte *data, int sz) {
-  return slice_write((slice*)b, data, sz);
+  return slice_write((slice *)b, data, sz);
 }
 
-uint64 slice_size(void *b) {
-  return ((slice*) b)->len;
-}
+uint64 slice_size(void *b) { return ((slice *)b)->len; }
 
-void slice_return_block(void *b, byte *dest) {
-}
+void slice_return_block(void *b, byte *dest) {}
 
-void slice_close(void *b) {
-
-}
+void slice_close(void *b) {}
 
 int slice_read_block(void *v, byte **dest, uint64 off, uint32 size) {
-  slice *b  = (slice*)v;
+  slice *b = (slice *)v;
   assert(off + size <= b->len);
   *dest = b->buf + off;
   return size;
 }
 
 block_source_ops slice_ops = {
-			       .size = &slice_size,
-			       .read_block = &slice_read_block,
-			       .return_block = &slice_return_block,
-			       .close = &slice_close,
+    .size = &slice_size,
+    .read_block = &slice_read_block,
+    .return_block = &slice_return_block,
+    .close = &slice_close,
 };
 
 void block_source_from_slice(block_source *bs, slice *buf) {

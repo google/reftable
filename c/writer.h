@@ -1,7 +1,6 @@
 
 #include "tree.h"
 
-
 typedef struct _writer {
   int (*write)(void *, byte *, int);
   void *write_arg;

@@ -55,10 +55,10 @@ void test_block_read_write() {
   for (int i = 0; i < N; i++) {
     char name[100];
     sprintf(name, "branch%02d", i);
- 
+
     byte hash[20];
     memset(hash, i, sizeof(hash));
-      
+
     ref.ref_name = name;
     ref.value = hash;
     names[i] = strdup(name);
@@ -72,7 +72,7 @@ void test_block_read_write() {
   assert(n > 0);
 
   block_writer_clear(&bw);
-  
+
   block_reader br = {};
   block_reader_init(&br, block, header_off, block_size);
 
@@ -95,11 +95,11 @@ void test_block_read_write() {
   slice want = {};
   for (int i = 0; i < N; i++) {
     slice_set_string(&want, names[i]);
-    
+
     block_iter it = {};
     int n = block_reader_seek(&br, &it, want);
     assert(n == 0);
-    
+
     n = block_iter_next(&it, rec);
     assert(n == 0);
 

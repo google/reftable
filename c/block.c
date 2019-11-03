@@ -10,7 +10,7 @@ int block_writer_register_restart(block_writer *w, int n, bool restart,
                                   slice key);
 
 void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32 block_size,
-		       uint32 header_off) {
+                       uint32 header_off) {
   bw->buf = buf;
   bw->block_size = block_size;
   bw->header_off = header_off;
@@ -109,7 +109,7 @@ int block_writer_finish(block_writer *w) {
 byte block_reader_type(block_reader *r) { return r->block[r->header_off]; }
 
 int block_reader_init(block_reader *br, byte *block, uint32 header_off,
-		      uint32 table_block_size) {
+                      uint32 table_block_size) {
   uint32 full_block_size = table_block_size;
   byte typ = block[header_off];
 
@@ -184,10 +184,10 @@ int key_less(int idx, void *args) {
   return result;
 }
 
-void block_iter_copy_from(block_iter* dest, block_iter* src) {
+void block_iter_copy_from(block_iter *dest, block_iter *src) {
   dest->br = src->br;
   dest->next_off = src->next_off;
-  slice_copy(&dest->last_key, src->last_key);    
+  slice_copy(&dest->last_key, src->last_key);
 }
 
 // return < 0 for error, 0 for OK, > 0 for EOF.
@@ -223,17 +223,19 @@ int block_iter_next(block_iter *it, record rec) {
   return 0;
 }
 
-int block_reader_first_key(block_reader *br, slice *key)  {
+int block_reader_first_key(block_reader *br, slice *key) {
   slice empty = {};
   int off = br->header_off + 4;
   slice in = {
-	      .buf = br->block + off,
-	      .len = br->block_len - off,
+      .buf = br->block + off,
+      .len = br->block_len - off,
   };
 
   byte extra = 0;
   int n = decode_key(key, &extra, empty, in);
-  if (n < 0) { return n; }
+  if (n < 0) {
+    return n;
+  }
   return 0;
 }
 
@@ -241,9 +243,7 @@ int block_iter_seek(block_iter *it, slice want) {
   return block_reader_seek(it->br, it, want);
 }
 
-void block_iter_close(block_iter *it) {
-  free(slice_yield(&it->last_key));
-}
+void block_iter_close(block_iter *it) { free(slice_yield(&it->last_key)); }
 
 int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   restart_find_args args = {
@@ -278,7 +278,7 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
     }
 
     record_key(rec, &key);
-    
+
     if (err > 0 || slice_compare(key, want) >= 0) {
       result = 0;
       goto exit;

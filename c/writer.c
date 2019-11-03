@@ -66,7 +66,8 @@ void writer_reinit_block_writer(writer *w, byte typ) {
     block_start = writer_write_header(w, w->block);
   }
 
-  block_writer_init(&w->block_writer_data, typ, w->block, w->opts.block_size, block_start);
+  block_writer_init(&w->block_writer_data, typ, w->block, w->opts.block_size,
+                    block_start);
   w->block_writer = &w->block_writer_data;
   w->block_writer->restart_interval = w->opts.restart_interval;
 }
@@ -147,7 +148,7 @@ int writer_add_record(writer *w, record rec) {
   }
 
   slice_copy(&w->last_key, key);
-  byte typ  = record_type(rec);
+  byte typ = record_type(rec);
   if (w->block_writer == NULL) {
     writer_reinit_block_writer(w, typ);
   }
@@ -185,7 +186,7 @@ int writer_add_ref(writer *w, ref_record *ref) {
     return -1;
   }
 
-  record rec ={};
+  record rec = {};
   record_from_ref(&rec, ref);
   ref->update_index -= w->opts.min_update_index;
   int err = writer_add_record(w, rec);
@@ -239,7 +240,7 @@ int writer_finish_section(writer *w) {
     w->index_cap = 0;
     for (int i = 0; i < idx_len; i++) {
       record rec = {};
-      record_from_index(&rec, idx +i);
+      record_from_index(&rec, idx + i);
       if (block_writer_add(w->block_writer, rec) == 0) {
         continue;
       }
@@ -419,7 +420,7 @@ void writer_clear_index(writer *w) {
   for (int i = 0; i < w->index_len; i++) {
     free(slice_yield(&w->index[i].last_key));
   }
-    
+
   free(w->index);
   w->index = NULL;
   w->index_len = 0;
@@ -483,7 +484,7 @@ int writer_flush_block(writer *w) {
   slice_copy(&ir.last_key, w->block_writer->last_key);
   w->index[w->index_len] = ir;
   w->index_len++;
-  w->next += n;  
+  w->next += n;
   block_writer_reset(&w->block_writer_data);
   w->block_writer = NULL;
   return 0;

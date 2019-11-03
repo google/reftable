@@ -87,7 +87,7 @@ void test_ref_record_roundtrip() {
     }
     in.ref_name = "refs/heads/master";
 
-    record rec ={};
+    record rec = {};
     record_from_ref(&rec, &in);
     assert(record_val_type(rec) == i);
     byte buf[1024];
@@ -150,7 +150,7 @@ void test_key_roundtrip() {
 }
 
 void print_bytes(byte *p, int l) {
-  for (int i = 0; i < l;i++) {
+  for (int i = 0; i < l; i++) {
     byte c = *p;
     if (c < 32) {
       c = '.';

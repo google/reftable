@@ -10,26 +10,25 @@
 
 #include <assert.h>
 
-#ifdef assert 
-#undef assert 
+#ifdef assert
+#undef assert
 #endif
 
-#define assert(c) \
-  if (!(c)) { \
-    fflush(stderr);\
-    fflush(stdout);\
-    fprintf(stderr, "%s: %d: failed assertion %s", __FILE__, __LINE__, #c); \
-    abort();\
-}
+#define assert(c)                                                              \
+  if (!(c)) {                                                                  \
+    fflush(stderr);                                                            \
+    fflush(stdout);                                                            \
+    fprintf(stderr, "%s: %d: failed assertion %s", __FILE__, __LINE__, #c);    \
+    abort();                                                                   \
+  }
 
-
-typedef struct  {
+typedef struct {
   const char *name;
   void (*testfunc)();
 } test_case;
 
-test_case* new_test_case (const char *name, void (*testfunc)());
-test_case* add_test_case (const char *name, void (*testfunc)());
+test_case *new_test_case(const char *name, void (*testfunc)());
+test_case *add_test_case(const char *name, void (*testfunc)());
 void test_main();
 
 #endif

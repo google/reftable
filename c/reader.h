@@ -21,5 +21,5 @@ typedef struct {
 } reader;
 
 int init_reader(reader *r, block_source source);
-int reader_seek(reader* r, iterator* it, record rec);
+int reader_seek(reader *r, iterator *it, record rec);
 void reader_close(reader *r);

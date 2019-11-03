@@ -9,8 +9,7 @@ typedef struct _tree_node {
 } tree_node;
 
 tree_node *tree_search(void *key, tree_node **rootp,
-		       int (*compare)(const void *, const void *),
-		       int insert);
-void infix_walk(tree_node*t, void (*action)(void *arg, void *key), void*arg);
+                       int (*compare)(const void *, const void *), int insert);
+void infix_walk(tree_node *t, void (*action)(void *arg, void *key), void *arg);
 
 #endif

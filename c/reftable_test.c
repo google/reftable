@@ -3,13 +3,13 @@
 #include "api.h"
 #include "basics.h"
 #include "block.h"
+#include "reader.h"
 #include "record.h"
 #include "test_framework.h"
 #include "writer.h"
-#include "reader.h"
 
 void test_buffer() {
-  slice buf  = {};
+  slice buf = {};
 
   byte in[] = "hello";
   slice_write(&buf, in, sizeof(in));
@@ -30,32 +30,31 @@ void test_buffer() {
   free(slice_yield(&buf));
 }
 
-
 void test_table_read_write() {
-  slice buf  = {};
-  
+  slice buf = {};
+
   const int N = 50;
   char *names[N];
 
   write_options opts = {
-			.block_size = 256,			
+      .block_size = 256,
   };
 
-  writer* w  = new_writer(&slice_write_void, &buf, &opts);
+  writer *w = new_writer(&slice_write_void, &buf, &opts);
 
   {
     ref_record ref = {};
     for (int i = 0; i < N; i++) {
       byte hash[20];
       memset(hash, i, sizeof(hash));
-      
+
       char name[100];
       sprintf(name, "refs/heads/branch%02d", i);
 
       ref.ref_name = name;
       ref.value = hash;
       names[i] = strdup(name);
-    
+
       fflush(stdout);
       int n = writer_add_ref(w, &ref);
       assert(n == 0);
@@ -63,25 +62,27 @@ void test_table_read_write() {
   }
   int n = writer_close(w);
   assert(n == 0);
-  
+
   for (int i = 0; i < w->stats.ref_stats.blocks; i++) {
     int off = i * opts.block_size;
-    if (off == 0 ) {off = HEADER_SIZE;}
+    if (off == 0) {
+      off = HEADER_SIZE;
+    }
     assert(buf.buf[off] == 'r');
   }
 
   writer_free(w);
   w = NULL;
-  
+
   reader rd;
   block_source source = {};
   block_source_from_slice(&source, &buf);
-    
+
   int err = init_reader(&rd, source);
   assert(err == 0);
-  
+
   ref_record ref = {};
-  record rec= {};
+  record rec = {};
   record_from_ref(&rec, &ref);
 
   iterator it = {};
@@ -108,7 +109,7 @@ void test_table_read_write() {
     int err = reader_seek(&rd, &it, rec);
     assert(err == 0);
     ref.ref_name = NULL;
-    
+
     err = iterator_next(it, rec);
     assert(err == 0);
     assert(0 == strcmp(names[i], ref.ref_name));

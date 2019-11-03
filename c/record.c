@@ -424,7 +424,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
 
     in.buf += n;
     in.len -= n;
-  } 
+  }
 
   r->offsets = NULL;
   r->offset_len = 0;
@@ -482,13 +482,13 @@ record new_record(byte typ) {
   }
 
   case BLOCK_TYPE_OBJ: {
-    obj_record* r = calloc(1, sizeof(obj_record));
+    obj_record *r = calloc(1, sizeof(obj_record));
     record_from_obj(&rec, r);
     return rec;
   }
 
   case BLOCK_TYPE_INDEX: {
-    index_record* r = calloc(1, sizeof(index_record));
+    index_record *r = calloc(1, sizeof(index_record));
     record_from_index(&rec, r);
     return rec;
   }
@@ -560,13 +560,9 @@ record_ops index_record_ops = {
     .clear = &index_record_clear,
 };
 
-void record_key(record rec, slice *dest) {
-  rec.ops->key(rec.data, dest);
-}
+void record_key(record rec, slice *dest) { rec.ops->key(rec.data, dest); }
 
-byte record_type(record rec) {
-  return rec.ops->type();
-}
+byte record_type(record rec) { return rec.ops->type(); }
 
 int record_encode(record rec, slice dest) {
   return rec.ops->encode(rec.data, dest);
@@ -574,38 +570,34 @@ int record_encode(record rec, slice dest) {
 
 void record_copy_from(record rec, record src) {
   assert(src.ops->type() == rec.ops->type());
-  
+
   rec.ops->copy_from(rec.data, src.data);
 }
 
-byte record_val_type(record rec) {
-  return rec.ops->val_type(rec.data);
-}
+byte record_val_type(record rec) { return rec.ops->val_type(rec.data); }
 
 int record_decode(record rec, slice key, byte extra, slice src) {
   return rec.ops->decode(rec.data, key, extra, src);
 }
 
-void record_clear(record rec) {
-  return rec.ops->clear(rec.data);
-}
+void record_clear(record rec) { return rec.ops->clear(rec.data); }
 
 void record_from_ref(record *rec, ref_record *ref_rec) {
   rec->data = ref_rec;
   rec->ops = &ref_record_ops;
 }
 
-void record_from_obj(record*rec, obj_record *obj_rec) {
+void record_from_obj(record *rec, obj_record *obj_rec) {
   rec->data = obj_rec;
   rec->ops = &obj_record_ops;
 }
 
-void record_from_index(record*rec, index_record *index_rec) {
+void record_from_index(record *rec, index_record *index_rec) {
   rec->data = index_rec;
   rec->ops = &index_record_ops;
 }
 
-void*record_yield(record *rec){
+void *record_yield(record *rec) {
   void *p = rec->data;
   rec->data = NULL;
   return p;
