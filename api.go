@@ -54,11 +54,11 @@ type Options struct {
 	Unpadded bool
 
 	// The block size, if not set 4096.
-	BlockSize       uint32
-	MinUpdateIndex  uint64
-	MaxUpdateIndex  uint64
-	IndexObjects    bool
-	RestartInterval int
+	BlockSize        uint32
+	MinUpdateIndex   uint64
+	MaxUpdateIndex   uint64
+	SkipIndexObjects bool
+	RestartInterval  int
 }
 
 // RefRecord is a Record from the ref database.

@@ -100,7 +100,7 @@ func NewWriter(out io.Writer, opts *Options) (*Writer, error) {
 		w.Stats.BlockStats[byte(c)] = new(BlockStats)
 	}
 
-	if opts.IndexObjects {
+	if !opts.SkipIndexObjects {
 		w.objIndex = map[string][]uint64{}
 	}
 
@@ -139,7 +139,7 @@ func (w *Writer) headerBytes() []byte {
 
 // XXX indexHash
 func (w *Writer) indexHash(hash []byte) {
-	if !w.opts.IndexObjects {
+	if w.opts.SkipIndexObjects {
 		return
 	}
 	off := w.next
@@ -304,7 +304,7 @@ func (w *Writer) finishPublicSection() error {
 		return err
 	}
 
-	if typ == BlockTypeRef && w.opts.IndexObjects {
+	if typ == BlockTypeRef && !w.opts.SkipIndexObjects {
 		if err := w.dumpObjectIndex(); err != nil {
 			return err
 		}
