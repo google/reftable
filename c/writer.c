@@ -412,7 +412,7 @@ int writer_close(writer *w) {
   // free up memory.
   block_writer_clear(&w->block_writer_data);
   writer_clear_index(w);
-
+  free(slice_yield(&w->last_key));
   return 0;
 }
 

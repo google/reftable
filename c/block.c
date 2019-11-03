@@ -243,7 +243,9 @@ int block_iter_seek(block_iter *it, slice want) {
   return block_reader_seek(it->br, it, want);
 }
 
-void block_iter_close(block_iter *it) { free(slice_yield(&it->last_key)); }
+void block_iter_close(block_iter *it) {
+  free(slice_yield(&it->last_key));
+}
 
 int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   restart_find_args args = {

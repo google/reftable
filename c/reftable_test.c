@@ -30,17 +30,15 @@ void test_buffer() {
   free(slice_yield(&buf));
 }
 
-void test_table_read_write() {
-  slice buf = {};
 
-  const int N = 50;
-  char *names[N];
-
+void write_table(char ***names, slice *buf, int N, int block_size) {
+  *names = calloc(sizeof(char*), N);
+  
   write_options opts = {
       .block_size = 256,
   };
 
-  writer *w = new_writer(&slice_write_void, &buf, &opts);
+  writer *w = new_writer(&slice_write_void, buf, &opts);
 
   {
     ref_record ref = {};
@@ -53,7 +51,7 @@ void test_table_read_write() {
 
       ref.ref_name = name;
       ref.value = hash;
-      names[i] = strdup(name);
+      (*names)[i] = strdup(name);
 
       fflush(stdout);
       int n = writer_add_ref(w, &ref);
@@ -68,12 +66,20 @@ void test_table_read_write() {
     if (off == 0) {
       off = HEADER_SIZE;
     }
-    assert(buf.buf[off] == 'r');
+    assert(buf->buf[off] == 'r');
   }
 
   writer_free(w);
   w = NULL;
+}
 
+
+void test_table_read_write_sequential() {
+  char **names;
+  slice buf ={};
+  int N =50;
+  write_table(&names, &buf, N, 256);
+  
   reader rd;
   block_source source = {};
   block_source_from_slice(&source, &buf);
@@ -100,11 +106,34 @@ void test_table_read_write() {
     j++;
   }
   assert(j == N);
-  iterator_close(it);
+  iterator_destroy(&it);
   record_clear(rec);
+  free(slice_yield(&buf));
+  for (int i = 0; i < N; i++) {
+    free(names[i]);
+  }
+  free(names);
+}
+
+void test_table_read_write_seek() {
+  char **names;
+  slice buf ={};
+  int N =50;
+  write_table(&names, &buf, N, 256);
+  
+  reader rd;
+  block_source source = {};
+  block_source_from_slice(&source, &buf);
+
+  int err = init_reader(&rd, source);
+  assert(err == 0);
 
   for (int i = 0; i < N; i++) {
     iterator it = {};
+    ref_record ref = {};
+    record rec = {};
+    record_from_ref(&rec, &ref);
+
     ref.ref_name = names[i];
     int err = reader_seek(&rd, &it, rec);
     assert(err == 0);
@@ -114,16 +143,21 @@ void test_table_read_write() {
     assert(err == 0);
     assert(0 == strcmp(names[i], ref.ref_name));
     assert(i == ref.value[0]);
+
+    record_clear(rec);
+    iterator_destroy(&it);
   }
 
   free(slice_yield(&buf));
   for (int i = 0; i < N; i++) {
     free(names[i]);
   }
+  free(names);
 }
 
 int main() {
   add_test_case("test_buffer", &test_buffer);
-  add_test_case("test_table_read_write", &test_table_read_write);
+  add_test_case("test_table_read_write_sequential", &test_table_read_write_sequential);
+  add_test_case("test_table_read_write_seek", &test_table_read_write_seek);
   test_main();
 }

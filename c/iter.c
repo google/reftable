@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "api.h"
 
 int empty_iterator_next(void *arg, record rec) { return 1; }
@@ -18,4 +20,9 @@ int iterator_next(iterator it, record rec) {
   return it.ops->next(it.iter_arg, rec);
 }
 
-void iterator_close(iterator it) { return it.ops->close(it.iter_arg); }
+void iterator_destroy(iterator *it) {
+  it->ops->close(it->iter_arg);
+  it->ops = NULL;
+  free(it->iter_arg);
+  it->iter_arg = NULL;
+}

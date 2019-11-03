@@ -83,7 +83,7 @@ typedef struct {
 
 // < 0: error, 0 = OK, > 0: end of iteration
 int iterator_next(iterator it, record rec);
-void iterator_close(iterator it);
+void iterator_destroy(iterator *it);
 void iterator_set_empty(iterator *it);
 
 typedef struct {

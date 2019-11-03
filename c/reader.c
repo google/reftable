@@ -252,6 +252,7 @@ int table_iter_next(table_iter *ti, record rec) {
     return err;
   }
   table_iter_copy_from(ti, &next);
+  block_iter_close(&next.bi);
   return block_iter_next(&ti->bi, rec);
 }
 
@@ -262,6 +263,7 @@ int table_iter_next_void(void *ti, record rec) {
 void table_iter_close(void *p) {
   table_iter *ti = (table_iter *)p;
   table_iter_block_done(ti);
+  block_iter_close(&ti->bi);
 }
 
 iterator_ops table_iter_ops = {
