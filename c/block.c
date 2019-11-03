@@ -223,6 +223,20 @@ int block_iter_next(block_iter *it, record rec) {
   return 0;
 }
 
+int block_reader_first_key(block_reader *br, slice *key)  {
+  slice empty = {};
+  int off = br->header_off + 4;
+  slice in = {
+	      .buf = br->block + off,
+	      .len = br->block_len - off,
+  };
+
+  byte extra = 0;
+  int n = decode_key(key, &extra, empty, in);
+  if (n < 0) { return n; }
+  return 0;
+}
+
 int block_iter_seek(block_iter *it, slice want) {
   return block_reader_seek(it->br, it, want);
 }
@@ -257,14 +271,15 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   while (true) {
     block_iter_copy_from(&next, it);
 
-    int ok = block_iter_next(&next, rec);
-    if (ok < 0) {
+    int err = block_iter_next(&next, rec);
+    if (err < 0) {
       result = -1;
       goto exit;
     }
 
     record_key(rec, &key);
-    if (ok > 0 || slice_compare(key, want) >= 0) {
+    
+    if (err > 0 || slice_compare(key, want) >= 0) {
       result = 0;
       goto exit;
     }

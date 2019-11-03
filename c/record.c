@@ -415,7 +415,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
   memcpy(r->hash_prefix, key.buf, key.len);
   r->hash_prefix_len = key.len;
 
-  uint64 count;
+  uint64 count = val_type;
   if (val_type == 0) {
     int n = get_var_int(&count, in);
     if (n < 0) {
@@ -424,9 +424,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
 
     in.buf += n;
     in.len -= n;
-  } else {
-    count = val_type;
-  }
+  } 
 
   r->offsets = NULL;
   r->offset_len = 0;
@@ -449,7 +447,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
 
   int j = 1;
   while (j < count) {
-    uint64 delta;
+    uint64 delta = 0;
     int n = get_var_int(&delta, in);
     if (n < 0) {
       return n;

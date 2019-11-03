@@ -42,6 +42,7 @@ int block_reader_init(block_reader* br, byte *block,  uint32 header_off , uint32
 void block_reader_start(block_reader* br, block_iter* it);
 int block_reader_seek(block_reader* br, block_iter* it, slice want);
 byte block_reader_type(block_reader *r);
+int block_reader_first_key(block_reader *br, slice *key);
 
 struct _block_iter {
   block_reader *br;

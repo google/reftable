@@ -25,7 +25,7 @@ void varint_roundtrip() {
     assert(n > 0);
     out.len = n;
 
-    uint64 got;
+    uint64 got = 0;
     n = get_var_int(&got, out);
     assert(n > 0);
 

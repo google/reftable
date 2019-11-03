@@ -109,6 +109,7 @@ typedef struct {
 
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
+#define WRONG_TYPE -4
 
 typedef struct _writer writer;
 

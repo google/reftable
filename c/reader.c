@@ -192,7 +192,7 @@ int reader_init_block_reader(reader* r, block_reader* br, uint64 next_off, byte 
     return block_size;
   }
   if (block_typ != typ) {
-    return 0;
+    return WRONG_TYPE;
   }
 
   byte *block = NULL;
@@ -200,8 +200,8 @@ int reader_init_block_reader(reader* r, block_reader* br, uint64 next_off, byte 
   if (read_size <= 0) {
     return read_size;
   }
-
-  uint32 header_off;
+ 
+  uint32 header_off = 0;
   if (next_off == 0) {
     header_off = HEADER_SIZE;
   }
@@ -211,9 +211,16 @@ int reader_init_block_reader(reader* r, block_reader* br, uint64 next_off, byte 
 
 int table_iter_next_block(table_iter *dest, table_iter *src) {
   uint64 next_block_off = src->block_off + src->bi.br->full_block_size;
+  dest->r = src->r;
+  dest->typ = src->typ;
+  dest->block_off = next_block_off;
 
   block_reader br = {};
   int err = reader_init_block_reader(src->r, &br, next_block_off, src->typ);
+  if (err == WRONG_TYPE) {
+    dest->finished = true;
+    return 1;
+  }
   if (err != 0) {
     return err;
   }
@@ -221,9 +228,6 @@ int table_iter_next_block(table_iter *dest, table_iter *src) {
   block_reader* brp = malloc(sizeof(block_reader));
   *brp = br;
 
-  dest->r = src->r;
-  dest->typ = src->typ;
-  dest->block_off = next_block_off;
   dest->finished = false;
   block_reader_start(brp, &dest->bi);
   return 0;
@@ -306,7 +310,7 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
   record rec = new_record(record_type(want));
   slice want_key={};
   slice got_key ={};
-  record_key(rec, &want_key);
+  record_key(want, &want_key);
   int err = -1;
   
   table_iter next = {}; 
@@ -320,17 +324,12 @@ int reader_seek_linear(reader* r, table_iter* ti, record want) {
       break;
     }
 
-    err = table_iter_next(ti, rec);
+    err = block_reader_first_key(next.bi.br, &got_key);
     if (err < 0) {
       goto exit;
     }
-
-    if (err > 0) {
-      abort(); // read from fresh block failed.
-    }
-
-    record_key(rec, &got_key);
-    if (slice_compare(got_key, want_key) > 0) {
+    int cmp = slice_compare(got_key, want_key);
+    if (cmp > 0) {
       table_iter_block_done(&next);
       break;
     }

@@ -55,7 +55,7 @@ void test_block_read_write() {
   for (int i = 0; i < N; i++) {
     char name[100];
     sprintf(name, "branch%02d", i);
-
+ 
     byte hash[20];
     memset(hash, i, sizeof(hash));
       

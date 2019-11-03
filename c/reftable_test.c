@@ -101,6 +101,20 @@ void test_table_read_write() {
   assert(j == N);
   iterator_close(it);
   record_clear(rec);
+
+  for (int i = 0; i < N; i++) {
+    iterator it = {};
+    ref.ref_name = names[i];
+    int err = reader_seek(&rd, &it, rec);
+    assert(err == 0);
+    ref.ref_name = NULL;
+    
+    err = iterator_next(it, rec);
+    assert(err == 0);
+    assert(0 == strcmp(names[i], ref.ref_name));
+    assert(i == ref.value[0]);
+  }
+
   free(slice_yield(&buf));
   for (int i = 0; i < N; i++) {
     free(names[i]);
