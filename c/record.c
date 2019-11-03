@@ -156,8 +156,11 @@ void ref_record_copy_from(void *rec, const void *src_rec) {
   }
 }
 
-void ref_record_clear(void *rec) {
-  ref_record *ref = (ref_record *)rec;
+void ref_record_clear_void(void *rec) {
+  ref_record_clear((ref_record *)rec);
+}
+
+void ref_record_clear(ref_record *ref) {
   free(ref->ref_name);
   free(ref->target);
   free(ref->target_value);
@@ -333,7 +336,7 @@ record_ops ref_record_ops = {
     .val_type = &ref_record_val_type,
     .encode = &ref_record_encode,
     .decode = &ref_record_decode,
-    .clear = &ref_record_clear,
+    .clear = &ref_record_clear_void,
 };
 
 byte obj_record_type() { return BLOCK_TYPE_OBJ; }

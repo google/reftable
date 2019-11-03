@@ -1,12 +1,13 @@
 #include <stdlib.h>
 
 #include "api.h"
+#include "iter.h"
 
 int empty_iterator_next(void *arg, record rec) { return 1; }
 
 void empty_iterator_close(void *arg) {}
 
-iterator_ops empty_ops = {
+struct _iterator_ops empty_ops = {
     .next = &empty_iterator_next,
     .close = &empty_iterator_close,
 };
@@ -25,4 +26,10 @@ void iterator_destroy(iterator *it) {
   it->ops = NULL;
   free(it->iter_arg);
   it->iter_arg = NULL;
+}
+
+int iterator_next_ref(iterator it, ref_record *ref) {
+  record rec = {} ;
+  record_from_ref(&rec, ref);
+  return iterator_next(it, rec);
 }

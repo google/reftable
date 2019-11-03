@@ -87,17 +87,14 @@ void test_table_read_write_sequential() {
   int err = init_reader(&rd, source);
   assert(err == 0);
 
-  ref_record ref = {};
-  record rec = {};
-  record_from_ref(&rec, &ref);
-
   iterator it = {};
-  err = reader_seek(&rd, &it, rec);
+  err = reader_seek_ref(&rd, &it, "");
   assert(err == 0);
 
   int j = 0;
   while (true) {
-    int r = iterator_next(it, rec);
+    ref_record ref = {};
+    int r = iterator_next_ref(it, &ref);
     assert(r >= 0);
     if (r > 0) {
       break;
@@ -107,7 +104,6 @@ void test_table_read_write_sequential() {
   }
   assert(j == N);
   iterator_destroy(&it);
-  record_clear(rec);
   free(slice_yield(&buf));
   for (int i = 0; i < N; i++) {
     free(names[i]);
@@ -130,21 +126,16 @@ void test_table_read_write_seek() {
 
   for (int i = 0; i < N; i++) {
     iterator it = {};
-    ref_record ref = {};
-    record rec = {};
-    record_from_ref(&rec, &ref);
-
-    ref.ref_name = names[i];
-    int err = reader_seek(&rd, &it, rec);
+    int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
-    ref.ref_name = NULL;
 
-    err = iterator_next(it, rec);
+    ref_record ref = {};
+    err = iterator_next_ref(it, &ref);
     assert(err == 0);
     assert(0 == strcmp(names[i], ref.ref_name));
     assert(i == ref.value[0]);
 
-    record_clear(rec);
+    ref_record_clear(&ref);
     iterator_destroy(&it);
   }
 

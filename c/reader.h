@@ -1,4 +1,7 @@
+#ifndef READER_H
+#define READER_H
 
+#include "api.h"
 
 typedef struct {
   bool present;
@@ -6,7 +9,8 @@ typedef struct {
   uint64 index_offset;
 } reader_offsets;
 
-typedef struct {
+
+struct _reader {
   block_source source;
 
   uint64 size;
@@ -18,8 +22,10 @@ typedef struct {
   reader_offsets ref_offsets;
   reader_offsets obj_offsets;
   reader_offsets log_offsets;
-} reader;
+};
 
 int init_reader(reader *r, block_source source);
 int reader_seek(reader *r, iterator *it, record rec);
 void reader_close(reader *r);
+
+#endif

@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stdio.h> // debug
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -491,3 +493,8 @@ int writer_flush_block(writer *w) {
   w->block_writer = NULL;
   return 0;
 }
+
+stats* writer_stats(writer *w) {
+  return &w->stats;
+}
+

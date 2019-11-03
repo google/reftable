@@ -15,6 +15,7 @@ cc_library(
         "basics.h",
         "block.h",
         "constants.h",
+        "iter.h",
         "reader.h",
         "record.h",
         "slice.h",

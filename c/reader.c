@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "iter.h"
 #include "block.h"
 #include "reader.h"
 #include "record.h"
@@ -266,7 +267,7 @@ void table_iter_close(void *p) {
   block_iter_close(&ti->bi);
 }
 
-iterator_ops table_iter_ops = {
+struct _iterator_ops table_iter_ops = {
     .next = &table_iter_next_void,
     .close = &table_iter_close,
 };
@@ -395,4 +396,31 @@ int reader_seek(reader *r, iterator *it, record rec) {
   return reader_seek_internal(r, it, rec);
 }
 
+int reader_seek_ref(reader *r, iterator *it, char *name) {
+  ref_record ref = {
+		    .ref_name = name,
+  };
+  record rec ={};
+  record_from_ref(&rec, &ref);
+  return reader_seek(r, it, rec);
+}
+
 void reader_close(reader *r) { block_source_close(r->source); }
+
+int new_reader(reader **p, block_source src) {
+  reader *rd = calloc(sizeof(reader), 1);
+  int err = init_reader(rd, src);
+  if (err == 0) {
+    *p= rd;
+  } else {
+    free(rd);
+  }
+  return err;
+}
+
+
+void reader_free(reader *r) {
+  reader_close(r);
+  free(r);
+}
+	     

@@ -1,15 +1,11 @@
 #ifndef API_H
 #define API_H
 
-#include <stdint.h>
-#include <stdio.h> // debug
-
 #include "basics.h"
 #include "constants.h"
 #include "slice.h"
 
-typedef struct record_t record;
-
+/* block_source_ops are the operations that make up block_source */
 typedef struct {
   uint64 (*size)(void *source);
   int (*read_block)(void *source, byte **dest, uint64 off, uint32 size);
@@ -17,12 +13,14 @@ typedef struct {
   void (*close)(void *source);
 } block_source_ops;
 
+/* block_source is a generic wrapper for a seekable readable file. */
+typedef struct _block_source block_source;
+
+/* block_source is a value type. */
 struct _block_source {
   block_source_ops *ops;
   void *arg;
 };
-
-typedef struct _block_source block_source;
 
 uint64 block_source_size(block_source source);
 int block_source_read_block(block_source source, byte **dest, uint64 off,
@@ -30,6 +28,7 @@ int block_source_read_block(block_source source, byte **dest, uint64 off,
 void block_source_return_block(block_source source, byte *block);
 void block_source_close(block_source source);
 
+/* write_options sets optiosn for writing a single reftable. */
 typedef struct {
   bool unpadded;
   uint32 block_size;
@@ -39,14 +38,18 @@ typedef struct {
   int restart_interval;
 } write_options;
 
+/* ref_record holds a ref database entry target_value */
 typedef struct {
-  char *ref_name;
+  char *ref_name; // name of the ref. Must be specified.
   uint64 update_index;
-  byte *value;
-  byte *target_value;
-  char *target;
+  byte *value; // SHA1, or NULL
+  byte *target_value; // peeled annotated tag, or NULL.
+  char *target; // symref, or NULL
 } ref_record;
 
+void ref_record_clear(ref_record *ref);
+
+/* log_record holds a reflog entry */
 typedef struct {
   char *ref_name;
   uint64 update_index;
@@ -59,33 +62,31 @@ typedef struct {
   char *message;
 } log_record;
 
-typedef struct _record_ops record_ops;
 
-// value type
-typedef struct record_t {
+/* record is a generic wrapper for differnt types of records. */
+typedef struct {
   void *data;
-  record_ops *ops;
+  struct _record_ops *ops;
 } record;
 
-void record_free(record rec);
 void record_from_ref(record *rec, ref_record *refrec);
 void record_from_log(record *rec, log_record *objrec);
 
-typedef struct {
-  int (*next)(void *iter_arg, record rec);
-  void (*close)(void *iter_arg);
-} iterator_ops;
+/* iterator is the generic interface for walking over data stored in a
+   reftable. */
 
 typedef struct {
-  iterator_ops *ops;
+  struct _iterator_ops *ops;
   void *iter_arg;
 } iterator;
 
 // < 0: error, 0 = OK, > 0: end of iteration
-int iterator_next(iterator it, record rec);
-void iterator_destroy(iterator *it);
-void iterator_set_empty(iterator *it);
+int iterator_next_ref(iterator it, ref_record *ref);
 
+// iterator_destroy must be called after finishing an iteration.
+void iterator_destroy(iterator *it);
+
+/* block_stats holds statistics for a single block type */
 typedef struct {
   int entries;
   int restarts;
@@ -97,6 +98,7 @@ typedef struct {
   uint64 index_offset;
 } block_stats;
 
+/* stats holds overall statistics for a single reftable */
 typedef struct {
   int blocks;
   block_stats ref_stats;
@@ -112,10 +114,39 @@ typedef struct {
 
 typedef struct _writer writer;
 
+/* new_writer creates a new writer */
 writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
                    write_options *opts);
+
+/* writer_add_ref adds a ref_record. Must be called in ascending order. */
 int writer_add_ref(writer *w, ref_record *ref);
+
+/* writer_close finalizes the reftable. The writer is retained so statistics can be inspected. */
 int writer_close(writer *w);
+
+/* writer_stats returns the statistics on the reftable being written. */
+stats* writer_stats(writer *w);
+
+/* writer_free deallocates memory for the writer */
 void writer_free(writer *w);
 
+typedef struct _reader reader;
+
+/* new_reader opens a reftable for reading. If successful, returns 0 code and sets pp */
+int new_reader(reader **pp, block_source);
+
+/* reader_seek_ref returns an iterator where 'name' would be inserted in the table.
+
+   example:
+
+   reader *r  = NULL;
+   int err = new_reader(&r, src);
+   if (err < 0) { ... }
+   iterator it = {};
+   err = reader_seek_ref(r, &it, "refs/heads/master");
+   if (err < 0) { ... }
+ */
+int reader_seek_ref(reader *r, iterator *it, char *name);
+void reader_free(reader *);
+	     
 #endif
