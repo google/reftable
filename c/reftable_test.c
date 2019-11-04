@@ -1,3 +1,17 @@
+// Copyright 2019 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <string.h>
 
 #include "api.h"
@@ -6,7 +20,6 @@
 #include "reader.h"
 #include "record.h"
 #include "test_framework.h"
-#include "writer.h"
 
 void test_buffer(void) {
   slice buf = {};
@@ -61,7 +74,8 @@ void write_table(char ***names, slice *buf, int N, int block_size) {
   int n = writer_close(w);
   assert(n == 0);
 
-  for (int i = 0; i < w->stats.ref_stats.blocks; i++) {
+  stats * stats = writer_stats(w);
+  for (int i = 0; i < stats->ref_stats.blocks; i++) {
     int off = i * opts.block_size;
     if (off == 0) {
       off = HEADER_SIZE;
@@ -159,9 +173,9 @@ void test_table_read_write_seek_index(void) {
 }
 
 int main() {
-  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);
   add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential", &test_table_read_write_sequential);
   add_test_case("test_table_read_write_seek_linear", &test_table_read_write_seek_linear);
+  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);
   test_main();
 }

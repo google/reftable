@@ -1,3 +1,18 @@
+// Copyright 2019 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
 #ifndef RECORD_H
 #define RECORD_H
 
@@ -13,6 +28,15 @@ typedef struct _record_ops {
   int (*decode)(void *rec, slice key, byte extra, slice src);
   void (*clear)(void *rec);
 } record_ops;
+
+/* record is a generic wrapper for differnt types of records. */
+typedef struct {
+  void *data;
+  struct _record_ops *ops;
+} record;
+
+void record_from_ref(record *rec, ref_record *refrec);
+void record_from_log(record *rec, log_record *objrec);
 
 int get_var_int(uint64 *dest, slice in);
 int put_var_int(slice dest, uint64 val);
