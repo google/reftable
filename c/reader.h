@@ -9,7 +9,6 @@ typedef struct {
   uint64 index_offset;
 } reader_offsets;
 
-
 struct _reader {
   block_source source;
 

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -133,7 +134,10 @@ typedef struct {
 } table_iter;
 
 void table_iter_copy_from(table_iter *dest, table_iter *src) {
-  *dest = *src;
+  dest->r = src->r;
+  dest->typ = src->typ;
+  dest->block_off = src->block_off;
+  dest->finished = src->finished;
   block_iter_copy_from(&dest->bi, &src->bi);
 }
 
@@ -183,7 +187,7 @@ exit:
 int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
                              byte typ) {
   if (next_off > r->size) {
-    return 0;
+    return 1;
   }
 
   byte block_typ = 0;
@@ -191,8 +195,8 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
   if (block_size < 0) {
     return block_size;
   }
-  if (block_typ != typ) {
-    return WRONG_TYPE;
+  if (typ != BLOCK_TYPE_ANY && block_typ != typ) {
+    return 1;
   }
 
   byte *block = NULL;
@@ -217,7 +221,7 @@ int table_iter_next_block(table_iter *dest, table_iter *src) {
 
   block_reader br = {};
   int err = reader_init_block_reader(src->r, &br, next_block_off, src->typ);
-  if (err == WRONG_TYPE) {
+  if (err > 0) {
     dest->finished = true;
     return 1;
   }
@@ -343,7 +347,6 @@ int reader_seek_linear(reader *r, table_iter *ti, record want) {
   if (err < 0) {
     goto exit;
   }
-
   err = 0;
 
 exit:
@@ -356,14 +359,69 @@ exit:
 }
 
 int reader_seek_indexed(reader *r, iterator *it, record rec) {
-  abort();
-  return 0;
+  index_record want_index  = {};
+  record_key(rec, &want_index.last_key);
+  record want_index_rec  = {};
+  record_from_index(&want_index_rec, &want_index);
+  index_record index_result = {};
+  record index_result_rec = {};
+  record_from_index(&index_result_rec, &index_result);
+
+  table_iter index_iter = {};
+  int err = reader_start(r, &index_iter, record_type(rec), true);
+  if (err < 0) {
+    goto exit;
+  }
+
+  err = reader_seek_linear(r, &index_iter, want_index_rec);
+  table_iter next = {};
+  while (true) {
+    err = table_iter_next(&index_iter, index_result_rec);
+    table_iter_block_done(&index_iter);
+    if (err != 0) {
+      goto exit;
+    }
+
+    err = reader_table_iter_at(r, &next, index_result.offset, 0);
+    if (err != 0) {
+      goto exit;
+    }
+
+    err = block_iter_seek(&next.bi, want_index.last_key);
+    if (err < 0){
+      goto exit;
+    }
+
+    if (next.typ == record_type(rec)) {
+      err = 0;
+      break;
+    }
+
+    if (next.typ != BLOCK_TYPE_INDEX) {
+      err = FORMAT_ERROR;
+      break;
+    }
+
+    table_iter_copy_from(&index_iter, &next);
+  }
+
+  if (err == 0) {
+    table_iter *malloced = calloc(sizeof(table_iter), 1);
+    table_iter_copy_from(malloced, &next);
+    iterator_from_table_iter(it, malloced);
+  }
+ exit:
+  block_iter_close(&next.bi);
+  table_iter_close(&index_iter);
+  record_clear(want_index_rec);
+  record_clear(index_result_rec);
+  return err;
 }
 
 int reader_seek_internal(reader *r, iterator *it, record rec) {
   reader_offsets *offs = reader_offsets_for(r, record_type(rec));
   uint64 idx = offs->index_offset;
-  if (false && idx > 0) {
+  if (idx > 0) {
     return reader_seek_indexed(r, it, rec);
   }
 

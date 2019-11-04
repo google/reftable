@@ -8,5 +8,6 @@
 #define BLOCK_TYPE_INDEX 'i'
 #define BLOCK_TYPE_REF 'r'
 #define BLOCK_TYPE_OBJ 'o'
+#define BLOCK_TYPE_ANY 0
 
 #define MAX_RESTARTS ((1 << 16) - 1)

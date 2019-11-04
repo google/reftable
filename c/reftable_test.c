@@ -8,7 +8,7 @@
 #include "test_framework.h"
 #include "writer.h"
 
-void test_buffer() {
+void test_buffer(void) {
   slice buf = {};
 
   byte in[] = "hello";
@@ -74,7 +74,7 @@ void write_table(char ***names, slice *buf, int N, int block_size) {
 }
 
 
-void test_table_read_write_sequential() {
+void test_table_read_write_sequential(void) {
   char **names;
   slice buf ={};
   int N =50;
@@ -111,7 +111,7 @@ void test_table_read_write_sequential() {
   free(names);
 }
 
-void test_table_read_write_seek() {
+void test_table_read_write_seek(bool index) {
   char **names;
   slice buf ={};
   int N =50;
@@ -124,7 +124,11 @@ void test_table_read_write_seek() {
   int err = init_reader(&rd, source);
   assert(err == 0);
 
-  for (int i = 0; i < N; i++) {
+  if (!index) {
+    rd.ref_offsets.index_offset = 0;
+  }
+      
+  for (int i = 1; i < N; i++) {
     iterator it = {};
     int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
@@ -146,9 +150,18 @@ void test_table_read_write_seek() {
   free(names);
 }
 
+void test_table_read_write_seek_linear(void) {
+  test_table_read_write_seek(false);
+}
+
+void test_table_read_write_seek_index(void) {
+  test_table_read_write_seek(true);
+}
+
 int main() {
+  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);
   add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential", &test_table_read_write_sequential);
-  add_test_case("test_table_read_write_seek", &test_table_read_write_seek);
+  add_test_case("test_table_read_write_seek_linear", &test_table_read_write_seek_linear);
   test_main();
 }
