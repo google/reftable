@@ -39,7 +39,6 @@ func TestTableObjectIDLen(t *testing.T) {
 		MinUpdateIndex: 0,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
-		IndexObjects:   true,
 	})
 
 	if g := reader.ObjectIDLen; g != 5 {
@@ -131,7 +130,6 @@ func TestTableSeekEmpty(t *testing.T) {
 		MinUpdateIndex: 1,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
-		IndexObjects:   true,
 	})
 
 	_, err := reader.Seek(&RefRecord{})
@@ -183,7 +181,6 @@ func TestTableRoundTrip(t *testing.T) {
 		MinUpdateIndex: 1,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
-		IndexObjects:   true,
 	})
 
 	iter, err := reader.Seek(&RefRecord{})
@@ -232,9 +229,10 @@ func TestTableLastBlockLacksPadding(t *testing.T) {
 		Value:   testHash(1),
 	}}, nil,
 		Options{
-			MinUpdateIndex: 1,
-			MaxUpdateIndex: 1,
-			BlockSize:      10240,
+			MinUpdateIndex:   1,
+			SkipIndexObjects: true,
+			MaxUpdateIndex:   1,
+			BlockSize:        10240,
 		})
 
 	if reader.size >= 100 {
@@ -257,7 +255,6 @@ func TestTableFirstBlock(t *testing.T) {
 			MinUpdateIndex: 1,
 			MaxUpdateIndex: 1,
 			BlockSize:      256,
-			IndexObjects:   true,
 		})
 	if got := reader.offsets[BlockTypeObj].Offset; got != 256 {
 		t.Fatalf("got %d, want %d", got, 256)
@@ -428,8 +425,8 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 
 	_, reader := constructTestTable(t, refs, nil,
 		Options{
-			BlockSize:    256,
-			IndexObjects: indexed,
+			BlockSize:        256,
+			SkipIndexObjects: !indexed,
 		})
 
 	t1 := testHash(4)
