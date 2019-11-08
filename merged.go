@@ -198,7 +198,8 @@ func (m *Merged) Seek(rec Record) (Iterator, error) {
 // mergedIter iterates over a stack of reftables. Entries from higher
 // in the stack obscure lower entries.
 type mergedIter struct {
-	// XXX - could short-circuit the entries coming from the base stack
+	// TODO: We could short-circuit the entries coming from the
+	// base stack
 	typ   byte
 	pq    mergedIterPQueue
 	stack []Iterator

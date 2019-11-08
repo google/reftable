@@ -137,7 +137,6 @@ func (w *Writer) headerBytes() []byte {
 	return buf.Bytes()
 }
 
-// XXX indexHash
 func (w *Writer) indexHash(hash []byte) {
 	if w.opts.SkipIndexObjects {
 		return
