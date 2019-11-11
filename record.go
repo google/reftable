@@ -20,9 +20,9 @@ import (
 	"fmt"
 )
 
-func newRecord(typ byte, key string) Record {
+func newRecord(typ byte, key string) record {
 	switch typ {
-	case BlockTypeLog:
+	case blockTypeLog:
 		l := &LogRecord{}
 		if key != "" {
 			if !l.decodeKey(key) {
@@ -30,15 +30,15 @@ func newRecord(typ byte, key string) Record {
 			}
 		}
 		return l
-	case BlockTypeRef:
+	case blockTypeRef:
 		return &RefRecord{
 			RefName: key,
 		}
-	case BlockTypeObj:
+	case blockTypeObj:
 		return &objRecord{
 			HashPrefix: []byte(key),
 		}
-	case BlockTypeIndex:
+	case blockTypeIndex:
 		return &indexRecord{LastKey: key}
 	}
 	return nil
@@ -119,14 +119,14 @@ func encodeKey(buf []byte, prevKey, key string, extra uint8) (n int, restart boo
 }
 
 func (r *RefRecord) Type() byte {
-	return BlockTypeRef
+	return blockTypeRef
 }
 
 func (r *RefRecord) Key() string {
 	return r.RefName
 }
 
-func (r *RefRecord) CopyFrom(in Record) {
+func (r *RefRecord) CopyFrom(in record) {
 	*r = *in.(*RefRecord)
 }
 func (r *RefRecord) String() string {
@@ -238,12 +238,12 @@ func (r *objRecord) Key() string {
 	return string(r.HashPrefix)
 }
 
-func (r *objRecord) CopyFrom(in Record) {
+func (r *objRecord) CopyFrom(in record) {
 	*r = *in.(*objRecord)
 }
 
 func (r *objRecord) Type() byte {
-	return BlockTypeObj
+	return blockTypeObj
 }
 
 func (r *objRecord) String() string {
@@ -354,14 +354,14 @@ func (r *indexRecord) Key() string {
 }
 
 func (r *indexRecord) Type() byte {
-	return BlockTypeIndex
+	return blockTypeIndex
 }
 
 func (r *indexRecord) valType() byte {
 	return 0
 }
 
-func (r *indexRecord) CopyFrom(in Record) {
+func (r *indexRecord) CopyFrom(in record) {
 	*r = *in.(*indexRecord)
 }
 
@@ -471,7 +471,7 @@ func encodeString(buf []byte, val string) (n int, ok bool) {
 }
 
 func (l *LogRecord) Type() byte {
-	return BlockTypeLog
+	return blockTypeLog
 }
 
 func (l *LogRecord) Key() string {
@@ -484,7 +484,7 @@ func (r *LogRecord) IsTombstone() bool {
 	return r.New == nil && r.Old == nil
 }
 
-func (r *LogRecord) CopyFrom(in Record) {
+func (r *LogRecord) CopyFrom(in record) {
 	*r = *in.(*LogRecord)
 }
 

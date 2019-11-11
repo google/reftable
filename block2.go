@@ -47,7 +47,7 @@ func newBlockWriter2(block []byte) *blockWriter2 {
 	return bw
 }
 
-func (w *blockWriter2) add(rec Record) bool {
+func (w *blockWriter2) add(rec record) bool {
 	n, ok := rec.encode(w.scratch)
 	if !ok {
 		return false
@@ -255,11 +255,11 @@ func (bi *blockIter2) next() (ok bool, key string, val []byte, valType uint8, er
 	return
 }
 
-func (br *blockReader2) Seek(rec Record) (*blockIter2, error) {
+func (br *blockReader2) Seek(rec record) (*blockIter2, error) {
 	return br.seek(string(rec.Type()) + rec.Key())
 }
 
-func (bi *blockIter2) Next(rec Record) (ok bool, err error) {
+func (bi *blockIter2) Next(rec record) (ok bool, err error) {
 	ok, key, val, valType, err := bi.next()
 	if !ok || err != nil {
 		return ok, err

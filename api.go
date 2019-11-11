@@ -21,11 +21,11 @@ type BlockSource interface {
 	Close() error
 }
 
-// Record is a single piece of keyed data, stored in the reftable.
-type Record interface {
+// record is a single piece of keyed data, stored in the reftable.
+type record interface {
 	Key() string
 	Type() byte
-	CopyFrom(Record)
+	CopyFrom(record)
 	IsTombstone() bool
 	String() string
 
@@ -38,14 +38,14 @@ type Record interface {
 type Table interface {
 	MaxUpdateIndex() uint64
 	MinUpdateIndex() uint64
-	Seek(rec Record) (Iterator, error)
+	SeekRef(ref *RefRecord) (*Iterator, error)
+	SeekLog(ref *LogRecord) (*Iterator, error)
+	RefsFor(oid []byte) (*Iterator, error)
 }
 
-// Iterator is an iterator over reftable
-type Iterator interface {
-	// Reads the next record (returning true), or returns false if
-	// there are no more records.
-	Next(rec Record) (bool, error)
+// iterator is an iterator over reftable
+type Iterator struct {
+	impl iterator
 }
 
 // Options define write options for reftables.
@@ -84,26 +84,6 @@ type LogRecord struct {
 	Message  string
 }
 
-// Header is the file header present both at start and end of file.
-type Header struct {
-	Magic          [4]byte
-	BlockSize      uint32
-	MinUpdateIndex uint64
-	MaxUpdateIndex uint64
-}
-
-// Footer is the file footer present only at the end of file.
-type Footer struct {
-	// Footer lacks RefOffset, because it is always 24 (if present)
-	RefIndexOffset uint64
-
-	// On serialization, offset is <<5, lower bits hold id size
-	ObjOffset      uint64
-	ObjIndexOffset uint64
-	LogOffset      uint64
-	LogIndexOffset uint64
-}
-
 // BlockStats provides write statistics data of a certain block type.
 type BlockStats struct {
 	Entries       int
@@ -118,12 +98,12 @@ type BlockStats struct {
 
 // Stats provides general write statistics
 type Stats struct {
-	// type => stats
-	BlockStats map[byte]*BlockStats
-	Blocks     int
+	ObjStats BlockStats
+	RefStats BlockStats
+	LogStats BlockStats
+	idxStats BlockStats
 
-	Header
-	Footer
+	Blocks int
 
 	ObjectIDLen int
 }

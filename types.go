@@ -14,18 +14,22 @@
 
 package reftable
 
-var magic = [4]byte{'R', 'E', 'F', 'T'}
+// header is the file header present both at start and end of file.
+type header struct {
+	Magic          [4]byte
+	BlockSize      uint32
+	MinUpdateIndex uint64
+	MaxUpdateIndex uint64
+}
 
-const hashSize = 20
-const version = 1
-const headerSize = 24
-const footerSize = 68
-const defaultBlockSize = 4096
+// footer is the file footer present only at the end of file.
+type footer struct {
+	// Footer lacks RefOffset, because it is always 24 (if present)
+	RefIndexOffset uint64
 
-const blockTypeLog = 'g'
-const blockTypeIndex = 'i'
-const blockTypeRef = 'r'
-const blockTypeObj = 'o'
-const blockTypeAny = 0
-
-const maxRestarts = (1 << 16) - 1
+	// On serialization, offset is <<5, lower bits hold id size
+	ObjOffset      uint64
+	ObjIndexOffset uint64
+	LogOffset      uint64
+	LogIndexOffset uint64
+}

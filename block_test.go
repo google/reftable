@@ -20,11 +20,11 @@ import (
 )
 
 func TestBlockSeekLog(t *testing.T) {
-	testBlockSeek(t, BlockTypeLog)
+	testBlockSeek(t, blockTypeLog)
 }
 
 func TestBlockSeekRef(t *testing.T) {
-	testBlockSeek(t, BlockTypeRef)
+	testBlockSeek(t, blockTypeRef)
 }
 
 func createSeekReader(t *testing.T, typ byte, bs uint32) ([]string, *blockReader) {
@@ -39,12 +39,12 @@ func createSeekReader(t *testing.T, typ byte, bs uint32) ([]string, *blockReader
 		names = append(names, fmt.Sprintf("refs/heads/branch%02d", i))
 	}
 	for i, n := range names {
-		var rec Record
-		if typ == BlockTypeRef {
+		var rec record
+		if typ == blockTypeRef {
 			rec = &RefRecord{
 				RefName: n,
 			}
-		} else if typ == BlockTypeLog {
+		} else if typ == blockTypeLog {
 			rec = &LogRecord{
 				RefName: n,
 				Message: "hello",
@@ -93,11 +93,11 @@ func testBlockSeek(t *testing.T, typ byte) {
 }
 
 func TestBlockSeekPrefixLog(t *testing.T) {
-	testBlockSeekPrefix(t, BlockTypeLog)
+	testBlockSeekPrefix(t, blockTypeLog)
 }
 
 func TestBlockSeekPrefixRef(t *testing.T) {
-	testBlockSeekPrefix(t, BlockTypeRef)
+	testBlockSeekPrefix(t, blockTypeRef)
 }
 
 func testBlockSeekPrefix(t *testing.T, typ byte) {
@@ -150,11 +150,11 @@ func testBlockSeekLast(t *testing.T, typ byte) {
 }
 
 func TestBlockSeekLastRef(t *testing.T) {
-	testBlockSeekLast(t, BlockTypeRef)
+	testBlockSeekLast(t, blockTypeRef)
 }
 
 func TestBlockSeekLastLog(t *testing.T) {
-	testBlockSeekLast(t, BlockTypeLog)
+	testBlockSeekLast(t, blockTypeLog)
 }
 
 func testBlockSeekFirst(t *testing.T, typ byte) {
@@ -179,15 +179,15 @@ func testBlockSeekFirst(t *testing.T, typ byte) {
 }
 
 func TestBlockSeekFirstRef(t *testing.T) {
-	testBlockSeekFirst(t, BlockTypeRef)
+	testBlockSeekFirst(t, blockTypeRef)
 }
 
 func TestBlockSeekFirstLog(t *testing.T) {
-	testBlockSeekFirst(t, BlockTypeLog)
+	testBlockSeekFirst(t, blockTypeLog)
 }
 
-func readIter(typ byte, bi Iterator) ([]Record, error) {
-	var result []Record
+func readIter(typ byte, bi iterator) ([]record, error) {
+	var result []record
 	for {
 		rec := newRecord(typ, "")
 		ok, err := bi.Next(rec)
@@ -208,7 +208,7 @@ func readIter(typ byte, bi Iterator) ([]Record, error) {
 func TestBlockRestart(t *testing.T) {
 	block := make([]byte, 512)
 	const headerOff = 17
-	bw := newBlockWriter(BlockTypeRef, block, headerOff)
+	bw := newBlockWriter(blockTypeRef, block, headerOff)
 	rec := &RefRecord{
 		RefName: "refs/heads/master",
 	}
@@ -237,7 +237,7 @@ func TestBlockPadding(t *testing.T) {
 	block := make([]byte, 512)
 	const headerOff = 17
 
-	bw := newBlockWriter(BlockTypeRef, block, headerOff)
+	bw := newBlockWriter(blockTypeRef, block, headerOff)
 	rec := &RefRecord{
 		RefName: "refs/heads/master",
 	}
@@ -266,7 +266,7 @@ func TestBlockHeader(t *testing.T) {
 	block := make([]byte, blockSize)
 	header := "hello"
 	copy(block, header)
-	bw := newBlockWriter(BlockTypeRef, block, uint32(len(header)))
+	bw := newBlockWriter(blockTypeRef, block, uint32(len(header)))
 
 	name := "refs/heads/master"
 	rec := &RefRecord{

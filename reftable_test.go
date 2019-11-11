@@ -41,20 +41,20 @@ func TestTableObjectIDLen(t *testing.T) {
 		BlockSize:      512,
 	})
 
-	if g := reader.ObjectIDLen; g != 5 {
+	if g := reader.objectIDLen; g != 5 {
 		t.Errorf("Got %d, want 5", g)
 	}
 
-	iter, err := reader.Seek(&objRecord{})
+	iter, err := reader.seek(&objRecord{})
 	if err != nil {
 		t.Fatalf("start(o): %v", err)
 	}
 
-	objResults, err := readIter(BlockTypeObj, iter)
+	objResults, err := readIter(blockTypeObj, iter)
 	if err != nil {
 		t.Fatalf("readIter(o): %v", err)
 	}
-	objs := []Record{
+	objs := []record{
 		&objRecord{
 			HashPrefix: h1[:5],
 			Offsets:    []uint64{0},
@@ -109,9 +109,6 @@ func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, opts O
 		t.Fatalf("NewReader: %v", err)
 	}
 
-	if !reflect.DeepEqual(w.Stats.Footer, r.Footer) {
-		t.Fatalf("got roundtrip footer %#v, want %#v", w.Stats.Footer, r.Footer)
-	}
 	return w, r
 }
 
@@ -132,7 +129,7 @@ func TestTableSeekEmpty(t *testing.T) {
 		BlockSize:      512,
 	})
 
-	_, err := reader.Seek(&RefRecord{})
+	_, err := reader.SeekRef(&RefRecord{})
 	if err != nil {
 		t.Fatalf("start(r): %v", err)
 	}
@@ -183,11 +180,11 @@ func TestTableRoundTrip(t *testing.T) {
 		BlockSize:      512,
 	})
 
-	iter, err := reader.Seek(&RefRecord{})
+	iter, err := reader.SeekRef(&RefRecord{})
 	if err != nil {
 		t.Fatalf("start(r): %v", err)
 	}
-	refResults, err := readIter(BlockTypeRef, iter)
+	refResults, err := readIter(blockTypeRef, iter.impl)
 	if err != nil {
 		t.Fatalf("readIter(r): %v, %v", err, refResults)
 	}
@@ -195,19 +192,19 @@ func TestTableRoundTrip(t *testing.T) {
 		t.Fatalf("refs size mismatch got %d want %d", len(refResults), len(refs))
 	}
 	for i, r := range refs {
-		var rec Record
+		var rec record
 		rec = &r
 		if !reflect.DeepEqual(refResults[i], rec) {
 			t.Fatalf("got %#v, want %#v", refResults[i], rec)
 		}
 	}
 
-	iter, err = reader.Seek(&LogRecord{})
+	iter, err = reader.SeekLog(&LogRecord{})
 	if err != nil {
 		t.Fatalf("start(g): %v", err)
 	}
 
-	logResults, err := readIter(BlockTypeLog, iter)
+	logResults, err := readIter(blockTypeLog, iter.impl)
 	if err != nil {
 		t.Fatalf("readIter(g): %v", err)
 	}
@@ -215,7 +212,7 @@ func TestTableRoundTrip(t *testing.T) {
 		t.Fatalf("refs size mismatch got %d want %d", len(logResults), len(logs))
 	}
 	for i, r := range logs {
-		var rec Record
+		var rec record
 		rec = &r
 		if !reflect.DeepEqual(logResults[i], rec) {
 			t.Fatalf("got %#v, want %#v", logResults[i], rec)
@@ -256,7 +253,7 @@ func TestTableFirstBlock(t *testing.T) {
 			MaxUpdateIndex: 1,
 			BlockSize:      256,
 		})
-	if got := reader.offsets[BlockTypeObj].Offset; got != 256 {
+	if got := reader.offsets[blockTypeObj].Offset; got != 256 {
 		t.Fatalf("got %d, want %d", got, 256)
 	}
 }
@@ -271,14 +268,14 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 		// Put the variable bit in front to kill prefix compression
 		name := fmt.Sprintf("%04d/%s", i, suffix)[:recSize]
 		switch typ {
-		case BlockTypeRef:
+		case blockTypeRef:
 			rec := RefRecord{
 				RefName: name,
 				Value:   testHash(i),
 			}
 			refs = append(refs, rec)
 			names = append(names, rec.Key())
-		case BlockTypeLog:
+		case blockTypeLog:
 			rec := LogRecord{
 				RefName: name,
 			}
@@ -292,12 +289,12 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 		MaxUpdateIndex: 1,
 		BlockSize:      blockSize,
 	})
-	if got := writer.Stats.BlockStats[typ].MaxIndexLevel; got != maxLevel {
+	if got := writer.getBlockStats(typ).MaxIndexLevel; got != maxLevel {
 		t.Fatalf("got index level %d, want %d", got, maxLevel)
 	}
 
 	if sequential {
-		iter, err := reader.Seek(newRecord(typ, ""))
+		iter, err := reader.seek(newRecord(typ, ""))
 		if err != nil {
 			t.Fatalf("Start %v", err)
 		}
@@ -322,7 +319,7 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 	for i := 1; i < len(names); i *= 3 {
 		nm := names[i]
 		rec := newRecord(typ, names[i])
-		it, err := reader.Seek(rec)
+		it, err := reader.seek(rec)
 		if err != nil {
 			t.Errorf("Seek %q: %v", nm, err)
 			continue
@@ -346,38 +343,38 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 
 func TestTableSeekRefLevel0(t *testing.T) {
 	// 8 * 50 / 256 ~= 2, this should not have an index
-	testTableSeek(t, BlockTypeRef, 4, 50, 256, 0, false)
+	testTableSeek(t, blockTypeRef, 4, 50, 256, 0, false)
 }
 
 func TestTableSeekRefLevel1(t *testing.T) {
 	// 30 * 50 / 256 = 6, this will force a 1-level index
-	testTableSeek(t, BlockTypeRef, 30, 50, 256, 1, false)
+	testTableSeek(t, blockTypeRef, 30, 50, 256, 1, false)
 }
 
 func TestTableSeekRefLevel2(t *testing.T) {
 	// 150 * 50 / 256 ~= 30, this should have 2-level index
-	testTableSeek(t, BlockTypeRef, 120, 50, 256, 2, false)
+	testTableSeek(t, blockTypeRef, 120, 50, 256, 2, false)
 }
 
 func TestTableSeekLogLevel0(t *testing.T) {
 	// 8 * 50 / 256 ~= 2, this should not have an index
-	testTableSeek(t, BlockTypeLog, 4, 50, 256, 0, false)
+	testTableSeek(t, blockTypeLog, 4, 50, 256, 0, false)
 }
 
 func TestTableIterLogLevel0(t *testing.T) {
 	// 4 * 50 / 256 ~= 2, this should not have an index
-	testTableSeek(t, BlockTypeLog, 4, 50, 256, 0, true)
+	testTableSeek(t, blockTypeLog, 4, 50, 256, 0, true)
 }
 
 func TestTableIterRefLevel0(t *testing.T) {
 	// 4 * 50 / 256 ~= 2, this should not have an index
-	testTableSeek(t, BlockTypeRef, 4, 50, 256, 0, true)
+	testTableSeek(t, blockTypeRef, 4, 50, 256, 0, true)
 }
 
 func TestTableSeekLogLevel1(t *testing.T) {
 	// 25 * (50b + 60b) -> 13 blocks
 	// 13 blocks -> 3 index blocks; not enough for another index level
-	testTableSeek(t, BlockTypeLog, 25, 50, 256, 1, false)
+	testTableSeek(t, blockTypeLog, 25, 50, 256, 1, false)
 }
 
 func TestTableLogBlocksUnpadded(t *testing.T) {
@@ -396,7 +393,7 @@ func TestTableLogBlocksUnpadded(t *testing.T) {
 		Options{
 			BlockSize: 4096,
 		})
-	if got := writer.Stats.BlockStats[BlockTypeLog].Blocks; got != N {
+	if got := writer.Stats.LogStats.Blocks; got != N {
 		t.Errorf("got log block count %d, want %d", got, N)
 	}
 	if reader.size > 4000 {
@@ -431,7 +428,7 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 
 	t1 := testHash(4)
 
-	var want []Record
+	var want []record
 	for _, r := range refs {
 		if bytes.Compare(r.Value, t1) == 0 || bytes.Compare(r.TargetValue, t1) == 0 {
 			copy := r
@@ -444,7 +441,7 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 		t.Fatalf("RefsFor: %v", err)
 	}
 
-	got, err := readIter(BlockTypeRef, it)
+	got, err := readIter(blockTypeRef, it.impl)
 	if err != nil {
 		t.Fatalf("ReadIter: %v", err)
 	}

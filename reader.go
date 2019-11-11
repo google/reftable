@@ -52,9 +52,10 @@ type readerOffsets struct {
 
 // Reader allows reading from a reftable.
 type Reader struct {
-	Header      Header
-	Footer      Footer
-	ObjectIDLen int
+	header header
+	footer footer
+
+	objectIDLen int
 
 	src  BlockSource
 	size uint64
@@ -86,11 +87,11 @@ func NewReader(src BlockSource) (*Reader, error) {
 	}
 
 	footBuf := bytes.NewBuffer(footblock)
-	if err := binary.Read(footBuf, binary.BigEndian, &r.Header); err != nil {
+	if err := binary.Read(footBuf, binary.BigEndian, &r.header); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Read(footBuf, binary.BigEndian, &r.Footer); err != nil {
+	if err := binary.Read(footBuf, binary.BigEndian, &r.footer); err != nil {
 		return nil, err
 	}
 
@@ -99,15 +100,15 @@ func NewReader(src BlockSource) (*Reader, error) {
 		return nil, err
 	}
 
-	if r.Header.Magic != magic {
-		return nil, fmt.Errorf("reftable: got magic %q, want %q", r.Header.Magic, magic)
+	if r.header.Magic != magic {
+		return nil, fmt.Errorf("reftable: got magic %q, want %q", r.header.Magic, magic)
 	}
 
-	readVersion := r.Header.BlockSize >> 24
+	readVersion := r.header.BlockSize >> 24
 	if readVersion != version {
 		return nil, fmt.Errorf("reftable: no support for format version %d", readVersion)
 	}
-	r.Header.BlockSize &= (1 << 24) - 1
+	r.header.BlockSize &= (1 << 24) - 1
 
 	if footBuf.Len() > 0 {
 		log.Panicf("footer size %d", footBuf.Len())
@@ -120,8 +121,8 @@ func NewReader(src BlockSource) (*Reader, error) {
 		return nil, err
 	}
 
-	r.ObjectIDLen = int(r.Footer.ObjOffset & ((1 << 5) - 1))
-	r.Footer.ObjOffset >>= 5
+	r.objectIDLen = int(r.footer.ObjOffset & ((1 << 5) - 1))
+	r.footer.ObjOffset >>= 5
 
 	wantCRC32 := crc32.ChecksumIEEE(footblock[:footerSize-4])
 	if gotCRC32 != wantCRC32 {
@@ -130,20 +131,20 @@ func NewReader(src BlockSource) (*Reader, error) {
 
 	firstBlockTyp := headBlock[headerSize]
 	r.offsets = map[byte]readerOffsets{
-		BlockTypeRef: {
-			Present:     firstBlockTyp == BlockTypeRef,
+		blockTypeRef: {
+			Present:     firstBlockTyp == blockTypeRef,
 			Offset:      0,
-			IndexOffset: r.Footer.RefIndexOffset,
+			IndexOffset: r.footer.RefIndexOffset,
 		},
-		BlockTypeLog: {
-			Present:     firstBlockTyp == BlockTypeLog || r.Footer.LogOffset > 0,
-			Offset:      r.Footer.LogOffset,
-			IndexOffset: r.Footer.LogIndexOffset,
+		blockTypeLog: {
+			Present:     firstBlockTyp == blockTypeLog || r.footer.LogOffset > 0,
+			Offset:      r.footer.LogOffset,
+			IndexOffset: r.footer.LogIndexOffset,
 		},
-		BlockTypeObj: {
-			Present:     r.Footer.ObjOffset > 0,
-			Offset:      r.Footer.ObjOffset,
-			IndexOffset: r.Footer.ObjIndexOffset,
+		blockTypeObj: {
+			Present:     r.footer.ObjOffset > 0,
+			Offset:      r.footer.ObjOffset,
+			IndexOffset: r.footer.ObjIndexOffset,
 		},
 	}
 
@@ -165,19 +166,19 @@ type tableIter struct {
 
 // nextInBlock advances the block iterator, or returns false we are
 // past the last record.
-func (i *tableIter) nextInBlock(rec Record) (bool, error) {
+func (i *tableIter) nextInBlock(rec record) (bool, error) {
 	ok, err := i.bi.Next(rec)
 	if ok {
 		r, isRef := rec.(*RefRecord)
 		if isRef {
-			r.UpdateIndex += i.r.Header.MinUpdateIndex
+			r.UpdateIndex += i.r.header.MinUpdateIndex
 		}
 	}
 	return ok, err
 }
 
 // Next implements the Iterator interface
-func (i *tableIter) Next(rec Record) (bool, error) {
+func (i *tableIter) Next(rec record) (bool, error) {
 	if i.finished {
 		return false, nil
 	}
@@ -218,7 +219,7 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 		return
 	}
 
-	guessBlockSize := r.Header.BlockSize
+	guessBlockSize := r.header.BlockSize
 	if guessBlockSize == 0 {
 		guessBlockSize = defaultBlockSize
 	}
@@ -248,7 +249,7 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 		headerOff = headerSize
 	}
 
-	return newBlockReader(block, headerOff, r.Header.BlockSize)
+	return newBlockReader(block, headerOff, r.header.BlockSize)
 }
 
 // nextBlock moves to the next block, or returns false fi there is none.
@@ -274,7 +275,7 @@ func (r *Reader) start(typ byte, index bool) (*tableIter, error) {
 	off := r.offsets[typ].Offset
 	if index {
 		off = r.offsets[typ].IndexOffset
-		typ = BlockTypeIndex
+		typ = blockTypeIndex
 		if off == 0 {
 			return nil, nil
 		}
@@ -298,17 +299,33 @@ func (r *Reader) tabIterAt(off uint64, wantTyp byte) (*tableIter, error) {
 	return ti, nil
 }
 
-// Seek returns an iterator pointed to just before the key specified
+// seekRecord returns an iterator pointed to just before the key specified
 // by the record
-func (r *Reader) Seek(rec Record) (Iterator, error) {
+func (r *Reader) seekRecord(rec record) (iterator, error) {
 	if !r.offsets[rec.Type()].Present {
 		return &emptyIterator{}, nil
 	}
 	return r.seek(rec)
 }
 
+func (r *Reader) SeekRef(ref *RefRecord) (*Iterator, error) {
+	impl, err := r.seekRecord(ref)
+	if err != nil {
+		return nil, err
+	}
+	return &Iterator{impl}, nil
+}
+
+func (r *Reader) SeekLog(log *LogRecord) (*Iterator, error) {
+	impl, err := r.seekRecord(log)
+	if err != nil {
+		return nil, err
+	}
+	return &Iterator{impl}, nil
+}
+
 // seek seekes to the key specified by the record
-func (r *Reader) seek(rec Record) (*tableIter, error) {
+func (r *Reader) seek(rec record) (*tableIter, error) {
 	typ := rec.Type()
 	if rec.Key() == newRecord(rec.Type(), "").Key() {
 		return r.start(typ, false)
@@ -333,7 +350,7 @@ func (r *Reader) seek(rec Record) (*tableIter, error) {
 }
 
 // seekIndexed seeks to the `want` record, using its index.
-func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
+func (r *Reader) seekIndexed(want record) (*tableIter, error) {
 	idxIter, err := r.start(want.Type(), true)
 	if err != nil {
 		return nil, err
@@ -372,7 +389,7 @@ func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
 			return tabIter, nil
 		}
 
-		if tabIter.typ != BlockTypeIndex {
+		if tabIter.typ != blockTypeIndex {
 			log.Panicf("got type %c following indexes", tabIter.typ)
 		}
 
@@ -381,7 +398,7 @@ func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
 }
 
 // seekLinear iterates tabIter to just before the wanted record.
-func (r *Reader) seekLinear(tabIter *tableIter, want Record) (bool, error) {
+func (r *Reader) seekLinear(tabIter *tableIter, want record) (bool, error) {
 	rec := newRecord(want.Type(), "")
 
 	wantKey := want.Key()
@@ -423,11 +440,11 @@ func (r *Reader) seekLinear(tabIter *tableIter, want Record) (bool, error) {
 }
 
 func (r *Reader) MaxUpdateIndex() uint64 {
-	return r.Header.MaxUpdateIndex
+	return r.header.MaxUpdateIndex
 }
 
 func (r *Reader) MinUpdateIndex() uint64 {
-	return r.Header.MinUpdateIndex
+	return r.header.MinUpdateIndex
 }
 
 // indexedTableRefIter iterates over a refs, returning refs pointing
@@ -453,7 +470,7 @@ func (i *indexedTableRefIter) nextBlock() error {
 	nextOff := i.offsets[0]
 	i.offsets = i.offsets[1:]
 
-	br, err := i.r.newBlockReader(nextOff, BlockTypeRef)
+	br, err := i.r.newBlockReader(nextOff, blockTypeRef)
 	if err != nil {
 		return err
 	}
@@ -466,7 +483,7 @@ func (i *indexedTableRefIter) nextBlock() error {
 }
 
 // Next implements the Iterator interface
-func (i *indexedTableRefIter) Next(rec Record) (bool, error) {
+func (i *indexedTableRefIter) Next(rec record) (bool, error) {
 	ref := rec.(*RefRecord)
 	for {
 		ok, err := i.cur.Next(ref)
@@ -491,25 +508,25 @@ func (i *indexedTableRefIter) Next(rec Record) (bool, error) {
 }
 
 // RefsFor iterates over refs that point to `oid`.
-func (r *Reader) RefsFor(oid []byte) (Iterator, error) {
-	if r.offsets[BlockTypeObj].Present {
+func (r *Reader) RefsFor(oid []byte) (*Iterator, error) {
+	if r.offsets[blockTypeObj].Present {
 		return r.refsForIndexed(oid)
 	}
 
-	it, err := r.start(BlockTypeRef, false)
+	it, err := r.start(blockTypeRef, false)
 	if err != nil {
 		return nil, err
 	}
-	return &filteringRefIterator{
+	return &Iterator{&filteringRefIterator{
 		tab:         r,
 		oid:         oid,
 		doubleCheck: false,
 		it:          it,
-	}, nil
+	}}, nil
 }
 
-func (r *Reader) refsForIndexed(oid []byte) (Iterator, error) {
-	want := &objRecord{HashPrefix: oid[:r.ObjectIDLen]}
+func (r *Reader) refsForIndexed(oid []byte) (*Iterator, error) {
+	want := &objRecord{HashPrefix: oid[:r.objectIDLen]}
 
 	it, err := r.seek(want)
 	if err != nil {
@@ -522,7 +539,7 @@ func (r *Reader) refsForIndexed(oid []byte) (Iterator, error) {
 		return nil, err
 	}
 	if !ok || got.Key() != want.Key() {
-		return &emptyIterator{}, nil
+		return &Iterator{&emptyIterator{}}, nil
 	}
 
 	tr := &indexedTableRefIter{
@@ -533,5 +550,5 @@ func (r *Reader) refsForIndexed(oid []byte) (Iterator, error) {
 	if err := tr.nextBlock(); err != nil {
 		return nil, err
 	}
-	return tr, nil
+	return &Iterator{tr}, nil
 }

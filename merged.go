@@ -22,7 +22,7 @@ import (
 
 // pqEntry is an entry of the priority queue
 type pqEntry struct {
-	rec   Record
+	rec   record
 	index int
 }
 
@@ -135,27 +135,27 @@ func (m *Merged) MinUpdateIndex() uint64 {
 }
 
 // RefsFor returns the refs that point to the given oid
-func (m *Merged) RefsFor(oid []byte) (Iterator, error) {
+func (m *Merged) RefsFor(oid []byte) (*Iterator, error) {
 	mit := &mergedIter{
-		typ: BlockTypeRef,
+		typ: blockTypeRef,
 	}
 	for _, t := range m.stack {
 		it, err := t.RefsFor(oid)
 		if err != nil {
 			return nil, err
 		}
-		mit.stack = append(mit.stack, it)
+		mit.stack = append(mit.stack, it.impl)
 	}
 
 	if err := mit.init(); err != nil {
 		return nil, err
 	}
-	return &filteringRefIterator{
+	return &Iterator{&filteringRefIterator{
 		tab:         m,
 		oid:         oid,
 		it:          mit,
 		doubleCheck: true,
-	}, nil
+	}}, nil
 }
 
 func uniq(ss []string) []string {
@@ -173,10 +173,26 @@ func uniq(ss []string) []string {
 }
 
 // Seek returns an iterator positioned before the wanted record.
-func (m *Merged) Seek(rec Record) (Iterator, error) {
-	var its []Iterator
+func (m *Merged) SeekLog(log *LogRecord) (*Iterator, error) {
+	impl, err := m.seek(log)
+	if err != nil {
+		return nil, err
+	}
+	return &Iterator{impl}, nil
+}
+
+func (m *Merged) SeekRef(ref *RefRecord) (*Iterator, error) {
+	impl, err := m.seek(ref)
+	if err != nil {
+		return nil, err
+	}
+	return &Iterator{impl}, nil
+}
+
+func (m *Merged) seek(rec record) (iterator, error) {
+	var its []iterator
 	for _, t := range m.stack {
-		iter, err := t.Seek(rec)
+		iter, err := t.seekRecord(rec)
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +218,7 @@ type mergedIter struct {
 	// base stack
 	typ   byte
 	pq    mergedIterPQueue
-	stack []Iterator
+	stack []iterator
 }
 
 func (it *mergedIter) init() error {
@@ -246,7 +262,7 @@ func (m *mergedIter) advanceSubIter(index int) error {
 	return nil
 }
 
-func (m *mergedIter) Next(rec Record) (bool, error) {
+func (m *mergedIter) Next(rec record) (bool, error) {
 	for {
 		ok, err := m.next(rec)
 		if !ok || err != nil {
@@ -256,7 +272,7 @@ func (m *mergedIter) Next(rec Record) (bool, error) {
 	}
 }
 
-func (m *mergedIter) next(rec Record) (bool, error) {
+func (m *mergedIter) next(rec record) (bool, error) {
 	if m.pq.isEmpty() {
 		return false, nil
 	}

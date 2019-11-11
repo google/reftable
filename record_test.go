@@ -30,7 +30,7 @@ func testHash(j int) []byte {
 }
 
 func TestRecordRoundTripRefRecord(t *testing.T) {
-	inputs := []Record{&RefRecord{
+	inputs := []record{&RefRecord{
 		RefName:     "prefix/master",
 		UpdateIndex: 32,
 	}, &RefRecord{
@@ -51,7 +51,7 @@ func TestRecordRoundTripRefRecord(t *testing.T) {
 	testRecordRoundTrip(t, inputs)
 }
 
-func testRecordRoundTrip(t *testing.T, inputs []Record) {
+func testRecordRoundTrip(t *testing.T, inputs []record) {
 	typ := inputs[0].Type()
 	buf := make([]byte, 1024)
 	out := buf
@@ -74,7 +74,7 @@ func testRecordRoundTrip(t *testing.T, inputs []Record) {
 	buf = buf[:len(buf)-len(out)]
 
 	lastKey = ""
-	var results []Record
+	var results []record
 	for len(buf) > 0 {
 		rec := newRecord(typ, "")
 
@@ -83,7 +83,7 @@ func testRecordRoundTrip(t *testing.T, inputs []Record) {
 		if !ok {
 			t.Fatalf("quick.Value failed")
 		}
-		rec = recVal.Interface().(Record)
+		rec = recVal.Interface().(record)
 
 		n, key, valType, ok := decodeKey(buf, lastKey)
 		if !ok {
@@ -127,7 +127,7 @@ func TestCommonPrefix(t *testing.T) {
 }
 
 func TestRecordRoundTripLogRecord(t *testing.T) {
-	inputs := []Record{&LogRecord{
+	inputs := []record{&LogRecord{
 		RefName:  "prefix/master",
 		TS:       552,
 		New:      testHash(2),
@@ -153,7 +153,7 @@ func TestRecordRoundTripLogRecord(t *testing.T) {
 }
 
 func TestRecordRoundTripObj(t *testing.T) {
-	inputs := []Record{&objRecord{
+	inputs := []record{&objRecord{
 		HashPrefix: []byte("prefix/master"),
 		Offsets:    []uint64{1, 25, 239},
 	}, &objRecord{

@@ -70,6 +70,9 @@ type Writer struct {
 	objIndex map[string][]uint64
 
 	Stats Stats
+
+	header header
+	footer footer
 }
 
 func (opts *Options) setDefaults() {
@@ -95,16 +98,11 @@ func NewWriter(out io.Writer, opts *Options) (*Writer, error) {
 	}
 
 	w.paddedWriter.out = out
-	w.Stats.BlockStats = map[byte]*BlockStats{}
-	for _, c := range "rgoi" {
-		w.Stats.BlockStats[byte(c)] = new(BlockStats)
-	}
-
 	if !opts.SkipIndexObjects {
 		w.objIndex = map[string][]uint64{}
 	}
 
-	w.blockWriter = w.newBlockWriter(BlockTypeRef)
+	w.blockWriter = w.newBlockWriter(blockTypeRef)
 	return w, nil
 }
 
@@ -124,13 +122,12 @@ func (w *Writer) newBlockWriter(typ byte) *blockWriter {
 }
 
 func (w *Writer) headerBytes() []byte {
-	w.Stats.Header = Header{
+	h := header{
 		Magic:          magic,
 		BlockSize:      w.opts.BlockSize,
 		MinUpdateIndex: w.opts.MinUpdateIndex,
 		MaxUpdateIndex: w.opts.MaxUpdateIndex,
 	}
-	h := w.Stats.Header
 	h.BlockSize = h.BlockSize | (version << 24)
 	buf := bytes.NewBuffer(make([]byte, 0, 24))
 	binary.Write(buf, binary.BigEndian, h)
@@ -174,7 +171,7 @@ func (w *Writer) AddRef(r *RefRecord) error {
 // AddLog adds a LogRecord to the table. AddLog must be called in
 // ascending order.
 func (w *Writer) AddLog(l *LogRecord) error {
-	if w.blockWriter != nil && w.blockWriter.getType() == BlockTypeRef {
+	if w.blockWriter != nil && w.blockWriter.getType() == blockTypeRef {
 		w.finishPublicSection()
 	}
 
@@ -184,7 +181,7 @@ func (w *Writer) AddLog(l *LogRecord) error {
 	return w.add(l)
 }
 
-func (w *Writer) add(rec Record) error {
+func (w *Writer) add(rec record) error {
 	k := rec.Key()
 	if w.lastKey >= k {
 		log.Panicf("keys must be ascending: got %q last %q", rec, w.lastRec)
@@ -219,15 +216,14 @@ func (w *Writer) Close() error {
 	hb := w.headerBytes()
 
 	buf := bytes.NewBuffer(hb)
-	w.Stats.Footer = Footer{
-		RefIndexOffset: w.Stats.BlockStats[BlockTypeRef].IndexOffset,
-		ObjOffset:      w.Stats.BlockStats[BlockTypeObj].Offset,
-		ObjIndexOffset: w.Stats.BlockStats[BlockTypeObj].IndexOffset,
-		LogOffset:      w.Stats.BlockStats[BlockTypeLog].Offset,
-		LogIndexOffset: w.Stats.BlockStats[BlockTypeLog].IndexOffset,
+	f := footer{
+		RefIndexOffset: w.Stats.RefStats.IndexOffset,
+		ObjOffset:      w.Stats.ObjStats.Offset,
+		ObjIndexOffset: w.Stats.ObjStats.IndexOffset,
+		LogOffset:      w.Stats.LogStats.Offset,
+		LogIndexOffset: w.Stats.LogStats.IndexOffset,
 	}
 
-	f := w.Stats.Footer
 	f.ObjOffset = f.ObjOffset<<5 | uint64(w.Stats.ObjectIDLen)
 
 	if err := binary.Write(buf, binary.BigEndian, &f); err != nil {
@@ -250,6 +246,21 @@ func (w *Writer) Close() error {
 
 const debug = false
 
+func (w *Writer) getBlockStats(typ byte) *BlockStats {
+	switch typ {
+	case blockTypeRef:
+		return &w.Stats.RefStats
+	case blockTypeLog:
+		return &w.Stats.LogStats
+	case blockTypeObj:
+		return &w.Stats.ObjStats
+	case blockTypeIndex:
+		return &w.Stats.idxStats
+	}
+
+	panic(typ)
+}
+
 func (w *Writer) flushBlock() error {
 	if w.blockWriter == nil {
 		return nil
@@ -258,7 +269,7 @@ func (w *Writer) flushBlock() error {
 		return nil
 	}
 	typ := w.blockWriter.getType()
-	blockStats := w.Stats.BlockStats[typ]
+	blockStats := w.getBlockStats(typ)
 	// blockStats.Offset maybe 0 legitimately, so look at
 	// blockStats.Blocks instead
 	if blockStats.Blocks == 0 {
@@ -267,7 +278,7 @@ func (w *Writer) flushBlock() error {
 	}
 	raw := w.blockWriter.finish()
 	padding := int(w.opts.BlockSize) - len(raw)
-	if w.opts.Unpadded || typ == BlockTypeLog {
+	if w.opts.Unpadded || typ == blockTypeLog {
 		padding = 0
 	}
 
@@ -303,7 +314,7 @@ func (w *Writer) finishPublicSection() error {
 		return err
 	}
 
-	if typ == BlockTypeRef && !w.opts.SkipIndexObjects {
+	if typ == blockTypeRef && !w.opts.SkipIndexObjects {
 		if err := w.dumpObjectIndex(); err != nil {
 			return err
 		}
@@ -346,7 +357,7 @@ func (w *Writer) dumpObjectIndex() error {
 	}
 	w.Stats.ObjectIDLen = maxCommon + 1
 
-	w.blockWriter = w.newBlockWriter(BlockTypeObj)
+	w.blockWriter = w.newBlockWriter(blockTypeObj)
 	for _, k := range strs {
 		offsets := w.objIndex[k]
 		k = k[:w.Stats.ObjectIDLen]
@@ -360,7 +371,7 @@ func (w *Writer) dumpObjectIndex() error {
 			return err
 		}
 
-		w.blockWriter = w.newBlockWriter(BlockTypeObj)
+		w.blockWriter = w.newBlockWriter(blockTypeObj)
 		if !w.blockWriter.add(rec) {
 			rec.Offsets = nil
 			if !w.blockWriter.add(rec) {
@@ -387,11 +398,11 @@ func (w *Writer) finishSection() error {
 		// always write index for unaligned files.
 		threshold = 1
 	}
-	before := w.Stats.BlockStats[BlockTypeIndex].Blocks
+	before := w.Stats.idxStats.Blocks
 	for len(w.index) > threshold {
 		maxLevel++
 		indexStart = w.next
-		w.blockWriter = w.newBlockWriter(BlockTypeIndex)
+		w.blockWriter = w.newBlockWriter(blockTypeIndex)
 		idx := w.index
 		w.index = nil
 		for _, i := range idx {
@@ -402,7 +413,7 @@ func (w *Writer) finishSection() error {
 			if err := w.flushBlock(); err != nil {
 				return err
 			}
-			w.blockWriter = w.newBlockWriter(BlockTypeIndex)
+			w.blockWriter = w.newBlockWriter(blockTypeIndex)
 			if !w.blockWriter.add(&i) {
 				panic("fail on fresh block")
 			}
@@ -413,8 +424,8 @@ func (w *Writer) finishSection() error {
 		return err
 	}
 
-	blockStats := w.Stats.BlockStats[typ]
-	blockStats.IndexBlocks = w.Stats.BlockStats[BlockTypeIndex].Blocks - before
+	blockStats := w.getBlockStats(typ)
+	blockStats.IndexBlocks = w.Stats.idxStats.Blocks - before
 	blockStats.IndexOffset = indexStart
 	blockStats.MaxIndexLevel = maxLevel
 	return nil

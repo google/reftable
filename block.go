@@ -67,7 +67,7 @@ func (w *blockWriter) getType() byte {
 }
 
 // add adds a record, returning true, or if it does not fit, false.
-func (w *blockWriter) add(r Record) bool {
+func (w *blockWriter) add(r record) bool {
 	last := w.lastKey
 	if w.entries%w.restartInterval == 0 {
 		last = ""
@@ -133,7 +133,7 @@ func (w *blockWriter) finish() (data []byte) {
 
 	data = w.buf[:w.next]
 
-	if w.getType() == BlockTypeLog {
+	if w.getType() == blockTypeLog {
 		compressed := bytes.Buffer{}
 		compressed.Write(data[:w.headerOff+4])
 
@@ -186,7 +186,7 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 
 	sz := getU24(block[headerOff+1:])
 
-	if typ == BlockTypeLog {
+	if typ == blockTypeLog {
 		decompress := make([]byte, 0, sz)
 		buf := bytes.NewBuffer(block)
 		out := bytes.NewBuffer(decompress)
@@ -310,7 +310,7 @@ func (br *blockReader) seek(key string) (*blockIter, error) {
 }
 
 // Next implement the Iterator interface.
-func (bi *blockIter) Next(r Record) (bool, error) {
+func (bi *blockIter) Next(r record) (bool, error) {
 	if bi.nextOffset >= uint32(len(bi.br.block)) {
 		return false, nil
 	}

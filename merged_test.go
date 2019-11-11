@@ -104,7 +104,7 @@ func TestMerged(t *testing.T) {
 	merged := constructMergedRefTestTable(t, r1, r2, r3)
 
 	if false {
-		want := []Record{
+		want := []record{
 			// the deletion is also produced in the merged
 			// iteration, for compaction.
 			&r2[0],
@@ -113,12 +113,12 @@ func TestMerged(t *testing.T) {
 			&r3[1],
 		}
 
-		iter, err := merged.Seek(&RefRecord{RefName: "a"})
+		iter, err := merged.SeekRef(&RefRecord{RefName: "a"})
 		if err != nil {
 			t.Fatalf("Seek: %v", err)
 		}
 
-		got, err := readIter(BlockTypeRef, iter)
+		got, err := readIter(blockTypeRef, iter.impl)
 		if err != nil {
 			t.Fatalf("readIter: %v", err)
 		}
@@ -133,12 +133,12 @@ func TestMerged(t *testing.T) {
 			t.Fatalf("Seek: %v", err)
 		}
 
-		got, err := readIter(BlockTypeRef, iter)
+		got, err := readIter(blockTypeRef, iter.impl)
 		if err != nil {
 			t.Fatalf("readIter: %v", err)
 		}
 
-		want := []Record{
+		want := []record{
 			&r1[1],
 			&r3[1],
 		}

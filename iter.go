@@ -19,7 +19,7 @@ import "bytes"
 type emptyIterator struct {
 }
 
-func (e *emptyIterator) Next(Record) (bool, error) {
+func (e *emptyIterator) Next(record) (bool, error) {
 	return false, nil
 }
 
@@ -34,11 +34,11 @@ type filteringRefIterator struct {
 	tab         Table
 
 	// mutable
-	it Iterator
+	it iterator
 }
 
 // Next implements the Iterator interface.
-func (fri *filteringRefIterator) Next(rec Record) (bool, error) {
+func (fri *filteringRefIterator) Next(rec record) (bool, error) {
 	ref := rec.(*RefRecord)
 	for {
 		ok, err := fri.it.Next(ref)
@@ -47,12 +47,12 @@ func (fri *filteringRefIterator) Next(rec Record) (bool, error) {
 		}
 
 		if fri.doubleCheck {
-			it, err := fri.tab.Seek(ref)
+			it, err := fri.tab.SeekRef(ref)
 			if err != nil {
 				return false, err
 			}
 
-			ok, err := it.Next(ref)
+			ok, err := it.NextRef(ref)
 
 			// XXX !ok
 			if !ok || err != nil {
@@ -64,4 +64,18 @@ func (fri *filteringRefIterator) Next(rec Record) (bool, error) {
 			return true, err
 		}
 	}
+}
+
+type iterator interface {
+	// Reads the next record (returning true), or returns false if
+	// there are no more records.
+	Next(rec record) (bool, error)
+}
+
+func (it *Iterator) NextRef(ref *RefRecord) (bool, error) {
+	return it.impl.Next(ref)
+}
+
+func (it *Iterator) NextLog(log *LogRecord) (bool, error) {
+	return it.impl.Next(log)
 }
