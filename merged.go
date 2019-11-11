@@ -263,16 +263,6 @@ func (m *mergedIter) advanceSubIter(index int) error {
 }
 
 func (m *mergedIter) Next(rec record) (bool, error) {
-	for {
-		ok, err := m.next(rec)
-		if !ok || err != nil {
-			return ok, err
-		}
-		return true, nil
-	}
-}
-
-func (m *mergedIter) next(rec record) (bool, error) {
 	if m.pq.isEmpty() {
 		return false, nil
 	}
