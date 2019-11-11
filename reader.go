@@ -196,51 +196,51 @@ func (i *tableIter) Next(rec Record) (bool, error) {
 	return i.bi.Next(rec)
 }
 
-// blockSize returns the block size from the block header
-func (r *Reader) blockSize(off uint64) (typ byte, size uint32, err error) {
+// extractBlockSize returns the block size from the block header
+func extractBlockSize(block []byte, off uint64) (typ byte, size uint32, err error) {
 	if off == 0 {
-		off = 24
+		block = block[24:]
 	}
 
-	header, err := r.getBlock(off, 4)
-	if err != nil {
-		return 0, 0, err
+	if !isBlockType(block[0]) {
+		return 0, 0, fmtError
 	}
-	if !isBlockType(header[0]) {
-		return 0, 0, nil
-	}
-	return header[0], getU24(header[1:]), nil
+
+	return block[0], getU24(block[1:]), nil
 }
 
 // newBlockReader opens a block of the given type, starting at
 // nextOff. It is not an error to read beyond the end of file, or
 // specify an offset into a different type of block. If this happens,
 // a nil blockReader is returned.
-func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err error) {
+func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, err error) {
 	if nextOff >= r.size {
 		return
 	}
 
-	// XXX we are accessing the block twice. Would be better to do it just
-	// once.
-	blockTyp, blockSize, err := r.blockSize(nextOff)
+	guessBlockSize := r.Header.BlockSize
+	if guessBlockSize == 0 {
+		guessBlockSize = defaultBlockSize
+	}
+	block, err := r.getBlock(nextOff, guessBlockSize)
 	if err != nil {
 		return nil, err
 	}
 
-	if typ != blockTypeAny && blockTyp != typ {
+	blockTyp, blockSize, err := extractBlockSize(block, nextOff)
+	if err != nil {
+		return nil, err
+	}
+
+	if wantTyp != blockTypeAny && blockTyp != wantTyp {
 		return nil, nil
 	}
 
-	// This assumes that the size of the compressed log block is
-	// smaller than the uncompressed one.
-	next, err := r.getBlock(nextOff, blockSize)
-	if err != nil {
-		return nil, err
-	}
-
-	if next == nil {
-		return
+	if blockSize > guessBlockSize {
+		block, err = r.getBlock(nextOff, blockSize)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var headerOff uint32
@@ -248,7 +248,7 @@ func (r *Reader) newBlockReader(nextOff uint64, typ byte) (br *blockReader, err 
 		headerOff = headerSize
 	}
 
-	return newBlockReader(next, headerOff, r.Header.BlockSize)
+	return newBlockReader(block, headerOff, r.Header.BlockSize)
 }
 
 // nextBlock moves to the next block, or returns false fi there is none.

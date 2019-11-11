@@ -77,7 +77,7 @@ func (opts *Options) setDefaults() {
 		opts.RestartInterval = 16
 	}
 	if opts.BlockSize == 0 {
-		opts.BlockSize = 4096
+		opts.BlockSize = defaultBlockSize
 	}
 }
 

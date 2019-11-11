@@ -20,6 +20,7 @@ const hashSize = 20
 const version = 1
 const headerSize = 24
 const footerSize = 68
+const defaultBlockSize = 4096
 
 const BlockTypeLog = 'g'
 const BlockTypeIndex = 'i'

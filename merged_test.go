@@ -57,9 +57,7 @@ func TestPQ(t *testing.T) {
 func constructMergedRefTestTable(t *testing.T, recs ...[]RefRecord) *Merged {
 	var tabs []*Reader
 	for _, rec := range recs {
-		opts := Options{
-			IndexObjects: true,
-		}
+		opts := Options{}
 
 		_, reader := constructTestTable(t, rec, nil, opts)
 		tabs = append(tabs, reader)
