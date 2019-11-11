@@ -115,10 +115,11 @@ typedef struct {
   block_stats ref_stats;
   block_stats obj_stats;
   block_stats idx_stats;
-  // todo: log stats.
+  
   int object_id_len;
 } stats;
 
+// different types of errors
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
 
@@ -149,12 +150,19 @@ int new_reader(reader **pp, block_source);
 
    example:
 
-   reader *r  = NULL;
+   reader *r = NULL;
    int err = new_reader(&r, src);
    if (err < 0) { ... }
    iterator it = {};
    err = reader_seek_ref(r, &it, "refs/heads/master");
    if (err < 0) { ... }
+   ref_record ref = {};
+   err = iterator_next_ref(it, &ref);
+   if (err == 0) {
+      // value found. 
+   }
+   iterator_destroy(&it);
+   
  */
 int reader_seek_ref(reader *r, iterator *it, char *name);
 void reader_free(reader *);
