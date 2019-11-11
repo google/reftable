@@ -39,7 +39,7 @@ func newRecord(typ byte, key string) Record {
 			HashPrefix: []byte(key),
 		}
 	case BlockTypeIndex:
-		return &IndexRecord{LastKey: key}
+		return &indexRecord{LastKey: key}
 	}
 	return nil
 }
@@ -340,37 +340,37 @@ func (r *objRecord) decode(buf []byte, prefix string, cnt3 uint8) (n int, ok boo
 	return len(start) - len(buf), true
 }
 
-type IndexRecord struct {
+type indexRecord struct {
 	LastKey string
 	Offset  uint64
 }
 
-func (r *IndexRecord) IsTombstone() bool {
+func (r *indexRecord) IsTombstone() bool {
 	return false
 }
 
-func (r *IndexRecord) Key() string {
+func (r *indexRecord) Key() string {
 	return r.LastKey
 }
 
-func (r *IndexRecord) Type() byte {
+func (r *indexRecord) Type() byte {
 	return BlockTypeIndex
 }
 
-func (r *IndexRecord) valType() byte {
+func (r *indexRecord) valType() byte {
 	return 0
 }
 
-func (r *IndexRecord) CopyFrom(in Record) {
-	*r = *in.(*IndexRecord)
+func (r *indexRecord) CopyFrom(in Record) {
+	*r = *in.(*indexRecord)
 }
 
-func (r *IndexRecord) String() string {
+func (r *indexRecord) String() string {
 	return fmt.Sprintf("idx(%s)", r.LastKey)
 }
 
-func (r *IndexRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
-	*r = IndexRecord{}
+func (r *indexRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
+	*r = indexRecord{}
 	start := buf
 	r.LastKey = key
 
@@ -383,7 +383,7 @@ func (r *IndexRecord) decode(buf []byte, key string, valType uint8) (n int, ok b
 	return len(start) - len(buf), true
 }
 
-func (r *IndexRecord) encode(buf []byte) (n int, ok bool) {
+func (r *indexRecord) encode(buf []byte) (n int, ok bool) {
 	start := buf
 
 	s, ok := putVarInt(buf, uint64(r.Offset))

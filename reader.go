@@ -339,7 +339,7 @@ func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
 		return nil, err
 	}
 
-	wantIdx := &IndexRecord{
+	wantIdx := &indexRecord{
 		LastKey: want.Key(),
 	}
 
@@ -349,7 +349,7 @@ func (r *Reader) seekIndexed(want Record) (*tableIter, error) {
 	}
 
 	for {
-		var rec IndexRecord
+		var rec indexRecord
 		ok, err := idxIter.Next(&rec)
 		if !ok {
 			return nil, nil
@@ -480,6 +480,8 @@ func (i *indexedTableRefIter) Next(rec Record) (bool, error) {
 			if i.finished {
 				return false, nil
 			}
+			// XXX test for this case
+			continue
 		}
 
 		if bytes.Compare(ref.Value, i.oid) == 0 || bytes.Compare(ref.TargetValue, i.oid) == 0 {

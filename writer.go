@@ -64,7 +64,7 @@ type Writer struct {
 
 	// The current block writer, or nil if it was just flushed.
 	blockWriter *blockWriter
-	index       []IndexRecord
+	index       []indexRecord
 
 	// hash => block offset positions.
 	objIndex map[string][]uint64
@@ -284,7 +284,7 @@ func (w *Writer) flushBlock() error {
 	if err != nil {
 		return err
 	}
-	w.index = append(w.index, IndexRecord{
+	w.index = append(w.index, indexRecord{
 		w.blockWriter.lastKey,
 		w.next,
 	})

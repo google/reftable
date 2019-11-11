@@ -38,27 +38,29 @@ type filteringRefIterator struct {
 }
 
 // Next implements the Iterator interface.
-func (it *filteringRefIterator) Next(rec Record) (bool, error) {
+func (fri *filteringRefIterator) Next(rec Record) (bool, error) {
 	ref := rec.(*RefRecord)
 	for {
-		ok, err := it.it.Next(ref)
+		ok, err := fri.it.Next(ref)
 		if !ok || err != nil {
 			return false, err
 		}
 
-		if it.doubleCheck {
+		if fri.doubleCheck {
 			it, err := it.tab.Seek(ref)
 			if err != nil {
 				return false, err
 			}
 
 			ok, err := it.Next(ref)
+
+			// XXX !ok
 			if !ok || err != nil {
 				return false, err
 			}
 		}
 
-		if bytes.Compare(ref.Value, it.oid) == 0 || bytes.Compare(ref.TargetValue, it.oid) == 0 {
+		if bytes.Compare(ref.Value, fri.oid) == 0 || bytes.Compare(ref.TargetValue, fri.oid) == 0 {
 			return true, err
 		}
 	}
