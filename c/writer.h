@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef TREE_H
+#define TREE_H
+
 #include "tree.h"
 
 typedef struct _writer {
@@ -39,3 +42,5 @@ typedef struct _writer {
 
 int writer_flush_block(writer *w);
 void writer_clear_index(writer *w);
+
+#endif
