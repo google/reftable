@@ -52,7 +52,7 @@ func (w *blockWriter2) add(rec record) bool {
 	if !ok {
 		return false
 	}
-	return w.addKeyVal(string(rec.Type())+rec.Key(), w.scratch[:n], rec.valType())
+	return w.addKeyVal(string(rec.typ())+rec.key(), w.scratch[:n], rec.valType())
 }
 
 func (w *blockWriter2) addKeyVal(key string, val []byte, extra uint8) bool {
@@ -256,7 +256,7 @@ func (bi *blockIter2) next() (ok bool, key string, val []byte, valType uint8, er
 }
 
 func (br *blockReader2) Seek(rec record) (*blockIter2, error) {
-	return br.seek(string(rec.Type()) + rec.Key())
+	return br.seek(string(rec.typ()) + rec.key())
 }
 
 func (bi *blockIter2) Next(rec record) (ok bool, err error) {
@@ -267,7 +267,7 @@ func (bi *blockIter2) Next(rec record) (ok bool, err error) {
 
 	typ := key[0]
 	key = key[1:]
-	if typ != rec.Type() {
+	if typ != rec.typ() {
 		return false, fmt.Errorf("reftable: wrong type")
 	}
 	n, ok := rec.decode(val, key, valType)

@@ -302,7 +302,7 @@ func (r *Reader) tabIterAt(off uint64, wantTyp byte) (*tableIter, error) {
 // seekRecord returns an iterator pointed to just before the key specified
 // by the record
 func (r *Reader) seekRecord(rec record) (iterator, error) {
-	if !r.offsets[rec.Type()].Present {
+	if !r.offsets[rec.typ()].Present {
 		return &emptyIterator{}, nil
 	}
 	return r.seek(rec)
@@ -326,8 +326,8 @@ func (r *Reader) SeekLog(log *LogRecord) (*Iterator, error) {
 
 // seek seekes to the key specified by the record
 func (r *Reader) seek(rec record) (*tableIter, error) {
-	typ := rec.Type()
-	if rec.Key() == newRecord(rec.Type(), "").Key() {
+	typ := rec.typ()
+	if rec.key() == newRecord(rec.typ(), "").key() {
 		return r.start(typ, false)
 	}
 
@@ -336,7 +336,7 @@ func (r *Reader) seek(rec record) (*tableIter, error) {
 		return r.seekIndexed(rec)
 	}
 
-	tabIter, err := r.start(rec.Type(), false)
+	tabIter, err := r.start(rec.typ(), false)
 	if err != nil {
 		return nil, err
 	}
@@ -351,13 +351,13 @@ func (r *Reader) seek(rec record) (*tableIter, error) {
 
 // seekIndexed seeks to the `want` record, using its index.
 func (r *Reader) seekIndexed(want record) (*tableIter, error) {
-	idxIter, err := r.start(want.Type(), true)
+	idxIter, err := r.start(want.typ(), true)
 	if err != nil {
 		return nil, err
 	}
 
 	wantIdx := &indexRecord{
-		LastKey: want.Key(),
+		LastKey: want.key(),
 	}
 
 	ok, err := r.seekLinear(idxIter, wantIdx)
@@ -380,12 +380,12 @@ func (r *Reader) seekIndexed(want record) (*tableIter, error) {
 			return nil, err
 		}
 
-		err = tabIter.bi.seek(want.Key())
+		err = tabIter.bi.seek(want.key())
 		if err != nil {
 			return nil, err
 		}
 
-		if tabIter.typ == want.Type() {
+		if tabIter.typ == want.typ() {
 			return tabIter, nil
 		}
 
@@ -399,9 +399,9 @@ func (r *Reader) seekIndexed(want record) (*tableIter, error) {
 
 // seekLinear iterates tabIter to just before the wanted record.
 func (r *Reader) seekLinear(tabIter *tableIter, want record) (bool, error) {
-	rec := newRecord(want.Type(), "")
+	rec := newRecord(want.typ(), "")
 
-	wantKey := want.Key()
+	wantKey := want.key()
 	// skip blocks
 	var last tableIter
 	for {
@@ -423,7 +423,7 @@ func (r *Reader) seekLinear(tabIter *tableIter, want record) (bool, error) {
 		if !ok {
 			panic("read from fresh block failed")
 		}
-		if rec.Key() > wantKey {
+		if rec.key() > wantKey {
 			break
 		}
 	}
@@ -538,7 +538,7 @@ func (r *Reader) refsForIndexed(oid []byte) (*Iterator, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !ok || got.Key() != want.Key() {
+	if !ok || got.key() != want.key() {
 		return &Iterator{&emptyIterator{}}, nil
 	}
 

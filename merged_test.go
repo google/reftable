@@ -46,7 +46,7 @@ func TestPQ(t *testing.T) {
 	for !pq.isEmpty() {
 		r := pq.remove()
 		pq.check()
-		res = append(res, r.rec.Key())
+		res = append(res, r.rec.key())
 	}
 
 	if !reflect.DeepEqual(names, res) {

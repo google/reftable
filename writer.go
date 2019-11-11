@@ -182,7 +182,7 @@ func (w *Writer) AddLog(l *LogRecord) error {
 }
 
 func (w *Writer) add(rec record) error {
-	k := rec.Key()
+	k := rec.key()
 	if w.lastKey >= k {
 		log.Panicf("keys must be ascending: got %q last %q", rec, w.lastRec)
 	}
@@ -190,11 +190,11 @@ func (w *Writer) add(rec record) error {
 	w.lastRec = rec.String()
 
 	if w.blockWriter == nil {
-		w.blockWriter = w.newBlockWriter(rec.Type())
+		w.blockWriter = w.newBlockWriter(rec.typ())
 	}
 
-	if t := w.blockWriter.getType(); t != rec.Type() {
-		log.Panicf("add %c on block %c", rec.Type(), t)
+	if t := w.blockWriter.getType(); t != rec.typ() {
+		log.Panicf("add %c on block %c", rec.typ(), t)
 	}
 	if w.blockWriter.add(rec) {
 		return nil
@@ -203,7 +203,7 @@ func (w *Writer) add(rec record) error {
 		return err
 	}
 
-	w.blockWriter = w.newBlockWriter(rec.Type())
+	w.blockWriter = w.newBlockWriter(rec.typ())
 	if !w.blockWriter.add(rec) {
 		return fmt.Errorf("reftable: record %v too large for block size", rec)
 	}

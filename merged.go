@@ -27,15 +27,15 @@ type pqEntry struct {
 }
 
 func (e pqEntry) String() string {
-	return fmt.Sprintf("%s,%d", e.rec.Key(), e.index)
+	return fmt.Sprintf("%s,%d", e.rec.key(), e.index)
 }
 
 func pqLess(a, b pqEntry) bool {
-	if a.rec.Key() == b.rec.Key() {
+	if a.rec.key() == b.rec.key() {
 		return a.index > b.index
 	}
 
-	return a.rec.Key() < b.rec.Key()
+	return a.rec.key() < b.rec.key()
 }
 
 // a min heap
@@ -200,7 +200,7 @@ func (m *Merged) seek(rec record) (iterator, error) {
 	}
 
 	merged := &mergedIter{
-		typ:   rec.Type(),
+		typ:   rec.typ(),
 		stack: its,
 	}
 
@@ -282,7 +282,7 @@ func (m *mergedIter) next(rec record) (bool, error) {
 
 	for !m.pq.isEmpty() {
 		top := m.pq.top()
-		if top.rec.Key() > entry.rec.Key() {
+		if top.rec.key() > entry.rec.key() {
 			break
 		}
 
@@ -290,6 +290,6 @@ func (m *mergedIter) next(rec record) (bool, error) {
 		m.advanceSubIter(top.index)
 	}
 
-	rec.CopyFrom(entry.rec)
+	rec.copyFrom(entry.rec)
 	return true, nil
 }

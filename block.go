@@ -75,7 +75,7 @@ func (w *blockWriter) add(r record) bool {
 
 	buf := w.buf[w.next:]
 	start := buf
-	n, restart, ok := encodeKey(buf, last, r.Key(), r.valType())
+	n, restart, ok := encodeKey(buf, last, r.key(), r.valType())
 	if !ok {
 		return false
 	}
@@ -87,7 +87,7 @@ func (w *blockWriter) add(r record) bool {
 	}
 	buf = buf[n:]
 
-	return w.registerRestart(len(start)-len(buf), restart, r.Key())
+	return w.registerRestart(len(start)-len(buf), restart, r.key())
 }
 
 func (w *blockWriter) registerRestart(n int, restart bool, key string) bool {
@@ -302,7 +302,7 @@ func (br *blockReader) seek(key string) (*blockIter, error) {
 			return nil, err
 		}
 
-		if !ok || rec.Key() >= key {
+		if !ok || rec.key() >= key {
 			return it, nil
 		}
 		*it = next
@@ -329,7 +329,7 @@ func (bi *blockIter) Next(r record) (bool, error) {
 		buf = buf[n:]
 	}
 
-	bi.lastKey = r.Key()
+	bi.lastKey = r.key()
 	bi.nextOffset += uint32(len(start) - len(buf))
 	return true, nil
 }

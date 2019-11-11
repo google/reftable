@@ -274,13 +274,13 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 				Value:   testHash(i),
 			}
 			refs = append(refs, rec)
-			names = append(names, rec.Key())
+			names = append(names, rec.key())
 		case blockTypeLog:
 			rec := LogRecord{
 				RefName: name,
 			}
 			logs = append(logs, rec)
-			names = append(names, rec.Key())
+			names = append(names, rec.key())
 		}
 	}
 
@@ -308,8 +308,8 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 		}
 
 		for i, r := range recs {
-			if names[i] != r.Key() {
-				t.Errorf("record %d: got %q want %q", i, r.Key(), names[i])
+			if names[i] != r.key() {
+				t.Errorf("record %d: got %q want %q", i, r.key(), names[i])
 			}
 		}
 

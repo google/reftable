@@ -53,7 +53,7 @@ func createSeekReader(t *testing.T, typ byte, bs uint32) ([]string, *blockReader
 			}
 		}
 
-		names[i] = rec.Key()
+		names[i] = rec.key()
 		bw.add(rec)
 	}
 
@@ -86,8 +86,8 @@ func testBlockSeek(t *testing.T, typ byte) {
 			t.Fatalf("next: should have returned true")
 		}
 
-		if res.Key() != nm {
-			t.Errorf("got %q want %q", res.Key(), nm)
+		if res.key() != nm {
+			t.Errorf("got %q want %q", res.key(), nm)
 		}
 	}
 }
@@ -122,8 +122,8 @@ func testBlockSeekPrefix(t *testing.T, typ byte) {
 	}
 
 	want := names[10]
-	if res.Key() != want {
-		t.Errorf("got %q want %q", res.Key(), want)
+	if res.key() != want {
+		t.Errorf("got %q want %q", res.key(), want)
 	}
 
 }
@@ -145,7 +145,7 @@ func testBlockSeekLast(t *testing.T, typ byte) {
 		t.Fatalf("Next %q: %v", nm, err)
 	}
 	if ok {
-		t.Fatalf("got record %q, expected end of block", res.Key())
+		t.Fatalf("got record %q, expected end of block", res.key())
 	}
 }
 
@@ -173,8 +173,8 @@ func testBlockSeekFirst(t *testing.T, typ byte) {
 		t.Fatalf("Next: %v, %v", ok, err)
 	}
 
-	if res.Key() != names[0] {
-		t.Fatalf("got %q, want key %q", res.Key(), names[0])
+	if res.key() != names[0] {
+		t.Fatalf("got %q, want key %q", res.key(), names[0])
 	}
 }
 

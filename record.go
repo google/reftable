@@ -118,23 +118,19 @@ func encodeKey(buf []byte, prevKey, key string, extra uint8) (n int, restart boo
 	return n, restart, true
 }
 
-func (r *RefRecord) Type() byte {
+func (r *RefRecord) typ() byte {
 	return blockTypeRef
 }
 
-func (r *RefRecord) Key() string {
+func (r *RefRecord) key() string {
 	return r.RefName
 }
 
-func (r *RefRecord) CopyFrom(in record) {
+func (r *RefRecord) copyFrom(in record) {
 	*r = *in.(*RefRecord)
 }
 func (r *RefRecord) String() string {
 	return fmt.Sprintf("ref(%s)", r.RefName)
-}
-
-func (r *RefRecord) IsTombstone() bool {
-	return len(r.Target) == 0 && len(r.Value) == 0
 }
 
 func (r *RefRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
@@ -234,24 +230,20 @@ func (r *RefRecord) encode(buf []byte) (n int, fits bool) {
 	return len(start) - len(buf), true
 }
 
-func (r *objRecord) Key() string {
+func (r *objRecord) key() string {
 	return string(r.HashPrefix)
 }
 
-func (r *objRecord) CopyFrom(in record) {
+func (r *objRecord) copyFrom(in record) {
 	*r = *in.(*objRecord)
 }
 
-func (r *objRecord) Type() byte {
+func (r *objRecord) typ() byte {
 	return blockTypeObj
 }
 
 func (r *objRecord) String() string {
 	return fmt.Sprintf("obj(%x)", r.HashPrefix)
-}
-
-func (r *objRecord) IsTombstone() bool {
-	return false
 }
 
 func (r *objRecord) valType() uint8 {
@@ -345,15 +337,11 @@ type indexRecord struct {
 	Offset  uint64
 }
 
-func (r *indexRecord) IsTombstone() bool {
-	return false
-}
-
-func (r *indexRecord) Key() string {
+func (r *indexRecord) key() string {
 	return r.LastKey
 }
 
-func (r *indexRecord) Type() byte {
+func (r *indexRecord) typ() byte {
 	return blockTypeIndex
 }
 
@@ -361,7 +349,7 @@ func (r *indexRecord) valType() byte {
 	return 0
 }
 
-func (r *indexRecord) CopyFrom(in record) {
+func (r *indexRecord) copyFrom(in record) {
 	*r = *in.(*indexRecord)
 }
 
@@ -470,21 +458,17 @@ func encodeString(buf []byte, val string) (n int, ok bool) {
 	return len(start) - len(buf), true
 }
 
-func (l *LogRecord) Type() byte {
+func (l *LogRecord) typ() byte {
 	return blockTypeLog
 }
 
-func (l *LogRecord) Key() string {
+func (l *LogRecord) key() string {
 	var suffix [9]byte
 	binary.BigEndian.PutUint64(suffix[1:], revInt64(l.TS))
 	return l.RefName + string(suffix[:])
 }
 
-func (r *LogRecord) IsTombstone() bool {
-	return r.New == nil && r.Old == nil
-}
-
-func (r *LogRecord) CopyFrom(in record) {
+func (r *LogRecord) copyFrom(in record) {
 	*r = *in.(*LogRecord)
 }
 

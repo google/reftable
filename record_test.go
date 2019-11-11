@@ -52,13 +52,13 @@ func TestRecordRoundTripRefRecord(t *testing.T) {
 }
 
 func testRecordRoundTrip(t *testing.T, inputs []record) {
-	typ := inputs[0].Type()
+	typ := inputs[0].typ()
 	buf := make([]byte, 1024)
 	out := buf
 
 	lastKey := ""
 	for i, in := range inputs {
-		n, _, ok := encodeKey(out, lastKey, in.Key(), in.valType())
+		n, _, ok := encodeKey(out, lastKey, in.key(), in.valType())
 		if !ok {
 			t.Fatalf("key encode")
 		}
@@ -68,7 +68,7 @@ func testRecordRoundTrip(t *testing.T, inputs []record) {
 			t.Fatalf("encode %d failed", i)
 		}
 		out = out[n:]
-		lastKey = in.Key()
+		lastKey = in.key()
 	}
 
 	buf = buf[:len(buf)-len(out)]

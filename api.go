@@ -23,10 +23,9 @@ type BlockSource interface {
 
 // record is a single piece of keyed data, stored in the reftable.
 type record interface {
-	Key() string
-	Type() byte
-	CopyFrom(record)
-	IsTombstone() bool
+	key() string
+	typ() byte
+	copyFrom(record)
 	String() string
 
 	valType() uint8
