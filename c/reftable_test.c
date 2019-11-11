@@ -44,6 +44,9 @@ void test_buffer(void) {
   free(slice_yield(&buf));
 }
 
+void set_test_hash(byte *p, int i) {
+  memset(p, (byte)i, HASH_SIZE);
+}
 
 void write_table(char ***names, slice *buf, int N, int block_size) {
   *names = calloc(sizeof(char*), N);
@@ -57,8 +60,8 @@ void write_table(char ***names, slice *buf, int N, int block_size) {
   {
     ref_record ref = {};
     for (int i = 0; i < N; i++) {
-      byte hash[20];
-      memset(hash, i, sizeof(hash));
+      byte hash[HASH_SIZE];
+      set_test_hash(hash, i);
 
       char name[100];
       sprintf(name, "refs/heads/branch%02d", i);
@@ -173,10 +176,108 @@ void test_table_read_write_seek_index(void) {
   test_table_read_write_seek(true);
 }
 
+
+void test_table_refs_for(bool indexed) {
+  int N = 50;
+
+  char **want_names = calloc(sizeof(char*), N);
+
+  int want_names_len  = 0;
+  byte want_hash[HASH_SIZE];
+  set_test_hash(want_hash, 4);
+  
+  write_options opts = {
+      .block_size = 256,
+  };
+
+  slice buf ={};
+  writer *w = new_writer(&slice_write_void, &buf, &opts);
+  {
+    ref_record ref = {};
+    for (int i = 0; i < N; i++) {
+      byte hash[20];
+      memset(hash, i, sizeof(hash));
+      char fill[51] = {};
+      memset(fill, 'x', 50);
+      char name[100];
+      // Put the variable part in the start
+      sprintf(name, "br%02d%s", i, fill);
+      name[40] = 0;
+      ref.ref_name = name;
+
+      byte hash1[20];
+      byte hash2[20];
+
+      set_test_hash(hash1, i/4);
+      set_test_hash(hash2, 3  + i/4);
+      ref.value = hash1;
+      ref.target_value = hash2;
+
+      // 80 bytes / entry, so 3 entries per block. Yields 17 blocks.
+      int n = writer_add_ref(w, &ref);
+      assert(n == 0);
+
+      if (0 == memcmp(hash1, want_hash, HASH_SIZE) ||
+	  0 ==  memcmp(hash2, want_hash, HASH_SIZE)){
+	want_names[want_names_len++]  = strdup(name);
+      }
+    }
+  }
+  
+  int n = writer_close(w);
+  assert(n == 0);
+
+  writer_free(w);
+  w = NULL;
+
+  reader rd;
+  block_source source = {};
+  block_source_from_slice(&source, &buf);
+
+  int err = init_reader(&rd, source);
+  assert(err == 0);
+  if (!indexed) {
+    rd.obj_offsets.present = 0;
+  }
+  
+  iterator it = {};
+  err = reader_seek_ref(&rd, &it, "");
+  assert(err == 0);
+
+  err = reader_refs_for(&rd, &it, want_hash);
+  assert(err == 0);
+
+  ref_record ref = {};
+
+  int j = 0;
+  while (true) {
+    int err = iterator_next_ref(it, &ref);
+    assert(err >= 0);
+    if (err > 0) {
+      break;
+    }
+
+    assert (j < want_names_len);
+    assert (0 == strcmp(ref.ref_name, want_names[j]));
+    j++;
+  }
+  assert(j== want_names_len);
+}
+
+void test_table_refs_for_no_index(void) {
+  test_table_refs_for(false);
+}
+
+void test_table_refs_for_obj_index(void) {
+  test_table_refs_for(true);
+}
+
 int main() {
-  add_test_case("test_buffer", &test_buffer);
+  /*  add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential", &test_table_read_write_sequential);
   add_test_case("test_table_read_write_seek_linear", &test_table_read_write_seek_linear);
-  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);
+  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);*/
+  add_test_case("test_table_read_write_refs_for_no_index", &test_table_refs_for_no_index);
+  add_test_case("test_table_read_write_refs_for_obj_index", &test_table_refs_for_obj_index);
   test_main();
 }

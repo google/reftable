@@ -35,9 +35,6 @@ typedef struct {
   struct _record_ops *ops;
 } record;
 
-void record_from_ref(record *rec, ref_record *refrec);
-void record_from_log(record *rec, log_record *objrec);
-
 int get_var_int(uint64 *dest, slice in);
 int put_var_int(slice dest, uint64 val);
 int common_prefix_size(slice a, slice b);
@@ -73,6 +70,9 @@ void record_clear(record rec);
 void *record_yield(record *rec);
 void record_from_obj(record *rec, obj_record *objrec);
 void record_from_index(record *rec, index_record *idxrec);
+void record_from_ref(record *rec, ref_record *refrec);
+void record_from_log(record *rec, log_record *objrec);
+
 bool record_is_start(record want);
 
 #endif

@@ -40,5 +40,8 @@ struct _reader {
 int init_reader(reader *r, block_source source);
 int reader_seek(reader *r, iterator *it, record rec);
 void reader_close(reader *r);
+void reader_return_block(reader *r, block *p);
+int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
+                             byte want_typ);
 
 #endif

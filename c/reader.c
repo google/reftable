@@ -191,8 +191,8 @@ int32 extract_block_size(byte *data, byte *typ, uint64 off) {
 }
 
 int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
-                             byte want_typ) {
-  if (next_off >= r->size) {
+                             byte want_typ) { 
+ if (next_off >= r->size) {
     return 1;
   }
 
@@ -501,4 +501,63 @@ void reader_free(reader *r) {
   reader_close(r);
   free(r);
 }
-	     
+
+int reader_refs_for_indexed(reader* r, iterator *it, byte *oid) {
+  obj_record want = {
+		     .hash_prefix = oid,
+		     .hash_prefix_len = r->object_id_len,
+  };
+  record want_rec  = {};
+  record_from_obj(&want_rec, &want);
+
+  iterator oit = {};
+  int err = reader_seek(r, &oit, want_rec);
+  if (err != 0) {
+    return err;
+  }
+
+  obj_record got = {};
+  record got_rec = {};
+  record_from_obj(&got_rec, &got);
+  err = iterator_next(oit, got_rec);
+  iterator_destroy(&oit);
+  if(err < 0) {
+    return err;
+  }
+
+  if (err > 0 || memcmp(want.hash_prefix, got.hash_prefix, r->object_id_len)) {
+    iterator_set_empty(it);
+    return 0;
+  }
+
+  indexed_table_ref_iter* itr = NULL;
+  err = new_indexed_table_ref_iter(&itr, r, oid, got.offsets, got.offset_len);
+  if (err  < 0) {
+    record_clear(got_rec);
+    return err;
+  }
+  got.offsets = NULL;
+  record_clear(got_rec);
+  
+  iterator_from_indexed_table_ref_iter(it, itr);
+  return 0;
+}
+
+int reader_refs_for(reader* r, iterator *it, byte *oid) {
+  if (r->obj_offsets.present) {
+    return reader_refs_for_indexed(r, it, oid);
+  }
+
+  table_iter * ti = calloc(sizeof(table_iter), 1);
+  int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
+  if (err < 0) { return err ; }
+
+  filtering_ref_iterator* filter = calloc(sizeof(filtering_ref_iterator), 1);
+  filter->oid = oid;
+  filter->r = r;
+  filter->double_check = false;
+  iterator_from_table_iter(&filter->it, ti);
+
+  iterator_from_filtering_ref_iterator(it, filter);
+  return 0;
+}

@@ -270,7 +270,7 @@ int writer_finish_section(writer *w) {
       writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
       err = block_writer_add(w->block_writer, rec);
-      assert(i == 0);
+      assert(err == 0);
     }
     for (int i = 0; i < idx_len; i++) {
       free(slice_yield(&idx[i].last_key));
@@ -330,6 +330,7 @@ void write_object_record(void *void_arg, void *key) {
       .offsets = entry->offsets,
       .offset_len = entry->offset_len,
   };
+
   record rec = {};
   record_from_obj(&rec, &obj_rec);
   int err = block_writer_add(arg->w->block_writer, rec);
@@ -382,7 +383,7 @@ int writer_finish_public_section(writer *w) {
   if (err < 0) {
     return err;
   }
-  if (typ == BLOCK_TYPE_REF && w->opts.skip_index_objects) {
+  if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects) {
     int err = writer_dump_object_index(w);
     if (err < 0) {
       return err;

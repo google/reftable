@@ -86,7 +86,6 @@ typedef struct {
 
 /* iterator is the generic interface for walking over data stored in a
    reftable. */
-
 typedef struct {
   struct _iterator_ops *ops;
   void *iter_arg;
@@ -159,5 +158,6 @@ int new_reader(reader **pp, block_source);
  */
 int reader_seek_ref(reader *r, iterator *it, char *name);
 void reader_free(reader *);
-	     
+int reader_refs_for(reader* r, iterator *it, byte *oid);
+
 #endif
