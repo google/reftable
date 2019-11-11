@@ -19,11 +19,13 @@
 #include "constants.h"
 #include "slice.h"
 
+typedef struct _block block;
+
 /* block_source_ops are the operations that make up block_source */
 typedef struct {
   uint64 (*size)(void *source);
-  int (*read_block)(void *source, byte **dest, uint64 off, uint32 size);
-  void (*return_block)(void *source, byte *block);
+  int (*read_block)(void *source, block *dest, uint64 off, uint32 size);
+  void (*return_block)(void *source, block *blockp);
   void (*close)(void *source);
 } block_source_ops;
 
@@ -36,10 +38,16 @@ struct _block_source {
   void *arg;
 };
 
+struct _block {
+  byte *data;
+  int len;
+  block_source source;
+};
+
 uint64 block_source_size(block_source source);
-int block_source_read_block(block_source source, byte **dest, uint64 off,
+int block_source_read_block(block_source source, block *dest, uint64 off,
                             uint32 size);
-void block_source_return_block(block_source source, byte *block);
+void block_source_return_block(block_source source, block *ret);
 void block_source_close(block_source source);
 
 /* write_options sets optiosn for writing a single reftable. */

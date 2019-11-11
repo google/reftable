@@ -47,14 +47,16 @@ void block_writer_clear(block_writer *bw);
 
 struct _block_reader {
   uint32 header_off;
-  byte *block;
+  block block;
+
+  // size of the data, excluding restart data.
   uint32 block_len;
   byte *restart_bytes;
   uint32 full_block_size;
   uint16 restart_count;
 };
 
-int block_reader_init(block_reader *br, byte *block, uint32 header_off,
+int block_reader_init(block_reader *br, block *bl, uint32 header_off,
                       uint32 table_block_size);
 void block_reader_start(block_reader *br, block_iter *it);
 int block_reader_seek(block_reader *br, block_iter *it, slice want);

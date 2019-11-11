@@ -120,33 +120,38 @@ int block_writer_finish(block_writer *w) {
   return w->next;
 }
 
-byte block_reader_type(block_reader *r) { return r->block[r->header_off]; }
+byte block_reader_type(block_reader *r) { return r->block.data[r->header_off]; }
 
-int block_reader_init(block_reader *br, byte *block, uint32 header_off,
+int block_reader_init(block_reader *br, block *block, uint32 header_off,
                       uint32 table_block_size) {
   uint32 full_block_size = table_block_size;
-  byte typ = block[header_off];
+  byte typ = block->data[header_off];
 
   if (!is_block_type(typ)) {
     return FORMAT_ERROR;
   }
 
-  uint32 sz = get_u24(block + header_off + 1);
+  uint32 sz = get_u24(block->data + header_off + 1);
 
   if (typ == BLOCK_TYPE_LOG) {
+    /* TODO: decompress log block, record how many bytes consumed. */
     abort();
 
-    /* TODO: decompress log block, record how many bytes consumed. */
+    block_source_return_block(block->source, block);
   } else if (full_block_size == 0) {
     full_block_size = sz;
   }
 
-  uint16 restart_count = get_u16(block + sz - 2);
+  uint16 restart_count = get_u16(block->data + sz - 2);
   uint32 restart_start = sz - 2 - 3 * restart_count;
 
-  byte *restart_bytes = block + restart_start;
-
-  br->block = block;
+  byte *restart_bytes = block->data + restart_start;
+  
+  // transfer ownership.
+  br->block = *block;
+  block->data = NULL;
+  block->len = 0;
+  
   br->block_len = restart_start;
   br->full_block_size = full_block_size;
   br->header_off = header_off;
@@ -176,7 +181,7 @@ int key_less(int idx, void *args) {
   restart_find_args *a = (restart_find_args *)args;
   uint32 off = block_reader_restart_offset(a->r, idx);
   slice in = {
-      .buf = a->r->block,
+      .buf = a->r->block.data,
       .len = a->r->block_len,
   };
   in.buf += off;
@@ -211,7 +216,7 @@ int block_iter_next(block_iter *it, record rec) {
   }
 
   slice in = {
-      .buf = it->br->block + it->next_off,
+      .buf = it->br->block.data + it->next_off,
       .len = it->br->block_len - it->next_off,
   };
   slice start = in;
@@ -241,7 +246,7 @@ int block_reader_first_key(block_reader *br, slice *key) {
   slice empty = {};
   int off = br->header_off + 4;
   slice in = {
-      .buf = br->block + off,
+      .buf = br->block.data + off,
       .len = br->block_len - off,
   };
 

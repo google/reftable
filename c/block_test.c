@@ -58,10 +58,12 @@ void test_block_read_write() {
   const int N = 30;
   char *names[N];
   const int block_size = 1024;
-  byte *block = calloc(block_size, 1);
+  block block = {};
+  block.data = calloc(block_size, 1);
+  block.len = block_size;
 
   block_writer bw = {};
-  block_writer_init(&bw, BLOCK_TYPE_REF, block, block_size, header_off);
+  block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off);
   ref_record ref = {};
   record rec = {};
   record_from_ref(&rec, &ref);
@@ -88,7 +90,7 @@ void test_block_read_write() {
   block_writer_clear(&bw);
 
   block_reader br = {};
-  block_reader_init(&br, block, header_off, block_size);
+  block_reader_init(&br, &block, header_off, block_size);
 
   block_iter it = {};
   block_reader_start(&br, &it);
@@ -131,7 +133,7 @@ void test_block_read_write() {
   }
 
   record_clear(rec);
-  free(block);
+  free(block.data);
   free(slice_yield(&want));
   for (int i = 0; i < N; i++) {
     free(names[i]);

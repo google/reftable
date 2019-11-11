@@ -27,13 +27,13 @@ uint64 block_source_size(block_source source) {
   return source.ops->size(source.arg);
 }
 
-int block_source_read_block(block_source source, byte **dest, uint64 off,
+int block_source_read_block(block_source source, block *dest, uint64 off,
                             uint32 size) {
   return source.ops->read_block(source.arg, dest, off, size);
 }
 
-void block_source_return_block(block_source source, byte *block) {
-  source.ops->return_block(source.arg, block);
+void block_source_return_block(block_source source, block *blockp) {
+  source.ops->return_block(source.arg, blockp);
 }
 
 void block_source_close(block_source source) { source.ops->close(source.arg); }
@@ -50,7 +50,7 @@ reader_offsets *reader_offsets_for(reader *r, byte typ) {
   abort();
 }
 
-int reader_get_block(reader *r, byte **dest, uint64 off, uint32 sz) {
+int reader_get_block(reader *r, block *dest, uint64 off, uint32 sz) {
   if (off >= r->size) {
     return 0;
   }
@@ -62,7 +62,7 @@ int reader_get_block(reader *r, byte **dest, uint64 off, uint32 sz) {
   return block_source_read_block(r->source, dest, off, sz);
 }
 
-void reader_return_block(reader *r, byte *p) {
+void reader_return_block(reader *r, block *p) {
   block_source_return_block(r->source, p);
 }
 
@@ -71,21 +71,22 @@ int init_reader(reader *r, block_source source) {
   r->size = block_source_size(source) - FOOTER_SIZE;
   r->source = source;
 
-  byte *footer = NULL;
+  block footer = {};
+  block header = {};
+  
   int err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
   if (err != FOOTER_SIZE) {
     err = IO_ERROR;
     goto exit;
   }
 
-  byte *header = NULL;
   err = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
   if (err != HEADER_SIZE + 1) {
     err = IO_ERROR;
     goto exit;
   }
 
-  byte *f = footer;
+  byte *f = footer.data;
   if (memcmp(f, "REFT", 4)) {
     err = FORMAT_ERROR;
     goto exit;
@@ -119,7 +120,7 @@ int init_reader(reader *r, block_source source) {
   uint64 log_index_off = get_u64(f);
   f += 8;
 
-  byte first_block_typ = header[HEADER_SIZE];
+  byte first_block_typ = header.data[HEADER_SIZE];
   r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
   r->ref_offsets.offset = 0;
   r->ref_offsets.index_offset = ref_index_off;
@@ -134,8 +135,8 @@ int init_reader(reader *r, block_source source) {
 
   err = 0;
 exit:
-  block_source_return_block(r->source, footer);
-  block_source_return_block(r->source, header);
+  block_source_return_block(r->source, &footer);
+  block_source_return_block(r->source, &header);
   return err;
 }
 
@@ -168,7 +169,7 @@ void table_iter_block_done(table_iter *ti) {
   if (ti->bi.br == NULL) {
     return;
   }
-  reader_return_block(ti->r, ti->bi.br->block);
+  reader_return_block(ti->r, &ti->bi.br->block);
   free(ti->bi.br);
   ti->bi.br = NULL;
 
@@ -181,20 +182,20 @@ int32 reader_block_size(reader *r, byte *typ, uint64 off) {
     off = 24;
   }
 
-  byte *head = NULL;
+  block head = {};
   int err = reader_get_block(r, &head, off, 4);
   if (err < 0) {
     return err;
   }
   int32 result = 0;
-  if (!is_block_type(head[0])) {
+  *typ = head.data[0];
+  if (!is_block_type(*typ)) {
     result = 0;
     goto exit;
   }
-  *typ = head[0];
-  result = get_u24(head + 1);
+  result = get_u24(head.data + 1);
 exit:
-  reader_return_block(r, head);
+  reader_return_block(r, &head);
   return result;
 }
 
@@ -213,7 +214,7 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
     return 1;
   }
 
-  byte *block = NULL;
+  block block = {};
   int32 read_size = reader_get_block(r, &block, next_off, block_size);
   if (read_size <= 0) {
     return read_size;
@@ -224,7 +225,7 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
     header_off = HEADER_SIZE;
   }
 
-  return block_reader_init(br, block, header_off, r->block_size);
+  return block_reader_init(br, &block, header_off, r->block_size);
 }
 
 int table_iter_next_block(table_iter *dest, table_iter *src) {
