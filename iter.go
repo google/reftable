@@ -47,7 +47,7 @@ func (fri *filteringRefIterator) Next(rec Record) (bool, error) {
 		}
 
 		if fri.doubleCheck {
-			it, err := it.tab.Seek(ref)
+			it, err := fri.tab.Seek(ref)
 			if err != nil {
 				return false, err
 			}
