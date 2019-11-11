@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TREE_H
-#define TREE_H
+#ifndef WRITER_H
+#define WRITER_H
 
 #include "tree.h"
 
