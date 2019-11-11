@@ -177,49 +177,54 @@ void table_iter_block_done(table_iter *ti) {
   ti->bi.next_off = 0;
 }
 
-int32 reader_block_size(reader *r, byte *typ, uint64 off) {
+int32 extract_block_size(byte *data, byte *typ, uint64 off) {
   if (off == 0) {
-    off = 24;
+    data += 24;
   }
 
-  block head = {};
-  int err = reader_get_block(r, &head, off, 4);
-  if (err < 0) {
-    return err;
-  }
+  *typ = data[0];
   int32 result = 0;
-  *typ = head.data[0];
-  if (!is_block_type(*typ)) {
-    result = 0;
-    goto exit;
+  if (is_block_type(*typ)) {
+    result = get_u24(data + 1);
   }
-  result = get_u24(head.data + 1);
-exit:
-  reader_return_block(r, &head);
   return result;
 }
 
 int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
-                             byte typ) {
-  if (next_off > r->size) {
+                             byte want_typ) {
+  if (next_off >= r->size) {
     return 1;
   }
 
-  byte block_typ = 0;
-  int32 block_size = reader_block_size(r, &block_typ, next_off);
-  if (block_size < 0) {
-    return block_size;
-  }
-  if (typ != BLOCK_TYPE_ANY && block_typ != typ) {
-    return 1;
+  int32 guess_block_size = r->block_size;
+  if (guess_block_size == 0 ) {
+    guess_block_size = DEFAULT_BLOCK_SIZE;
   }
 
   block block = {};
-  int32 read_size = reader_get_block(r, &block, next_off, block_size);
-  if (read_size <= 0) {
+  int32 read_size = reader_get_block(r, &block, next_off, guess_block_size);
+  if (read_size < 0) {
     return read_size;
   }
 
+  byte block_typ = 0;
+  int32 block_size = extract_block_size(block.data, &block_typ, next_off);
+  if (block_size < 0) {
+    return block_size;
+  }
+
+  if (want_typ != BLOCK_TYPE_ANY && block_typ != want_typ) {
+    return 1;
+  }
+
+  if (block_size > guess_block_size) {
+    reader_return_block(r, &block);
+    int err = reader_get_block(r, &block, next_off, block_size);
+    if (err < 0) {
+      return err;
+    }
+  }
+  
   uint32 header_off = 0;
   if (next_off == 0) {
     header_off = HEADER_SIZE;

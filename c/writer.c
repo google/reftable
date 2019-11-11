@@ -63,7 +63,7 @@ void options_set_defaults(write_options *opts) {
   }
 
   if (opts->block_size == 0) {
-    opts->block_size = 16;
+    opts->block_size = DEFAULT_BLOCK_SIZE;
   }
 }
 

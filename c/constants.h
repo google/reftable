@@ -27,5 +27,6 @@
 #define BLOCK_TYPE_ANY 0
 
 #define MAX_RESTARTS ((1 << 16) - 1)
+#define DEFAULT_BLOCK_SIZE  4096
 
 #endif
