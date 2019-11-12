@@ -561,3 +561,12 @@ int reader_refs_for(reader* r, iterator *it, byte *oid) {
   iterator_from_filtering_ref_iterator(it, filter);
   return 0;
 }
+
+uint64 reader_max_update_index(reader*r) {
+  return r->max_update_index;
+}
+
+uint64 reader_min_update_index(reader*r) {
+  return r->min_update_index;
+}
+

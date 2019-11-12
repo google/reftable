@@ -16,6 +16,8 @@
 #define READER_H
 
 #include "api.h"
+#include "record.h"
+#include "block.h"
 
 typedef struct {
   bool present;

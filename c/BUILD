@@ -4,6 +4,8 @@ cc_library(
         "basics.c",
         "block.c",
         "iter.c",
+	"merged.c",
+	"pq.c",
         "reader.c",
         "record.c",
         "slice.c",
@@ -16,6 +18,7 @@ cc_library(
         "block.h",
         "constants.h",
         "iter.h",
+	"pq.h",
         "reader.h",
         "record.h",
         "slice.h",
@@ -65,6 +68,15 @@ cc_test(
 cc_test(
     name = "block_test",
     srcs = ["block_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+)
+
+cc_test(
+    name = "merged_test",
+    srcs = ["merged_test.c"],
     deps = [
         ":reftable",
         ":testlib",

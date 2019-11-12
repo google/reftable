@@ -84,10 +84,12 @@ void test_ref_record_roundtrip() {
 
   set_hash(testHash1, 1);
   set_hash(testHash1, 2);
-  for (int i = 1; i <= 3; i++) {
+  for (int i = 0; i <= 3; i++) {
     printf("subtest %d\n", i);
     ref_record in = {};
     switch (i) {
+    case 0:
+      break;
     case 1:
       in.value = testHash1;
       break;

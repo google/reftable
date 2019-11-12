@@ -98,10 +98,10 @@ void test_table_read_write_sequential(void) {
   int N =50;
   write_table(&names, &buf, N, 256);
   
-  reader rd;
   block_source source = {};
   block_source_from_slice(&source, &buf);
 
+  reader rd = {};
   int err = init_reader(&rd, source);
   assert(err == 0);
 
@@ -273,10 +273,10 @@ void test_table_refs_for_obj_index(void) {
 }
 
 int main() {
-  /*  add_test_case("test_buffer", &test_buffer);
+  add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential", &test_table_read_write_sequential);
   add_test_case("test_table_read_write_seek_linear", &test_table_read_write_seek_linear);
-  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);*/
+  add_test_case("test_table_read_write_seek_index", &test_table_read_write_seek_index);
   add_test_case("test_table_read_write_refs_for_no_index", &test_table_refs_for_no_index);
   add_test_case("test_table_read_write_refs_for_obj_index", &test_table_refs_for_obj_index);
   test_main();

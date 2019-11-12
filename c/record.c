@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "api.h"
 #include "record.h"
@@ -170,6 +171,39 @@ void ref_record_copy_from(void *rec, const void *src_rec) {
   }
 }
 
+char hexdigit(int c) {
+  if (c <= 9) { return '0' + c; }
+  return 'a' + (c - 10);
+}
+
+void hex_format(char *dest, byte *src) {
+  if(src != NULL) {
+    for (int i =0 ; i < HASH_SIZE;i++) {
+      dest[2*i] = hexdigit(src[i] >> 4);
+      dest[2*i+1] = hexdigit(src[i]&0xf);
+    }
+    dest[2*HASH_SIZE] = 0;
+  }
+}
+
+void ref_record_print(ref_record *ref) {
+  char hex[41]={};
+  
+  printf("ref{%s(%ld) ", ref->ref_name, ref->update_index);
+  if (ref->value != NULL) {
+    hex_format(hex, ref->value);
+    printf("%s", hex);
+  }
+  if (ref->target_value != NULL) {
+    hex_format(hex, ref->target_value);
+    printf(" (T %s)", hex);
+  }
+  if (ref->target != NULL) {
+    printf("=> %s", ref->target);
+  }
+  printf("}\n");
+}
+
 void ref_record_clear_void(void *rec) {
   ref_record_clear((ref_record *)rec);
 }
@@ -296,6 +330,9 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
     r->target = slice_to_string(dest);
     free(slice_yield(&dest));
   } break;
+
+  case 0:
+    break;
   default:
     abort();
     break;
@@ -619,3 +656,34 @@ void *record_yield(record *rec) {
   rec->data = NULL;
   return p;
 }
+
+ref_record* record_as_ref(record rec) {
+  assert(record_type(rec) == BLOCK_TYPE_REF);
+  return (ref_record*) rec.data;
+}
+
+bool hash_equal(byte *a, byte *b) {
+  if (a!= NULL && b!=NULL) {
+    return memcmp(a,b, HASH_SIZE);
+  }
+
+  return a== b;
+}
+
+bool str_equal(char *a, char *b) {
+  if (a!= NULL && b!=NULL) {
+    return strcmp(a,b);
+  }
+
+  return a== b;
+}
+
+bool ref_record_equal(ref_record *a, ref_record *b) {
+  return strcmp(a->ref_name, b->ref_name) &&
+    a->update_index == b->update_index &&
+    hash_equal(a->value, b->value) &&
+    hash_equal(a->target_value, b->target_value) &&
+    str_equal(a->target, b->target);
+}
+
+  

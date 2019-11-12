@@ -360,13 +360,17 @@ void write_object_record(void *void_arg, void *key) {
 
 int writer_dump_object_index(writer *w) {
   common_prefix_arg common = {};
-  infix_walk(w->obj_index_tree, &update_common, &common);
+  if (w->obj_index_tree != NULL) {
+    infix_walk(w->obj_index_tree, &update_common, &common);
+  }
   w->stats.object_id_len = common.max + 1;
 
   writer_reinit_block_writer(w, BLOCK_TYPE_OBJ);
 
   write_record_arg closure = {.w = w};
-  infix_walk(w->obj_index_tree, &write_object_record, &closure);
+  if (w->obj_index_tree != NULL) {
+    infix_walk(w->obj_index_tree, &write_object_record, &closure);
+  }
   if (closure.err < 0) {
     return closure.err;
   }

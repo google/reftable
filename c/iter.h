@@ -25,6 +25,7 @@ struct _iterator_ops {
 
 void iterator_set_empty(iterator *it);
 int iterator_next(iterator it, record rec);
+bool iterator_is_null(iterator it);
 
 typedef struct {
   reader *r;

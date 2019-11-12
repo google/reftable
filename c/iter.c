@@ -20,6 +20,10 @@
 #include "block.h"
 #include "reader.h"
 
+bool iterator_is_null(iterator it) {
+  return it.ops == NULL;
+}
+
 int empty_iterator_next(void *arg, record rec) { return 1; }
 
 void empty_iterator_close(void *arg) {}

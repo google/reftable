@@ -69,7 +69,9 @@ typedef struct {
   char *target; // symref, or NULL
 } ref_record;
 
+void ref_record_print(ref_record *ref);
 void ref_record_clear(ref_record *ref);
+bool ref_record_equal(ref_record *a, ref_record *b);
 
 /* log_record holds a reflog entry */
 typedef struct {
@@ -167,5 +169,11 @@ int new_reader(reader **pp, block_source);
 int reader_seek_ref(reader *r, iterator *it, char *name);
 void reader_free(reader *);
 int reader_refs_for(reader* r, iterator *it, byte *oid);
+uint64 reader_max_update_index(reader*r);
+uint64 reader_min_update_index(reader*r);
+
+typedef struct _merged_table  merged_table;
+int new_merged_table(merged_table**dest, reader**stack, int n);
+int merged_table_seek_ref(merged_table* mt, iterator*it, ref_record *ref);
 
 #endif
