@@ -103,7 +103,7 @@ func TestMerged(t *testing.T) {
 
 	merged := constructMergedRefTestTable(t, r1, r2, r3)
 
-	if false {
+	{
 		want := []record{
 			// the deletion is also produced in the merged
 			// iteration, for compaction.
