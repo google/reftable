@@ -63,6 +63,10 @@ type Reader struct {
 	offsets map[byte]readerOffsets
 }
 
+func (r *Reader) Close() {
+	r.src.Close()
+}
+
 func (r *Reader) getBlock(off uint64, sz uint32) ([]byte, error) {
 	if off >= r.size {
 		return nil, nil
