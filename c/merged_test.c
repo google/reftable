@@ -92,8 +92,10 @@ void write_test_table(slice *buf, ref_record refs [], int n)  {
   writer *w = new_writer(&slice_write_void, buf, &opts);
 
   for (int i = 0; i < n; i++) {
+    uint64 before = refs[i].update_index;
     int n = writer_add_ref(w, &refs[i]);
     assert(n == 0);
+    assert(before == refs[i].update_index);
   }
 
   int err = writer_close(w);
@@ -115,21 +117,24 @@ void test_merged(void) {
       .ref_name = "a",
       .update_index = 1,
       .value = hash1,
-     }, {
-	 .ref_name = "b",
-	.update_index = 1,
-	.value = hash1,
-     }, {
-	 .ref_name = "c",
-	 .update_index = 1,
-	 .value = hash1,
+     },
+     {
+      .ref_name = "b",
+      .update_index = 1,
+      .value = hash1,
+     },
+     {
+      .ref_name = "c",
+      .update_index = 1,
+      .value = hash1,
      }
     };
   ref_record r2[] =
     {
-      { .ref_name = "a",
-	  .update_index = 2,
-	  }
+      {
+       .ref_name = "a",
+       .update_index = 2,
+      }
     };
   ref_record r3[] =
     {
@@ -137,10 +142,11 @@ void test_merged(void) {
       .ref_name = "c",
       .update_index = 3,
       .value = hash2,
-     },{
-	.ref_name = "d",
-	.update_index = 3,
-	.value = hash1,
+     },
+     {
+      .ref_name = "d",
+      .update_index = 3,
+      .value = hash1,
      },
     };
 
@@ -193,7 +199,7 @@ void test_merged(void) {
      r3[1],
     };
   assert(ARRAYSIZE(want) == len);
-  for (int i =0 ; i < len; i++) {
+  for (int i = 0; i < len; i++) {
     assert(ref_record_equal(&want[i], &out[i]));
   }
 }

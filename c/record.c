@@ -169,6 +169,7 @@ void ref_record_copy_from(void *rec, const void *src_rec) {
     ref->value = malloc(HASH_SIZE);
     memcpy(ref->value, src->value, HASH_SIZE);
   }
+  ref->update_index = src->update_index;
 }
 
 char hexdigit(int c) {
@@ -663,8 +664,8 @@ ref_record* record_as_ref(record rec) {
 }
 
 bool hash_equal(byte *a, byte *b) {
-  if (a!= NULL && b!=NULL) {
-    return memcmp(a,b, HASH_SIZE);
+  if (a!= NULL && b != NULL) {
+    return 0 ==  memcmp(a, b, HASH_SIZE);
   }
 
   return a== b;
@@ -672,14 +673,14 @@ bool hash_equal(byte *a, byte *b) {
 
 bool str_equal(char *a, char *b) {
   if (a!= NULL && b!=NULL) {
-    return strcmp(a,b);
+    return 0 == strcmp(a,b);
   }
 
-  return a== b;
+  return a == b;
 }
 
 bool ref_record_equal(ref_record *a, ref_record *b) {
-  return strcmp(a->ref_name, b->ref_name) &&
+  return 0 == strcmp(a->ref_name, b->ref_name) &&
     a->update_index == b->update_index &&
     hash_equal(a->value, b->value) &&
     hash_equal(a->target_value, b->target_value) &&

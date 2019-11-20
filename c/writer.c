@@ -205,8 +205,9 @@ int writer_add_ref(writer *w, ref_record *ref) {
   }
 
   record rec = {};
-  record_from_ref(&rec, ref);
-  ref->update_index -= w->opts.min_update_index;
+  ref_record copy = *ref;
+  record_from_ref(&rec, &copy);
+  copy.update_index -= w->opts.min_update_index;
   int err = writer_add_record(w, rec);
   if (err < 0) {
     return err;
