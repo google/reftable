@@ -62,6 +62,9 @@ type Writer struct {
 	cfg   Config
 	block []byte
 
+	minUpdateIndex uint64
+	maxUpdateIndex uint64
+
 	// The current block writer, or nil if it was just flushed.
 	blockWriter *blockWriter
 	index       []indexRecord
@@ -125,8 +128,8 @@ func (w *Writer) headerBytes() []byte {
 	h := header{
 		Magic:          magic,
 		BlockSize:      w.cfg.BlockSize,
-		MinUpdateIndex: w.cfg.MinUpdateIndex,
-		MaxUpdateIndex: w.cfg.MaxUpdateIndex,
+		MinUpdateIndex: w.minUpdateIndex,
+		MaxUpdateIndex: w.maxUpdateIndex,
 	}
 	h.BlockSize = h.BlockSize | (version << 24)
 	buf := bytes.NewBuffer(make([]byte, 0, 24))
@@ -151,15 +154,22 @@ func (w *Writer) indexHash(hash []byte) {
 	w.objIndex[str] = append(l, off)
 }
 
+// SetLimits sets the range of the records to be written. It should be
+// called before calling AddRef or AddLog
+func (w *Writer) SetLimits(min, max uint64) {
+	w.minUpdateIndex = min
+	w.maxUpdateIndex = max
+}
+
 // AddRef adds a RefRecord to the table. AddRef must be called in ascending order. AddRef cannot be called after AddLog is called.
 func (w *Writer) AddRef(r *RefRecord) error {
-	if r.UpdateIndex < w.cfg.MinUpdateIndex || r.UpdateIndex > w.cfg.MaxUpdateIndex {
+	if r.UpdateIndex < w.minUpdateIndex || r.UpdateIndex > w.maxUpdateIndex {
 		return fmt.Errorf("reftable: UpdateIndex %d outside bounds [%d, %d]",
-			r.UpdateIndex, w.cfg.MinUpdateIndex, w.cfg.MaxUpdateIndex)
+			r.UpdateIndex, w.minUpdateIndex, w.maxUpdateIndex)
 	}
 
 	cpy := *r
-	cpy.UpdateIndex -= w.cfg.MinUpdateIndex
+	cpy.UpdateIndex -= w.minUpdateIndex
 
 	if err := w.add(&cpy); err != nil {
 		return err

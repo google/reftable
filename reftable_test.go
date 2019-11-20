@@ -36,11 +36,8 @@ func TestTableObjectIDLen(t *testing.T) {
 		RefName: "b" + suffix,
 		Value:   h2,
 	}}, nil, Config{
-		MinUpdateIndex: 0,
-		MaxUpdateIndex: 1,
-		BlockSize:      512,
+		BlockSize: 512,
 	})
-
 	if g := reader.objectIDLen; g != 5 {
 		t.Errorf("Got %d, want 5", g)
 	}
@@ -81,14 +78,11 @@ func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, cfg Co
 		}
 	}
 
-	cfg.MinUpdateIndex = min
-	cfg.MaxUpdateIndex = max
-
 	w, err := NewWriter(buf, &cfg)
 	if err != nil {
 		t.Fatalf("NewWriter: %v", err)
 	}
-
+	w.SetLimits(min, max)
 	for _, r := range refs {
 		if err := w.AddRef(&r); err != nil {
 			t.Fatalf("AddRef: %v", err)
@@ -124,9 +118,7 @@ func TestTableSeekEmpty(t *testing.T) {
 	}}
 
 	_, reader := constructTestTable(t, refs, nil, Config{
-		MinUpdateIndex: 1,
-		MaxUpdateIndex: 1,
-		BlockSize:      512,
+		BlockSize: 512,
 	})
 
 	_, err := reader.SeekRef(&RefRecord{})
@@ -175,9 +167,7 @@ func TestTableRoundTrip(t *testing.T) {
 	}}
 
 	_, reader := constructTestTable(t, refs, logs, Config{
-		MinUpdateIndex: 1,
-		MaxUpdateIndex: 1,
-		BlockSize:      512,
+		BlockSize: 512,
 	})
 
 	iter, err := reader.SeekRef(&RefRecord{})
@@ -226,9 +216,7 @@ func TestTableLastBlockLacksPadding(t *testing.T) {
 		Value:   testHash(1),
 	}}, nil,
 		Config{
-			MinUpdateIndex:   1,
 			SkipIndexObjects: true,
-			MaxUpdateIndex:   1,
 			BlockSize:        10240,
 		})
 
@@ -249,9 +237,7 @@ func TestTableFirstBlock(t *testing.T) {
 		},
 	},
 		Config{
-			MinUpdateIndex: 1,
-			MaxUpdateIndex: 1,
-			BlockSize:      256,
+			BlockSize: 256,
 		})
 	if got := reader.offsets[blockTypeObj].Offset; got != 256 {
 		t.Fatalf("got %d, want %d", got, 256)
@@ -285,9 +271,7 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 	}
 
 	writer, reader := constructTestTable(t, refs, logs, Config{
-		MinUpdateIndex: 1,
-		MaxUpdateIndex: 1,
-		BlockSize:      blockSize,
+		BlockSize: blockSize,
 	})
 	if got := writer.getBlockStats(typ).MaxIndexLevel; got != maxLevel {
 		t.Fatalf("got index level %d, want %d", got, maxLevel)
@@ -453,14 +437,12 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 
 func TestTableMinUpdate(t *testing.T) {
 	buf := &bytes.Buffer{}
-	w, err := NewWriter(buf, &Config{
-		MinUpdateIndex: 2,
-		MaxUpdateIndex: 4,
-	})
+	w, err := NewWriter(buf, &Config{})
 	if err != nil {
 		t.Fatalf("NewWriter: %v", err)
 	}
 
+	w.SetLimits(2, 4)
 	for _, ref := range []RefRecord{{
 		RefName:     "ref",
 		UpdateIndex: 1,
