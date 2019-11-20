@@ -17,7 +17,8 @@ C
 =
 
 An experimental implementation in C is under the directory c/ . It
-implements ref records and single reftables only. 
+implements ref records, the obj index, and merged reftables. It lacks
+support for reflog blocks.
 
 DISCLAIMER
 ==========
