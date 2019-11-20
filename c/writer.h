@@ -15,7 +15,11 @@
 #ifndef WRITER_H
 #define WRITER_H
 
+#include "basics.h"
+#include "slice.h"
 #include "tree.h"
+#include "api.h"
+#include "block.h"
 
 typedef struct _writer {
   int (*write)(void *, byte *, int);
