@@ -17,24 +17,24 @@
 
 #include "record.h"
 
-typedef struct {
-  record rec;
+struct pq_entry {
+  struct record rec;
   int index;
-} pq_entry;
+};
 
-int pq_less(pq_entry a, pq_entry b);
+int pq_less(struct pq_entry a, struct pq_entry b);
 
-typedef struct {
-  pq_entry *heap;
+struct merged_iter_pqueue {
+  struct pq_entry *heap;
   int len;
   int cap;
-} merged_iter_pqueue;
+};
 
-pq_entry merged_iter_pqueue_top(merged_iter_pqueue pq);
-bool merged_iter_pqueue_is_empty(merged_iter_pqueue pq);
-void merged_iter_pqueue_check(merged_iter_pqueue pq);
-pq_entry merged_iter_pqueue_remove(merged_iter_pqueue *pq);
-void merged_iter_pqueue_add(merged_iter_pqueue *pq, pq_entry e);
-void merged_iter_pqueue_clear(merged_iter_pqueue *pq);
+struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq);
+bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq);
+void merged_iter_pqueue_check(struct merged_iter_pqueue pq);
+struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq);
+void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e);
+void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq);
 
 #endif

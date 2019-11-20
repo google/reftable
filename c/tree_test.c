@@ -34,10 +34,10 @@ void check_increasing(void *arg, void *key) {
 }
 
 void test_tree() {
-  tree_node *root = NULL;
+  struct tree_node *root = NULL;
 
   void *values[11] = {};
-  tree_node *nodes[11] = {};
+  struct tree_node *nodes[11] = {};
   int i = 1;
   do {
     nodes[i] = tree_search(values + i, &root, &test_compare, 1);

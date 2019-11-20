@@ -19,11 +19,7 @@
 #include "basics.h"
 #include "record.h"
 
-typedef struct _block_reader block_reader;
-typedef struct _block_writer block_writer;
-typedef struct _block_iter block_iter;
-
-struct _block_writer {
+struct block_writer {
   byte *buf;
   uint32_t block_size;
   uint32_t header_off;
@@ -33,21 +29,21 @@ struct _block_writer {
   uint32_t *restarts;
   uint32_t restart_len;
   uint32_t restart_cap;
-  slice last_key;
+  struct slice last_key;
   int entries;
 };
 
-void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32_t block_size,
-                       uint32_t header_off);
-byte block_writer_type(block_writer *bw);
-int block_writer_add(block_writer *w, record rec);
-int block_writer_finish(block_writer *w);
-void block_writer_reset(block_writer *bw);
-void block_writer_clear(block_writer *bw);
+void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
+                       uint32_t block_size, uint32_t header_off);
+byte block_writer_type(struct block_writer *bw);
+int block_writer_add(struct block_writer *w, struct record rec);
+int block_writer_finish(struct block_writer *w);
+void block_writer_reset(struct block_writer *bw);
+void block_writer_clear(struct block_writer *bw);
 
-struct _block_reader {
+struct block_reader {
   uint32_t header_off;
-  block block;
+  struct block block;
 
   // size of the data, excluding restart data.
   uint32_t block_len;
@@ -56,23 +52,23 @@ struct _block_reader {
   uint16_t restart_count;
 };
 
-int block_reader_init(block_reader *br, block *bl, uint32_t header_off,
-                      uint32_t table_block_size);
-void block_reader_start(block_reader *br, block_iter *it);
-int block_reader_seek(block_reader *br, block_iter *it, slice want);
-byte block_reader_type(block_reader *r);
-int block_reader_first_key(block_reader *br, slice *key);
-
-struct _block_iter {
-  block_reader *br;
-
-  slice last_key;
+struct block_iter {
+  struct block_reader *br;
+  struct slice last_key;
   uint32_t next_off;
 };
 
-void block_iter_copy_from(block_iter *dest, block_iter *src);
-int block_iter_next(block_iter *it, record rec);
-int block_iter_seek(block_iter *it, slice want);
-void block_iter_close(block_iter *it);
+int block_reader_init(struct block_reader *br, struct block *bl,
+                      uint32_t header_off, uint32_t table_block_size);
+void block_reader_start(struct block_reader *br, struct block_iter *it);
+int block_reader_seek(struct block_reader *br, struct block_iter *it,
+                      struct slice want);
+byte block_reader_type(struct block_reader *r);
+int block_reader_first_key(struct block_reader *br, struct slice *key);
+
+void block_iter_copy_from(struct block_iter *dest, struct block_iter *src);
+int block_iter_next(struct block_iter *it, struct record rec);
+int block_iter_seek(struct block_iter *it, struct slice want);
+void block_iter_close(struct block_iter *it);
 
 #endif

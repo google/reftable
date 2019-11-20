@@ -19,14 +19,14 @@
 #include "block.h"
 #include "record.h"
 
-typedef struct {
+struct reader_offsets {
   bool present;
   uint64_t offset;
   uint64_t index_offset;
-} reader_offsets;
+};
 
-struct _reader {
-  block_source source;
+struct reader {
+  struct block_source source;
 
   uint64_t size;
   uint32_t block_size;
@@ -34,16 +34,16 @@ struct _reader {
   uint64_t max_update_index;
   int object_id_len;
 
-  reader_offsets ref_offsets;
-  reader_offsets obj_offsets;
-  reader_offsets log_offsets;
+  struct reader_offsets ref_offsets;
+  struct reader_offsets obj_offsets;
+  struct reader_offsets log_offsets;
 };
 
-int init_reader(reader *r, block_source source);
-int reader_seek(reader *r, iterator *it, record rec);
-void reader_close(reader *r);
-void reader_return_block(reader *r, block *p);
-int reader_init_block_reader(reader *r, block_reader *br, uint64_t next_off,
-                             byte want_typ);
+int init_reader(struct reader *r, struct block_source source);
+int reader_seek(struct reader *r, struct iterator *it, struct record rec);
+void reader_close(struct reader *r);
+void reader_return_block(struct reader *r, struct block *p);
+int reader_init_block_reader(struct reader *r, struct block_reader *br,
+                             uint64_t next_off, byte want_typ);
 
 #endif

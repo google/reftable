@@ -22,18 +22,18 @@
 
 void varint_roundtrip() {
   uint64_t inputs[] = {0,
-                     1,
-                     27,
-                     127,
-                     128,
-                     257,
-                     4096,
-                     ((uint64_t)1 << 63),
-                     ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1};
+                       1,
+                       27,
+                       127,
+                       128,
+                       257,
+                       4096,
+                       ((uint64_t)1 << 63),
+                       ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1};
   for (int i = 0; i < ARRAYSIZE(inputs); i++) {
     byte dest[10];
 
-    slice out = {.buf = dest, .len = 10, .cap = 10};
+    struct slice out = {.buf = dest, .len = 10, .cap = 10};
 
     uint64_t in = inputs[i];
     int n = put_var_int(out, in);
@@ -60,8 +60,8 @@ void test_common_prefix() {
   };
 
   for (int i = 0; i < ARRAYSIZE(cases); i++) {
-    slice a = {};
-    slice b = {};
+    struct slice a = {};
+    struct slice b = {};
     slice_set_string(&a, cases[i].a);
     slice_set_string(&b, cases[i].b);
 
@@ -87,7 +87,7 @@ void test_ref_record_roundtrip() {
   set_hash(testHash1, 2);
   for (int i = 0; i <= 3; i++) {
     printf("subtest %d\n", i);
-    ref_record in = {};
+    struct ref_record in = {};
     switch (i) {
       case 0:
         break;
@@ -104,22 +104,21 @@ void test_ref_record_roundtrip() {
     }
     in.ref_name = "refs/heads/master";
 
-    record rec = {};
+    struct record rec = {};
     record_from_ref(&rec, &in);
     assert(record_val_type(rec) == i);
     byte buf[1024];
-    slice key = {};
+    struct slice key = {};
     record_key(rec, &key);
-
-    slice dest = {
+    struct slice dest = {
         .buf = buf,
         .len = sizeof(buf),
     };
     int n = record_encode(rec, dest);
     assert(n > 0);
 
-    ref_record out = {};
-    record rec_out = {};
+    struct ref_record out = {};
+    struct record rec_out = {};
     record_from_ref(&rec_out, &out);
     int m = record_decode(rec_out, key, i, dest);
     assert(n == m);
@@ -142,7 +141,7 @@ void test_u24_roundtrip() {
 }
 
 void test_key_roundtrip() {
-  slice dest = {}, last_key = {}, key = {}, roundtrip = {};
+  struct slice dest = {}, last_key = {}, key = {}, roundtrip = {};
 
   slice_resize(&dest, 1024);
   slice_set_string(&last_key, "refs/heads/master");
@@ -182,41 +181,41 @@ void test_obj_record_roundtrip() {
   set_hash(testHash1, 1);
   uint64_t till9[] = {1, 2, 3, 4, 500, 600, 700, 800, 9000};
 
-  obj_record recs[3] = {{
-                            .hash_prefix = testHash1,
-                            .hash_prefix_len = 5,
-                            .offsets = till9,
-                            .offset_len = 3,
-                        },
-                        {
-                            .hash_prefix = testHash1,
-                            .hash_prefix_len = 5,
-                            .offsets = till9,
-                            .offset_len = 9,
-                        },
-                        {
-                            .hash_prefix = testHash1,
-                            .hash_prefix_len = 5,
-                        }
+  struct obj_record recs[3] = {{
+                                   .hash_prefix = testHash1,
+                                   .hash_prefix_len = 5,
+                                   .offsets = till9,
+                                   .offset_len = 3,
+                               },
+                               {
+                                   .hash_prefix = testHash1,
+                                   .hash_prefix_len = 5,
+                                   .offsets = till9,
+                                   .offset_len = 9,
+                               },
+                               {
+                                   .hash_prefix = testHash1,
+                                   .hash_prefix_len = 5,
+                               }
 
   };
   for (int i = 0; i < ARRAYSIZE(recs); i++) {
     printf("subtest %d\n", i);
-    obj_record in = recs[i];
+    struct obj_record in = recs[i];
     byte buf[1024];
-    record rec = {};
+    struct record rec = {};
     record_from_obj(&rec, &in);
-    slice key = {};
+    struct slice key = {};
     record_key(rec, &key);
-    slice dest = {
+    struct slice dest = {
         .buf = buf,
         .len = sizeof(buf),
     };
     int n = record_encode(rec, dest);
     assert(n > 0);
     byte extra = record_val_type(rec);
-    obj_record out = {};
-    record rec_out = {};
+    struct obj_record out = {};
+    struct record rec_out = {};
     record_from_obj(&rec_out, &out);
     int m = record_decode(rec_out, key, extra, dest);
     assert(n == m);
@@ -233,19 +232,19 @@ void test_obj_record_roundtrip() {
 }
 
 void test_index_record_roundtrip() {
-  index_record in = {.offset = 42};
+  struct index_record in = {.offset = 42};
 
   slice_set_string(&in.last_key, "refs/heads/master");
 
-  slice key = {};
-  record rec = {};
+  struct slice key = {};
+  struct record rec = {};
   record_from_index(&rec, &in);
   record_key(rec, &key);
 
   assert(0 == slice_compare(key, in.last_key));
 
   byte buf[1024];
-  slice dest = {
+  struct slice dest = {
       .buf = buf,
       .len = sizeof(buf),
   };
@@ -253,8 +252,8 @@ void test_index_record_roundtrip() {
   assert(n > 0);
 
   byte extra = record_val_type(rec);
-  index_record out = {};
-  record out_rec;
+  struct index_record out = {};
+  struct record out_rec;
   record_from_index(&out_rec, &out);
   int m = record_decode(out_rec, key, extra, dest);
   assert(m == n);

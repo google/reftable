@@ -19,62 +19,58 @@
 #include "constants.h"
 #include "slice.h"
 
-typedef struct _block block;
-
-/* block_source_ops are the operations that make up block_source */
-typedef struct {
-  uint64_t (*size)(void *source);
-  int (*read_block)(void *source, block *dest, uint64_t off, uint32_t size);
-  void (*return_block)(void *source, block *blockp);
-  void (*close)(void *source);
-} block_source_ops;
-
 /* block_source is a generic wrapper for a seekable readable file. */
-typedef struct _block_source block_source;
-
-/* block_source is a value type. */
-struct _block_source {
-  block_source_ops *ops;
+struct block_source {
+  struct block_source_ops *ops;
   void *arg;
 };
 
-struct _block {
+struct block {
   byte *data;
   int len;
-  block_source source;
+  struct block_source source;
 };
 
-uint64_t block_source_size(block_source source);
-int block_source_read_block(block_source source, block *dest, uint64_t off,
-                            uint32_t size);
-void block_source_return_block(block_source source, block *ret);
-void block_source_close(block_source source);
+/* block_source_ops are the operations that make up block_source */
+struct block_source_ops {
+  uint64_t (*size)(void *source);
+  int (*read_block)(void *source, struct block *dest, uint64_t off,
+                    uint32_t size);
+  void (*return_block)(void *source, struct block *blockp);
+  void (*close)(void *source);
+};
+
+uint64_t block_source_size(struct block_source source);
+int block_source_read_block(struct block_source source, struct block *dest,
+                            uint64_t off, uint32_t size);
+void block_source_return_block(struct block_source source, struct block *ret);
+void block_source_close(struct block_source source);
 
 /* write_options sets optiosn for writing a single reftable. */
-typedef struct {
+struct write_options {
   bool unpadded;
   uint32_t block_size;
   uint32_t min_update_index;
   uint32_t max_update_index;
   bool skip_index_objects;
   int restart_interval;
-} write_options;
+};
 
 /* ref_record holds a ref database entry target_value */
-typedef struct {
+struct ref_record {
   char *ref_name;  // name of the ref. Must be specified.
   uint64_t update_index;
   byte *value;         // SHA1, or NULL
   byte *target_value;  // peeled annotated tag, or NULL.
   char *target;        // symref, or NULL
-} ref_record;
+};
 
-void ref_record_print(ref_record *ref);
-void ref_record_clear(ref_record *ref);
-bool ref_record_equal(ref_record *a, ref_record *b);
+void ref_record_print(struct ref_record *ref);
+void ref_record_clear(struct ref_record *ref);
+bool ref_record_equal(struct ref_record *a, struct ref_record *b);
 
 /* log_record holds a reflog entry */
-typedef struct {
+struct log_record {
   char *ref_name;
   uint64_t update_index;
   char *new_hash;
@@ -84,23 +80,23 @@ typedef struct {
   uint64_t time;
   uint64_t tz_offset;
   char *message;
-} log_record;
+};
 
 /* iterator is the generic interface for walking over data stored in a
    reftable. */
-typedef struct {
-  struct _iterator_ops *ops;
+struct iterator {
+  struct iterator_ops *ops;
   void *iter_arg;
-} iterator;
+};
 
 // < 0: error, 0 = OK, > 0: end of iteration
-int iterator_next_ref(iterator it, ref_record *ref);
+int iterator_next_ref(struct iterator it, struct ref_record *ref);
 
 // iterator_destroy must be called after finishing an iteration.
-void iterator_destroy(iterator *it);
+void iterator_destroy(struct iterator *it);
 
 /* block_stats holds statistics for a single block type */
-typedef struct {
+struct block_stats {
   int entries;
   int restarts;
   int blocks;
@@ -109,53 +105,51 @@ typedef struct {
 
   uint64_t offset;
   uint64_t index_offset;
-} block_stats;
+};
 
 /* stats holds overall statistics for a single reftable */
-typedef struct {
+struct stats {
   int blocks;
-  block_stats ref_stats;
-  block_stats obj_stats;
-  block_stats idx_stats;
+  struct block_stats ref_stats;
+  struct block_stats obj_stats;
+  struct block_stats idx_stats;
 
   int object_id_len;
-} stats;
+};
 
 // different types of errors
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
 
-typedef struct _writer writer;
-
 /* new_writer creates a new writer */
-writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
-                   write_options *opts);
+struct writer *new_writer(int (*writer_func)(void *, byte *, int),
+                          void *writer_arg, struct write_options *opts);
 
 /* writer_add_ref adds a ref_record. Must be called in ascending order. */
-int writer_add_ref(writer *w, ref_record *ref);
+int writer_add_ref(struct writer *w, struct ref_record *ref);
 
 /* writer_close finalizes the reftable. The writer is retained so statistics can
  * be inspected. */
-int writer_close(writer *w);
+int writer_close(struct writer *w);
 
 /* writer_stats returns the statistics on the reftable being written. */
-stats *writer_stats(writer *w);
+struct stats *writer_stats(struct writer *w);
 
 /* writer_free deallocates memory for the writer */
-void writer_free(writer *w);
+void writer_free(struct writer *w);
 
-typedef struct _reader reader;
+struct reader;
 
 /* new_reader opens a reftable for reading. If successful, returns 0 code and
  * sets pp */
-int new_reader(reader **pp, block_source);
+int new_reader(struct reader **pp, struct block_source);
 
 /* reader_seek_ref returns an iterator where 'name' would be inserted in the
    table.
 
    example:
 
-   reader *r = NULL;
+   struct reader *r = NULL;
    int err = new_reader(&r, src);
    if (err < 0) { ... }
    iterator it = {};
@@ -169,14 +163,15 @@ int new_reader(reader **pp, block_source);
    iterator_destroy(&it);
 
  */
-int reader_seek_ref(reader *r, iterator *it, char *name);
-void reader_free(reader *);
-int reader_refs_for(reader *r, iterator *it, byte *oid);
-uint64_t reader_max_update_index(reader *r);
-uint64_t reader_min_update_index(reader *r);
+int reader_seek_ref(struct reader *r, struct iterator *it, char *name);
+void reader_free(struct reader *);
+int reader_refs_for(struct reader *r, struct iterator *it, byte *oid);
+uint64_t reader_max_update_index(struct reader *r);
+uint64_t reader_min_update_index(struct reader *r);
 
-typedef struct _merged_table merged_table;
-int new_merged_table(merged_table **dest, reader **stack, int n);
-int merged_table_seek_ref(merged_table *mt, iterator *it, ref_record *ref);
+struct merged_table;
+int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
+int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
+                          struct ref_record *ref);
 
 #endif

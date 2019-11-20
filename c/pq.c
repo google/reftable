@@ -17,9 +17,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-int pq_less(pq_entry a, pq_entry b) {
-  slice ak = {};
-  slice bk = {};
+int pq_less(struct pq_entry a, struct pq_entry b) {
+  struct slice ak = {};
+  struct slice bk = {};
 
   record_key(a.rec, &ak);
   record_key(b.rec, &bk);
@@ -36,11 +36,15 @@ int pq_less(pq_entry a, pq_entry b) {
   return cmp < 0;
 }
 
-pq_entry merged_iter_pqueue_top(merged_iter_pqueue pq) { return pq.heap[0]; }
+struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq) {
+  return pq.heap[0];
+}
 
-bool merged_iter_pqueue_is_empty(merged_iter_pqueue pq) { return pq.len == 0; }
+bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq) {
+  return pq.len == 0;
+}
 
-void merged_iter_pqueue_check(merged_iter_pqueue pq) {
+void merged_iter_pqueue_check(struct merged_iter_pqueue pq) {
   for (int i = 1; i < pq.len; i++) {
     int parent = (i - 1) / 2;
 
@@ -48,8 +52,8 @@ void merged_iter_pqueue_check(merged_iter_pqueue pq) {
   }
 }
 
-pq_entry merged_iter_pqueue_remove(merged_iter_pqueue *pq) {
-  pq_entry e = pq->heap[0];
+struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq) {
+  struct pq_entry e = pq->heap[0];
   pq->heap[0] = pq->heap[pq->len - 1];
   pq->len--;
 
@@ -69,7 +73,7 @@ pq_entry merged_iter_pqueue_remove(merged_iter_pqueue *pq) {
       break;
     }
 
-    pq_entry tmp = pq->heap[min];
+    struct pq_entry tmp = pq->heap[min];
     pq->heap[min] = pq->heap[i];
     pq->heap[i] = tmp;
 
@@ -79,10 +83,10 @@ pq_entry merged_iter_pqueue_remove(merged_iter_pqueue *pq) {
   return e;
 }
 
-void merged_iter_pqueue_add(merged_iter_pqueue *pq, pq_entry e) {
+void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e) {
   if (pq->len == pq->cap) {
     pq->cap = 2 * pq->cap + 1;
-    pq->heap = realloc(pq->heap, pq->cap * sizeof(pq_entry));
+    pq->heap = realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
   }
 
   pq->heap[pq->len++] = e;
@@ -93,14 +97,14 @@ void merged_iter_pqueue_add(merged_iter_pqueue *pq, pq_entry e) {
       break;
     }
 
-    pq_entry tmp = pq->heap[j];
+    struct pq_entry tmp = pq->heap[j];
     pq->heap[j] = pq->heap[i];
     pq->heap[i] = tmp;
     i = j;
   }
 }
 
-void merged_iter_pqueue_clear(merged_iter_pqueue *pq) {
+void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq) {
   for (int i = 0; i < pq->len; i++) {
     record_clear(pq->heap[i].rec);
   }

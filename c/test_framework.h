@@ -36,13 +36,13 @@
     abort();                                                                \
   }
 
-typedef struct {
+struct test_case {
   const char *name;
   void (*testfunc)();
-} test_case;
+};
 
-test_case *new_test_case(const char *name, void (*testfunc)());
-test_case *add_test_case(const char *name, void (*testfunc)());
+struct test_case *new_test_case(const char *name, void (*testfunc)());
+struct test_case *add_test_case(const char *name, void (*testfunc)());
 void test_main();
 
 #endif

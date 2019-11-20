@@ -18,24 +18,24 @@
 #include "pq.h"
 #include "reader.h"
 
-struct _merged_table {
-  reader **stack;
+struct merged_table {
+  struct reader **stack;
   int stack_len;
 
   uint64_t min;
   uint64_t max;
 };
 
-typedef struct {
-  iterator *stack;
+struct merged_iter {
+  struct iterator *stack;
   int stack_len;
   byte typ;
-  merged_iter_pqueue pq;
+  struct merged_iter_pqueue pq;
 } merged_iter;
 
-int merged_iter_init(merged_iter *mi) {
+int merged_iter_init(struct merged_iter *mi) {
   for (int i = 0; i < mi->stack_len; i++) {
-    record rec = new_record(mi->typ);
+    struct record rec = new_record(mi->typ);
     int err = iterator_next(mi->stack[i], rec);
     if (err < 0) {
       return err;
@@ -44,7 +44,7 @@ int merged_iter_init(merged_iter *mi) {
     if (err > 0) {
       iterator_destroy(&mi->stack[i]);
     } else {
-      pq_entry e = {
+      struct pq_entry e = {
           .rec = rec,
           .index = i,
       };
@@ -56,7 +56,7 @@ int merged_iter_init(merged_iter *mi) {
 }
 
 void merged_iter_close(void *p) {
-  merged_iter *mi = (merged_iter *)p;
+  struct merged_iter *mi = (struct merged_iter *)p;
 
   merged_iter_pqueue_clear(&mi->pq);
   for (int i = 0; i < mi->stack_len; i++) {
@@ -64,12 +64,12 @@ void merged_iter_close(void *p) {
   }
 }
 
-int merged_iter_advance_subiter(merged_iter *mi, int idx) {
+int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
   if (iterator_is_null(mi->stack[idx])) {
     return 0;
   }
 
-  record rec = new_record(mi->typ);
+  struct record rec = new_record(mi->typ);
   int err = iterator_next(mi->stack[idx], rec);
   if (err < 0) {
     return err;
@@ -80,7 +80,7 @@ int merged_iter_advance_subiter(merged_iter *mi, int idx) {
     return 0;
   }
 
-  pq_entry e = {
+  struct pq_entry e = {
       .rec = rec,
       .index = idx,
   };
@@ -88,24 +88,24 @@ int merged_iter_advance_subiter(merged_iter *mi, int idx) {
   return 0;
 }
 
-int merged_iter_next(void *p, record rec) {
-  merged_iter *mi = (merged_iter *)p;
+int merged_iter_next(void *p, struct record rec) {
+  struct merged_iter *mi = (struct merged_iter *)p;
   if (merged_iter_pqueue_is_empty(mi->pq)) {
     return 1;
   }
 
-  pq_entry entry = merged_iter_pqueue_remove(&mi->pq);
+  struct pq_entry entry = merged_iter_pqueue_remove(&mi->pq);
   int err = merged_iter_advance_subiter(mi, entry.index);
   if (err < 0) {
     return err;
   }
 
-  slice entry_key = {};
+  struct slice entry_key = {};
   record_key(entry.rec, &entry_key);
   while (!merged_iter_pqueue_is_empty(mi->pq)) {
-    pq_entry top = merged_iter_pqueue_top(mi->pq);
+    struct pq_entry top = merged_iter_pqueue_top(mi->pq);
 
-    slice k = {};
+    struct slice k = {};
     record_key(top.rec, &k);
 
     int cmp = slice_compare(k, entry_key);
@@ -131,23 +131,23 @@ int merged_iter_next(void *p, record rec) {
   return 0;
 }
 
-struct _iterator_ops merged_iter_ops = {
+struct iterator_ops merged_iter_ops = {
     .next = &merged_iter_next,
     .close = &merged_iter_close,
 };
 
-void iterator_from_merged_iter(iterator *it, merged_iter *mi) {
+void iterator_from_merged_iter(struct iterator *it, struct merged_iter *mi) {
   it->iter_arg = mi;
   it->ops = &merged_iter_ops;
 }
 
 /* new_merged_table creates a new merged table. It takes ownership of the stack
  * array. */
-int new_merged_table(merged_table **dest, reader **stack, int n) {
+int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
   uint64_t last_max = 0;
   uint64_t first_min = 0;
   for (int i = 0; i < n; i++) {
-    reader *r = stack[i];
+    struct reader *r = stack[i];
     if (i > 0 && last_max >= reader_min_update_index(r)) {
       return FORMAT_ERROR;
     }
@@ -158,24 +158,25 @@ int new_merged_table(merged_table **dest, reader **stack, int n) {
     last_max = reader_max_update_index(r);
   }
 
-  merged_table m = {
+  struct merged_table m = {
       .stack = stack,
       .stack_len = n,
       .min = first_min,
       .max = last_max,
   };
 
-  *dest = calloc(sizeof(merged_table), 1);
+  *dest = calloc(sizeof(struct merged_table), 1);
   **dest = m;
   return 0;
 }
 
-uint64_t merged_max_update_index(merged_table *mt) { return mt->max; }
+uint64_t merged_max_update_index(struct merged_table *mt) { return mt->max; }
 
-uint64_t merged_min_update_index(merged_table *mt) { return mt->min; }
+uint64_t merged_min_update_index(struct merged_table *mt) { return mt->min; }
 
-int merged_table_seek_record(merged_table *mt, iterator *it, record rec) {
-  iterator *iters = calloc(sizeof(iterator), mt->stack_len);
+int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
+                             struct record rec) {
+  struct iterator *iters = calloc(sizeof(struct iterator), mt->stack_len);
   for (int i = 0; i < mt->stack_len; i++) {
     int err = reader_seek(mt->stack[i], &iters[i], rec);
     if (err < 0) {
@@ -184,7 +185,7 @@ int merged_table_seek_record(merged_table *mt, iterator *it, record rec) {
     }
   }
 
-  merged_iter merged = {
+  struct merged_iter merged = {
       .stack = iters,
       .stack_len = mt->stack_len,
       .typ = record_type(rec),
@@ -195,14 +196,15 @@ int merged_table_seek_record(merged_table *mt, iterator *it, record rec) {
     return err;
   }
 
-  merged_iter *p = malloc(sizeof(merged_iter));
+  struct merged_iter *p = malloc(sizeof(struct merged_iter));
   *p = merged;
   iterator_from_merged_iter(it, p);
   return 0;
 }
 
-int merged_table_seek_ref(merged_table *mt, iterator *it, ref_record *ref) {
-  record rec = {};
+int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
+                          struct ref_record *ref) {
+  struct record rec = {};
   record_from_ref(&rec, ref);
   return merged_table_seek_record(mt, it, rec);
 }

@@ -21,11 +21,11 @@
 #include "api.h"
 #include "record.h"
 
-int block_writer_register_restart(block_writer *w, int n, bool restart,
-                                  slice key);
+int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+                                  struct slice key);
 
-void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32_t block_size,
-                       uint32_t header_off) {
+void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
+                       uint32_t block_size, uint32_t header_off) {
   bw->buf = buf;
   bw->block_size = block_size;
   bw->header_off = header_off;
@@ -34,23 +34,25 @@ void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32_t block_siz
   bw->restart_interval = 16;
 }
 
-byte block_writer_type(block_writer *bw) { return bw->buf[bw->header_off]; }
+byte block_writer_type(struct block_writer *bw) {
+  return bw->buf[bw->header_off];
+}
 
-int block_writer_add(block_writer *w, record rec) {
-  slice last = w->last_key;
+int block_writer_add(struct block_writer *w, struct record rec) {
+  struct slice last = w->last_key;
   if (w->entries % w->restart_interval == 0) {
     last.len = 0;
   }
 
-  slice out = {
+  struct slice out = {
       .buf = w->buf + w->next,
       .len = w->block_size - w->next,
   };
 
-  slice start = out;
+  struct slice start = out;
 
   bool restart = false;
-  slice key = {};
+  struct slice key = {};
   record_key(rec, &key);
   int n = encode_key(&restart, out, last, key, record_val_type(rec));
   if (n < 0) {
@@ -79,8 +81,8 @@ err:
   return -1;
 }
 
-int block_writer_register_restart(block_writer *w, int n, bool restart,
-                                  slice key) {
+int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+                                  struct slice key) {
   int rlen = w->restart_len;
   if (rlen >= MAX_RESTARTS) {
     restart = false;
@@ -107,7 +109,7 @@ int block_writer_register_restart(block_writer *w, int n, bool restart,
   return 0;
 }
 
-int block_writer_finish(block_writer *w) {
+int block_writer_finish(struct block_writer *w) {
   for (int i = 0; i < w->restart_len; i++) {
     put_u24(w->buf + w->next, w->restarts[i]);
     w->next += 3;
@@ -121,10 +123,12 @@ int block_writer_finish(block_writer *w) {
   return w->next;
 }
 
-byte block_reader_type(block_reader *r) { return r->block.data[r->header_off]; }
+byte block_reader_type(struct block_reader *r) {
+  return r->block.data[r->header_off];
+}
 
-int block_reader_init(block_reader *br, block *block, uint32_t header_off,
-                      uint32_t table_block_size) {
+int block_reader_init(struct block_reader *br, struct block *block,
+                      uint32_t header_off, uint32_t table_block_size) {
   uint32_t full_block_size = table_block_size;
   byte typ = block->data[header_off];
 
@@ -162,26 +166,26 @@ int block_reader_init(block_reader *br, block *block, uint32_t header_off,
   return 0;
 }
 
-uint32_t block_reader_restart_offset(block_reader *br, int i) {
+uint32_t block_reader_restart_offset(struct block_reader *br, int i) {
   return get_u24(br->restart_bytes + 3 * i);
 }
 
-void block_reader_start(block_reader *br, block_iter *it) {
+void block_reader_start(struct block_reader *br, struct block_iter *it) {
   it->br = br;
   slice_resize(&it->last_key, 0);
   it->next_off = br->header_off + 4;
 }
 
-typedef struct {
-  slice key;
-  block_reader *r;
+struct restart_find_args {
+  struct slice key;
+  struct block_reader *r;
   int error;
-} restart_find_args;
+};
 
 int key_less(int idx, void *args) {
-  restart_find_args *a = (restart_find_args *)args;
+  struct restart_find_args *a = (struct restart_find_args *)args;
   uint32_t off = block_reader_restart_offset(a->r, idx);
-  slice in = {
+  struct slice in = {
       .buf = a->r->block.data,
       .len = a->r->block_len,
   };
@@ -189,8 +193,8 @@ int key_less(int idx, void *args) {
   in.len -= off;
 
   // XXX could avoid alloc here.
-  slice rkey = {};
-  slice last_key = {};
+  struct slice rkey = {};
+  struct slice last_key = {};
   byte extra;
   int n = decode_key(&rkey, &extra, last_key, in);
   if (n < 0) {
@@ -204,24 +208,24 @@ int key_less(int idx, void *args) {
   return result;
 }
 
-void block_iter_copy_from(block_iter *dest, block_iter *src) {
+void block_iter_copy_from(struct block_iter *dest, struct block_iter *src) {
   dest->br = src->br;
   dest->next_off = src->next_off;
   slice_copy(&dest->last_key, src->last_key);
 }
 
 // return < 0 for error, 0 for OK, > 0 for EOF.
-int block_iter_next(block_iter *it, record rec) {
+int block_iter_next(struct block_iter *it, struct record rec) {
   if (it->next_off >= it->br->block_len) {
     return 1;
   }
 
-  slice in = {
+  struct slice in = {
       .buf = it->br->block.data + it->next_off,
       .len = it->br->block_len - it->next_off,
   };
-  slice start = in;
-  slice key = {};
+  struct slice start = in;
+  struct slice key = {};
   byte extra;
   int n = decode_key(&key, &extra, it->last_key, in);
   if (n < 0) {
@@ -243,10 +247,10 @@ int block_iter_next(block_iter *it, record rec) {
   return 0;
 }
 
-int block_reader_first_key(block_reader *br, slice *key) {
-  slice empty = {};
+int block_reader_first_key(struct block_reader *br, struct slice *key) {
+  struct slice empty = {};
   int off = br->header_off + 4;
-  slice in = {
+  struct slice in = {
       .buf = br->block.data + off,
       .len = br->block_len - off,
   };
@@ -259,14 +263,17 @@ int block_reader_first_key(block_reader *br, slice *key) {
   return 0;
 }
 
-int block_iter_seek(block_iter *it, slice want) {
+int block_iter_seek(struct block_iter *it, struct slice want) {
   return block_reader_seek(it->br, it, want);
 }
 
-void block_iter_close(block_iter *it) { free(slice_yield(&it->last_key)); }
+void block_iter_close(struct block_iter *it) {
+  free(slice_yield(&it->last_key));
+}
 
-int block_reader_seek(block_reader *br, block_iter *it, slice want) {
-  restart_find_args args = {
+int block_reader_seek(struct block_reader *br, struct block_iter *it,
+                      struct slice want) {
+  struct restart_find_args args = {
       .key = want,
       .r = br,
   };
@@ -284,10 +291,10 @@ int block_reader_seek(block_reader *br, block_iter *it, slice want) {
     it->next_off = br->header_off + 4;
   }
 
-  record rec = new_record(block_reader_type(br));
-  slice key = {};
+  struct record rec = new_record(block_reader_type(br));
+  struct slice key = {};
   int result = 0;
-  block_iter next = {};
+  struct block_iter next = {};
   while (true) {
     block_iter_copy_from(&next, it);
 
@@ -315,12 +322,12 @@ exit:
   return result;
 }
 
-void block_writer_reset(block_writer *bw) {
+void block_writer_reset(struct block_writer *bw) {
   bw->restart_len = 0;
   bw->last_key.len = 0;
 }
 
-void block_writer_clear(block_writer *bw) {
+void block_writer_clear(struct block_writer *bw) {
   free(bw->restarts);
   bw->restarts = NULL;
   free(slice_yield(&bw->last_key));

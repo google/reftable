@@ -21,13 +21,13 @@
 #include "record.h"
 #include "test_framework.h"
 
-typedef struct {
+struct binsearch_args {
   int key;
   int *arr;
-} binsearch_args;
+};
 
 int binsearch_func(int i, void *void_args) {
-  binsearch_args *args = (binsearch_args *)void_args;
+  struct binsearch_args *args = (struct binsearch_args *)void_args;
 
   return args->key < args->arr[i];
 }
@@ -35,7 +35,7 @@ int binsearch_func(int i, void *void_args) {
 void test_binsearch() {
   int arr[] = {2, 4, 6, 8, 10};
   int sz = ARRAYSIZE(arr);
-  binsearch_args args = {
+  struct binsearch_args args = {
       .arr = arr,
   };
 
@@ -59,14 +59,14 @@ void test_block_read_write() {
   const int N = 30;
   char *names[N];
   const int block_size = 1024;
-  block block = {};
+  struct block block = {};
   block.data = calloc(block_size, 1);
   block.len = block_size;
 
-  block_writer bw = {};
+  struct block_writer bw = {};
   block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off);
-  ref_record ref = {};
-  record rec = {};
+  struct ref_record ref = {};
+  struct record rec = {};
   record_from_ref(&rec, &ref);
 
   for (int i = 0; i < N; i++) {
@@ -90,10 +90,10 @@ void test_block_read_write() {
 
   block_writer_clear(&bw);
 
-  block_reader br = {};
+  struct block_reader br = {};
   block_reader_init(&br, &block, header_off, block_size);
 
-  block_iter it = {};
+  struct block_iter it = {};
   block_reader_start(&br, &it);
 
   int j = 0;
@@ -109,11 +109,11 @@ void test_block_read_write() {
   record_clear(rec);
   block_iter_close(&it);
 
-  slice want = {};
+  struct slice want = {};
   for (int i = 0; i < N; i++) {
     slice_set_string(&want, names[i]);
 
-    block_iter it = {};
+    struct block_iter it = {};
     int n = block_reader_seek(&br, &it, want);
     assert(n == 0);
 

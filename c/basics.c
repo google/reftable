@@ -32,8 +32,8 @@ void put_u32(byte *out, uint32_t i) {
 }
 
 uint32_t get_u32(byte *in) {
-  return (uint32_t)(in[0]) << 24 | (uint32_t)(in[1]) << 16 | (uint32_t)(in[2]) << 8 |
-         (uint32_t)(in[3]);
+  return (uint32_t)(in[0]) << 24 | (uint32_t)(in[1]) << 16 |
+         (uint32_t)(in[2]) << 8 | (uint32_t)(in[3]);
 }
 
 void put_u64(byte *out, uint64_t v) {
@@ -56,7 +56,9 @@ void put_u16(byte *out, uint16_t i) {
   out[1] = (byte)((i)&0xff);
 }
 
-uint16_t get_u16(byte *in) { return (uint32_t)(in[0]) << 8 | (uint32_t)(in[1]); }
+uint16_t get_u16(byte *in) {
+  return (uint32_t)(in[0]) << 8 | (uint32_t)(in[1]);
+}
 
 /*
   find smallest index i in [0, sz) at which f(i) is true, assuming

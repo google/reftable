@@ -20,7 +20,7 @@
 
 #include "api.h"
 
-void slice_set_string(slice *s, const char *str) {
+void slice_set_string(struct slice *s, const char *str) {
   if (str == NULL) {
     s->len = 0;
     return;
@@ -33,7 +33,7 @@ void slice_set_string(slice *s, const char *str) {
   s->len = l - 1;
 }
 
-void slice_resize(slice *s, int l) {
+void slice_resize(struct slice *s, int l) {
   if (s->cap < l) {
     int c = s->cap * 2;
     if (c < l) {
@@ -45,7 +45,7 @@ void slice_resize(slice *s, int l) {
   s->len = l;
 }
 
-byte *slice_yield(slice *s) {
+byte *slice_yield(struct slice *s) {
   byte *p = s->buf;
   s->buf = NULL;
   s->cap = 0;
@@ -53,27 +53,27 @@ byte *slice_yield(slice *s) {
   return p;
 }
 
-void slice_copy(slice *dest, slice src) {
+void slice_copy(struct slice *dest, struct slice src) {
   slice_resize(dest, src.len);
   memcpy(dest->buf, src.buf, src.len);
 }
 
-char *slice_to_string(slice in) {
-  slice s = {};
+char *slice_to_string(struct slice in) {
+  struct slice s = {};
   slice_resize(&s, in.len + 1);
   s.buf[in.len] = 0;
   memcpy(s.buf, in.buf, in.len);
   return (char *)slice_yield(&s);
 }
 
-bool slice_equal(slice a, slice b) {
+bool slice_equal(struct slice a, struct slice b) {
   if (a.len != b.len) {
     return 0;
   }
   return memcmp(a.buf, b.buf, a.len) == 0;
 }
 
-int slice_compare(slice a, slice b) {
+int slice_compare(struct slice a, struct slice b) {
   int min = b.len;
   if (a.len < b.len) {
     min = a.len;
@@ -91,7 +91,7 @@ int slice_compare(slice a, slice b) {
   }
 }
 
-int slice_write(slice *b, byte *data, int sz) {
+int slice_write(struct slice *b, byte *data, int sz) {
   if (b->len + sz > b->cap) {
     int newcap = 2 * b->cap + 1;
     if (newcap < b->len + sz) {
@@ -107,20 +107,20 @@ int slice_write(slice *b, byte *data, int sz) {
 }
 
 int slice_write_void(void *b, byte *data, int sz) {
-  return slice_write((slice *)b, data, sz);
+  return slice_write((struct slice *)b, data, sz);
 }
 
-uint64_t slice_size(void *b) { return ((slice *)b)->len; }
+uint64_t slice_size(void *b) { return ((struct slice *)b)->len; }
 
-void slice_return_block(void *b, block *dest) {
+void slice_return_block(void *b, struct block *dest) {
   memset(dest->data, 0xff, dest->len);
   free(dest->data);
 }
 
 void slice_close(void *b) {}
 
-int slice_read_block(void *v, block *dest, uint64_t off, uint32_t size) {
-  slice *b = (slice *)v;
+int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
+  struct slice *b = (struct slice *)v;
   assert(off + size <= b->len);
   dest->data = calloc(size, 1);
   memcpy(dest->data, b->buf + off, size);
@@ -129,14 +129,14 @@ int slice_read_block(void *v, block *dest, uint64_t off, uint32_t size) {
   return size;
 }
 
-block_source_ops slice_ops = {
+struct block_source_ops slice_ops = {
     .size = &slice_size,
     .read_block = &slice_read_block,
     .return_block = &slice_return_block,
     .close = &slice_close,
 };
 
-void block_source_from_slice(block_source *bs, slice *buf) {
+void block_source_from_slice(struct block_source *bs, struct slice *buf) {
   bs->ops = &slice_ops;
   bs->arg = buf;
 }

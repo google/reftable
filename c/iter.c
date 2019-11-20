@@ -21,47 +21,49 @@
 #include "block.h"
 #include "reader.h"
 
-bool iterator_is_null(iterator it) { return it.ops == NULL; }
+bool iterator_is_null(struct iterator it) { return it.ops == NULL; }
 
-int empty_iterator_next(void *arg, record rec) { return 1; }
+int empty_iterator_next(void *arg, struct record rec) { return 1; }
 
 void empty_iterator_close(void *arg) {}
 
-struct _iterator_ops empty_ops = {
+struct iterator_ops empty_ops = {
     .next = &empty_iterator_next,
     .close = &empty_iterator_close,
 };
 
-void iterator_set_empty(iterator *it) {
+void iterator_set_empty(struct iterator *it) {
   it->iter_arg = NULL;
   it->ops = &empty_ops;
 }
 
-int iterator_next(iterator it, record rec) {
+int iterator_next(struct iterator it, struct record rec) {
   return it.ops->next(it.iter_arg, rec);
 }
 
-void iterator_destroy(iterator *it) {
+void iterator_destroy(struct iterator *it) {
   it->ops->close(it->iter_arg);
   it->ops = NULL;
   free(it->iter_arg);
   it->iter_arg = NULL;
 }
 
-int iterator_next_ref(iterator it, ref_record *ref) {
-  record rec = {};
+int iterator_next_ref(struct iterator it, struct ref_record *ref) {
+  struct record rec = {};
   record_from_ref(&rec, ref);
   return iterator_next(it, rec);
 }
 
 void filtering_ref_iterator_close(void *iter_arg) {
-  filtering_ref_iterator *fri = (filtering_ref_iterator *)iter_arg;
+  struct filtering_ref_iterator *fri =
+      (struct filtering_ref_iterator *)iter_arg;
   iterator_destroy(&fri->it);
 }
 
-int filtering_ref_iterator_next(void *iter_arg, record rec) {
-  filtering_ref_iterator *fri = (filtering_ref_iterator *)iter_arg;
-  ref_record *ref = (ref_record *)rec.data;
+int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
+  struct filtering_ref_iterator *fri =
+      (struct filtering_ref_iterator *)iter_arg;
+  struct ref_record *ref = (struct ref_record *)rec.data;
 
   while (true) {
     int err = iterator_next_ref(fri->it, ref);
@@ -70,7 +72,7 @@ int filtering_ref_iterator_next(void *iter_arg, record rec) {
     }
 
     if (fri->double_check) {
-      iterator it = {};
+      struct iterator it = {};
 
       int err = reader_seek_ref(fri->r, &it, ref->ref_name);
       if (err == 0) {
@@ -96,23 +98,23 @@ int filtering_ref_iterator_next(void *iter_arg, record rec) {
   }
 }
 
-struct _iterator_ops filtering_ref_iterator_ops = {
+struct iterator_ops filtering_ref_iterator_ops = {
     .next = &filtering_ref_iterator_next,
     .close = &filtering_ref_iterator_close,
 };
 
-void iterator_from_filtering_ref_iterator(iterator *it,
-                                          filtering_ref_iterator *fri) {
+void iterator_from_filtering_ref_iterator(struct iterator *it,
+                                          struct filtering_ref_iterator *fri) {
   it->iter_arg = fri;
   it->ops = &filtering_ref_iterator_ops;
 }
 
 void indexed_table_ref_iter_close(void *p) {
-  indexed_table_ref_iter *it = (indexed_table_ref_iter *)p;
+  struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
   reader_return_block(it->r, &it->block_reader.block);
 }
 
-int indexed_table_ref_iter_next_block(indexed_table_ref_iter *it) {
+int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
   if (it->offset_idx == it->offset_len) {
     it->finished = true;
     return 1;
@@ -136,9 +138,9 @@ int indexed_table_ref_iter_next_block(indexed_table_ref_iter *it) {
   return 0;
 }
 
-int indexed_table_ref_iter_next(void *p, record rec) {
-  indexed_table_ref_iter *it = (indexed_table_ref_iter *)p;
-  ref_record *ref = (ref_record *)rec.data;
+int indexed_table_ref_iter_next(void *p, struct record rec) {
+  struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
+  struct ref_record *ref = (struct ref_record *)rec.data;
 
   while (true) {
     int err = block_iter_next(&it->cur, rec);
@@ -165,9 +167,11 @@ int indexed_table_ref_iter_next(void *p, record rec) {
   }
 }
 
-int new_indexed_table_ref_iter(indexed_table_ref_iter **dest, reader *r,
-                               byte *oid, uint64_t *offsets, int offset_len) {
-  indexed_table_ref_iter *itr = calloc(sizeof(indexed_table_ref_iter), 1);
+int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
+                               struct reader *r, byte *oid, uint64_t *offsets,
+                               int offset_len) {
+  struct indexed_table_ref_iter *itr =
+      calloc(sizeof(struct indexed_table_ref_iter), 1);
   itr->r = r;
   itr->oid = oid;
 
@@ -182,13 +186,13 @@ int new_indexed_table_ref_iter(indexed_table_ref_iter **dest, reader *r,
   return err;
 }
 
-struct _iterator_ops indexed_table_ref_iter_ops = {
+struct iterator_ops indexed_table_ref_iter_ops = {
     .next = &indexed_table_ref_iter_next,
     .close = &indexed_table_ref_iter_close,
 };
 
-void iterator_from_indexed_table_ref_iter(iterator *it,
-                                          indexed_table_ref_iter *itr) {
+void iterator_from_indexed_table_ref_iter(struct iterator *it,
+                                          struct indexed_table_ref_iter *itr) {
   it->iter_arg = itr;
   it->ops = &indexed_table_ref_iter_ops;
 }

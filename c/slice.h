@@ -15,25 +15,25 @@
 #ifndef SLICE_H
 #define SLICE_H
 
+#include "api.h"
 #include "basics.h"
 
-typedef struct {
+struct slice {
   byte *buf;
   int len;
   int cap;
-} slice;
+};
 
-void slice_set_string(slice *dest, const char *);
-char *slice_to_string(slice src);
-bool slice_equal(slice a, slice b);
-byte *slice_yield(slice *s);
-void slice_copy(slice *dest, slice src);
-void slice_resize(slice *s, int l);
-int slice_compare(slice a, slice b);
-int slice_write(slice *b, byte *data, int sz);
+void slice_set_string(struct slice *dest, const char *);
+char *slice_to_string(struct slice src);
+bool slice_equal(struct slice a, struct slice b);
+byte *slice_yield(struct slice *s);
+void slice_copy(struct slice *dest, struct slice src);
+void slice_resize(struct slice *s, int l);
+int slice_compare(struct slice a, struct slice b);
+int slice_write(struct slice *b, byte *data, int sz);
 int slice_write_void(void *b, byte *data, int sz);
-
-typedef struct _block_source block_source;
-void block_source_from_slice(block_source *bs, slice *buf);
+struct block_source;
+void block_source_from_slice(struct block_source *bs, struct slice *buf);
 
 #endif

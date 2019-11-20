@@ -18,61 +18,63 @@
 #include "api.h"
 #include "slice.h"
 
-typedef struct _record_ops {
-  void (*key)(const void *rec, slice *dest);
+struct record_ops {
+  void (*key)(const void *rec, struct slice *dest);
   byte (*type)();
   void (*copy_from)(void *rec, const void *src);
   byte (*val_type)(const void *rec);
-  int (*encode)(const void *rec, slice dest);
-  int (*decode)(void *rec, slice key, byte extra, slice src);
+  int (*encode)(const void *rec, struct slice dest);
+  int (*decode)(void *rec, struct slice key, byte extra, struct slice src);
   void (*clear)(void *rec);
-} record_ops;
+};
 
 /* record is a generic wrapper for differnt types of records. */
-typedef struct {
+struct record {
   void *data;
-  struct _record_ops *ops;
-} record;
+  struct record_ops *ops;
+};
 
-int get_var_int(uint64_t *dest, slice in);
-int put_var_int(slice dest, uint64_t val);
-int common_prefix_size(slice a, slice b);
+int get_var_int(uint64_t *dest, struct slice in);
+int put_var_int(struct slice dest, uint64_t val);
+int common_prefix_size(struct slice a, struct slice b);
 
 int is_block_type(byte typ);
-record new_record(byte typ);
+struct record new_record(byte typ);
 
-extern record_ops ref_record_ops;
+extern struct record_ops ref_record_ops;
 
-int encode_key(bool *restart, slice dest, slice prev_key, slice key,
-               byte extra);
-int decode_key(slice *key, byte *extra, slice last_key, slice in);
+int encode_key(bool *restart, struct slice dest, struct slice prev_key,
+               struct slice key, byte extra);
+int decode_key(struct slice *key, byte *extra, struct slice last_key,
+               struct slice in);
 
-typedef struct {
-  slice last_key;
+struct index_record {
+  struct slice last_key;
   uint64_t offset;
-} index_record;
+};
 
-typedef struct {
+struct obj_record {
   byte *hash_prefix;
   int hash_prefix_len;
   uint64_t *offsets;
   int offset_len;
-} obj_record;
+};
 
-void record_key(record rec, slice *dest);
-byte record_type(record rec);
-void record_copy_from(record rec, record src);
-byte record_val_type(record rec);
-int record_encode(record rec, slice dest);
-int record_decode(record rec, slice key, byte extra, slice src);
-void record_clear(record rec);
-void *record_yield(record *rec);
-void record_from_obj(record *rec, obj_record *objrec);
-void record_from_index(record *rec, index_record *idxrec);
-void record_from_ref(record *rec, ref_record *refrec);
-void record_from_log(record *rec, log_record *objrec);
-ref_record *record_as_ref(record ref);
+void record_key(struct record rec, struct slice *dest);
+byte record_type(struct record rec);
+void record_copy_from(struct record rec, struct record src);
+byte record_val_type(struct record rec);
+int record_encode(struct record rec, struct slice dest);
+int record_decode(struct record rec, struct slice key, byte extra,
+                  struct slice src);
+void record_clear(struct record rec);
+void *record_yield(struct record *rec);
+void record_from_obj(struct record *rec, struct obj_record *objrec);
+void record_from_index(struct record *rec, struct index_record *idxrec);
+void record_from_ref(struct record *rec, struct ref_record *refrec);
+void record_from_log(struct record *rec, struct log_record *objrec);
+struct ref_record *record_as_ref(struct record ref);
 
-bool record_is_start(record want);
+bool record_is_start(struct record want);
 
 #endif

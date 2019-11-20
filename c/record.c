@@ -32,7 +32,7 @@ int is_block_type(byte typ) {
   return false;
 }
 
-int get_var_int(uint64_t *dest, slice in) {
+int get_var_int(uint64_t *dest, struct slice in) {
   if (in.len == 0) {
     return -1;
   }
@@ -52,7 +52,7 @@ int get_var_int(uint64_t *dest, slice in) {
   return ptr + 1;
 }
 
-int put_var_int(slice dest, uint64_t val) {
+int put_var_int(struct slice dest, uint64_t val) {
   byte buf[10];
 
   int i = 9;
@@ -76,7 +76,7 @@ int put_var_int(slice dest, uint64_t val) {
   return n;
 }
 
-int common_prefix_size(slice a, slice b) {
+int common_prefix_size(struct slice a, struct slice b) {
   int p = 0;
   while (p < a.len && p < b.len) {
     if (a.buf[p] != b.buf[p]) {
@@ -88,7 +88,7 @@ int common_prefix_size(slice a, slice b) {
   return p;
 }
 
-int decode_string(slice *dest, slice in) {
+int decode_string(struct slice *dest, struct slice in) {
   int start_len = in.len;
   uint64_t tsize = 0;
   int n = get_var_int(&tsize, in);
@@ -110,9 +110,9 @@ int decode_string(slice *dest, slice in) {
   return start_len - in.len;
 }
 
-int encode_key(bool *restart, slice dest, slice prev_key, slice key,
-               byte extra) {
-  slice start = dest;
+int encode_key(bool *restart, struct slice dest, struct slice prev_key,
+               struct slice key, byte extra) {
+  struct slice start = dest;
   int prefix_len = common_prefix_size(prev_key, key);
   *restart = (prefix_len == 0);
 
@@ -143,16 +143,16 @@ int encode_key(bool *restart, slice dest, slice prev_key, slice key,
 
 byte ref_record_type() { return BLOCK_TYPE_REF; }
 
-void ref_record_key(const void *r, slice *dest) {
-  const ref_record *rec = (const ref_record *)r;
+void ref_record_key(const void *r, struct slice *dest) {
+  const struct ref_record *rec = (const struct ref_record *)r;
   slice_set_string(dest, rec->ref_name);
 }
 
 void ref_record_copy_from(void *rec, const void *src_rec) {
-  ref_record *ref = (ref_record *)rec;
-  ref_record *src = (ref_record *)src_rec;
+  struct ref_record *ref = (struct ref_record *)rec;
+  struct ref_record *src = (struct ref_record *)src_rec;
 
-  memset(ref, 0, sizeof(ref_record));
+  memset(ref, 0, sizeof(struct ref_record));
   if (src->ref_name != NULL) {
     ref->ref_name = strdup(src->ref_name);
   }
@@ -190,7 +190,7 @@ void hex_format(char *dest, byte *src) {
   }
 }
 
-void ref_record_print(ref_record *ref) {
+void ref_record_print(struct ref_record *ref) {
   char hex[41] = {};
 
   printf("ref{%s(%ld) ", ref->ref_name, ref->update_index);
@@ -208,18 +208,20 @@ void ref_record_print(ref_record *ref) {
   printf("}\n");
 }
 
-void ref_record_clear_void(void *rec) { ref_record_clear((ref_record *)rec); }
+void ref_record_clear_void(void *rec) {
+  ref_record_clear((struct ref_record *)rec);
+}
 
-void ref_record_clear(ref_record *ref) {
+void ref_record_clear(struct ref_record *ref) {
   free(ref->ref_name);
   free(ref->target);
   free(ref->target_value);
   free(ref->value);
-  memset(ref, 0, sizeof(ref_record));
+  memset(ref, 0, sizeof(struct ref_record));
 }
 
 byte ref_record_val_type(const void *rec) {
-  const ref_record *r = (const ref_record *)rec;
+  const struct ref_record *r = (const struct ref_record *)rec;
   if (r->value != NULL) {
     if (r->target_value != NULL) {
       return 2;
@@ -232,9 +234,9 @@ byte ref_record_val_type(const void *rec) {
   return 0;
 }
 
-int ref_record_encode(const void *rec, slice s) {
-  const ref_record *r = (const ref_record *)rec;
-  slice start = s;
+int ref_record_encode(const void *rec, struct slice s) {
+  const struct ref_record *r = (const struct ref_record *)rec;
+  struct slice start = s;
   int n = put_var_int(s, r->update_index);
   if (n < 0) {
     return -1;
@@ -279,10 +281,11 @@ int ref_record_encode(const void *rec, slice s) {
   return start.len - s.len;
 }
 
-int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
-  ref_record *r = (ref_record *)rec;
+int ref_record_decode(void *rec, struct slice key, byte val_type,
+                      struct slice in) {
+  struct ref_record *r = (struct ref_record *)rec;
 
-  slice start = in;
+  struct slice start = in;
   int n = get_var_int(&r->update_index, in);
   if (n < 0) {
     return n;
@@ -318,7 +321,7 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
       in.len -= HASH_SIZE;
       break;
     case 3: {
-      slice dest = {};
+      struct slice dest = {};
       int n = decode_string(&dest, in);
       if (n < 0) {
         return -1;
@@ -343,7 +346,8 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
   return start.len - in.len;
 }
 
-int decode_key(slice *key, byte *extra, slice last_key, slice in) {
+int decode_key(struct slice *key, byte *extra, struct slice last_key,
+               struct slice in) {
   int start_len = in.len;
   uint64_t prefix_len = 0;
   int n = get_var_int(&prefix_len, in);
@@ -382,7 +386,7 @@ int decode_key(slice *key, byte *extra, slice last_key, slice in) {
   return start_len - in.len;
 }
 
-record_ops ref_record_ops = {
+struct record_ops ref_record_ops = {
     .key = &ref_record_key,
     .type = &ref_record_type,
     .copy_from = &ref_record_copy_from,
@@ -394,15 +398,15 @@ record_ops ref_record_ops = {
 
 byte obj_record_type() { return BLOCK_TYPE_OBJ; }
 
-void obj_record_key(const void *r, slice *dest) {
-  const obj_record *rec = (const obj_record *)r;
+void obj_record_key(const void *r, struct slice *dest) {
+  const struct obj_record *rec = (const struct obj_record *)r;
   slice_resize(dest, rec->hash_prefix_len);
   memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
 }
 
 void obj_record_copy_from(void *rec, const void *src_rec) {
-  obj_record *ref = (obj_record *)rec;
-  const obj_record *src = (const obj_record *)src_rec;
+  struct obj_record *ref = (struct obj_record *)rec;
+  const struct obj_record *src = (const struct obj_record *)src_rec;
 
   *ref = *src;
   ref->hash_prefix = malloc(ref->hash_prefix_len);
@@ -414,23 +418,23 @@ void obj_record_copy_from(void *rec, const void *src_rec) {
 }
 
 void obj_record_clear(void *rec) {
-  obj_record *ref = (obj_record *)rec;
+  struct obj_record *ref = (struct obj_record *)rec;
   free(ref->hash_prefix);
   free(ref->offsets);
-  memset(ref, 0, sizeof(obj_record));
+  memset(ref, 0, sizeof(struct obj_record));
 }
 
 byte obj_record_val_type(const void *rec) {
-  obj_record *r = (obj_record *)rec;
+  struct obj_record *r = (struct obj_record *)rec;
   if (r->offset_len > 0 && r->offset_len < 8) {
     return r->offset_len;
   }
   return 0;
 }
 
-int obj_record_encode(const void *rec, slice s) {
-  obj_record *r = (obj_record *)rec;
-  slice start = s;
+int obj_record_encode(const void *rec, struct slice s) {
+  struct obj_record *r = (struct obj_record *)rec;
+  struct slice start = s;
   if (r->offset_len == 0 || r->offset_len >= 8) {
     int n = put_var_int(s, r->offset_len);
     if (n < 0) {
@@ -463,9 +467,10 @@ int obj_record_encode(const void *rec, slice s) {
   return start.len - s.len;
 }
 
-int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
-  slice start = in;
-  obj_record *r = (obj_record *)rec;
+int obj_record_decode(void *rec, struct slice key, byte val_type,
+                      struct slice in) {
+  struct slice start = in;
+  struct obj_record *r = (struct obj_record *)rec;
 
   r->hash_prefix = malloc(key.len);
   memcpy(r->hash_prefix, key.buf, key.len);
@@ -518,7 +523,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
   return start.len - in.len;
 }
 
-record_ops obj_record_ops = {
+struct record_ops obj_record_ops = {
     .key = &obj_record_key,
     .type = &obj_record_type,
     .copy_from = &obj_record_copy_from,
@@ -528,23 +533,23 @@ record_ops obj_record_ops = {
     .clear = &obj_record_clear,
 };
 
-record new_record(byte typ) {
-  record rec;
+struct record new_record(byte typ) {
+  struct record rec;
   switch (typ) {
     case BLOCK_TYPE_REF: {
-      ref_record *r = calloc(1, sizeof(ref_record));
+      struct ref_record *r = calloc(1, sizeof(struct ref_record));
       record_from_ref(&rec, r);
       return rec;
     }
 
     case BLOCK_TYPE_OBJ: {
-      obj_record *r = calloc(1, sizeof(obj_record));
+      struct obj_record *r = calloc(1, sizeof(struct obj_record));
       record_from_obj(&rec, r);
       return rec;
     }
 
     case BLOCK_TYPE_INDEX: {
-      index_record *r = calloc(1, sizeof(index_record));
+      struct index_record *r = calloc(1, sizeof(struct index_record));
       record_from_index(&rec, r);
       return rec;
     }
@@ -555,29 +560,29 @@ record new_record(byte typ) {
 
 byte index_record_type() { return BLOCK_TYPE_INDEX; }
 
-void index_record_key(const void *r, slice *dest) {
-  index_record *rec = (index_record *)r;
+void index_record_key(const void *r, struct slice *dest) {
+  struct index_record *rec = (struct index_record *)r;
   slice_copy(dest, rec->last_key);
 }
 
 void index_record_copy_from(void *rec, const void *src_rec) {
-  index_record *dst = (index_record *)rec;
-  index_record *src = (index_record *)src_rec;
+  struct index_record *dst = (struct index_record *)rec;
+  struct index_record *src = (struct index_record *)src_rec;
 
   slice_copy(&dst->last_key, src->last_key);
   dst->offset = src->offset;
 }
 
 void index_record_clear(void *rec) {
-  index_record *idx = (index_record *)rec;
+  struct index_record *idx = (struct index_record *)rec;
   free(slice_yield(&idx->last_key));
 }
 
 byte index_record_val_type(const void *rec) { return 0; }
 
-int index_record_encode(const void *rec, slice out) {
-  const index_record *r = (const index_record *)rec;
-  slice start = out;
+int index_record_encode(const void *rec, struct slice out) {
+  const struct index_record *r = (const struct index_record *)rec;
+  struct slice start = out;
 
   int n = put_var_int(out, r->offset);
   if (n < 0) {
@@ -590,9 +595,10 @@ int index_record_encode(const void *rec, slice out) {
   return start.len - out.len;
 }
 
-int index_record_decode(void *rec, slice key, byte val_type, slice in) {
-  slice start = in;
-  index_record *r = (index_record *)rec;
+int index_record_decode(void *rec, struct slice key, byte val_type,
+                        struct slice in) {
+  struct slice start = in;
+  struct index_record *r = (struct index_record *)rec;
 
   slice_copy(&r->last_key, key);
 
@@ -606,7 +612,7 @@ int index_record_decode(void *rec, slice key, byte val_type, slice in) {
   return start.len - in.len;
 }
 
-record_ops index_record_ops = {
+struct record_ops index_record_ops = {
     .key = &index_record_key,
     .type = &index_record_type,
     .copy_from = &index_record_copy_from,
@@ -616,52 +622,55 @@ record_ops index_record_ops = {
     .clear = &index_record_clear,
 };
 
-void record_key(record rec, slice *dest) { rec.ops->key(rec.data, dest); }
+void record_key(struct record rec, struct slice *dest) {
+  rec.ops->key(rec.data, dest);
+}
 
-byte record_type(record rec) { return rec.ops->type(); }
+byte record_type(struct record rec) { return rec.ops->type(); }
 
-int record_encode(record rec, slice dest) {
+int record_encode(struct record rec, struct slice dest) {
   return rec.ops->encode(rec.data, dest);
 }
 
-void record_copy_from(record rec, record src) {
+void record_copy_from(struct record rec, struct record src) {
   assert(src.ops->type() == rec.ops->type());
 
   rec.ops->copy_from(rec.data, src.data);
 }
 
-byte record_val_type(record rec) { return rec.ops->val_type(rec.data); }
+byte record_val_type(struct record rec) { return rec.ops->val_type(rec.data); }
 
-int record_decode(record rec, slice key, byte extra, slice src) {
+int record_decode(struct record rec, struct slice key, byte extra,
+                  struct slice src) {
   return rec.ops->decode(rec.data, key, extra, src);
 }
 
-void record_clear(record rec) { return rec.ops->clear(rec.data); }
+void record_clear(struct record rec) { return rec.ops->clear(rec.data); }
 
-void record_from_ref(record *rec, ref_record *ref_rec) {
+void record_from_ref(struct record *rec, struct ref_record *ref_rec) {
   rec->data = ref_rec;
   rec->ops = &ref_record_ops;
 }
 
-void record_from_obj(record *rec, obj_record *obj_rec) {
+void record_from_obj(struct record *rec, struct obj_record *obj_rec) {
   rec->data = obj_rec;
   rec->ops = &obj_record_ops;
 }
 
-void record_from_index(record *rec, index_record *index_rec) {
+void record_from_index(struct record *rec, struct index_record *index_rec) {
   rec->data = index_rec;
   rec->ops = &index_record_ops;
 }
 
-void *record_yield(record *rec) {
+void *record_yield(struct record *rec) {
   void *p = rec->data;
   rec->data = NULL;
   return p;
 }
 
-ref_record *record_as_ref(record rec) {
+struct ref_record *record_as_ref(struct record rec) {
   assert(record_type(rec) == BLOCK_TYPE_REF);
-  return (ref_record *)rec.data;
+  return (struct ref_record *)rec.data;
 }
 
 bool hash_equal(byte *a, byte *b) {
@@ -680,7 +689,7 @@ bool str_equal(char *a, char *b) {
   return a == b;
 }
 
-bool ref_record_equal(ref_record *a, ref_record *b) {
+bool ref_record_equal(struct ref_record *a, struct ref_record *b) {
   return 0 == strcmp(a->ref_name, b->ref_name) &&
          a->update_index == b->update_index && hash_equal(a->value, b->value) &&
          hash_equal(a->target_value, b->target_value) &&

@@ -22,14 +22,14 @@
 #include "test_framework.h"
 
 void test_buffer(void) {
-  slice buf = {};
+  struct slice buf = {};
 
   byte in[] = "hello";
   slice_write(&buf, in, sizeof(in));
-  block_source source;
+  struct block_source source;
   block_source_from_slice(&source, &buf);
   assert(block_source_size(source) == 6);
-  block out = {};
+  struct block out = {};
   int n = block_source_read_block(source, &out, 0, sizeof(in));
   assert(n == sizeof(in));
   assert(0 == memcmp(in, out.data, n));
@@ -46,17 +46,17 @@ void test_buffer(void) {
 
 void set_test_hash(byte *p, int i) { memset(p, (byte)i, HASH_SIZE); }
 
-void write_table(char ***names, slice *buf, int N, int block_size) {
+void write_table(char ***names, struct slice *buf, int N, int block_size) {
   *names = calloc(sizeof(char *), N);
 
-  write_options opts = {
+  struct write_options opts = {
       .block_size = 256,
   };
 
-  writer *w = new_writer(&slice_write_void, buf, &opts);
+  struct writer *w = new_writer(&slice_write_void, buf, &opts);
 
   {
-    ref_record ref = {};
+    struct ref_record ref = {};
     for (int i = 0; i < N; i++) {
       byte hash[HASH_SIZE];
       set_test_hash(hash, i);
@@ -76,7 +76,7 @@ void write_table(char ***names, slice *buf, int N, int block_size) {
   int n = writer_close(w);
   assert(n == 0);
 
-  stats *stats = writer_stats(w);
+  struct stats *stats = writer_stats(w);
   for (int i = 0; i < stats->ref_stats.blocks; i++) {
     int off = i * opts.block_size;
     if (off == 0) {
@@ -91,24 +91,24 @@ void write_table(char ***names, slice *buf, int N, int block_size) {
 
 void test_table_read_write_sequential(void) {
   char **names;
-  slice buf = {};
+  struct slice buf = {};
   int N = 50;
   write_table(&names, &buf, N, 256);
 
-  block_source source = {};
+  struct block_source source = {};
   block_source_from_slice(&source, &buf);
 
-  reader rd = {};
+  struct reader rd = {};
   int err = init_reader(&rd, source);
   assert(err == 0);
 
-  iterator it = {};
+  struct iterator it = {};
   err = reader_seek_ref(&rd, &it, "");
   assert(err == 0);
 
   int j = 0;
   while (true) {
-    ref_record ref = {};
+    struct ref_record ref = {};
     int r = iterator_next_ref(it, &ref);
     assert(r >= 0);
     if (r > 0) {
@@ -128,12 +128,12 @@ void test_table_read_write_sequential(void) {
 
 void test_table_read_write_seek(bool index) {
   char **names;
-  slice buf = {};
+  struct slice buf = {};
   int N = 50;
   write_table(&names, &buf, N, 256);
 
-  reader rd;
-  block_source source = {};
+  struct reader rd;
+  struct block_source source = {};
   block_source_from_slice(&source, &buf);
 
   int err = init_reader(&rd, source);
@@ -144,11 +144,11 @@ void test_table_read_write_seek(bool index) {
   }
 
   for (int i = 1; i < N; i++) {
-    iterator it = {};
+    struct iterator it = {};
     int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
 
-    ref_record ref = {};
+    struct ref_record ref = {};
     err = iterator_next_ref(it, &ref);
     assert(err == 0);
     assert(0 == strcmp(names[i], ref.ref_name));
@@ -182,14 +182,14 @@ void test_table_refs_for(bool indexed) {
   byte want_hash[HASH_SIZE];
   set_test_hash(want_hash, 4);
 
-  write_options opts = {
+  struct write_options opts = {
       .block_size = 256,
   };
 
-  slice buf = {};
-  writer *w = new_writer(&slice_write_void, &buf, &opts);
+  struct slice buf = {};
+  struct writer *w = new_writer(&slice_write_void, &buf, &opts);
   {
-    ref_record ref = {};
+    struct ref_record ref = {};
     for (int i = 0; i < N; i++) {
       byte hash[20];
       memset(hash, i, sizeof(hash));
@@ -226,8 +226,8 @@ void test_table_refs_for(bool indexed) {
   writer_free(w);
   w = NULL;
 
-  reader rd;
-  block_source source = {};
+  struct reader rd;
+  struct block_source source = {};
   block_source_from_slice(&source, &buf);
 
   int err = init_reader(&rd, source);
@@ -236,14 +236,14 @@ void test_table_refs_for(bool indexed) {
     rd.obj_offsets.present = 0;
   }
 
-  iterator it = {};
+  struct iterator it = {};
   err = reader_seek_ref(&rd, &it, "");
   assert(err == 0);
 
   err = reader_refs_for(&rd, &it, want_hash);
   assert(err == 0);
 
-  ref_record ref = {};
+  struct ref_record ref = {};
 
   int j = 0;
   while (true) {
