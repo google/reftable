@@ -34,7 +34,7 @@ pq_entry merged_iter_pqueue_top(merged_iter_pqueue pq);
 bool merged_iter_pqueue_is_empty(merged_iter_pqueue pq);
 void merged_iter_pqueue_check(merged_iter_pqueue pq);
 pq_entry merged_iter_pqueue_remove(merged_iter_pqueue *pq);
-void merged_iter_pqueue_add(merged_iter_pqueue * pq, pq_entry e);
+void merged_iter_pqueue_add(merged_iter_pqueue *pq, pq_entry e);
 void merged_iter_pqueue_clear(merged_iter_pqueue *pq);
-  
+
 #endif

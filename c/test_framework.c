@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "test_framework.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "test_framework.h"
 
 test_case **test_cases;
 int test_case_len;
@@ -45,5 +45,3 @@ void test_main() {
     test_cases[i]->testfunc();
   }
 }
-
-

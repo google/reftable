@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "tree.h"
 
 #include <stdlib.h>
-
-#include "tree.h"
 
 tree_node *tree_search(void *key, tree_node **rootp,
                        int (*compare)(const void *, const void *), int insert) {

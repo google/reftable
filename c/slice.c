@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "slice.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "api.h"
-#include "slice.h"
 
 void slice_set_string(slice *s, const char *str) {
   if (str == NULL) {
@@ -27,7 +27,7 @@ void slice_set_string(slice *s, const char *str) {
   }
 
   int l = strlen(str);
-  l++; // \0
+  l++;  // \0
   slice_resize(s, l);
   memcpy(s->buf, str, l);
   s->len = l - 1;
@@ -122,8 +122,8 @@ void slice_close(void *b) {}
 int slice_read_block(void *v, block *dest, uint64 off, uint32 size) {
   slice *b = (slice *)v;
   assert(off + size <= b->len);
-  dest->data = calloc(size,1);
-  memcpy(dest->data,  b->buf + off, size);
+  dest->data = calloc(size, 1);
+  memcpy(dest->data, b->buf + off, size);
   dest->len = size;
   block_source_from_slice(&dest->source, b);
   return size;

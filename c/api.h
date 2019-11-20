@@ -62,11 +62,11 @@ typedef struct {
 
 /* ref_record holds a ref database entry target_value */
 typedef struct {
-  char *ref_name; // name of the ref. Must be specified.
+  char *ref_name;  // name of the ref. Must be specified.
   uint64 update_index;
-  byte *value; // SHA1, or NULL
-  byte *target_value; // peeled annotated tag, or NULL.
-  char *target; // symref, or NULL
+  byte *value;         // SHA1, or NULL
+  byte *target_value;  // peeled annotated tag, or NULL.
+  char *target;        // symref, or NULL
 } ref_record;
 
 void ref_record_print(ref_record *ref);
@@ -117,7 +117,7 @@ typedef struct {
   block_stats ref_stats;
   block_stats obj_stats;
   block_stats idx_stats;
-  
+
   int object_id_len;
 } stats;
 
@@ -134,21 +134,24 @@ writer *new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
 /* writer_add_ref adds a ref_record. Must be called in ascending order. */
 int writer_add_ref(writer *w, ref_record *ref);
 
-/* writer_close finalizes the reftable. The writer is retained so statistics can be inspected. */
+/* writer_close finalizes the reftable. The writer is retained so statistics can
+ * be inspected. */
 int writer_close(writer *w);
 
 /* writer_stats returns the statistics on the reftable being written. */
-stats* writer_stats(writer *w);
+stats *writer_stats(writer *w);
 
 /* writer_free deallocates memory for the writer */
 void writer_free(writer *w);
 
 typedef struct _reader reader;
 
-/* new_reader opens a reftable for reading. If successful, returns 0 code and sets pp */
+/* new_reader opens a reftable for reading. If successful, returns 0 code and
+ * sets pp */
 int new_reader(reader **pp, block_source);
 
-/* reader_seek_ref returns an iterator where 'name' would be inserted in the table.
+/* reader_seek_ref returns an iterator where 'name' would be inserted in the
+   table.
 
    example:
 
@@ -161,19 +164,19 @@ int new_reader(reader **pp, block_source);
    ref_record ref = {};
    err = iterator_next_ref(it, &ref);
    if (err == 0) {
-      // value found. 
+      // value found.
    }
    iterator_destroy(&it);
-   
+
  */
 int reader_seek_ref(reader *r, iterator *it, char *name);
 void reader_free(reader *);
-int reader_refs_for(reader* r, iterator *it, byte *oid);
-uint64 reader_max_update_index(reader*r);
-uint64 reader_min_update_index(reader*r);
+int reader_refs_for(reader *r, iterator *it, byte *oid);
+uint64 reader_max_update_index(reader *r);
+uint64 reader_min_update_index(reader *r);
 
-typedef struct _merged_table  merged_table;
-int new_merged_table(merged_table**dest, reader**stack, int n);
-int merged_table_seek_ref(merged_table* mt, iterator*it, ref_record *ref);
+typedef struct _merged_table merged_table;
+int new_merged_table(merged_table **dest, reader **stack, int n);
+int merged_table_seek_ref(merged_table *mt, iterator *it, ref_record *ref);
 
 #endif

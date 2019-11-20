@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "record.h"
+
 #include <string.h>
 
 #include "api.h"
 #include "basics.h"
-#include "record.h"
 #include "test_framework.h"
 
 void varint_roundtrip() {
@@ -88,18 +89,18 @@ void test_ref_record_roundtrip() {
     printf("subtest %d\n", i);
     ref_record in = {};
     switch (i) {
-    case 0:
-      break;
-    case 1:
-      in.value = testHash1;
-      break;
-    case 2:
-      in.value = testHash1;
-      in.target_value = testHash2;
-      break;
-    case 3:
-      in.target = "target";
-      break;
+      case 0:
+        break;
+      case 1:
+        in.value = testHash1;
+        break;
+      case 2:
+        in.value = testHash1;
+        in.target_value = testHash2;
+        break;
+      case 3:
+        in.target = "target";
+        break;
     }
     in.ref_name = "refs/heads/master";
 

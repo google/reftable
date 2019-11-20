@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef RECORD_H
 #define RECORD_H
 
@@ -72,7 +71,7 @@ void record_from_obj(record *rec, obj_record *objrec);
 void record_from_index(record *rec, index_record *idxrec);
 void record_from_ref(record *rec, ref_record *refrec);
 void record_from_log(record *rec, log_record *objrec);
-ref_record* record_as_ref(record ref);
+ref_record *record_as_ref(record ref);
 
 bool record_is_start(record want);
 

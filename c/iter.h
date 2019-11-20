@@ -15,8 +15,8 @@
 #ifndef ITER_H
 #define ITER_H
 
-#include "record.h"
 #include "block.h"
+#include "record.h"
 
 struct _iterator_ops {
   int (*next)(void *iter_arg, record rec);
@@ -29,12 +29,12 @@ bool iterator_is_null(iterator it);
 
 typedef struct {
   reader *r;
-  byte *oid ;
-  bool double_check ;
+  byte *oid;
+  bool double_check;
   iterator it;
 } filtering_ref_iterator;
 
-void iterator_from_filtering_ref_iterator(iterator*, filtering_ref_iterator*);
+void iterator_from_filtering_ref_iterator(iterator *, filtering_ref_iterator *);
 
 typedef struct {
   reader *r;
@@ -51,11 +51,9 @@ typedef struct {
   bool finished;
 } indexed_table_ref_iter;
 
-void iterator_from_indexed_table_ref_iter(iterator *it, indexed_table_ref_iter *itr);
-int new_indexed_table_ref_iter(indexed_table_ref_iter **dest,
-			       reader * r,
-			       byte *oid,
-			       uint64 *offsets,
-			       int offset_len);
+void iterator_from_indexed_table_ref_iter(iterator *it,
+                                          indexed_table_ref_iter *itr);
+int new_indexed_table_ref_iter(indexed_table_ref_iter **dest, reader *r,
+                               byte *oid, uint64 *offsets, int offset_len);
 
 #endif

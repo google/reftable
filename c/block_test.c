@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "block.h"
+
 #include <string.h>
 
 #include "api.h"
 #include "basics.h"
-#include "block.h"
 #include "record.h"
 #include "test_framework.h"
 
@@ -54,7 +55,7 @@ void test_binsearch() {
 }
 
 void test_block_read_write() {
-  const int header_off = 21; // random
+  const int header_off = 21;  // random
   const int N = 30;
   char *names[N];
   const int block_size = 1024;

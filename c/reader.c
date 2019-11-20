@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "reader.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "api.h"
-#include "iter.h"
 #include "block.h"
-#include "reader.h"
+#include "iter.h"
 #include "record.h"
 #include "tree.h"
 
@@ -40,12 +41,12 @@ void block_source_close(block_source source) { source.ops->close(source.arg); }
 
 reader_offsets *reader_offsets_for(reader *r, byte typ) {
   switch (typ) {
-  case BLOCK_TYPE_REF:
-    return &r->ref_offsets;
-  case BLOCK_TYPE_LOG:
-    return &r->log_offsets;
-  case BLOCK_TYPE_OBJ:
-    return &r->obj_offsets;
+    case BLOCK_TYPE_REF:
+      return &r->ref_offsets;
+    case BLOCK_TYPE_LOG:
+      return &r->log_offsets;
+    case BLOCK_TYPE_OBJ:
+      return &r->obj_offsets;
   }
   abort();
 }
@@ -73,7 +74,7 @@ int init_reader(reader *r, block_source source) {
 
   block footer = {};
   block header = {};
-  
+
   int err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
   if (err != FOOTER_SIZE) {
     err = IO_ERROR;
@@ -191,13 +192,13 @@ int32 extract_block_size(byte *data, byte *typ, uint64 off) {
 }
 
 int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
-                             byte want_typ) { 
- if (next_off >= r->size) {
+                             byte want_typ) {
+  if (next_off >= r->size) {
     return 1;
   }
 
   int32 guess_block_size = r->block_size;
-  if (guess_block_size == 0 ) {
+  if (guess_block_size == 0) {
     guess_block_size = DEFAULT_BLOCK_SIZE;
   }
 
@@ -224,7 +225,7 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
       return err;
     }
   }
-  
+
   uint32 header_off = 0;
   if (next_off == 0) {
     header_off = HEADER_SIZE;
@@ -379,9 +380,9 @@ exit:
 }
 
 int reader_seek_indexed(reader *r, iterator *it, record rec) {
-  index_record want_index  = {};
+  index_record want_index = {};
   record_key(rec, &want_index.last_key);
-  record want_index_rec  = {};
+  record want_index_rec = {};
   record_from_index(&want_index_rec, &want_index);
   index_record index_result = {};
   record index_result_rec = {};
@@ -408,7 +409,7 @@ int reader_seek_indexed(reader *r, iterator *it, record rec) {
     }
 
     err = block_iter_seek(&next.bi, want_index.last_key);
-    if (err < 0){
+    if (err < 0) {
       goto exit;
     }
 
@@ -430,7 +431,7 @@ int reader_seek_indexed(reader *r, iterator *it, record rec) {
     table_iter_copy_from(malloced, &next);
     iterator_from_table_iter(it, malloced);
   }
- exit:
+exit:
   block_iter_close(&next.bi);
   table_iter_close(&index_iter);
   record_clear(want_index_rec);
@@ -476,9 +477,9 @@ int reader_seek(reader *r, iterator *it, record rec) {
 
 int reader_seek_ref(reader *r, iterator *it, char *name) {
   ref_record ref = {
-		    .ref_name = name,
+      .ref_name = name,
   };
-  record rec ={};
+  record rec = {};
   record_from_ref(&rec, &ref);
   return reader_seek(r, it, rec);
 }
@@ -489,25 +490,24 @@ int new_reader(reader **p, block_source src) {
   reader *rd = calloc(sizeof(reader), 1);
   int err = init_reader(rd, src);
   if (err == 0) {
-    *p= rd;
+    *p = rd;
   } else {
     free(rd);
   }
   return err;
 }
 
-
 void reader_free(reader *r) {
   reader_close(r);
   free(r);
 }
 
-int reader_refs_for_indexed(reader* r, iterator *it, byte *oid) {
+int reader_refs_for_indexed(reader *r, iterator *it, byte *oid) {
   obj_record want = {
-		     .hash_prefix = oid,
-		     .hash_prefix_len = r->object_id_len,
+      .hash_prefix = oid,
+      .hash_prefix_len = r->object_id_len,
   };
-  record want_rec  = {};
+  record want_rec = {};
   record_from_obj(&want_rec, &want);
 
   iterator oit = {};
@@ -521,7 +521,7 @@ int reader_refs_for_indexed(reader* r, iterator *it, byte *oid) {
   record_from_obj(&got_rec, &got);
   err = iterator_next(oit, got_rec);
   iterator_destroy(&oit);
-  if(err < 0) {
+  if (err < 0) {
     return err;
   }
 
@@ -530,29 +530,31 @@ int reader_refs_for_indexed(reader* r, iterator *it, byte *oid) {
     return 0;
   }
 
-  indexed_table_ref_iter* itr = NULL;
+  indexed_table_ref_iter *itr = NULL;
   err = new_indexed_table_ref_iter(&itr, r, oid, got.offsets, got.offset_len);
-  if (err  < 0) {
+  if (err < 0) {
     record_clear(got_rec);
     return err;
   }
   got.offsets = NULL;
   record_clear(got_rec);
-  
+
   iterator_from_indexed_table_ref_iter(it, itr);
   return 0;
 }
 
-int reader_refs_for(reader* r, iterator *it, byte *oid) {
+int reader_refs_for(reader *r, iterator *it, byte *oid) {
   if (r->obj_offsets.present) {
     return reader_refs_for_indexed(r, it, oid);
   }
 
-  table_iter * ti = calloc(sizeof(table_iter), 1);
+  table_iter *ti = calloc(sizeof(table_iter), 1);
   int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
-  if (err < 0) { return err ; }
+  if (err < 0) {
+    return err;
+  }
 
-  filtering_ref_iterator* filter = calloc(sizeof(filtering_ref_iterator), 1);
+  filtering_ref_iterator *filter = calloc(sizeof(filtering_ref_iterator), 1);
   filter->oid = oid;
   filter->r = r;
   filter->double_check = false;
@@ -562,11 +564,6 @@ int reader_refs_for(reader* r, iterator *it, byte *oid) {
   return 0;
 }
 
-uint64 reader_max_update_index(reader*r) {
-  return r->max_update_index;
-}
+uint64 reader_max_update_index(reader *r) { return r->max_update_index; }
 
-uint64 reader_min_update_index(reader*r) {
-  return r->min_update_index;
-}
-
+uint64 reader_min_update_index(reader *r) { return r->min_update_index; }

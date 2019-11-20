@@ -16,8 +16,8 @@
 #define BLOCK_H
 
 #include "api.h"
-#include "record.h"
 #include "basics.h"
+#include "record.h"
 
 typedef struct _block_reader block_reader;
 typedef struct _block_writer block_writer;

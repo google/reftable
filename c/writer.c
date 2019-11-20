@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdint.h>
-#include <stdio.h> // debug
+#include "writer.h"
+
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>  // debug
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,16 +24,15 @@
 #include "block.h"
 #include "record.h"
 #include "tree.h"
-#include "writer.h"
 
 block_stats *writer_block_stats(writer *w, byte typ) {
   switch (typ) {
-  case 'r':
-    return &w->stats.ref_stats;
-  case 'o':
-    return &w->stats.obj_stats;
-  case 'i':
-    return &w->stats.idx_stats;
+    case 'r':
+      return &w->stats.ref_stats;
+    case 'o':
+      return &w->stats.obj_stats;
+    case 'i':
+      return &w->stats.idx_stats;
   }
   assert(false);
 }
@@ -69,7 +70,7 @@ void options_set_defaults(write_options *opts) {
 
 int writer_write_header(writer *w, byte *dest) {
   strcpy((char *)dest, "REFT");
-  dest[4] = 1; // version
+  dest[4] = 1;  // version
   put_u24(dest + 5, w->opts.block_size);
   put_u64(dest + 8, w->opts.min_update_index);
   put_u64(dest + 16, w->opts.max_update_index);
@@ -137,12 +138,11 @@ void writer_index_hash(writer *w, slice hash) {
   if (node == NULL) {
     key = calloc(sizeof(obj_index_tree_node), 1);
     slice_copy(&key->hash, hash);
-    tree_search((void *)key, &w->obj_index_tree,
-                &obj_index_tree_node_compare, 1);
+    tree_search((void *)key, &w->obj_index_tree, &obj_index_tree_node_compare,
+                1);
   } else {
     key = node->key;
   }
-
 
   if (key->offset_len > 0 && key->offsets[key->offset_len - 1] == off) {
     return;
@@ -514,7 +514,4 @@ int writer_flush_block(writer *w) {
   return 0;
 }
 
-stats* writer_stats(writer *w) {
-  return &w->stats;
-}
-
+stats *writer_stats(writer *w) { return &w->stats; }

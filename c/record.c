@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "record.h"
+
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "api.h"
-#include "record.h"
 
 int is_block_type(byte typ) {
   switch (typ) {
-  case BLOCK_TYPE_REF:
-  case BLOCK_TYPE_LOG:
-  case BLOCK_TYPE_OBJ:
-  case BLOCK_TYPE_INDEX:
-    return true;
+    case BLOCK_TYPE_REF:
+    case BLOCK_TYPE_LOG:
+    case BLOCK_TYPE_OBJ:
+    case BLOCK_TYPE_INDEX:
+      return true;
   }
   return false;
 }
@@ -173,23 +174,25 @@ void ref_record_copy_from(void *rec, const void *src_rec) {
 }
 
 char hexdigit(int c) {
-  if (c <= 9) { return '0' + c; }
+  if (c <= 9) {
+    return '0' + c;
+  }
   return 'a' + (c - 10);
 }
 
 void hex_format(char *dest, byte *src) {
-  if(src != NULL) {
-    for (int i =0 ; i < HASH_SIZE;i++) {
-      dest[2*i] = hexdigit(src[i] >> 4);
-      dest[2*i+1] = hexdigit(src[i]&0xf);
+  if (src != NULL) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+      dest[2 * i] = hexdigit(src[i] >> 4);
+      dest[2 * i + 1] = hexdigit(src[i] & 0xf);
     }
-    dest[2*HASH_SIZE] = 0;
+    dest[2 * HASH_SIZE] = 0;
   }
 }
 
 void ref_record_print(ref_record *ref) {
-  char hex[41]={};
-  
+  char hex[41] = {};
+
   printf("ref{%s(%ld) ", ref->ref_name, ref->update_index);
   if (ref->value != NULL) {
     hex_format(hex, ref->value);
@@ -205,9 +208,7 @@ void ref_record_print(ref_record *ref) {
   printf("}\n");
 }
 
-void ref_record_clear_void(void *rec) {
-  ref_record_clear((ref_record *)rec);
-}
+void ref_record_clear_void(void *rec) { ref_record_clear((ref_record *)rec); }
 
 void ref_record_clear(ref_record *ref) {
   free(ref->ref_name);
@@ -294,49 +295,49 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
   memcpy(r->ref_name, key.buf, key.len);
   r->ref_name[key.len] = 0;
   switch (val_type) {
-  case 1:
-  case 2:
-    if (in.len < HASH_SIZE) {
-      return -1;
-    }
+    case 1:
+    case 2:
+      if (in.len < HASH_SIZE) {
+        return -1;
+      }
 
-    if (r->value == NULL) {
-      r->value = malloc(HASH_SIZE);
-    }
-    memcpy(r->value, in.buf, HASH_SIZE);
-    in.buf += HASH_SIZE;
-    in.len -= HASH_SIZE;
-    if (val_type == 1) {
+      if (r->value == NULL) {
+        r->value = malloc(HASH_SIZE);
+      }
+      memcpy(r->value, in.buf, HASH_SIZE);
+      in.buf += HASH_SIZE;
+      in.len -= HASH_SIZE;
+      if (val_type == 1) {
+        break;
+      }
+      if (r->target_value == NULL) {
+        r->target_value = malloc(HASH_SIZE);
+      }
+      memcpy(r->target_value, in.buf, HASH_SIZE);
+      in.buf += HASH_SIZE;
+      in.len -= HASH_SIZE;
       break;
-    }
-    if (r->target_value == NULL) {
-      r->target_value = malloc(HASH_SIZE);
-    }
-    memcpy(r->target_value, in.buf, HASH_SIZE);
-    in.buf += HASH_SIZE;
-    in.len -= HASH_SIZE;
-    break;
-  case 3: {
-    slice dest = {};
-    int n = decode_string(&dest, in);
-    if (n < 0) {
-      return -1;
-    }
-    in.buf += n;
-    in.len -= n;
+    case 3: {
+      slice dest = {};
+      int n = decode_string(&dest, in);
+      if (n < 0) {
+        return -1;
+      }
+      in.buf += n;
+      in.len -= n;
 
-    if (r->target != NULL) {
-      free(r->target);
-    }
-    r->target = slice_to_string(dest);
-    free(slice_yield(&dest));
-  } break;
+      if (r->target != NULL) {
+        free(r->target);
+      }
+      r->target = slice_to_string(dest);
+      free(slice_yield(&dest));
+    } break;
 
-  case 0:
-    break;
-  default:
-    abort();
-    break;
+    case 0:
+      break;
+    default:
+      abort();
+      break;
   }
 
   return start.len - in.len;
@@ -530,23 +531,23 @@ record_ops obj_record_ops = {
 record new_record(byte typ) {
   record rec;
   switch (typ) {
-  case BLOCK_TYPE_REF: {
-    ref_record *r = calloc(1, sizeof(ref_record));
-    record_from_ref(&rec, r);
-    return rec;
-  }
+    case BLOCK_TYPE_REF: {
+      ref_record *r = calloc(1, sizeof(ref_record));
+      record_from_ref(&rec, r);
+      return rec;
+    }
 
-  case BLOCK_TYPE_OBJ: {
-    obj_record *r = calloc(1, sizeof(obj_record));
-    record_from_obj(&rec, r);
-    return rec;
-  }
+    case BLOCK_TYPE_OBJ: {
+      obj_record *r = calloc(1, sizeof(obj_record));
+      record_from_obj(&rec, r);
+      return rec;
+    }
 
-  case BLOCK_TYPE_INDEX: {
-    index_record *r = calloc(1, sizeof(index_record));
-    record_from_index(&rec, r);
-    return rec;
-  }
+    case BLOCK_TYPE_INDEX: {
+      index_record *r = calloc(1, sizeof(index_record));
+      record_from_index(&rec, r);
+      return rec;
+    }
   }
   abort();
   return rec;
@@ -658,22 +659,22 @@ void *record_yield(record *rec) {
   return p;
 }
 
-ref_record* record_as_ref(record rec) {
+ref_record *record_as_ref(record rec) {
   assert(record_type(rec) == BLOCK_TYPE_REF);
-  return (ref_record*) rec.data;
+  return (ref_record *)rec.data;
 }
 
 bool hash_equal(byte *a, byte *b) {
-  if (a!= NULL && b != NULL) {
-    return 0 ==  memcmp(a, b, HASH_SIZE);
+  if (a != NULL && b != NULL) {
+    return 0 == memcmp(a, b, HASH_SIZE);
   }
 
-  return a== b;
+  return a == b;
 }
 
 bool str_equal(char *a, char *b) {
-  if (a!= NULL && b!=NULL) {
-    return 0 == strcmp(a,b);
+  if (a != NULL && b != NULL) {
+    return 0 == strcmp(a, b);
   }
 
   return a == b;
@@ -681,10 +682,7 @@ bool str_equal(char *a, char *b) {
 
 bool ref_record_equal(ref_record *a, ref_record *b) {
   return 0 == strcmp(a->ref_name, b->ref_name) &&
-    a->update_index == b->update_index &&
-    hash_equal(a->value, b->value) &&
-    hash_equal(a->target_value, b->target_value) &&
-    str_equal(a->target, b->target);
+         a->update_index == b->update_index && hash_equal(a->value, b->value) &&
+         hash_equal(a->target_value, b->target_value) &&
+         str_equal(a->target, b->target);
 }
-
-  

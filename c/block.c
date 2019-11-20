@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "block.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "api.h"
-#include "block.h"
 #include "record.h"
 
 int block_writer_register_restart(block_writer *w, int n, bool restart,
@@ -146,12 +147,12 @@ int block_reader_init(block_reader *br, block *block, uint32 header_off,
   uint32 restart_start = sz - 2 - 3 * restart_count;
 
   byte *restart_bytes = block->data + restart_start;
-  
+
   // transfer ownership.
   br->block = *block;
   block->data = NULL;
   block->len = 0;
-  
+
   br->block_len = restart_start;
   br->full_block_size = full_block_size;
   br->header_off = header_off;
@@ -262,9 +263,7 @@ int block_iter_seek(block_iter *it, slice want) {
   return block_reader_seek(it->br, it, want);
 }
 
-void block_iter_close(block_iter *it) {
-  free(slice_yield(&it->last_key));
-}
+void block_iter_close(block_iter *it) { free(slice_yield(&it->last_key)); }
 
 int block_reader_seek(block_reader *br, block_iter *it, slice want) {
   restart_find_args args = {

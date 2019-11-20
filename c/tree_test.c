@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "tree.h"
+
 #include "api.h"
 #include "basics.h"
 #include "record.h"
 #include "test_framework.h"
-#include "tree.h"
 
 static int test_compare(const void *a, const void *b) { return a - b; }
 
