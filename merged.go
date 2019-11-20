@@ -269,7 +269,7 @@ func (m *mergedIter) Next(rec record) (bool, error) {
 
 	entry := m.pq.remove()
 	if err := m.advanceSubIter(entry.index); err != nil {
-		return err
+		return false, err
 	}
 
 	for !m.pq.isEmpty() {
@@ -280,7 +280,7 @@ func (m *mergedIter) Next(rec record) (bool, error) {
 
 		m.pq.remove()
 		if err := m.advanceSubIter(top.index); err != nil {
-			return err
+			return false, err
 		}
 	}
 

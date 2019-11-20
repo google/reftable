@@ -59,7 +59,7 @@ type Writer struct {
 	next uint64
 
 	// write options
-	opts  Options
+	cfg   Config
 	block []byte
 
 	// The current block writer, or nil if it was just flushed.
@@ -75,30 +75,30 @@ type Writer struct {
 	footer footer
 }
 
-func (opts *Options) setDefaults() {
-	if opts.RestartInterval == 0 {
-		opts.RestartInterval = 16
+func (cfg *Config) setDefaults() {
+	if cfg.RestartInterval == 0 {
+		cfg.RestartInterval = 16
 	}
-	if opts.BlockSize == 0 {
-		opts.BlockSize = defaultBlockSize
+	if cfg.BlockSize == 0 {
+		cfg.BlockSize = defaultBlockSize
 	}
 }
 
 // NewWriter creates a writer.
-func NewWriter(out io.Writer, opts *Options) (*Writer, error) {
-	o := *opts
+func NewWriter(out io.Writer, cfg *Config) (*Writer, error) {
+	o := *cfg
 	o.setDefaults()
 	w := &Writer{
-		opts:  o,
+		cfg:   o,
 		block: make([]byte, o.BlockSize),
 	}
 
-	if opts.BlockSize >= (1 << 24) {
+	if cfg.BlockSize >= (1 << 24) {
 		return nil, errors.New("reftable: invalid blocksize")
 	}
 
 	w.paddedWriter.out = out
-	if !opts.SkipIndexObjects {
+	if !cfg.SkipIndexObjects {
 		w.objIndex = map[string][]uint64{}
 	}
 
@@ -117,16 +117,16 @@ func (w *Writer) newBlockWriter(typ byte) *blockWriter {
 	}
 
 	bw := newBlockWriter(typ, block, blockStart)
-	bw.restartInterval = w.opts.RestartInterval
+	bw.restartInterval = w.cfg.RestartInterval
 	return bw
 }
 
 func (w *Writer) headerBytes() []byte {
 	h := header{
 		Magic:          magic,
-		BlockSize:      w.opts.BlockSize,
-		MinUpdateIndex: w.opts.MinUpdateIndex,
-		MaxUpdateIndex: w.opts.MaxUpdateIndex,
+		BlockSize:      w.cfg.BlockSize,
+		MinUpdateIndex: w.cfg.MinUpdateIndex,
+		MaxUpdateIndex: w.cfg.MaxUpdateIndex,
 	}
 	h.BlockSize = h.BlockSize | (version << 24)
 	buf := bytes.NewBuffer(make([]byte, 0, 24))
@@ -135,7 +135,7 @@ func (w *Writer) headerBytes() []byte {
 }
 
 func (w *Writer) indexHash(hash []byte) {
-	if w.opts.SkipIndexObjects {
+	if w.cfg.SkipIndexObjects {
 		return
 	}
 	off := w.next
@@ -153,13 +153,13 @@ func (w *Writer) indexHash(hash []byte) {
 
 // AddRef adds a RefRecord to the table. AddRef must be called in ascending order. AddRef cannot be called after AddLog is called.
 func (w *Writer) AddRef(r *RefRecord) error {
-	if r.UpdateIndex < w.opts.MinUpdateIndex || r.UpdateIndex > w.opts.MaxUpdateIndex {
+	if r.UpdateIndex < w.cfg.MinUpdateIndex || r.UpdateIndex > w.cfg.MaxUpdateIndex {
 		return fmt.Errorf("reftable: UpdateIndex %d outside bounds [%d, %d]",
-			r.UpdateIndex, w.opts.MinUpdateIndex, w.opts.MaxUpdateIndex)
+			r.UpdateIndex, w.cfg.MinUpdateIndex, w.cfg.MaxUpdateIndex)
 	}
 
 	cpy := *r
-	cpy.UpdateIndex -= w.opts.MinUpdateIndex
+	cpy.UpdateIndex -= w.cfg.MinUpdateIndex
 
 	if err := w.add(&cpy); err != nil {
 		return err
@@ -278,8 +278,8 @@ func (w *Writer) flushBlock() error {
 		blockStats.Offset = w.next
 	}
 	raw := w.blockWriter.finish()
-	padding := int(w.opts.BlockSize) - len(raw)
-	if w.opts.Unpadded || typ == blockTypeLog {
+	padding := int(w.cfg.BlockSize) - len(raw)
+	if w.cfg.Unaligned || typ == blockTypeLog {
 		padding = 0
 	}
 
@@ -315,7 +315,7 @@ func (w *Writer) finishPublicSection() error {
 		return err
 	}
 
-	if typ == blockTypeRef && !w.opts.SkipIndexObjects {
+	if typ == blockTypeRef && !w.cfg.SkipIndexObjects {
 		if err := w.dumpObjectIndex(); err != nil {
 			return err
 		}
@@ -395,7 +395,7 @@ func (w *Writer) finishSection() error {
 	maxLevel := 0
 
 	threshold := 3
-	if w.opts.Unpadded {
+	if w.cfg.Unaligned {
 		// always write index for unaligned files.
 		threshold = 1
 	}

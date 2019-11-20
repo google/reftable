@@ -35,7 +35,7 @@ func TestTableObjectIDLen(t *testing.T) {
 	}, {
 		RefName: "b" + suffix,
 		Value:   h2,
-	}}, nil, Options{
+	}}, nil, Config{
 		MinUpdateIndex: 0,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
@@ -68,7 +68,7 @@ func TestTableObjectIDLen(t *testing.T) {
 	}
 }
 
-func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, opts Options) (*Writer, *Reader) {
+func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, cfg Config) (*Writer, *Reader) {
 	buf := &bytes.Buffer{}
 	var min, max uint64
 	min = 0xfffffffff
@@ -81,10 +81,10 @@ func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, opts O
 		}
 	}
 
-	opts.MinUpdateIndex = min
-	opts.MaxUpdateIndex = max
+	cfg.MinUpdateIndex = min
+	cfg.MaxUpdateIndex = max
 
-	w, err := NewWriter(buf, &opts)
+	w, err := NewWriter(buf, &cfg)
 	if err != nil {
 		t.Fatalf("NewWriter: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestTableSeekEmpty(t *testing.T) {
 		Value:       testHash(1),
 	}}
 
-	_, reader := constructTestTable(t, refs, nil, Options{
+	_, reader := constructTestTable(t, refs, nil, Config{
 		MinUpdateIndex: 1,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
@@ -174,7 +174,7 @@ func TestTableRoundTrip(t *testing.T) {
 		Message: "n2",
 	}}
 
-	_, reader := constructTestTable(t, refs, logs, Options{
+	_, reader := constructTestTable(t, refs, logs, Config{
 		MinUpdateIndex: 1,
 		MaxUpdateIndex: 1,
 		BlockSize:      512,
@@ -225,7 +225,7 @@ func TestTableLastBlockLacksPadding(t *testing.T) {
 		RefName: "hello",
 		Value:   testHash(1),
 	}}, nil,
-		Options{
+		Config{
 			MinUpdateIndex:   1,
 			SkipIndexObjects: true,
 			MaxUpdateIndex:   1,
@@ -248,7 +248,7 @@ func TestTableFirstBlock(t *testing.T) {
 			Old:     testHash(2),
 		},
 	},
-		Options{
+		Config{
 			MinUpdateIndex: 1,
 			MaxUpdateIndex: 1,
 			BlockSize:      256,
@@ -284,7 +284,7 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 		}
 	}
 
-	writer, reader := constructTestTable(t, refs, logs, Options{
+	writer, reader := constructTestTable(t, refs, logs, Config{
 		MinUpdateIndex: 1,
 		MaxUpdateIndex: 1,
 		BlockSize:      blockSize,
@@ -377,7 +377,7 @@ func TestTableSeekLogLevel1(t *testing.T) {
 	testTableSeek(t, blockTypeLog, 25, 50, 256, 1, false)
 }
 
-func TestTableLogBlocksUnpadded(t *testing.T) {
+func TestTableLogBlocksUnaligned(t *testing.T) {
 	var ls []LogRecord
 
 	N := 50
@@ -390,7 +390,7 @@ func TestTableLogBlocksUnpadded(t *testing.T) {
 	}
 
 	writer, reader := constructTestTable(t, nil, ls,
-		Options{
+		Config{
 			BlockSize: 4096,
 		})
 	if got := writer.Stats.LogStats.Blocks; got != N {
@@ -421,7 +421,7 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 	}
 
 	_, reader := constructTestTable(t, refs, nil,
-		Options{
+		Config{
 			BlockSize:        256,
 			SkipIndexObjects: !indexed,
 		})
@@ -453,7 +453,7 @@ func testTableRefsFor(t *testing.T, indexed bool) {
 
 func TestTableMinUpdate(t *testing.T) {
 	buf := &bytes.Buffer{}
-	w, err := NewWriter(buf, &Options{
+	w, err := NewWriter(buf, &Config{
 		MinUpdateIndex: 2,
 		MaxUpdateIndex: 4,
 	})

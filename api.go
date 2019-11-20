@@ -49,10 +49,9 @@ type Iterator struct {
 }
 
 // Options define write options for reftables.
-// XXX WriteOptions?
-type Options struct {
-	// If set,  do not pad blocks to blocksize.
-	Unpadded bool
+type Config struct {
+	// If set, do not pad blocks to blocksize.
+	Unaligned bool
 
 	// The block size, if not set 4096.
 	BlockSize        uint32
