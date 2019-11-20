@@ -110,7 +110,7 @@ int slice_write_void(void *b, byte *data, int sz) {
   return slice_write((slice *)b, data, sz);
 }
 
-uint64 slice_size(void *b) { return ((slice *)b)->len; }
+uint64_t slice_size(void *b) { return ((slice *)b)->len; }
 
 void slice_return_block(void *b, block *dest) {
   memset(dest->data, 0xff, dest->len);
@@ -119,7 +119,7 @@ void slice_return_block(void *b, block *dest) {
 
 void slice_close(void *b) {}
 
-int slice_read_block(void *v, block *dest, uint64 off, uint32 size) {
+int slice_read_block(void *v, block *dest, uint64_t off, uint32_t size) {
   slice *b = (slice *)v;
   assert(off + size <= b->len);
   dest->data = calloc(size, 1);

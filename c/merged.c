@@ -22,8 +22,8 @@ struct _merged_table {
   reader **stack;
   int stack_len;
 
-  uint64 min;
-  uint64 max;
+  uint64_t min;
+  uint64_t max;
 };
 
 typedef struct {
@@ -144,8 +144,8 @@ void iterator_from_merged_iter(iterator *it, merged_iter *mi) {
 /* new_merged_table creates a new merged table. It takes ownership of the stack
  * array. */
 int new_merged_table(merged_table **dest, reader **stack, int n) {
-  uint64 last_max = 0;
-  uint64 first_min = 0;
+  uint64_t last_max = 0;
+  uint64_t first_min = 0;
   for (int i = 0; i < n; i++) {
     reader *r = stack[i];
     if (i > 0 && last_max >= reader_min_update_index(r)) {
@@ -170,9 +170,9 @@ int new_merged_table(merged_table **dest, reader **stack, int n) {
   return 0;
 }
 
-uint64 merged_max_update_index(merged_table *mt) { return mt->max; }
+uint64_t merged_max_update_index(merged_table *mt) { return mt->max; }
 
-uint64 merged_min_update_index(merged_table *mt) { return mt->min; }
+uint64_t merged_min_update_index(merged_table *mt) { return mt->min; }
 
 int merged_table_seek_record(merged_table *mt, iterator *it, record rec) {
   iterator *iters = calloc(sizeof(iterator), mt->stack_len);

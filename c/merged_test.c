@@ -72,7 +72,7 @@ void write_test_table(slice *buf, ref_record refs[], int n) {
   int min = 0xffffffff;
   int max = 0;
   for (int i = 0; i < n; i++) {
-    uint64 ui = refs[i].update_index;
+    uint64_t ui = refs[i].update_index;
     if (ui > max) {
       max = ui;
     }
@@ -90,7 +90,7 @@ void write_test_table(slice *buf, ref_record refs[], int n) {
   writer *w = new_writer(&slice_write_void, buf, &opts);
 
   for (int i = 0; i < n; i++) {
-    uint64 before = refs[i].update_index;
+    uint64_t before = refs[i].update_index;
     int n = writer_add_ref(w, &refs[i]);
     assert(n == 0);
     assert(before == refs[i].update_index);

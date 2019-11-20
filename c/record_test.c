@@ -21,26 +21,26 @@
 #include "test_framework.h"
 
 void varint_roundtrip() {
-  uint64 inputs[] = {0,
+  uint64_t inputs[] = {0,
                      1,
                      27,
                      127,
                      128,
                      257,
                      4096,
-                     ((uint64)1 << 63),
-                     ((uint64)1 << 63) + ((uint64)1 << 63) - 1};
+                     ((uint64_t)1 << 63),
+                     ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1};
   for (int i = 0; i < ARRAYSIZE(inputs); i++) {
     byte dest[10];
 
     slice out = {.buf = dest, .len = 10, .cap = 10};
 
-    uint64 in = inputs[i];
+    uint64_t in = inputs[i];
     int n = put_var_int(out, in);
     assert(n > 0);
     out.len = n;
 
-    uint64 got = 0;
+    uint64_t got = 0;
     n = get_var_int(&got, out);
     assert(n > 0);
 
@@ -133,11 +133,11 @@ void test_ref_record_roundtrip() {
 }
 
 void test_u24_roundtrip() {
-  uint32 in = 0x112233;
+  uint32_t in = 0x112233;
   byte dest[3];
 
   put_u24(dest, in);
-  uint32 out = get_u24(dest);
+  uint32_t out = get_u24(dest);
   assert(in == out);
 }
 
@@ -180,7 +180,7 @@ void print_bytes(byte *p, int l) {
 void test_obj_record_roundtrip() {
   byte testHash1[HASH_SIZE] = {};
   set_hash(testHash1, 1);
-  uint64 till9[] = {1, 2, 3, 4, 500, 600, 700, 800, 9000};
+  uint64_t till9[] = {1, 2, 3, 4, 500, 600, 700, 800, 9000};
 
   obj_record recs[3] = {{
                             .hash_prefix = testHash1,
@@ -226,7 +226,7 @@ void test_obj_record_roundtrip() {
 
     assert(0 == memcmp(in.hash_prefix, out.hash_prefix, in.hash_prefix_len));
     assert(0 ==
-           memcmp(in.offsets, out.offsets, sizeof(uint64) * in.offset_len));
+           memcmp(in.offsets, out.offsets, sizeof(uint64_t) * in.offset_len));
     free(slice_yield(&key));
     record_clear(rec_out);
   }

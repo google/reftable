@@ -120,7 +120,7 @@ int indexed_table_ref_iter_next_block(indexed_table_ref_iter *it) {
 
   reader_return_block(it->r, &it->block_reader.block);
 
-  uint64 off = it->offsets[it->offset_idx++];
+  uint64_t off = it->offsets[it->offset_idx++];
 
   int err =
       reader_init_block_reader(it->r, &it->block_reader, off, BLOCK_TYPE_REF);
@@ -166,7 +166,7 @@ int indexed_table_ref_iter_next(void *p, record rec) {
 }
 
 int new_indexed_table_ref_iter(indexed_table_ref_iter **dest, reader *r,
-                               byte *oid, uint64 *offsets, int offset_len) {
+                               byte *oid, uint64_t *offsets, int offset_len) {
   indexed_table_ref_iter *itr = calloc(sizeof(indexed_table_ref_iter), 1);
   itr->r = r;
   itr->oid = oid;

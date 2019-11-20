@@ -32,27 +32,27 @@ int is_block_type(byte typ) {
   return false;
 }
 
-int get_var_int(uint64 *dest, slice in) {
+int get_var_int(uint64_t *dest, slice in) {
   if (in.len == 0) {
     return -1;
   }
 
   int ptr = 0;
-  uint64 val = in.buf[ptr] & 0x7f;
+  uint64_t val = in.buf[ptr] & 0x7f;
 
   while (in.buf[ptr] & 0x80) {
     ptr++;
     if (ptr > in.len) {
       return -1;
     }
-    val = (val + 1) << 7 | (uint64)(in.buf[ptr] & 0x7f);
+    val = (val + 1) << 7 | (uint64_t)(in.buf[ptr] & 0x7f);
   }
 
   *dest = val;
   return ptr + 1;
 }
 
-int put_var_int(slice dest, uint64 val) {
+int put_var_int(slice dest, uint64_t val) {
   byte buf[10];
 
   int i = 9;
@@ -90,7 +90,7 @@ int common_prefix_size(slice a, slice b) {
 
 int decode_string(slice *dest, slice in) {
   int start_len = in.len;
-  uint64 tsize = 0;
+  uint64_t tsize = 0;
   int n = get_var_int(&tsize, in);
   if (n <= 0) {
     return -1;
@@ -116,15 +116,15 @@ int encode_key(bool *restart, slice dest, slice prev_key, slice key,
   int prefix_len = common_prefix_size(prev_key, key);
   *restart = (prefix_len == 0);
 
-  int n = put_var_int(dest, (uint64)prefix_len);
+  int n = put_var_int(dest, (uint64_t)prefix_len);
   if (n < 0) {
     return -1;
   }
   dest.buf += n;
   dest.len -= n;
 
-  uint64 suffix_len = key.len - prefix_len;
-  n = put_var_int(dest, suffix_len << 3 | (uint64)extra);
+  uint64_t suffix_len = key.len - prefix_len;
+  n = put_var_int(dest, suffix_len << 3 | (uint64_t)extra);
   if (n < 0) {
     return -1;
   }
@@ -345,7 +345,7 @@ int ref_record_decode(void *rec, slice key, byte val_type, slice in) {
 
 int decode_key(slice *key, byte *extra, slice last_key, slice in) {
   int start_len = in.len;
-  uint64 prefix_len = 0;
+  uint64_t prefix_len = 0;
   int n = get_var_int(&prefix_len, in);
   if (n < 0) {
     return -1;
@@ -357,7 +357,7 @@ int decode_key(slice *key, byte *extra, slice last_key, slice in) {
     return -1;
   }
 
-  uint64 suffix_len = 0;
+  uint64_t suffix_len = 0;
   n = get_var_int(&suffix_len, in);
   if (n <= 0) {
     return -1;
@@ -408,7 +408,7 @@ void obj_record_copy_from(void *rec, const void *src_rec) {
   ref->hash_prefix = malloc(ref->hash_prefix_len);
   memcpy(ref->hash_prefix, src->hash_prefix, ref->hash_prefix_len);
 
-  int olen = ref->offset_len * sizeof(uint64);
+  int olen = ref->offset_len * sizeof(uint64_t);
   ref->offsets = malloc(olen);
   memcpy(ref->offsets, src->offsets, olen);
 }
@@ -449,7 +449,7 @@ int obj_record_encode(const void *rec, slice s) {
   s.buf += n;
   s.len -= n;
 
-  uint64 last = r->offsets[0];
+  uint64_t last = r->offsets[0];
   for (int i = 1; i < r->offset_len; i++) {
     int n = put_var_int(s, r->offsets[i] - last);
     if (n < 0) {
@@ -471,7 +471,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
   memcpy(r->hash_prefix, key.buf, key.len);
   r->hash_prefix_len = key.len;
 
-  uint64 count = val_type;
+  uint64_t count = val_type;
   if (val_type == 0) {
     int n = get_var_int(&count, in);
     if (n < 0) {
@@ -488,7 +488,7 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
     return start.len - in.len;
   }
 
-  r->offsets = malloc(count * sizeof(uint64));
+  r->offsets = malloc(count * sizeof(uint64_t));
   r->offset_len = count;
 
   int n = get_var_int(&r->offsets[0], in);
@@ -499,11 +499,11 @@ int obj_record_decode(void *rec, slice key, byte val_type, slice in) {
   in.buf += n;
   in.len -= n;
 
-  uint64 last = r->offsets[0];
+  uint64_t last = r->offsets[0];
 
   int j = 1;
   while (j < count) {
-    uint64 delta = 0;
+    uint64_t delta = 0;
     int n = get_var_int(&delta, in);
     if (n < 0) {
       return n;

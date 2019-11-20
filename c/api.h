@@ -23,8 +23,8 @@ typedef struct _block block;
 
 /* block_source_ops are the operations that make up block_source */
 typedef struct {
-  uint64 (*size)(void *source);
-  int (*read_block)(void *source, block *dest, uint64 off, uint32 size);
+  uint64_t (*size)(void *source);
+  int (*read_block)(void *source, block *dest, uint64_t off, uint32_t size);
   void (*return_block)(void *source, block *blockp);
   void (*close)(void *source);
 } block_source_ops;
@@ -44,18 +44,18 @@ struct _block {
   block_source source;
 };
 
-uint64 block_source_size(block_source source);
-int block_source_read_block(block_source source, block *dest, uint64 off,
-                            uint32 size);
+uint64_t block_source_size(block_source source);
+int block_source_read_block(block_source source, block *dest, uint64_t off,
+                            uint32_t size);
 void block_source_return_block(block_source source, block *ret);
 void block_source_close(block_source source);
 
 /* write_options sets optiosn for writing a single reftable. */
 typedef struct {
   bool unpadded;
-  uint32 block_size;
-  uint32 min_update_index;
-  uint32 max_update_index;
+  uint32_t block_size;
+  uint32_t min_update_index;
+  uint32_t max_update_index;
   bool skip_index_objects;
   int restart_interval;
 } write_options;
@@ -63,7 +63,7 @@ typedef struct {
 /* ref_record holds a ref database entry target_value */
 typedef struct {
   char *ref_name;  // name of the ref. Must be specified.
-  uint64 update_index;
+  uint64_t update_index;
   byte *value;         // SHA1, or NULL
   byte *target_value;  // peeled annotated tag, or NULL.
   char *target;        // symref, or NULL
@@ -76,13 +76,13 @@ bool ref_record_equal(ref_record *a, ref_record *b);
 /* log_record holds a reflog entry */
 typedef struct {
   char *ref_name;
-  uint64 update_index;
+  uint64_t update_index;
   char *new_hash;
   char *old_hash;
   char *name;
   char *email;
-  uint64 time;
-  uint64 tz_offset;
+  uint64_t time;
+  uint64_t tz_offset;
   char *message;
 } log_record;
 
@@ -107,8 +107,8 @@ typedef struct {
   int index_blocks;
   int max_index_level;
 
-  uint64 offset;
-  uint64 index_offset;
+  uint64_t offset;
+  uint64_t index_offset;
 } block_stats;
 
 /* stats holds overall statistics for a single reftable */
@@ -172,8 +172,8 @@ int new_reader(reader **pp, block_source);
 int reader_seek_ref(reader *r, iterator *it, char *name);
 void reader_free(reader *);
 int reader_refs_for(reader *r, iterator *it, byte *oid);
-uint64 reader_max_update_index(reader *r);
-uint64 reader_min_update_index(reader *r);
+uint64_t reader_max_update_index(reader *r);
+uint64_t reader_min_update_index(reader *r);
 
 typedef struct _merged_table merged_table;
 int new_merged_table(merged_table **dest, reader **stack, int n);

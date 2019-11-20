@@ -24,12 +24,12 @@
 #include "record.h"
 #include "tree.h"
 
-uint64 block_source_size(block_source source) {
+uint64_t block_source_size(block_source source) {
   return source.ops->size(source.arg);
 }
 
-int block_source_read_block(block_source source, block *dest, uint64 off,
-                            uint32 size) {
+int block_source_read_block(block_source source, block *dest, uint64_t off,
+                            uint32_t size) {
   return source.ops->read_block(source.arg, dest, off, size);
 }
 
@@ -51,7 +51,7 @@ reader_offsets *reader_offsets_for(reader *r, byte typ) {
   abort();
 }
 
-int reader_get_block(reader *r, block *dest, uint64 off, uint32 sz) {
+int reader_get_block(reader *r, block *dest, uint64_t off, uint32_t sz) {
   if (off >= r->size) {
     return 0;
   }
@@ -106,19 +106,19 @@ int init_reader(reader *r, block_source source) {
   r->max_update_index = get_u64(f);
   f += 8;
 
-  uint64 ref_index_off = get_u64(f);
+  uint64_t ref_index_off = get_u64(f);
   f += 8;
-  uint64 obj_off = get_u64(f);
+  uint64_t obj_off = get_u64(f);
   f += 8;
 
   r->object_id_len = obj_off & ((1 << 5) - 1);
   obj_off >>= 5;
 
-  uint64 obj_index_off = get_u64(f);
+  uint64_t obj_index_off = get_u64(f);
   f += 8;
-  uint64 log_off = get_u64(f);
+  uint64_t log_off = get_u64(f);
   f += 8;
-  uint64 log_index_off = get_u64(f);
+  uint64_t log_index_off = get_u64(f);
   f += 8;
 
   byte first_block_typ = header.data[HEADER_SIZE];
@@ -144,7 +144,7 @@ exit:
 typedef struct {
   reader *r;
   byte typ;
-  uint64 block_off;
+  uint64_t block_off;
   block_iter bi;
   bool finished;
 } table_iter;
@@ -178,38 +178,38 @@ void table_iter_block_done(table_iter *ti) {
   ti->bi.next_off = 0;
 }
 
-int32 extract_block_size(byte *data, byte *typ, uint64 off) {
+int32_t extract_block_size(byte *data, byte *typ, uint64_t off) {
   if (off == 0) {
     data += 24;
   }
 
   *typ = data[0];
-  int32 result = 0;
+  int32_t result = 0;
   if (is_block_type(*typ)) {
     result = get_u24(data + 1);
   }
   return result;
 }
 
-int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
+int reader_init_block_reader(reader *r, block_reader *br, uint64_t next_off,
                              byte want_typ) {
   if (next_off >= r->size) {
     return 1;
   }
 
-  int32 guess_block_size = r->block_size;
+  int32_t guess_block_size = r->block_size;
   if (guess_block_size == 0) {
     guess_block_size = DEFAULT_BLOCK_SIZE;
   }
 
   block block = {};
-  int32 read_size = reader_get_block(r, &block, next_off, guess_block_size);
+  int32_t read_size = reader_get_block(r, &block, next_off, guess_block_size);
   if (read_size < 0) {
     return read_size;
   }
 
   byte block_typ = 0;
-  int32 block_size = extract_block_size(block.data, &block_typ, next_off);
+  int32_t block_size = extract_block_size(block.data, &block_typ, next_off);
   if (block_size < 0) {
     return block_size;
   }
@@ -226,7 +226,7 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
     }
   }
 
-  uint32 header_off = 0;
+  uint32_t header_off = 0;
   if (next_off == 0) {
     header_off = HEADER_SIZE;
   }
@@ -235,7 +235,7 @@ int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
 }
 
 int table_iter_next_block(table_iter *dest, table_iter *src) {
-  uint64 next_block_off = src->block_off + src->bi.br->full_block_size;
+  uint64_t next_block_off = src->block_off + src->bi.br->full_block_size;
   dest->r = src->r;
   dest->typ = src->typ;
   dest->block_off = next_block_off;
@@ -302,7 +302,7 @@ void iterator_from_table_iter(iterator *it, table_iter *ti) {
   it->ops = &table_iter_ops;
 }
 
-int reader_table_iter_at(reader *r, table_iter *ti, uint64 off, byte typ) {
+int reader_table_iter_at(reader *r, table_iter *ti, uint64_t off, byte typ) {
   block_reader br = {};
   int err = reader_init_block_reader(r, &br, off, typ);
   if (err != 0) {
@@ -320,7 +320,7 @@ int reader_table_iter_at(reader *r, table_iter *ti, uint64 off, byte typ) {
 
 int reader_start(reader *r, table_iter *ti, byte typ, bool index) {
   reader_offsets *offs = reader_offsets_for(r, typ);
-  uint64 off = offs->offset;
+  uint64_t off = offs->offset;
   if (index) {
     off = offs->index_offset;
     if (off == 0) {
@@ -441,7 +441,7 @@ exit:
 
 int reader_seek_internal(reader *r, iterator *it, record rec) {
   reader_offsets *offs = reader_offsets_for(r, record_type(rec));
-  uint64 idx = offs->index_offset;
+  uint64_t idx = offs->index_offset;
   if (idx > 0) {
     return reader_seek_indexed(r, it, rec);
   }
@@ -564,6 +564,6 @@ int reader_refs_for(reader *r, iterator *it, byte *oid) {
   return 0;
 }
 
-uint64 reader_max_update_index(reader *r) { return r->max_update_index; }
+uint64_t reader_max_update_index(reader *r) { return r->max_update_index; }
 
-uint64 reader_min_update_index(reader *r) { return r->min_update_index; }
+uint64_t reader_min_update_index(reader *r) { return r->min_update_index; }

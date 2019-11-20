@@ -21,25 +21,21 @@
 #define false 0
 #define ARRAYSIZE(a) sizeof(a) / sizeof(a[0])
 
-typedef uint64_t uint64;
-typedef uint32_t uint32;
-typedef int32_t int32;
-typedef uint16_t uint16;
 typedef uint8_t byte;
 typedef byte bool;
 typedef int error;
 
-void put_u24(byte *out, uint32 i);
-uint32 get_u24(byte *in);
+void put_u24(byte *out, uint32_t i);
+uint32_t get_u24(byte *in);
 
-uint64 get_u64(byte *in);
-void put_u64(byte *out, uint64 i);
+uint64_t get_u64(byte *in);
+void put_u64(byte *out, uint64_t i);
 
-void put_u32(byte *out, uint32 i);
-uint32 get_u32(byte *in);
+void put_u32(byte *out, uint32_t i);
+uint32_t get_u32(byte *in);
 
-void put_u16(byte *out, uint16 i);
-uint16 get_u16(byte *in);
+void put_u16(byte *out, uint16_t i);
+uint16_t get_u16(byte *in);
 int binsearch(int sz, int (*f)(int k, void *args), void *args);
 
 #endif

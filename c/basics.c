@@ -14,49 +14,49 @@
 
 #include "basics.h"
 
-void put_u24(byte *out, uint32 i) {
+void put_u24(byte *out, uint32_t i) {
   out[0] = (byte)((i >> 16) & 0xff);
   out[1] = (byte)((i >> 8) & 0xff);
   out[2] = (byte)((i)&0xff);
 }
 
-uint32 get_u24(byte *in) {
-  return (uint32)(in[0]) << 16 | (uint32)(in[1]) << 8 | (uint32)(in[2]);
+uint32_t get_u24(byte *in) {
+  return (uint32_t)(in[0]) << 16 | (uint32_t)(in[1]) << 8 | (uint32_t)(in[2]);
 }
 
-void put_u32(byte *out, uint32 i) {
+void put_u32(byte *out, uint32_t i) {
   out[0] = (byte)((i >> 24) & 0xff);
   out[1] = (byte)((i >> 16) & 0xff);
   out[2] = (byte)((i >> 8) & 0xff);
   out[3] = (byte)((i)&0xff);
 }
 
-uint32 get_u32(byte *in) {
-  return (uint32)(in[0]) << 24 | (uint32)(in[1]) << 16 | (uint32)(in[2]) << 8 |
-         (uint32)(in[3]);
+uint32_t get_u32(byte *in) {
+  return (uint32_t)(in[0]) << 24 | (uint32_t)(in[1]) << 16 | (uint32_t)(in[2]) << 8 |
+         (uint32_t)(in[3]);
 }
 
-void put_u64(byte *out, uint64 v) {
-  for (int i = sizeof(uint64); i--;) {
+void put_u64(byte *out, uint64_t v) {
+  for (int i = sizeof(uint64_t); i--;) {
     out[i] = (byte)(v & 0xff);
     v >>= 8;
   }
 }
 
-uint64 get_u64(byte *out) {
-  uint64 v = 0;
-  for (int i = 0; i < sizeof(uint64); i++) {
+uint64_t get_u64(byte *out) {
+  uint64_t v = 0;
+  for (int i = 0; i < sizeof(uint64_t); i++) {
     v = (v << 8) | (byte)(out[i] & 0xff);
   }
   return v;
 }
 
-void put_u16(byte *out, uint16 i) {
+void put_u16(byte *out, uint16_t i) {
   out[0] = (byte)((i >> 8) & 0xff);
   out[1] = (byte)((i)&0xff);
 }
 
-uint16 get_u16(byte *in) { return (uint32)(in[0]) << 8 | (uint32)(in[1]); }
+uint16_t get_u16(byte *in) { return (uint32_t)(in[0]) << 8 | (uint32_t)(in[1]); }
 
 /*
   find smallest index i in [0, sz) at which f(i) is true, assuming

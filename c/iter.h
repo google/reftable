@@ -41,7 +41,7 @@ typedef struct {
   byte *oid;
 
   // mutable
-  uint64 *offsets;
+  uint64_t *offsets;
 
   // Points to the next offset to read.
   int offset_idx;
@@ -54,6 +54,6 @@ typedef struct {
 void iterator_from_indexed_table_ref_iter(iterator *it,
                                           indexed_table_ref_iter *itr);
 int new_indexed_table_ref_iter(indexed_table_ref_iter **dest, reader *r,
-                               byte *oid, uint64 *offsets, int offset_len);
+                               byte *oid, uint64_t *offsets, int offset_len);
 
 #endif

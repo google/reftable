@@ -28,7 +28,7 @@ typedef struct _writer {
 
   slice last_key;
 
-  uint64 next;
+  uint64_t next;
   write_options opts;
 
   byte *block;

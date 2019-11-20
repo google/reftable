@@ -24,8 +24,8 @@
 int block_writer_register_restart(block_writer *w, int n, bool restart,
                                   slice key);
 
-void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32 block_size,
-                       uint32 header_off) {
+void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32_t block_size,
+                       uint32_t header_off) {
   bw->buf = buf;
   bw->block_size = block_size;
   bw->header_off = header_off;
@@ -95,7 +95,7 @@ int block_writer_register_restart(block_writer *w, int n, bool restart,
   if (restart) {
     if (w->restart_len == w->restart_cap) {
       w->restart_cap = w->restart_cap * 2 + 1;
-      w->restarts = realloc(w->restarts, sizeof(uint32) * w->restart_cap);
+      w->restarts = realloc(w->restarts, sizeof(uint32_t) * w->restart_cap);
     }
 
     w->restarts[w->restart_len++] = w->next;
@@ -123,16 +123,16 @@ int block_writer_finish(block_writer *w) {
 
 byte block_reader_type(block_reader *r) { return r->block.data[r->header_off]; }
 
-int block_reader_init(block_reader *br, block *block, uint32 header_off,
-                      uint32 table_block_size) {
-  uint32 full_block_size = table_block_size;
+int block_reader_init(block_reader *br, block *block, uint32_t header_off,
+                      uint32_t table_block_size) {
+  uint32_t full_block_size = table_block_size;
   byte typ = block->data[header_off];
 
   if (!is_block_type(typ)) {
     return FORMAT_ERROR;
   }
 
-  uint32 sz = get_u24(block->data + header_off + 1);
+  uint32_t sz = get_u24(block->data + header_off + 1);
 
   if (typ == BLOCK_TYPE_LOG) {
     /* TODO: decompress log block, record how many bytes consumed. */
@@ -143,8 +143,8 @@ int block_reader_init(block_reader *br, block *block, uint32 header_off,
     full_block_size = sz;
   }
 
-  uint16 restart_count = get_u16(block->data + sz - 2);
-  uint32 restart_start = sz - 2 - 3 * restart_count;
+  uint16_t restart_count = get_u16(block->data + sz - 2);
+  uint32_t restart_start = sz - 2 - 3 * restart_count;
 
   byte *restart_bytes = block->data + restart_start;
 
@@ -162,7 +162,7 @@ int block_reader_init(block_reader *br, block *block, uint32 header_off,
   return 0;
 }
 
-uint32 block_reader_restart_offset(block_reader *br, int i) {
+uint32_t block_reader_restart_offset(block_reader *br, int i) {
   return get_u24(br->restart_bytes + 3 * i);
 }
 
@@ -180,7 +180,7 @@ typedef struct {
 
 int key_less(int idx, void *args) {
   restart_find_args *a = (restart_find_args *)args;
-  uint32 off = block_reader_restart_offset(a->r, idx);
+  uint32_t off = block_reader_restart_offset(a->r, idx);
   slice in = {
       .buf = a->r->block.data,
       .len = a->r->block_len,

@@ -112,7 +112,7 @@ void writer_free(writer *w) {
 
 typedef struct {
   slice hash;
-  uint64 *offsets;
+  uint64_t *offsets;
   int offset_len;
   int offset_cap;
 } obj_index_tree_node;
@@ -127,7 +127,7 @@ void writer_index_hash(writer *w, slice hash) {
     return;
   }
 
-  uint64 off = w->next;
+  uint64_t off = w->next;
 
   obj_index_tree_node want = {};
   slice_copy(&want.hash, hash);
@@ -150,7 +150,7 @@ void writer_index_hash(writer *w, slice hash) {
 
   if (key->offset_len == key->offset_cap) {
     key->offset_cap = 2 * key->offset_cap + 1;
-    key->offsets = realloc(key->offsets, sizeof(uint64) * key->offset_cap);
+    key->offsets = realloc(key->offsets, sizeof(uint64_t) * key->offset_cap);
   }
 
   key->offsets[key->offset_len++] = off;
@@ -239,7 +239,7 @@ int writer_finish_section(writer *w) {
     return err;
   }
 
-  uint64 index_start = 0;
+  uint64_t index_start = 0;
   int max_level = 0;
   int threshold = 3;
   if (w->opts.unpadded) {

@@ -21,17 +21,17 @@
 
 typedef struct {
   bool present;
-  uint64 offset;
-  uint64 index_offset;
+  uint64_t offset;
+  uint64_t index_offset;
 } reader_offsets;
 
 struct _reader {
   block_source source;
 
-  uint64 size;
-  uint32 block_size;
-  uint64 min_update_index;
-  uint64 max_update_index;
+  uint64_t size;
+  uint32_t block_size;
+  uint64_t min_update_index;
+  uint64_t max_update_index;
   int object_id_len;
 
   reader_offsets ref_offsets;
@@ -43,7 +43,7 @@ int init_reader(reader *r, block_source source);
 int reader_seek(reader *r, iterator *it, record rec);
 void reader_close(reader *r);
 void reader_return_block(reader *r, block *p);
-int reader_init_block_reader(reader *r, block_reader *br, uint64 next_off,
+int reader_init_block_reader(reader *r, block_reader *br, uint64_t next_off,
                              byte want_typ);
 
 #endif

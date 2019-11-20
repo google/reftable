@@ -25,20 +25,20 @@ typedef struct _block_iter block_iter;
 
 struct _block_writer {
   byte *buf;
-  uint32 block_size;
-  uint32 header_off;
+  uint32_t block_size;
+  uint32_t header_off;
   int restart_interval;
 
-  uint32 next;
-  uint32 *restarts;
-  uint32 restart_len;
-  uint32 restart_cap;
+  uint32_t next;
+  uint32_t *restarts;
+  uint32_t restart_len;
+  uint32_t restart_cap;
   slice last_key;
   int entries;
 };
 
-void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32 block_size,
-                       uint32 header_off);
+void block_writer_init(block_writer *bw, byte typ, byte *buf, uint32_t block_size,
+                       uint32_t header_off);
 byte block_writer_type(block_writer *bw);
 int block_writer_add(block_writer *w, record rec);
 int block_writer_finish(block_writer *w);
@@ -46,18 +46,18 @@ void block_writer_reset(block_writer *bw);
 void block_writer_clear(block_writer *bw);
 
 struct _block_reader {
-  uint32 header_off;
+  uint32_t header_off;
   block block;
 
   // size of the data, excluding restart data.
-  uint32 block_len;
+  uint32_t block_len;
   byte *restart_bytes;
-  uint32 full_block_size;
-  uint16 restart_count;
+  uint32_t full_block_size;
+  uint16_t restart_count;
 };
 
-int block_reader_init(block_reader *br, block *bl, uint32 header_off,
-                      uint32 table_block_size);
+int block_reader_init(block_reader *br, block *bl, uint32_t header_off,
+                      uint32_t table_block_size);
 void block_reader_start(block_reader *br, block_iter *it);
 int block_reader_seek(block_reader *br, block_iter *it, slice want);
 byte block_reader_type(block_reader *r);
@@ -67,7 +67,7 @@ struct _block_iter {
   block_reader *br;
 
   slice last_key;
-  uint32 next_off;
+  uint32_t next_off;
 };
 
 void block_iter_copy_from(block_iter *dest, block_iter *src);

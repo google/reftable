@@ -34,8 +34,8 @@ typedef struct {
   struct _record_ops *ops;
 } record;
 
-int get_var_int(uint64 *dest, slice in);
-int put_var_int(slice dest, uint64 val);
+int get_var_int(uint64_t *dest, slice in);
+int put_var_int(slice dest, uint64_t val);
 int common_prefix_size(slice a, slice b);
 
 int is_block_type(byte typ);
@@ -49,13 +49,13 @@ int decode_key(slice *key, byte *extra, slice last_key, slice in);
 
 typedef struct {
   slice last_key;
-  uint64 offset;
+  uint64_t offset;
 } index_record;
 
 typedef struct {
   byte *hash_prefix;
   int hash_prefix_len;
-  uint64 *offsets;
+  uint64_t *offsets;
   int offset_len;
 } obj_record;
 
