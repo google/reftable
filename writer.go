@@ -158,9 +158,10 @@ func (w *Writer) AddRef(r *RefRecord) error {
 			r.UpdateIndex, w.opts.MinUpdateIndex, w.opts.MaxUpdateIndex)
 	}
 
-	r.UpdateIndex -= w.opts.MinUpdateIndex
+	cpy := *r
+	cpy.UpdateIndex -= w.opts.MinUpdateIndex
 
-	if err := w.add(r); err != nil {
+	if err := w.add(&cpy); err != nil {
 		return err
 	}
 	w.indexHash(r.Value)
