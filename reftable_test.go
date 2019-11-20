@@ -121,7 +121,7 @@ func TestTableSeekEmpty(t *testing.T) {
 		BlockSize: 512,
 	})
 
-	_, err := reader.SeekRef(&RefRecord{})
+	_, err := reader.SeekRef("")
 	if err != nil {
 		t.Fatalf("start(r): %v", err)
 	}
@@ -147,30 +147,30 @@ func TestTableRoundTrip(t *testing.T) {
 		TargetValue: testHash(2),
 	}}
 	logs := []LogRecord{{
-		RefName: "refs/heads/master",
-		TS:      2,
-		Old:     testHash(1),
-		New:     testHash(2),
-		Message: "m2",
+		RefName:     "refs/heads/master",
+		UpdateIndex: 2,
+		Old:         testHash(1),
+		New:         testHash(2),
+		Message:     "m2",
 	}, {
-		RefName: "refs/heads/master",
-		TS:      1,
-		Old:     testHash(2),
-		New:     testHash(1),
-		Message: "m1",
+		RefName:     "refs/heads/master",
+		UpdateIndex: 1,
+		Old:         testHash(2),
+		New:         testHash(1),
+		Message:     "m1",
 	}, {
-		RefName: "refs/heads/next",
-		TS:      2,
-		Old:     testHash(1),
-		New:     testHash(2),
-		Message: "n2",
+		RefName:     "refs/heads/next",
+		UpdateIndex: 2,
+		Old:         testHash(1),
+		New:         testHash(2),
+		Message:     "n2",
 	}}
 
 	_, reader := constructTestTable(t, refs, logs, Config{
 		BlockSize: 512,
 	})
 
-	iter, err := reader.SeekRef(&RefRecord{})
+	iter, err := reader.SeekRef("")
 	if err != nil {
 		t.Fatalf("start(r): %v", err)
 	}
@@ -189,7 +189,7 @@ func TestTableRoundTrip(t *testing.T) {
 		}
 	}
 
-	iter, err = reader.SeekLog(&LogRecord{})
+	iter, err = reader.SeekLog("", maxUint64)
 	if err != nil {
 		t.Fatalf("start(g): %v", err)
 	}

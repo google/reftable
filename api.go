@@ -38,8 +38,8 @@ type record interface {
 type Table interface {
 	MaxUpdateIndex() uint64
 	MinUpdateIndex() uint64
-	SeekRef(ref *RefRecord) (*Iterator, error)
-	SeekLog(ref *LogRecord) (*Iterator, error)
+	SeekRef(refName string) (*Iterator, error)
+	SeekLog(refName string, updateIndex uint64) (*Iterator, error)
 	RefsFor(oid []byte) (*Iterator, error)
 }
 
@@ -71,16 +71,15 @@ type RefRecord struct {
 
 // LogRecord is a Record from the reflog database.
 type LogRecord struct {
-	RefName string
-	// XXX
-	TS       uint64
-	New      []byte
-	Old      []byte
-	Name     string
-	Email    string
-	Time     uint64
-	TZOffset int16
-	Message  string
+	RefName     string
+	UpdateIndex uint64
+	New         []byte
+	Old         []byte
+	Name        string
+	Email       string
+	Time        uint64
+	TZOffset    int16
+	Message     string
 }
 
 // BlockStats provides write statistics data of a certain block type.

@@ -439,8 +439,10 @@ func decodeKey(buf []byte, prevKey string) (n int, key string, value uint8, ok b
 	return len(start) - len(buf), string(name), value, true
 }
 
+const maxUint64 = 0xffffffffffffffff
+
 func revInt64(t uint64) uint64 {
-	return 0xffffffffffffffff - t
+	return maxUint64 - t
 }
 
 func encodeString(buf []byte, val string) (n int, ok bool) {
@@ -464,7 +466,7 @@ func (l *LogRecord) typ() byte {
 
 func (l *LogRecord) key() string {
 	var suffix [9]byte
-	binary.BigEndian.PutUint64(suffix[1:], revInt64(l.TS))
+	binary.BigEndian.PutUint64(suffix[1:], revInt64(l.UpdateIndex))
 	return l.RefName + string(suffix[:])
 }
 
@@ -473,7 +475,7 @@ func (r *LogRecord) copyFrom(in record) {
 }
 
 func (l *LogRecord) String() string {
-	return fmt.Sprintf("log(%s, %d)", l.RefName, l.TS)
+	return fmt.Sprintf("log(%s, %d)", l.RefName, l.UpdateIndex)
 }
 
 func (l *LogRecord) valType() uint8 {
@@ -558,7 +560,7 @@ func (l *LogRecord) decodeKey(key string) bool {
 	if last[0] != 0 {
 		return false
 	}
-	l.TS = revInt64(binary.BigEndian.Uint64(last[1:]))
+	l.UpdateIndex = revInt64(binary.BigEndian.Uint64(last[1:]))
 	return true
 }
 

@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
@@ -32,7 +31,6 @@ func testStackN(t *testing.T, N int) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	log.Println("dir", dir)
 	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +65,7 @@ func testStackN(t *testing.T, N int) {
 
 	m := st.Merged()
 	for k, v := range refmap {
-		it, err := m.SeekRef(&RefRecord{RefName: k})
+		it, err := m.SeekRef(k)
 		if err != nil {
 			t.Fatal(err)
 		}

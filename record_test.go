@@ -128,25 +128,25 @@ func TestCommonPrefix(t *testing.T) {
 
 func TestRecordRoundTripLogRecord(t *testing.T) {
 	inputs := []record{&LogRecord{
-		RefName:  "prefix/master",
-		TS:       552,
-		New:      testHash(2),
-		Old:      testHash(1),
-		Name:     "C. Omitter",
-		Email:    "committer@host.invalid",
-		Time:     42,
-		TZOffset: 330,
-		Message:  "message",
+		RefName:     "prefix/master",
+		UpdateIndex: 552,
+		New:         testHash(2),
+		Old:         testHash(1),
+		Name:        "C. Omitter",
+		Email:       "committer@host.invalid",
+		Time:        42,
+		TZOffset:    330,
+		Message:     "message",
 	}, &LogRecord{
-		RefName:  "prefix/next",
-		TS:       551,
-		New:      testHash(2),
-		Old:      testHash(1),
-		Name:     "C. Omitter",
-		Email:    "committer@host.invalid",
-		Time:     43,
-		TZOffset: 330,
-		Message:  "message",
+		RefName:     "prefix/next",
+		UpdateIndex: 551,
+		New:         testHash(2),
+		Old:         testHash(1),
+		Name:        "C. Omitter",
+		Email:       "committer@host.invalid",
+		Time:        43,
+		TZOffset:    330,
+		Message:     "message",
 	}}
 
 	testRecordRoundTrip(t, inputs)

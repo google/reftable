@@ -173,16 +173,23 @@ func uniq(ss []string) []string {
 }
 
 // Seek returns an iterator positioned before the wanted record.
-func (m *Merged) SeekLog(log *LogRecord) (*Iterator, error) {
-	impl, err := m.seek(log)
+func (m *Merged) SeekLog(refname string, updateIndex uint64) (*Iterator, error) {
+	log := LogRecord{
+		RefName:     refname,
+		UpdateIndex: updateIndex,
+	}
+	impl, err := m.seek(&log)
 	if err != nil {
 		return nil, err
 	}
 	return &Iterator{impl}, nil
 }
 
-func (m *Merged) SeekRef(ref *RefRecord) (*Iterator, error) {
-	impl, err := m.seek(ref)
+func (m *Merged) SeekRef(name string) (*Iterator, error) {
+	ref := RefRecord{
+		RefName: name,
+	}
+	impl, err := m.seek(&ref)
 	if err != nil {
 		return nil, err
 	}

@@ -312,16 +312,24 @@ func (r *Reader) seekRecord(rec record) (iterator, error) {
 	return r.seek(rec)
 }
 
-func (r *Reader) SeekRef(ref *RefRecord) (*Iterator, error) {
-	impl, err := r.seekRecord(ref)
+func (r *Reader) SeekRef(name string) (*Iterator, error) {
+	ref := RefRecord{
+		RefName: name,
+	}
+	impl, err := r.seekRecord(&ref)
 	if err != nil {
 		return nil, err
 	}
 	return &Iterator{impl}, nil
 }
 
-func (r *Reader) SeekLog(log *LogRecord) (*Iterator, error) {
-	impl, err := r.seekRecord(log)
+func (r *Reader) SeekLog(name string, updateIndex uint64) (*Iterator, error) {
+	log := LogRecord{
+		RefName:     name,
+		UpdateIndex: updateIndex,
+	}
+
+	impl, err := r.seekRecord(&log)
 	if err != nil {
 		return nil, err
 	}

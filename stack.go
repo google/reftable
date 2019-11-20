@@ -343,7 +343,7 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 	if err != nil {
 		return err
 	}
-	if it, err := merged.SeekRef(&RefRecord{RefName: ""}); err != nil {
+	if it, err := merged.SeekRef(""); err != nil {
 		return err
 	} else {
 		for {
@@ -362,7 +362,7 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 		}
 	}
 
-	if it, err := merged.SeekLog(&LogRecord{RefName: ""}); err != nil {
+	if it, err := merged.SeekLog("", 0xffffffffffffffff); err != nil {
 		return err
 	} else {
 		for {

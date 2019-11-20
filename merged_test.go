@@ -113,7 +113,7 @@ func TestMerged(t *testing.T) {
 			&r3[1],
 		}
 
-		iter, err := merged.SeekRef(&RefRecord{RefName: "a"})
+		iter, err := merged.SeekRef("a")
 		if err != nil {
 			t.Fatalf("Seek: %v", err)
 		}
