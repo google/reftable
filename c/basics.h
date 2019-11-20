@@ -23,7 +23,6 @@
 
 typedef uint8_t byte;
 typedef byte bool;
-typedef int error;
 
 void put_u24(byte *out, uint32_t i);
 uint32_t get_u24(byte *in);
