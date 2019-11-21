@@ -31,12 +31,15 @@ type stackEntry struct {
 	reader *Reader
 }
 
+// CompactionStats holds some statistics of compaction over the
+// lifetime of the stack.
 type CompactionStats struct {
 	Bytes    uint64
 	Attempts int
 	Failures int
 }
 
+// Stack is an auto-compacting stack of reftables.
 type Stack struct {
 	listFile    string
 	reftableDir string
@@ -49,6 +52,7 @@ type Stack struct {
 	Stats CompactionStats
 }
 
+// NewStack returns a new stack.
 func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
 	st := &Stack{
 		listFile:    listFile,
@@ -83,10 +87,13 @@ func (s *Stack) readNames() ([]string, error) {
 	return res, nil
 }
 
+// Returns the merged stack. The stack is only valid until the next
+// write, as writes may trigger reloads
 func (s *Stack) Merged() *Merged {
 	return s.merged
 }
 
+// Close releases file descriptors associated with this stack.
 func (s *Stack) Close() {
 	for _, e := range s.stack {
 		e.reader.Close()
@@ -178,6 +185,8 @@ func (s *Stack) reload() error {
 	return nil
 }
 
+// ErrLockFailure is returned for failed writes. On a failed write,
+// the stack is reloaded, so the transaction may be retried.
 var ErrLockFailure = errors.New("reftable: lock failure")
 
 func (s *Stack) UpToDate() (bool, error) {
@@ -198,8 +207,12 @@ func (s *Stack) UpToDate() (bool, error) {
 	return true, nil
 }
 
+// Add a new reftable to stack, transactionally.
 func (s *Stack) Add(write func(w *Writer) error) error {
 	if err := s.add(write); err != nil {
+		if err == ErrLockFailure {
+			s.reload()
+		}
 		return err
 	}
 
@@ -284,6 +297,7 @@ func formatName(min, max uint64) string {
 	return fmt.Sprintf("%012x-%012x", min, max)
 }
 
+// NextUpdateIndex returns the update index at which to write the next table.
 func (s *Stack) NextUpdateIndex() uint64 {
 	if sz := len(s.stack); sz > 0 {
 		return s.stack[sz-1].reader.MaxUpdateIndex() + 1
@@ -582,7 +596,8 @@ func suggestCompactionSegment(sizes []uint64) *segment {
 	return minSeg
 }
 
-func (s *Stack) autoCompact() error {
+// AutoCompact runs a compaction if the stack looks imbalanced.
+func (s *Stack) AutoCompact() error {
 	sizes := s.tableSizesForCompaction()
 	seg := suggestCompactionSegment(sizes)
 	if seg != nil {
