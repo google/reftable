@@ -9,6 +9,7 @@ cc_library(
         "reader.c",
         "record.c",
         "slice.c",
+	"stack.c",
         "tree.c",
         "writer.c",
     ],
@@ -22,6 +23,7 @@ cc_library(
         "reader.h",
         "record.h",
         "slice.h",
+	"stack.h",
         "tree.h",
         "writer.h",
     ],
@@ -55,6 +57,16 @@ cc_test(
         ":testlib",
     ],
 )
+
+cc_test(
+    name = "stack_test",
+    srcs = ["stack_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+)
+
 
 cc_test(
     name = "tree_test",

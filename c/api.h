@@ -173,5 +173,6 @@ struct merged_table;
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
                           struct ref_record *ref);
+void merged_table_free(struct merged_table *m);
 
 #endif

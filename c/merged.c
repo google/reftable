@@ -170,6 +170,10 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
   return 0;
 }
 
+void merged_table_free(struct merged_table *m) {
+  free(m);
+}
+
 uint64_t merged_max_update_index(struct merged_table *mt) { return mt->max; }
 
 uint64_t merged_min_update_index(struct merged_table *mt) { return mt->min; }
