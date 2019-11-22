@@ -71,10 +71,15 @@ void reader_return_block(struct reader *r, struct block *p) {
   block_source_return_block(r->source, p);
 }
 
-int init_reader(struct reader *r, struct block_source source) {
+const char *reader_name(struct reader *r) {
+  return r->name;
+}
+
+int init_reader(struct reader *r, struct block_source source, const char *name) {
   memset(r, 0, sizeof(struct reader));
   r->size = block_source_size(source) - FOOTER_SIZE;
   r->source = source;
+  r->name = strdup(name);
 
   struct block footer = {};
   struct block header = {};
@@ -493,11 +498,15 @@ int reader_seek_ref(struct reader *r, struct iterator *it, char *name) {
   return reader_seek(r, it, rec);
 }
 
-void reader_close(struct reader *r) { block_source_close(r->source); }
+void reader_close(struct reader *r) {
+  block_source_close(r->source);
+  free(r->name);
+  r->name = NULL;
+}
 
-int new_reader(struct reader **p, struct block_source src) {
+int new_reader(struct reader **p, struct block_source src, char const *name) {
   struct reader *rd = calloc(sizeof(struct reader), 1);
-  int err = init_reader(rd, src);
+  int err = init_reader(rd, src, name);
   if (err == 0) {
     *p = rd;
   } else {

@@ -99,7 +99,7 @@ void test_table_read_write_sequential(void) {
   block_source_from_slice(&source, &buf);
 
   struct reader rd = {};
-  int err = init_reader(&rd, source);
+  int err = init_reader(&rd, source, "file.ref");
   assert(err == 0);
 
   struct iterator it = {};
@@ -136,7 +136,7 @@ void test_table_read_write_seek(bool index) {
   struct block_source source = {};
   block_source_from_slice(&source, &buf);
 
-  int err = init_reader(&rd, source);
+  int err = init_reader(&rd, source, "file.ref");
   assert(err == 0);
 
   if (!index) {
@@ -230,7 +230,7 @@ void test_table_refs_for(bool indexed) {
   struct block_source source = {};
   block_source_from_slice(&source, &buf);
 
-  int err = init_reader(&rd, source);
+  int err = init_reader(&rd, source, "file.ref");
   assert(err == 0);
   if (!indexed) {
     rd.obj_offsets.present = 0;

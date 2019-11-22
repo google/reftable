@@ -142,7 +142,7 @@ struct reader;
 
 /* new_reader opens a reftable for reading. If successful, returns 0 code and
  * sets pp */
-int new_reader(struct reader **pp, struct block_source);
+int new_reader(struct reader **pp, struct block_source, const char *name);
 
 /* reader_seek_ref returns an iterator where 'name' would be inserted in the
    table.
@@ -150,7 +150,7 @@ int new_reader(struct reader **pp, struct block_source);
    example:
 
    struct reader *r = NULL;
-   int err = new_reader(&r, src);
+   int err = new_reader(&r, src, "filename");
    if (err < 0) { ... }
    iterator it = {};
    err = reader_seek_ref(r, &it, "refs/heads/master");

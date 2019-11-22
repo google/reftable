@@ -150,7 +150,7 @@ void test_merged(void) {
     write_test_table(&buf[i], refs[i], sizes[i]);
     block_source_from_slice(&source[i], &buf[i]);
 
-    int err = new_reader(&rd[i], source[i]);
+    int err = new_reader(&rd[i], source[i], "name");
     assert(err == 0);
   }
 
