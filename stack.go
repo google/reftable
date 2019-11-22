@@ -26,11 +26,6 @@ import (
 	"time"
 )
 
-type stackEntry struct {
-	name   string
-	reader *Reader
-}
-
 // CompactionStats holds some statistics of compaction over the
 // lifetime of the stack.
 type CompactionStats struct {
@@ -46,7 +41,7 @@ type Stack struct {
 	cfg         Config
 
 	// mutable
-	stack  []stackEntry
+	stack  []*Reader
 	merged *Merged
 
 	Stats CompactionStats
@@ -95,22 +90,22 @@ func (s *Stack) Merged() *Merged {
 
 // Close releases file descriptors associated with this stack.
 func (s *Stack) Close() {
-	for _, e := range s.stack {
-		e.reader.Close()
+	for _, r := range s.stack {
+		r.Close()
 	}
 	s.stack = nil
 }
 
 func (s *Stack) reloadOnce(names []string) error {
 	cur := map[string]*Reader{}
-	for _, e := range s.stack {
-		cur[e.name] = e.reader
+	for _, r := range s.stack {
+		cur[r.Name()] = r
 	}
 
-	var newTables []stackEntry
+	var newTables []*Reader
 	defer func() {
 		for _, t := range newTables {
-			t.reader.Close()
+			t.Close()
 		}
 	}()
 
@@ -124,15 +119,12 @@ func (s *Stack) reloadOnce(names []string) error {
 				return err
 			}
 
-			rd, err = NewReader(bs)
+			rd, err = NewReader(bs, name)
 			if err != nil {
 				return err
 			}
 		}
-		newTables = append(newTables, stackEntry{
-			name:   name,
-			reader: rd,
-		})
+		newTables = append(newTables, rd)
 	}
 
 	// success. Swap.
@@ -173,8 +165,8 @@ func (s *Stack) reload() error {
 	}
 
 	var tabs []*Reader
-	for _, e := range s.stack {
-		tabs = append(tabs, e.reader)
+	for _, r := range s.stack {
+		tabs = append(tabs, r)
 	}
 
 	m, err := NewMerged(tabs)
@@ -300,14 +292,14 @@ func formatName(min, max uint64) string {
 // NextUpdateIndex returns the update index at which to write the next table.
 func (s *Stack) NextUpdateIndex() uint64 {
 	if sz := len(s.stack); sz > 0 {
-		return s.stack[sz-1].reader.MaxUpdateIndex() + 1
+		return s.stack[sz-1].MaxUpdateIndex() + 1
 	}
 	return 1
 }
 
 func (s *Stack) compactLocked(first, last int) (string, error) {
-	fn := formatName(s.stack[first].reader.MinUpdateIndex(),
-		s.stack[last].reader.MaxUpdateIndex())
+	fn := formatName(s.stack[first].MinUpdateIndex(),
+		s.stack[last].MaxUpdateIndex())
 
 	tmpTable, err := ioutil.TempFile(s.reftableDir, fn+"_*.ref")
 	if err != nil {
@@ -344,13 +336,13 @@ func (s *Stack) compactLocked(first, last int) (string, error) {
 
 func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 	// do it.
-	wr.SetLimits(s.stack[first].reader.MinUpdateIndex(),
-		s.stack[last].reader.MaxUpdateIndex())
+	wr.SetLimits(s.stack[first].MinUpdateIndex(),
+		s.stack[last].MaxUpdateIndex())
 
 	// XXX stick name into reader.
 	var subtabs []*Reader
 	for i := first; i <= last; i++ {
-		subtabs = append(subtabs, s.stack[i].reader)
+		subtabs = append(subtabs, s.stack[i])
 	}
 
 	merged, err := NewMerged(subtabs)
@@ -467,8 +459,8 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 	defer lockFile.Close()
 
 	fn := formatName(
-		s.stack[first].reader.MinUpdateIndex(),
-		s.stack[(last)].reader.MaxUpdateIndex())
+		s.stack[first].MinUpdateIndex(),
+		s.stack[(last)].MaxUpdateIndex())
 
 	fn += ".ref"
 	destTable := filepath.Join(s.reftableDir, fn)
@@ -513,7 +505,7 @@ func (s *Stack) tableSizesForCompaction() []uint64 {
 	var res []uint64
 	for _, t := range s.stack {
 		// overhead is 92 bytes
-		res = append(res, t.reader.size-91)
+		res = append(res, t.size-91)
 	}
 	return res
 }

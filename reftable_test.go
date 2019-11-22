@@ -111,7 +111,7 @@ func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, cfg Co
 	}
 
 	src := &ByteBlockSource{buf.Bytes()}
-	r, err := NewReader(src)
+	r, err := NewReader(src, "buffer")
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}

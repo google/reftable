@@ -57,6 +57,7 @@ type Reader struct {
 
 	objectIDLen int
 
+	name string
 	src  BlockSource
 	size uint64
 
@@ -65,6 +66,10 @@ type Reader struct {
 
 func (r *Reader) Close() {
 	r.src.Close()
+}
+
+func (r *Reader) Name() string {
+	return r.name
 }
 
 func (r *Reader) getBlock(off uint64, sz uint32) ([]byte, error) {
@@ -80,10 +85,11 @@ func (r *Reader) getBlock(off uint64, sz uint32) ([]byte, error) {
 }
 
 // NewReader creates a reader for a reftable file.
-func NewReader(src BlockSource) (*Reader, error) {
+func NewReader(src BlockSource, name string) (*Reader, error) {
 	r := &Reader{
 		size: src.Size() - footerSize,
 		src:  src,
+		name: name,
 	}
 	footblock, err := src.ReadBlock(r.size, footerSize)
 	if err != nil {
