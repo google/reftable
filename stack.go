@@ -216,7 +216,7 @@ func (s *Stack) Add(write func(w *Writer) error) error {
 		return err
 	}
 
-	return s.autoCompact()
+	return s.AutoCompact()
 }
 
 func (s *Stack) add(write func(w *Writer) error) error {
