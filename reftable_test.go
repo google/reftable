@@ -20,22 +20,29 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestTableObjectIDLen(t *testing.T) {
-	h1 := bytes.Repeat([]byte{'~'}, 20)
-	h2 := bytes.Repeat([]byte{'~'}, 20)
-
-	h1[4] = 11
-
 	suffix := strings.Repeat("x", 450)
-	_, reader := constructTestTable(t, []RefRecord{{
-		RefName: "a" + suffix,
-		Value:   h1,
-	}, {
-		RefName: "b" + suffix,
-		Value:   h2,
-	}}, nil, Config{
+
+	var refs []RefRecord
+
+	obj2ref := map[string]string{}
+	for i := 0; i < 8; i++ {
+		h := bytes.Repeat([]byte{'~'}, 20)
+		h[4] = byte(i)
+
+		refName := string('a'+i) + suffix
+		refs = append(refs, RefRecord{
+			RefName: refName,
+			Value:   h,
+		})
+
+		obj2ref[string(h)] = refName
+	}
+
+	_, reader := constructTestTable(t, refs, nil, Config{
 		BlockSize: 512,
 	})
 	if g := reader.objectIDLen; g != 5 {
@@ -47,21 +54,27 @@ func TestTableObjectIDLen(t *testing.T) {
 		t.Fatalf("start(o): %v", err)
 	}
 
-	objResults, err := readIter(blockTypeObj, iter)
-	if err != nil {
-		t.Fatalf("readIter(o): %v", err)
+	obj := objRecord{}
+	ok, err := iter.Next(&obj)
+	// Check that the index is there.
+	if !ok || err != nil {
+		t.Fatalf("objRecord.Next: %v %v", ok, err)
 	}
-	objs := []record{
-		&objRecord{
-			HashPrefix: h1[:5],
-			Offsets:    []uint64{0},
-		},
-		&objRecord{
-			HashPrefix: h2[:5],
-			Offsets:    []uint64{512},
-		}}
-	if !reflect.DeepEqual(objs, objResults) {
-		t.Fatalf("got %v, want %v", objResults, objs)
+
+	for h, r := range obj2ref {
+		iter, err := reader.RefsFor([]byte(h))
+		if err != nil {
+			t.Fatalf("RefsFor %q: %v", h, err)
+		}
+		var ref RefRecord
+		ok, err := iter.NextRef(&ref)
+		if !ok || err != nil {
+			t.Fatalf("Next: %v %v", ok, err)
+		}
+
+		if ref.RefName != r {
+			t.Fatalf("got ref %q, want %q", ref.RefName, r)
+		}
 	}
 }
 
@@ -225,22 +238,25 @@ func TestTableLastBlockLacksPadding(t *testing.T) {
 	}
 }
 
-func TestTableFirstBlock(t *testing.T) {
+func TestSmallTableLacksPadding(t *testing.T) {
+	// A small table doesn't have obj-index, so it doesnt have any padding.
 	_, reader := constructTestTable(t, []RefRecord{{
 		RefName: "hello",
 		Value:   testHash(1),
-	}}, []LogRecord{
-		{
-			RefName: "hello",
-			New:     testHash(1),
-			Old:     testHash(2),
-		},
-	},
+	}}, []LogRecord{{
+		RefName: "hello",
+		Old:     testHash(0),
+		New:     testHash(1),
+		Name:    "John Doe",
+		Email:   "j.doe@aol.com",
+		Time:    uint64(time.Date(2018, 10, 10, 14, 9, 53, 0, time.UTC).Unix()),
+	}},
 		Config{
-			BlockSize: 256,
+			BlockSize: 1024,
 		})
-	if got := reader.offsets[blockTypeObj].Offset; got != 256 {
-		t.Fatalf("got %d, want %d", got, 256)
+
+	if reader.size >= 500 {
+		t.Fatalf("got size %d, want < 500", reader.size)
 	}
 }
 

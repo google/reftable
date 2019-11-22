@@ -325,7 +325,7 @@ func (w *Writer) finishPublicSection() error {
 		return err
 	}
 
-	if typ == blockTypeRef && !w.cfg.SkipIndexObjects {
+	if typ == blockTypeRef && !w.cfg.SkipIndexObjects && w.Stats.RefStats.IndexBlocks > 0 {
 		if err := w.dumpObjectIndex(); err != nil {
 			return err
 		}
