@@ -222,7 +222,11 @@ func (s *Stack) add(write func(w *Writer) error) error {
 	}
 
 	defer f.Close()
-	defer os.Remove(lockFile)
+	defer func() {
+		if lockFile != "" {
+			os.Remove(lockFile)
+		}
+	}()
 
 	if ok, err := s.UpToDate(); err != nil {
 		return err
@@ -280,9 +284,9 @@ func (s *Stack) add(write func(w *Writer) error) error {
 		os.Remove(dest)
 		return err
 	}
+	lockFile = ""
 
-	s.reload()
-	return nil
+	return s.reload()
 }
 
 func formatName(min, max uint64) string {
@@ -297,6 +301,8 @@ func (s *Stack) NextUpdateIndex() uint64 {
 	return 1
 }
 
+// compactLocked writes the compacted version of tables [first,last]
+// into a temporary file, whose name is returned.
 func (s *Stack) compactLocked(first, last int) (string, error) {
 	fn := formatName(s.stack[first].MinUpdateIndex(),
 		s.stack[last].MaxUpdateIndex())
