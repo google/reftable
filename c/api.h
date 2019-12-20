@@ -53,10 +53,6 @@ struct write_options {
   uint32_t block_size;
   bool skip_index_objects;
   int restart_interval;
-
-  // TODO - move this to the writer API
-  uint32_t min_update_index;
-  uint32_t max_update_index;
 };
 
 /* ref_record holds a ref database entry target_value */
@@ -132,6 +128,9 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
 int fd_writer(void* fdp, byte*data, int size);
+
+/* Set the range of update indices for the records we will add. */   
+void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
 
 /* writer_add_ref adds a ref_record. Must be called in ascending order. */
 int writer_add_ref(struct writer *w, struct ref_record *ref);

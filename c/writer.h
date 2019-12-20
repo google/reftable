@@ -29,6 +29,7 @@ struct writer {
   struct slice last_key;
 
   uint64_t next;
+  uint64_t min_update_index, max_update_index;
   struct write_options opts;
 
   byte *block;

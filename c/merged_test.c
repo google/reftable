@@ -83,11 +83,10 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
 
   struct write_options opts = {
       .block_size = 256,
-      .max_update_index = max,
-      .min_update_index = min,
   };
 
   struct writer *w = new_writer(&slice_write_void, buf, &opts);
+  writer_set_limits(w, min, max);
 
   for (int i = 0; i < n; i++) {
     uint64_t before = refs[i].update_index;

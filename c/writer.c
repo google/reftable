@@ -72,8 +72,8 @@ int writer_write_header(struct writer *w, byte *dest) {
   strcpy((char *)dest, "REFT");
   dest[4] = 1;  // version
   put_u24(dest + 5, w->opts.block_size);
-  put_u64(dest + 8, w->opts.min_update_index);
-  put_u64(dest + 16, w->opts.max_update_index);
+  put_u64(dest + 8, w->min_update_index);
+  put_u64(dest + 16, w->max_update_index);
   return 24;
 }
 
@@ -103,6 +103,11 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
   writer_reinit_block_writer(wp, BLOCK_TYPE_REF);
 
   return wp;
+}
+
+void writer_set_limits(struct writer *w, uint64_t min, uint64_t max) {
+  w->min_update_index = min;
+  w->max_update_index = max;
 }
 
 void writer_free(struct writer *w) {
@@ -199,15 +204,15 @@ exit:
 }
 
 int writer_add_ref(struct writer *w, struct ref_record *ref) {
-  if (ref->update_index < w->opts.min_update_index ||
-      ref->update_index > w->opts.max_update_index) {
+  if (ref->update_index < w->min_update_index ||
+      ref->update_index > w->max_update_index) {
     return -1;
   }
 
   struct record rec = {};
   struct ref_record copy = *ref;
   record_from_ref(&rec, &copy);
-  copy.update_index -= w->opts.min_update_index;
+  copy.update_index -= w->min_update_index;
   int err = writer_add_record(w, rec);
   if (err < 0) {
     return err;
