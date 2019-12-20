@@ -17,21 +17,7 @@
 #include "iter.h"
 #include "pq.h"
 #include "reader.h"
-
-struct merged_table {
-  struct reader **stack;
-  int stack_len;
-
-  uint64_t min;
-  uint64_t max;
-};
-
-struct merged_iter {
-  struct iterator *stack;
-  int stack_len;
-  byte typ;
-  struct merged_iter_pqueue pq;
-} merged_iter;
+#include "merged.h"
 
 int merged_iter_init(struct merged_iter *mi) {
   for (int i = 0; i < mi->stack_len; i++) {
@@ -171,6 +157,8 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
 }
 
 void merged_table_free(struct merged_table *m) {
+  free(m->stack);
+  m->stack = NULL;
   free(m);
 }
 
