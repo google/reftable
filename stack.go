@@ -345,7 +345,6 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 	wr.SetLimits(s.stack[first].MinUpdateIndex(),
 		s.stack[last].MaxUpdateIndex())
 
-	// XXX stick name into reader.
 	var subtabs []*Reader
 	for i := first; i <= last; i++ {
 		subtabs = append(subtabs, s.stack[i])
@@ -367,7 +366,11 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 			if !ok {
 				break
 			}
-			// XXX tombstone
+
+			if first == 0 && rec.isDeletion() {
+				continue
+			}
+
 			if err := wr.AddRef(&rec); err != nil {
 				return err
 			}
@@ -386,7 +389,7 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 			if !ok {
 				break
 			}
-			// XXX tombstone
+
 			if err := wr.AddLog(&rec); err != nil {
 				return err
 			}
@@ -603,4 +606,10 @@ func (s *Stack) AutoCompact() error {
 		return err
 	}
 	return nil
+}
+
+// CompactAll compacts the entire stack.
+func (s *Stack) CompactAll() error {
+	_, err := s.compactRange(0, len(s.stack)-1)
+	return err
 }

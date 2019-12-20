@@ -129,6 +129,11 @@ func (r *RefRecord) key() string {
 func (r *RefRecord) copyFrom(in record) {
 	*r = *in.(*RefRecord)
 }
+
+func (r *RefRecord) isDeletion() bool {
+	return r.Value == nil && r.TargetValue == nil && r.Target == ""
+}
+
 func (r *RefRecord) String() string {
 	return fmt.Sprintf("ref(%s)", r.RefName)
 }

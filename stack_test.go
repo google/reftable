@@ -92,3 +92,62 @@ func testStackN(t *testing.T, N int) {
 		t.Fatalf("got %d compactions, want max %d", st.Stats.Attempts, limit)
 	}
 }
+
+func TestTombstones(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		Unaligned: true,
+	}
+
+	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	N := 30
+	refmap := map[string][]byte{}
+	for i := 0; i < N; i++ {
+		if err := st.Add(func(w *Writer) error {
+			r := RefRecord{
+				RefName:     "branch",
+				UpdateIndex: uint64(i) + 1,
+			}
+			if i%2 == 0 {
+				r.Value = testHash(i)
+			}
+
+			w.SetLimits(uint64(i)+1, uint64(i)+1)
+			refmap[r.RefName] = r.Value
+			if err := w.AddRef(&r); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("write %d: %v", i, err)
+		}
+	}
+	if err := st.CompactAll(); err != nil {
+		t.Fatal(err)
+	}
+	m := st.Merged()
+	it, err := m.SeekRef("branch")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var r RefRecord
+	ok, err := it.NextRef(&r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Errorf("got %v, but value should not be there", r)
+	}
+}
