@@ -45,6 +45,19 @@ void slice_resize(struct slice *s, int l) {
   s->len = l;
 }
 
+void slice_append_string(struct slice *d, const char *s) {
+  int l1 = d->len;
+  int l2 = strlen(s);
+  
+  slice_resize(d, l2 + l1);
+  memcpy(d->buf + l1, s, l2); 
+}
+
+void slice_append(struct slice *s, struct slice a) {
+  slice_resize(s, s->len + a.len);
+  memcpy(s->buf, a.buf, a.len);
+}
+
 byte *slice_yield(struct slice *s) {
   byte *p = s->buf;
   s->buf = NULL;
@@ -58,6 +71,19 @@ void slice_copy(struct slice *dest, struct slice src) {
   memcpy(dest->buf, src.buf, src.len);
 }
 
+/* return the underlying data as char*. len is left unchanged, but
+   a \0 is added at the end. */
+const char *slice_as_string(struct slice* s) {
+  if (s->cap == s->len) {
+    int l = s->len;
+    slice_resize(s, l+1);
+    s->len = l;
+  }
+  s->buf[s->len] = 0;
+  return (const char*) s->buf;
+}
+
+/* return a newly malloced string for this slice */
 char *slice_to_string(struct slice in) {
   struct slice s = {};
   slice_resize(&s, in.len + 1);
@@ -125,7 +151,6 @@ int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   dest->data = calloc(size, 1);
   memcpy(dest->data, b->buf + off, size);
   dest->len = size;
-  block_source_from_slice(&dest->source, b);
   return size;
 }
 
