@@ -3,6 +3,7 @@ cc_library(
     srcs = [
         "basics.c",
         "block.c",
+        "file.c",
         "iter.c",
 	"merged.c",
 	"pq.c",
@@ -19,6 +20,7 @@ cc_library(
         "block.h",
         "constants.h",
         "iter.h",
+        "merged.h",
 	"pq.h",
         "reader.h",
         "record.h",

@@ -45,15 +45,18 @@ int block_source_read_block(struct block_source source, struct block *dest,
                             uint64_t off, uint32_t size);
 void block_source_return_block(struct block_source source, struct block *ret);
 void block_source_close(struct block_source source);
+int block_source_from_file(struct block_source *block_src, const char *name);
 
 /* write_options sets optiosn for writing a single reftable. */
 struct write_options {
   bool unpadded;
   uint32_t block_size;
-  uint32_t min_update_index;
-  uint32_t max_update_index;
   bool skip_index_objects;
   int restart_interval;
+
+  // TODO - move this to the writer API
+  uint32_t min_update_index;
+  uint32_t max_update_index;
 };
 
 /* ref_record holds a ref database entry target_value */
@@ -120,10 +123,15 @@ struct stats {
 // different types of errors
 #define IO_ERROR -2
 #define FORMAT_ERROR -3
+#define ERR_NOT_EXIST -4
+#define LOCK_FAILURE -5
 
 /* new_writer creates a new writer */
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
                           void *writer_arg, struct write_options *opts);
+
+/* write to a file descriptor. fdp should be an int* pointing to the fd. */
+int fd_writer(void* fdp, byte*data, int size);
 
 /* writer_add_ref adds a ref_record. Must be called in ascending order. */
 int writer_add_ref(struct writer *w, struct ref_record *ref);
