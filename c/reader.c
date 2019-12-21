@@ -224,6 +224,7 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
   }
 
   if (want_typ != BLOCK_TYPE_ANY && block_typ != want_typ) {
+    reader_return_block(r, &block);
     return 1;
   }
 
