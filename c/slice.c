@@ -54,8 +54,9 @@ void slice_append_string(struct slice *d, const char *s) {
 }
 
 void slice_append(struct slice *s, struct slice a) {
+  int end = s->len;
   slice_resize(s, s->len + a.len);
-  memcpy(s->buf, a.buf, a.len);
+  memcpy(s->buf + end, a.buf, a.len);
 }
 
 byte *slice_yield(struct slice *s) {

@@ -61,6 +61,15 @@ cc_test(
 )
 
 cc_test(
+    name = "slice_test",
+    srcs = ["slice_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+)
+
+cc_test(
     name = "stack_test",
     srcs = ["stack_test.c"],
     deps = [
@@ -96,3 +105,6 @@ cc_test(
         ":testlib",
     ],
 )
+
+
+
