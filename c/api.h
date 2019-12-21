@@ -121,6 +121,7 @@ struct stats {
 #define FORMAT_ERROR -3
 #define ERR_NOT_EXIST -4
 #define LOCK_FAILURE -5
+#define API_ERROR -6
 
 /* new_writer creates a new writer */
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
@@ -178,8 +179,18 @@ uint64_t reader_min_update_index(struct reader *r);
 
 struct merged_table;
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
+
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
-                          struct ref_record *ref);
+                          char *name);
 void merged_table_free(struct merged_table *m);
+
+struct stack;
+int new_stack(struct stack **dest, const char *dir,
+	      const char *list_file,
+	      struct write_options cfg);
+uint64_t stack_next_update_index(struct stack* st);
+int stack_add(struct stack* st, int (*write)(struct writer *wr, void*arg), void *arg); 
+struct merged_table *stack_merged(struct stack* st);
+void stack_destroy(struct stack *st);
 
 #endif

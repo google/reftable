@@ -27,15 +27,6 @@
 #include "merged.h"
 #include "reader.h"
 
-void stack_free(struct stack *st) {
-  free(st->list_file);
-  free(st->reftable_dir);
-  merged_table_free(st->merged);
-  st->merged = NULL;
-  st->list_file = NULL;
-  st->reftable_dir = NULL;
-}
-
 int new_stack(struct stack **dest, const char *dir,
 	      const char *list_file,
 	      struct write_options cfg) {
@@ -46,7 +37,7 @@ int new_stack(struct stack **dest, const char *dir,
   p->cfg = cfg;
   int err = stack_reload(p);
   if (err < 0) {
-    stack_free(p);
+    stack_destroy(p);
   } else {
     *dest = p;
   }
@@ -54,19 +45,20 @@ int new_stack(struct stack **dest, const char *dir,
 }
 
 
+
 int read_lines(const char *filename, char ***namesp) {
   FILE *f = fopen(filename, "r");
   if (f == NULL) {
     int e = errno;
-    if (e == EINVAL) {
+    if (e == ENOENT) {
       *namesp = calloc(sizeof(char *), 1);
       return 0;
     }
 
     return IO_ERROR;
   }
-  char *buf = NULL;
   
+  char *buf = NULL;
   int err = fseek(f, 0, SEEK_END);
   if (err < 0) {
     err = IO_ERROR;
@@ -86,44 +78,12 @@ int read_lines(const char *filename, char ***namesp) {
   buf = malloc(size+1);
   size_t n = fread(buf, 1, size, f);
   if (n != size) {
-    printf("HERE %ld %ld\n",n,size);
     return IO_ERROR;
   }
   buf[size] = 0;
-
-  char **names = NULL;
-  int names_cap = 0;
-  int names_len = 0;
   
-  char *p = buf;
-  char *end = buf + size;
-  while (p < end) {
-    char *next = strchr(p, '\n');
-    if (next != NULL) {
-      *next = 0;
-    } else {
-      next = end;
-    }
-    if (p > next) {
-      
-      if (names_len == names_cap) {
-	names_cap = 2*names_cap + 1;
-	*names = realloc(*names, names_cap * sizeof(char*));
-      }
+  parse_names(buf, size, namesp);
 
-      names[names_len++] = strdup(p);
-    }
-    p = next + 1;
-  }
-
-  if (names_len == names_cap) {
-    names_cap = 2*names_cap + 1;
-    names = realloc(names, names_cap * sizeof(char*));
-  }
-
-  names[names_len] = NULL;
-  *namesp = names;
-  
  exit:
   free(buf);
   fclose(f);
@@ -134,7 +94,8 @@ struct merged_table *stack_merged_table(struct stack *st) {
   return st->merged;
 }
 
-void stack_close(struct stack *st) {
+/* Close and free the stack */
+void stack_destroy(struct stack *st) {
   if (st->merged == NULL) {
     return;
   }
@@ -150,12 +111,13 @@ void stack_close(struct stack *st) {
   st->list_file = NULL;
   free(st->reftable_dir);
   st->reftable_dir = NULL;
+  free(st);
 }
 
 int stack_reload_once(struct stack* st, char **names) {
-  struct reader **cur = calloc(sizeof(struct reader*), st->merged->stack_len);
-  int cur_len = st->merged->stack_len;
-  for (int i =0; i < cur_len; i++) {
+  int cur_len = st->merged == NULL ? 0 : st->merged->stack_len;
+  struct reader **cur = calloc(sizeof(struct reader*), cur_len);
+  for (int i = 0; i < cur_len; i++) {
     cur[i] = st->merged->stack[i];
   }
 
@@ -167,6 +129,8 @@ int stack_reload_once(struct stack* st, char **names) {
 
   struct reader **new_tables = malloc(sizeof(struct reader*)*names_len);
   int new_tables_len = 0;
+
+  struct slice table_path = {};
 
   while (*names) {
     char *name = *names;
@@ -182,13 +146,16 @@ int stack_reload_once(struct stack* st, char **names) {
     }
 
     if (rd == NULL) {
+      slice_set_string(&table_path, st->reftable_dir);
+      slice_append_string(&table_path, "/");
+      slice_append_string(&table_path, name);
+
       struct block_source src = {};
-      err = block_source_from_file(&src, name);
+      err = block_source_from_file(&src, slice_as_string(&table_path));
       if (err < 0) {
 	goto exit;
       }
 
-      
       err = new_reader(&rd, src, name);
       if (err < 0) {
 	goto exit;
@@ -204,11 +171,14 @@ int stack_reload_once(struct stack* st, char **names) {
   if (err < 0) {
     goto exit;
   }
-  
+
+  new_tables = NULL;
+  new_tables_len = 0;
   merged_table_free(st->merged);
   st->merged = new_merged;
   
  exit:
+  free(slice_yield(&table_path));
   for (int i = 0; i < new_tables_len; i++) {
     reader_close(new_tables[i]);
   }
@@ -217,11 +187,13 @@ int stack_reload_once(struct stack* st, char **names) {
   return err;
 }
 
+// XXX const?
 struct merged_table *stack_merged(struct stack* st) {
   return st->merged;
 }
 
-int tv_cmp(struct timeval *a,struct timeval *b) {
+// return negative if a before b.
+int tv_cmp(struct timeval *a, struct timeval *b) {
   time_t diff =  a->tv_sec - b->tv_sec;
   if (diff != 0) {
       return diff;
@@ -231,30 +203,10 @@ int tv_cmp(struct timeval *a,struct timeval *b) {
   return udiff;
 }
 
-void free_names(char **a) {
-  char **p = a;
-  while (*p) {
-    free(*p);
-    p++;
-  }
-  free(a);
-}
 
-int names_equal(char **a, char **b) {
-  while (*a && *b) {
-    if (0 == strcmp(*a, *b)) {
-      return 1;
-    }
-
-    a++;
-    b++;
-  }
-
-  return *a == *b;
-}
 
 int stack_reload(struct stack* st) {
-  struct timeval deadline;
+  struct timeval deadline = {};
   int err = gettimeofday(&deadline, NULL);
   if (err < 0) {
     return err;
@@ -262,14 +214,18 @@ int stack_reload(struct stack* st) {
 
   deadline.tv_sec += 3;
   int delay = 0;
+  int tries = 0; 
   while (true) {
-    struct timeval tv = {};
-    int err = gettimeofday(&tv, NULL);
+    struct timeval now = {};
+    int err = gettimeofday(&now, NULL);
     if (err < 0) {
       return err;
     }
 
-    if (tv_cmp(&tv, &deadline) >= 0) {
+    // Only look at deadlines after the first few times. This
+    // simplifies debugging in GDB
+    tries ++;
+    if (tries > 3 && tv_cmp(&now, &deadline) >= 0) {
       break;
     }
     
@@ -279,7 +235,6 @@ int stack_reload(struct stack* st) {
       free_names(names);
       return err;
     }
-
     err = stack_reload_once(st, names);
     if (err == 0) {
       free_names(names);
@@ -364,12 +319,17 @@ void format_name(struct slice *dest, uint64_t min, uint64_t max) {
 
 int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*arg), void *arg) {
   struct slice lock_name = {};
-  slice_set_string(&lock_name, st->list_file);
+  struct slice temp_tab_name = {};
+  struct slice tab_name = {};
+  struct slice next_name = {};
   struct slice lock_suffix = {};
+  struct writer *wr = NULL;
+  
+  slice_set_string(&lock_name, st->list_file);
   slice_set_string(&lock_suffix, ".lock");
   slice_append(&lock_name, lock_suffix);
-  struct slice temp_tab_name = {};
 
+  int tab_fd = 0;
   int err = 0;
   int fd = 0;
   fd = open(slice_as_string(&lock_name), O_EXCL|O_CREAT|O_WRONLY, 0644);
@@ -404,21 +364,21 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   
   uint64_t next = stack_next_update_index(st);
    
-  struct slice next_name = {};
   format_name(&next_name, next, next);
 
   slice_set_string(&temp_tab_name, st->reftable_dir);
   slice_append_string(&temp_tab_name, "/");
   slice_append(&temp_tab_name, next_name);
   slice_append_string(&temp_tab_name, "XXXXXX");
-     
-  int tab_fd = mkstemp((char*)slice_as_string(&temp_tab_name));
+
+  tab_fd = mkstemp((char*)slice_as_string(&temp_tab_name));
   if (tab_fd < 0 ) {
     err = IO_ERROR;
     goto exit;
   }
 
-  struct writer *wr = new_writer( fd_writer, &tab_fd, &st->cfg);
+
+  wr = new_writer( fd_writer, &tab_fd, &st->cfg);
   err = write_table(wr, arg);
   if (err < 0) {
     goto exit;
@@ -430,6 +390,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   }
 
   err = close(tab_fd);
+  tab_fd = 0;
   if (err < 0) {
     err = IO_ERROR;
     goto exit;
@@ -438,7 +399,6 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   // TODO check min_update_index
   slice_append_string(&next_name, ".ref");
 
-  struct slice tab_name;
   slice_set_string(&tab_name, st->reftable_dir);
   slice_append_string(&tab_name, "/");
   slice_append(&tab_name, next_name);
@@ -463,12 +423,13 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   }
 
   err = close(fd);
+  fd = 0;
   if (err < 0) {
     unlink(slice_as_string(&tab_name));
     err = IO_ERROR;
     goto exit;
   }
-
+  
   err = rename(slice_as_string(&lock_name), st->list_file);
   if (err < 0) {
     unlink(slice_as_string(&tab_name));
@@ -492,9 +453,12 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     fd = 0;
   }
 
+  free(slice_yield(&lock_suffix));
+  free(slice_yield(&lock_name));
   free(slice_yield(&temp_tab_name));
   free(slice_yield(&tab_name));
   free(slice_yield(&next_name));
+  writer_free(wr);
   return err;
 }
 

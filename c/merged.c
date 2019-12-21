@@ -157,6 +157,10 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
 }
 
 void merged_table_free(struct merged_table *m) {
+  if (m == NULL) {
+    return;
+  }
+  // XXX delete readers? close readers?
   free(m->stack);
   m->stack = NULL;
   free(m);
@@ -195,8 +199,11 @@ int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
 }
 
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
-                          struct ref_record *ref) {
+                          char *name) {
+  struct ref_record ref = {
+			   .ref_name = name,
+  };
   struct record rec = {};
-  record_from_ref(&rec, ref);
+  record_from_ref(&rec, &ref);
   return merged_table_seek_record(mt, it, rec);
 }

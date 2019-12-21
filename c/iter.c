@@ -42,6 +42,9 @@ int iterator_next(struct iterator it, struct record rec) {
 }
 
 void iterator_destroy(struct iterator *it) {
+  if (it->ops == NULL) {
+    return;
+  }
   it->ops->close(it->iter_arg);
   it->ops = NULL;
   free(it->iter_arg);

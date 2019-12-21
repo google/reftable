@@ -23,8 +23,8 @@
 #include "test_framework.h"
 
 void test_pq(void) {
-  char *names[53];
-  int N = 53;
+  char *names[54] = {};
+  int N = ARRAYSIZE(names)-1;
 
   for (int i = 0; i < N; i++) {
     char name[100];
@@ -142,7 +142,7 @@ void test_merged(void) {
   int sizes[3] = {3, 1, 2};
   struct slice buf[3] = {};
   struct block_source source[3] = {};
-  struct reader *rd[3] = {};
+  struct reader **rd = calloc(sizeof(struct reader*), 3);
   for (int i = 0; i < 3; i++) {
     write_test_table(&buf[i], refs[i], sizes[i]);
     block_source_from_slice(&source[i], &buf[i]);
@@ -156,10 +156,7 @@ void test_merged(void) {
   assert(err == 0);
 
   struct iterator it = {};
-  struct ref_record start = {
-      .ref_name = "a",
-  };
-  err = merged_table_seek_ref(mt, &it, &start);
+  err = merged_table_seek_ref(mt, &it, "a");
   assert(err == 0);
 
   struct ref_record *out = NULL;
@@ -188,6 +185,15 @@ void test_merged(void) {
   for (int i = 0; i < len; i++) {
     assert(ref_record_equal(&want[i], &out[i]));
   }
+  for (int i = 0; i < len; i++) {
+    ref_record_clear(&out[i]);
+  }
+  free(out);
+  
+  for (int i = 0 ; i < ARRAYSIZE(buf); i++) {
+    free(slice_yield(&buf[i]));
+  }
+  merged_table_free(mt);
 }
 
 int main() {

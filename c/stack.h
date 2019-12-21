@@ -33,14 +33,9 @@ struct stack {
   struct compaction_stats stats;
 };
 
-int new_stack(struct stack **dest, const char *dir,
-	      const char *list_file,
-	      struct write_options cfg);
 int read_lines(const char* filename, char ***lines);
 int stack_reload(struct stack *st);
-void stack_free(struct stack *st);
 int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*arg), void *arg);
-uint64_t stack_next_update_index(struct stack* st);
 int stack_write_compact(struct writer *wr, int first, int last);
 
 #endif
