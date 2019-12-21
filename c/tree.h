@@ -25,5 +25,6 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
                               int insert);
 void infix_walk(struct tree_node *t, void (*action)(void *arg, void *key),
                 void *arg);
+void tree_free(struct tree_node *t);
 
 #endif

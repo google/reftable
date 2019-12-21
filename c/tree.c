@@ -50,3 +50,16 @@ void infix_walk(struct tree_node *t, void (*action)(void *arg, void *key),
     infix_walk(t->right, action, arg);
   }
 }
+
+void tree_free(struct tree_node *t) {
+  if (t == NULL) {
+    return;
+  }
+  if (t->left != NULL) {
+    tree_free(t->left);
+  }
+  if (t->right != NULL) {
+    tree_free(t->right);
+  }
+  free(t);
+}

@@ -51,6 +51,7 @@ void test_tree() {
 
   struct curry c = {};
   infix_walk(root, check_increasing, &c);
+  tree_free(root);
 }
 
 int main() {
