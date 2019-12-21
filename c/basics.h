@@ -37,4 +37,8 @@ void put_u16(byte *out, uint16_t i);
 uint16_t get_u16(byte *in);
 int binsearch(int sz, int (*f)(int k, void *args), void *args);
 
+void free_names(char **a);
+void parse_names(char *buf, int size, char ***namesp);
+int names_equal(char **a, char **b);
+
 #endif

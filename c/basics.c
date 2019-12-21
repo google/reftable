@@ -14,6 +14,10 @@
 
 #include "basics.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 void put_u24(byte *out, uint32_t i) {
   out[0] = (byte)((i >> 16) & 0xff);
   out[1] = (byte)((i >> 8) & 0xff);
@@ -91,4 +95,77 @@ int binsearch(int sz, int (*f)(int k, void *args), void *args) {
   }
 
   return hi;
+}
+
+void free_names(char **a) {
+  if (a == NULL) {
+    return;
+  }
+  char **p = a;
+  while (*p) {
+    free(*p);
+    p++;
+  }
+  free(a);
+}
+
+void print_names(char **a) {
+  if (a == NULL || *a == NULL) {
+    puts("[]");
+    return;
+  }
+  puts("[");
+  char **p = a;
+  while (*p) {
+    puts(*p);
+    p++;
+  }
+  puts("]");
+}
+
+int names_equal(char **a, char **b) {
+  while (*a && *b) {
+    if (0 != strcmp(*a, *b)) {
+      return 0;
+    }
+
+    a++;
+    b++;
+  }
+
+  return *a == *b;
+}
+
+/* parse a newline separated list of names. Empty names are discarded. */
+void parse_names(char *buf, int size, char ***namesp) {
+  char **names = NULL;
+  int names_cap = 0;
+  int names_len = 0;
+	    
+  char *p = buf;
+  char *end = buf + size;
+  while (p < end) {
+    char *next = strchr(p, '\n');
+    if (next != NULL) {
+      *next = 0;
+    } else {
+      next = end;
+    }
+    if (p < next) {
+      if (names_len == names_cap) {
+	names_cap = 2*names_cap + 1;
+	names = realloc(names, names_cap * sizeof(char*));
+      }
+      names[names_len++] = strdup(p);
+    }
+    p = next + 1;
+  }
+
+  if (names_len == names_cap) {
+    names_cap = 2*names_cap + 1;
+    names = realloc(names, names_cap * sizeof(char*));
+  }
+
+  names[names_len] = NULL;
+  *namesp = names;
 }
