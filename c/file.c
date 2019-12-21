@@ -54,7 +54,7 @@ int file_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   struct file_block_source *b = (struct file_block_source *)v;
   assert(off + size <= b->size);
   dest->data = malloc(size);
-  int n = read(b->fd, dest->data, size);
+  int n = pread(b->fd, dest->data, size, off);
   if (n != size) {
     return -1;
   }
