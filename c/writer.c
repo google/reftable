@@ -135,7 +135,7 @@ void writer_index_hash(struct writer *w, struct slice hash) {
   uint64_t off = w->next;
 
   struct obj_index_tree_node want = {};
-  slice_copy(&want.hash, hash);
+  want.hash = hash;
 
   struct tree_node *node =
       tree_search(&want, &w->obj_index_tree, &obj_index_tree_node_compare, 0);
@@ -144,7 +144,7 @@ void writer_index_hash(struct writer *w, struct slice hash) {
     key = calloc(sizeof(struct obj_index_tree_node), 1);
     slice_copy(&key->hash, hash);
     tree_search((void *)key, &w->obj_index_tree, &obj_index_tree_node_compare,
-                1);
+		1);
   } else {
     key = node->key;
   }
@@ -159,7 +159,6 @@ void writer_index_hash(struct writer *w, struct slice hash) {
   }
 
   key->offsets[key->offset_len++] = off;
-  free(slice_yield(&want.hash));
 }
 
 int writer_add_record(struct writer *w, struct record rec) {
@@ -206,7 +205,7 @@ exit:
 int writer_add_ref(struct writer *w, struct ref_record *ref) {
   if (ref->update_index < w->min_update_index ||
       ref->update_index > w->max_update_index) {
-    return -1;
+    return API_ERROR;
   }
 
   struct record rec = {};
@@ -326,7 +325,7 @@ void write_object_record(void *void_arg, void *key) {
   struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 
   if (arg->err < 0) {
-    return;
+    goto exit;
   }
 
   struct obj_record obj_rec = {
@@ -340,27 +339,29 @@ void write_object_record(void *void_arg, void *key) {
   record_from_obj(&rec, &obj_rec);
   int err = block_writer_add(arg->w->block_writer, rec);
   if (err == 0) {
-    return;
+    goto exit;
   }
 
   err = writer_flush_block(arg->w);
   if (err < 0) {
     arg->err = err;
-    return;
+    goto exit;
   }
 
   writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
   err = block_writer_add(arg->w->block_writer, rec);
   if (err == 0) {
-    return;
+    goto exit;
   }
   obj_rec.offset_len = 0;
   err = block_writer_add(arg->w->block_writer, rec);
   assert(err == 0);
 
+ exit:
   free(entry->offsets);
   entry->offsets = NULL;
   free(slice_yield(&entry->hash));
+  free(entry);
 }
 
 int writer_dump_object_index(struct writer *w) {
@@ -376,6 +377,10 @@ int writer_dump_object_index(struct writer *w) {
   if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &write_object_record, &closure);
   }
+
+  tree_free(w->obj_index_tree);
+  w->obj_index_tree = NULL;
+
   if (closure.err < 0) {
     return closure.err;
   }
