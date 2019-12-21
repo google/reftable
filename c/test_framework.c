@@ -15,6 +15,7 @@
 #include "test_framework.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 struct test_case **test_cases;
@@ -45,3 +46,5 @@ void test_main() {
     test_cases[i]->testfunc();
   }
 }
+
+void set_test_hash(byte *p, int i) { memset(p, (byte)i, HASH_SIZE); }

@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "api.h"
+
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -28,11 +30,19 @@
 #undef assert
 #endif
 
+#define assert_err(c)                                                           \
+  if (c != 0) { \
+    fflush(stderr);                                                         \
+    fflush(stdout);                                                         \
+    fprintf(stderr, "%s: %d: error == %d, want 0\n", __FILE__, __LINE__, c); \
+    abort();                                                                \
+  }
+
 #define assert(c)                                                           \
   if (!(c)) {                                                               \
     fflush(stderr);                                                         \
     fflush(stdout);                                                         \
-    fprintf(stderr, "%s: %d: failed assertion %s", __FILE__, __LINE__, #c); \
+    fprintf(stderr, "%s: %d: failed assertion %s\n", __FILE__, __LINE__, #c); \
     abort();                                                                \
   }
 
@@ -44,5 +54,7 @@ struct test_case {
 struct test_case *new_test_case(const char *name, void (*testfunc)());
 struct test_case *add_test_case(const char *name, void (*testfunc)());
 void test_main();
+
+void set_test_hash(byte *p, int i) ;
 
 #endif

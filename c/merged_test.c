@@ -66,8 +66,6 @@ void test_pq(void) {
   }
 }
 
-void set_test_hash(byte *p, int i) { memset(p, (byte)i, HASH_SIZE); }
-
 void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
   int min = 0xffffffff;
   int max = 0;

@@ -44,8 +44,6 @@ void test_buffer(void) {
   free(slice_yield(&buf));
 }
 
-void set_test_hash(byte *p, int i) { memset(p, (byte)i, HASH_SIZE); }
-
 void write_table(char ***names, struct slice *buf, int N, int block_size) {
   *names = calloc(sizeof(char *), N);
 
