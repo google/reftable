@@ -74,6 +74,10 @@ dulwich etc.)
 
 * padding between blocks poorly defined.
 
+* the footer has no statistics, which is useful for making decisions
+  about compacting or not. File size only works if tables are large or
+  if tables are unaligned.
+
 If there were ever to be a V2 format, here is a my suggestion for a
 format that gets most of the benefits with less complications:
 

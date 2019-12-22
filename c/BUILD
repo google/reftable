@@ -18,6 +18,7 @@ cc_library(
         "api.h",
         "basics.h",
         "block.h",
+        "blocksource.h",
         "constants.h",
         "iter.h",
         "merged.h",

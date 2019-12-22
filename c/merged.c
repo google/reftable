@@ -131,8 +131,6 @@ void iterator_from_merged_iter(struct iterator *it, struct merged_iter *mi) {
   it->ops = &merged_iter_ops;
 }
 
-/* new_merged_table creates a new merged table. It takes ownership of the stack
- * array. */
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
   uint64_t last_max = 0;
   uint64_t first_min = 0;

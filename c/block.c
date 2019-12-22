@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "blocksource.h"
 #include "record.h"
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,

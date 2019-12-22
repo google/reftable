@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "api.h"
 #include "stack.h"
 #include "merged.h"
 #include "reader.h"
@@ -241,7 +242,7 @@ int stack_reload(struct stack* st) {
       free_names(names);
       break;
     }
-    if (err != ERR_NOT_EXIST) {
+    if (err != NOT_EXIST_ERROR) {
       free_names(names);
       return err;
     }
@@ -303,7 +304,7 @@ int stack_uptodate(struct stack *st) {
 int stack_add(struct stack* st, int (*write)(struct writer *wr, void*arg), void *arg) {
   int err = stack_try_add(st, write, arg);
   if (err < 0) {
-    if (err == LOCK_FAILURE) {
+    if (err == LOCK_ERROR) {
       err = stack_reload(st);
     }
     return err;
@@ -336,7 +337,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   fd = open(slice_as_string(&lock_name), O_EXCL|O_CREAT|O_WRONLY, 0644);
   if (fd < 0) {
     if (errno == EEXIST) {
-      err = LOCK_FAILURE;
+      err = LOCK_ERROR;
       goto exit;
     }
     err = -1;
@@ -349,7 +350,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   }
 
   if (err > 1) {
-    err = LOCK_FAILURE;
+    err = LOCK_ERROR;
     goto exit;
   }
 

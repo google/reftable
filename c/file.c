@@ -73,7 +73,7 @@ int block_source_from_file(struct block_source *bs, const char *name) {
   int fd = open(name, O_RDONLY);
   if (fd < 0) {
     if (errno == ENOENT) {
-      return ERR_NOT_EXIST;
+      return NOT_EXIST_ERROR;
     }
     return -1;
   }
