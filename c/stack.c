@@ -19,13 +19,14 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
-       #include <sys/types.h>
-       #include <sys/stat.h>
-       #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "stack.h"
 #include "merged.h"
 #include "reader.h"
+#include "writer.h"
 
 int new_stack(struct stack **dest, const char *dir,
 	      const char *list_file,
@@ -362,9 +363,9 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
    }
   }
   
-  uint64_t next = stack_next_update_index(st);
+  uint64_t next_update_index = stack_next_update_index(st);
    
-  format_name(&next_name, next, next);
+  format_name(&next_name, next_update_index, next_update_index);
 
   slice_set_string(&temp_tab_name, st->reftable_dir);
   slice_append_string(&temp_tab_name, "/");
@@ -388,7 +389,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   if (err < 0) {
     goto exit;
   }
-
+  
   err = close(tab_fd);
   tab_fd = 0;
   if (err < 0) {
@@ -401,8 +402,15 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
 
   slice_set_string(&tab_name, st->reftable_dir);
   slice_append_string(&tab_name, "/");
+
+  if (wr->min_update_index < next_update_index) {
+    err = API_ERROR;
+    goto exit;
+  }
+  
+  format_name(&next_name, wr->min_update_index, wr->max_update_index);
+  slice_append_string(&next_name, ".ref");
   slice_append(&tab_name, next_name);
-  slice_append_string(&tab_name, "");
    
   err = rename(slice_as_string(&temp_tab_name), slice_as_string(&tab_name));
   if (err < 0) {

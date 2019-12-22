@@ -66,16 +66,11 @@ void test_names_equal(void) {
   assert(!names_equal(a, c));
 }
 
-struct write_arg {
-  uint64_t index;
-  struct ref_record ref;
-};
-
 int write_test_ref(struct writer *wr, void*arg) {
-  struct write_arg *w_arg = arg;
+  struct ref_record *ref = arg;
 
-  writer_set_limits(wr, w_arg->index, w_arg->index);
-  int err = writer_add_ref(wr, &w_arg->ref);
+  writer_set_limits(wr, ref->update_index, ref->update_index);
+  int err = writer_add_ref(wr, ref);
 
   return err;
 }
@@ -103,16 +98,12 @@ void test_stack_add(void) {
     sprintf(buf, "branch%02d", i);
     refs[i].ref_name = strdup(buf);
     refs[i].value = malloc(HASH_SIZE);
-    refs[i].update_index = i;
+    refs[i].update_index = i + 1;
     set_test_hash(refs[i].value , i);
   }
   
   for (int i = 0; i < N; i++) {
-    struct write_arg arg = {
-			    .ref = refs[i],
-			    .index = i,
-    };
-    int err = stack_add(st, &write_test_ref, &arg);
+    int err = stack_add(st, &write_test_ref, &refs[i]);
     assert_err(err);
   }
 
