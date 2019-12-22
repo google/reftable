@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hanwen/reftable"
+	"github.com/google/reftable"
 )
 
 func main() {
@@ -62,14 +62,14 @@ func dumpStack(nm, dir string) error {
 		return (err)
 	}
 
-	var tabs []reftable.Table
+	var tabs []*reftable.Reader
 	for _, nm := range names {
 		f, err := reftable.NewFileBlockSource(filepath.Join(dir, nm))
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		r, err := reftable.NewReader(f)
+		r, err := reftable.NewReader(f, nm)
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func dumpTableFile(nm string) error {
 		return err
 	}
 
-	r, err := reftable.NewReader(f)
+	r, err := reftable.NewReader(f, nm)
 	if err != nil {
 		return err
 	}
@@ -101,14 +101,14 @@ func dumpTableFile(nm string) error {
 }
 
 func dumpTable(tab reftable.Table) error {
-	iter, err := tab.Seek(&reftable.RefRecord{})
+	iter, err := tab.SeekRef("")
 	if err != nil {
 		return err
 	}
 
 	for {
 		var rec reftable.RefRecord
-		ok, err := iter.Next(&rec)
+		ok, err := iter.NextRef(&rec)
 		if err != nil {
 			return err
 		}
@@ -119,14 +119,16 @@ func dumpTable(tab reftable.Table) error {
 		fmt.Printf("%#v\n", rec)
 	}
 
-	iter, err = tab.Seek(&reftable.LogRecord{})
+	var neg int64
+	neg = -1
+	iter, err = tab.SeekLog("", uint64(neg))
 	if err != nil {
 		return err
 	}
 
 	for {
 		var rec reftable.LogRecord
-		ok, err := iter.Next(&rec)
+		ok, err := iter.NextLog(&rec)
 		if err != nil {
 			return err
 		}
