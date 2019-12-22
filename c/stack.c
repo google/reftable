@@ -363,7 +363,8 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   }
   
   uint64_t next_update_index = stack_next_update_index(st);
-   
+
+  slice_resize(&next_name, 0);
   format_name(&next_name, next_update_index, next_update_index);
 
   slice_set_string(&temp_tab_name, st->reftable_dir);
@@ -406,7 +407,8 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     err = API_ERROR;
     goto exit;
   }
-  
+
+  slice_resize(&next_name, 0);
   format_name(&next_name, wr->min_update_index, wr->max_update_index);
   slice_append_string(&next_name, ".ref");
   slice_append(&tab_name, next_name);
@@ -491,7 +493,7 @@ int stack_compact_locked(struct stack* st, int first, int last, struct slice* te
 
   struct writer *wr = new_writer(fd_writer, &tab_fd, &st->cfg);
 
-  int err = stack_write_compact(wr, first, last);
+  int err = stack_write_compact(st, wr, first, last);
   if (err < 0) {
     goto exit;
   }
@@ -516,8 +518,217 @@ int stack_compact_locked(struct stack* st, int first, int last, struct slice* te
   return err;
 }
 
-int stack_write_compact(struct writer *wr, int first, int last) {
-  assert(false);
-  return 0;
+int stack_write_compact(struct stack *st, struct writer *wr, int first, int last) {
+  writer_set_limits(wr,
+		    st->merged->stack[first]->min_update_index,
+		    st->merged->stack[last]->max_update_index);
+
+  int subtabs_len = last - first + 1;
+  struct reader** subtabs = calloc(sizeof(struct reader*), last - first + 1);
+  for (int i = first, j = 0; i <= last; i++) {
+    subtabs[j++] = st->merged->stack[i];
+  }
+
+  struct merged_table *mt = NULL;
+  int err = new_merged_table(&mt, subtabs, subtabs_len);
+  if (err < 0) {
+    free(subtabs);
+    goto exit;
+  }
+
+  struct iterator it = {};
+  err = merged_table_seek_ref(mt, &it, "");
+  if (err < 0) {
+    goto exit;
+  }
+
+  struct ref_record ref = {};
+  while (true) {
+    err = iterator_next_ref(it, &ref);
+    if (err > 0) {
+      err = 0;
+      break;
+    }
+    if (err < 0) {
+      goto exit;
+    }
+    if (first == 0 && ref_record_is_deletion(&ref)) {
+      continue;
+    }
+    
+    err = writer_add_ref(wr, &ref);
+    if (err < 0) {
+      goto exit;
+    }
+  }
+ exit:
+  if (mt != NULL) {
+    merged_table_clear(mt);
+    merged_table_free(mt);
+  }
+  ref_record_clear(&ref);
+  
+  return err;
 }
 
+
+// <  0: error. 0 == OK,  > 0 attempt failed; could retry.
+int stack_compact_range(struct stack *st, int first, int last) {
+  if (first >= last) {
+    return 0;
+  }
+
+  struct slice temp_tab_name = {};
+  struct slice new_table_name = {};
+  struct slice lock_file_name = {};
+
+  st->stats.attempts++;
+  int err = 0;
+
+  // XXX in function?
+  slice_set_string(&lock_file_name, st->list_file);
+  slice_append_string(&lock_file_name, ".lock");
+
+  int have_lock = false;
+  int lock_file_fd = open(slice_as_string(&lock_file_name), O_EXCL| O_CREAT|O_WRONLY, 0644);
+  if (lock_file_fd < 0){
+    if (errno == EEXIST) {
+      err = 1;
+    } else {
+      err = IO_ERROR;
+    }
+    goto exit;
+  }
+  have_lock = true;
+  err = stack_uptodate(st);
+  if (err != 0) {
+    goto exit;
+  }
+
+  int compact_count = last - first + 1;
+  char **delete_on_success = calloc(sizeof(char*), compact_count+1);
+  char **subtable_locks = calloc(sizeof(char*), compact_count+1);
+
+  for (int i = first, j = 0; i <= last; i++) {
+    struct slice subtab_name = {};
+    struct slice subtab_lock = {};
+    slice_set_string(&subtab_name, st->reftable_dir);
+    slice_append_string(&subtab_name, "/");
+    slice_append_string(&subtab_name, reader_name(st->merged->stack[i]));
+
+    slice_copy(&subtab_lock, subtab_name);
+    slice_append_string(&subtab_lock, ".lock");
+
+    int lock_file_fd = open(slice_as_string(&subtab_lock), O_EXCL| O_CREAT|O_WRONLY, 0644);
+    if (lock_file_fd < 0) {
+      // XXX mem leak for slices
+      if (errno == EEXIST) {
+	err = 1;
+	goto exit;
+      }
+      err = IO_ERROR;
+      goto exit;
+    }
+
+    close(lock_file_fd);
+    subtable_locks[j] = (char*)slice_yield(&subtab_lock);
+    delete_on_success[j] = (char*)slice_yield(&subtab_name);
+    j++;
+  }
+
+  err = unlink(slice_as_string(&lock_file_name));
+  if (err < 0) {
+    goto exit;
+  }
+  have_lock = false;
+
+  err = stack_compact_locked(st, first ,last, &temp_tab_name);
+  if (err < 0) {
+    goto exit;
+  }
+
+  // XXX in function?
+  lock_file_fd = open(slice_as_string(&lock_file_name), O_EXCL| O_CREAT|O_WRONLY, 0644);
+  if (lock_file_fd < 0){
+    if (errno == EEXIST) {
+      err = 1;
+    } else {
+      err = IO_ERROR;
+    }
+    goto exit;
+  }
+  have_lock = true;
+
+  format_name(&new_table_name,
+	      st->merged->stack[first]->min_update_index,
+	      st->merged->stack[last]->max_update_index);
+  slice_append_string(&new_table_name, ".ref");
+
+  struct slice new_table_path={};
+  slice_set_string(&new_table_path, st->reftable_dir);
+  slice_append_string(&new_table_path, "/");
+  slice_append(&new_table_path, new_table_name);
+
+  err = rename(slice_as_string(&temp_tab_name),
+	       slice_as_string(&new_table_path));
+  if (err < 0) {
+    goto exit;
+  }
+
+  struct slice ref_list_contents = {};
+  for (int i =0; i < first; i++) {
+    slice_append_string(&ref_list_contents, st->merged->stack[i]->name);
+    slice_append_string(&ref_list_contents, "\n");
+  }
+  slice_append(&ref_list_contents, new_table_name);
+  slice_append_string(&ref_list_contents, "\n");
+  for (int i = last+1; i < st->merged->stack_len; i++) {
+    slice_append_string(&ref_list_contents, st->merged->stack[i]->name);
+    slice_append_string(&ref_list_contents, "\n");
+  }
+
+  err = write(lock_file_fd, ref_list_contents.buf, ref_list_contents.len);
+  if (err < 0){
+    unlink(slice_as_string(&new_table_path));
+    goto exit;
+  }
+  err = close(lock_file_fd);
+  if (err < 0) {
+    unlink(slice_as_string(&new_table_path));
+    goto exit;
+  }
+
+  err = rename(slice_as_string(&lock_file_name), st->list_file);
+  if (err < 0) {
+    unlink(slice_as_string(&new_table_path));
+    goto exit;
+  }
+  have_lock = false;
+
+  for (char **p = delete_on_success; *p; p++) {
+    unlink(*p);
+  }
+
+  err = stack_reload(st);
+ exit:
+  
+  free(slice_yield(&temp_tab_name));
+  for (char **p = subtable_locks; *p; p++) {
+    unlink(*p);
+  }
+  free_names(delete_on_success);
+  free_names(subtable_locks);
+  if (lock_file_fd > 0) {
+    close(lock_file_fd);
+    lock_file_fd = 0;
+  }
+  if (have_lock) {
+    unlink(slice_as_string(&lock_file_name));
+  }
+  free(slice_yield(&lock_file_name));
+  return err;
+}
+
+int stack_compact_all(struct stack* st) {
+  return stack_compact_range(st, 0, st->merged->stack_len-1);
+}

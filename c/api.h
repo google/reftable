@@ -79,6 +79,10 @@ struct ref_record {
   char *target;        // symref, or NULL. malloced.
 };
 
+
+/* returns whether 'ref' represents a deletion */
+bool ref_record_is_deletion(const struct ref_record *ref);
+
 /* prints a ref_record onto stdout */
 void ref_record_print(struct ref_record *ref);
 
@@ -292,5 +296,8 @@ void stack_destroy(struct stack *st);
 
 /* reloads the stack if necessary. */
 int stack_reload(struct stack *st);
+
+/* compacts all reftables into a giant table. */
+int stack_compact_all(struct stack* st);
 
 #endif

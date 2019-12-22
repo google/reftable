@@ -106,6 +106,8 @@ void test_stack_add(void) {
     assert_err(err);
   }
 
+  // XXX compact here.
+
   struct merged_table *mt = stack_merged(st);
   for (int i = 0; i < N; i++) {
     struct iterator it = {};
@@ -119,11 +121,17 @@ void test_stack_add(void) {
     iterator_destroy(&it);
     ref_record_clear(&dest);
   }
+
+  err = stack_compact_all(st);
+  assert_err(err);
+
+  // cleanup
   stack_destroy(st);
   for (int i = 0; i < N; i++) {
     free(refs[i].value);
     free(refs[i].ref_name);
   }
+
 }
 
 int main() {

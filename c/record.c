@@ -695,3 +695,7 @@ bool ref_record_equal(struct ref_record *a, struct ref_record *b) {
          hash_equal(a->target_value, b->target_value) &&
          str_equal(a->target, b->target);
 }
+
+bool ref_record_is_deletion(const struct ref_record *ref) {
+  return ref->value == NULL && ref->target == NULL && ref->target_value == NULL;
+}

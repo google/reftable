@@ -75,6 +75,4 @@ void record_from_ref(struct record *rec, struct ref_record *refrec);
 void record_from_log(struct record *rec, struct log_record *objrec);
 struct ref_record *record_as_ref(struct record ref);
 
-bool record_is_start(struct record want);
-
 #endif
