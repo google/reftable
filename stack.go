@@ -354,45 +354,46 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 	if err != nil {
 		return err
 	}
-	if it, err := merged.SeekRef(""); err != nil {
+	it, err := merged.SeekRef("")
+	if err != nil {
 		return err
-	} else {
-		for {
-			var rec RefRecord
-			ok, err := it.NextRef(&rec)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				break
-			}
+	}
 
-			if first == 0 && rec.isDeletion() {
-				continue
-			}
+	for {
+		var rec RefRecord
+		ok, err := it.NextRef(&rec)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			break
+		}
 
-			if err := wr.AddRef(&rec); err != nil {
-				return err
-			}
+		if first == 0 && rec.isDeletion() {
+			continue
+		}
+
+		if err := wr.AddRef(&rec); err != nil {
+			return err
 		}
 	}
 
-	if it, err := merged.SeekLog("", 0xffffffffffffffff); err != nil {
+	it, err = merged.SeekLog("", 0xffffffffffffffff)
+	if err != nil {
 		return err
-	} else {
-		for {
-			var rec LogRecord
-			ok, err := it.NextLog(&rec)
-			if err != nil {
-				return err
-			}
-			if !ok {
-				break
-			}
+	}
+	for {
+		var rec LogRecord
+		ok, err := it.NextLog(&rec)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			break
+		}
 
-			if err := wr.AddLog(&rec); err != nil {
-				return err
-			}
+		if err := wr.AddLog(&rec); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -444,6 +445,9 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 		if os.IsExist(err) {
 			return false, nil
 		}
+		if err != nil {
+			return false, err
+		}
 		l.Close()
 		subtableLocks = append(subtableLocks, subtabLock)
 		deleteOnSuccess = append(deleteOnSuccess, subtab)
@@ -469,7 +473,7 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 
 	fn := formatName(
 		s.stack[first].MinUpdateIndex(),
-		s.stack[(last)].MaxUpdateIndex())
+		s.stack[last].MaxUpdateIndex())
 
 	fn += ".ref"
 	destTable := filepath.Join(s.reftableDir, fn)
