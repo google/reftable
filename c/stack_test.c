@@ -43,6 +43,7 @@ void test_read_file(void) {
     assert(0 == strcmp(want[i], names[i]));
   }
   free_names(names);
+  remove(fn);
 }
 
 void test_parse_names(void) {
