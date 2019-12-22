@@ -205,8 +205,6 @@ int tv_cmp(struct timeval *a, struct timeval *b) {
   return udiff;
 }
 
-
-
 int stack_reload(struct stack* st) {
   struct timeval deadline = {};
   int err = gettimeofday(&deadline, NULL);
@@ -215,7 +213,7 @@ int stack_reload(struct stack* st) {
   }
 
   deadline.tv_sec += 3;
-  int delay = 0;
+  int64_t delay = 0;
   int tries = 0; 
   while (true) {
     struct timeval now = {};
@@ -262,7 +260,7 @@ int stack_reload(struct stack* st) {
     free_names(names);
     free_names(names_after);
 
-    delay = delay * 2 + 100; // TODO: jitter.
+    delay = delay + (delay * rand()) / RAND_MAX + 100;
     usleep(delay);
   }
 
