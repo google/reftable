@@ -48,7 +48,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   *names = calloc(sizeof(char *), N+1);
 
   struct write_options opts = {
-      .block_size = 256,
+      .block_size = block_size,
   };
 
   struct writer *w = new_writer(&slice_write_void, buf, &opts);
@@ -124,12 +124,12 @@ void test_table_read_write_sequential(void) {
   reader_close(&rd);
 }
 
-void test_table_write(void) {
+void test_table_write_small_table(void) {
   char **names;
   struct slice buf = {};
-  int N = 50;
-  write_table(&names, &buf, N, 256);
-
+  int N = 1;
+  write_table(&names, &buf, N, 4096);
+  assert(buf.len  < 200);
   free(slice_yield(&buf));
   free_names(names);
 }
@@ -281,7 +281,7 @@ void test_table_refs_for_no_index(void) { test_table_refs_for(false); }
 void test_table_refs_for_obj_index(void) { test_table_refs_for(true); }
 
 int main() {
-  add_test_case("test_table_write", &test_table_write);
+  add_test_case("test_table_write_small_table", &test_table_write_small_table);
   add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential",
                 &test_table_read_write_sequential);

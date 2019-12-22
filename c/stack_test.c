@@ -85,9 +85,7 @@ void test_stack_add(void) {
   strcat(fn, "/");
   strcat(fn, "refs");
 
-  struct write_options cfg = {
-			      .unpadded = true,
-  };
+  struct write_options cfg = {  };
   struct stack *st = NULL;
   int err = new_stack(&st, dir, fn, cfg);
   assert_err(err);

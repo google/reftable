@@ -398,7 +398,7 @@ int writer_finish_public_section(struct writer *w) {
   if (err < 0) {
     return err;
   }
-  if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects) {
+  if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects && w->stats.ref_stats.index_blocks > 0) {
     int err = writer_dump_object_index(w);
     if (err < 0) {
       return err;
