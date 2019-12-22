@@ -34,6 +34,7 @@ cc_library(
         "-Wall",
         "-Werror",
     ],
+    deps = [ "@zlib//:zlib" ],
 )
 
 cc_library(

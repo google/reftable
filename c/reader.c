@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 
 #include "api.h"
 #include "block.h"
@@ -130,6 +131,14 @@ int init_reader(struct reader *r, struct block_source source, const char *name) 
   uint64_t log_index_off = get_u64(f);
   f += 8;
 
+  uint32_t computed_crc = crc32(0, footer.data, f - footer.data);
+  uint32_t file_crc = get_u32(f);
+  f += 4;
+  if (computed_crc != file_crc) {
+    err = FORMAT_ERROR;
+    goto exit;
+  }
+    
   byte first_block_typ = header.data[HEADER_SIZE];
   r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
   r->ref_offsets.offset = 0;

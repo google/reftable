@@ -19,6 +19,7 @@
 #include <stdio.h>  // debug
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 
 #include "api.h"
 #include "block.h"
@@ -421,13 +422,17 @@ int writer_close(struct writer *w) {
   p += 8;
   put_u64(p, w->stats.obj_stats.index_offset);
   p += 8;
-  put_u64(p, 0);
-  p += 8;
+
+  // Logs not supported.
   put_u64(p, 0);
   p += 8;
 
-  // XXX compute CRC-32.
-  put_u32(p, 0);
+  // Log index not supported.
+  put_u64(p, 0);
+  p += 8;
+
+  uint32_t crc = crc32(0, footer, p-footer);
+  put_u32(p, crc);
   p += 4;
   w->pending_padding = 0;
 
