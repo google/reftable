@@ -99,11 +99,8 @@ void stack_destroy(struct stack *st) {
   if (st->merged == NULL) {
     return;
   }
-  
-  for (int i = 0; i < st->merged->stack_len; i++) {
-    reader_close(st->merged->stack[i]);
-  }
 
+  merged_table_close(st->merged);
   merged_table_free(st->merged);
   st->merged = NULL;
 
@@ -174,7 +171,10 @@ int stack_reload_once(struct stack* st, char **names) {
 
   new_tables = NULL;
   new_tables_len = 0;
-  merged_table_free(st->merged);
+  if (st->merged != NULL) {
+    merged_table_clear(st->merged);
+    merged_table_free(st->merged);
+  }
   st->merged = new_merged;
   
  exit:

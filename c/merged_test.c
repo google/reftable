@@ -21,6 +21,7 @@
 #include "reader.h"
 #include "record.h"
 #include "test_framework.h"
+#include "merged.h"
 
 void test_pq(void) {
   char *names[54] = {};
@@ -64,6 +65,8 @@ void test_pq(void) {
   for (int i = 0; i < N; i++) {
     free(names[i]);
   }
+
+  merged_iter_pqueue_clear(&pq);
 }
 
 void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
@@ -162,7 +165,7 @@ void test_merged(void) {
   struct ref_record *out = NULL;
   int len = 0;
   int cap = 0;
-  while (len < 100) {
+  while (len < 100) { // cap loops/recursion.
     struct ref_record ref = {};
     int err = iterator_next_ref(it, &ref);
     if (err > 0) {
@@ -175,6 +178,8 @@ void test_merged(void) {
     }
     out[len++] = ref;
   }
+  iterator_destroy(&it);
+  
   struct ref_record want[] = {
       r2[0],
       r1[1],
@@ -193,6 +198,7 @@ void test_merged(void) {
   for (int i = 0 ; i < ARRAYSIZE(buf); i++) {
     free(slice_yield(&buf[i]));
   }
+  merged_table_close(mt);
   merged_table_free(mt);
 }
 

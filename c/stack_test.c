@@ -89,7 +89,9 @@ void test_stack_add(void) {
   strcat(fn, "/");
   strcat(fn, "refs");
 
-  struct write_options cfg = {};
+  struct write_options cfg = {
+			      .unpadded = true,
+  };
   struct stack *st = NULL;
   int err = new_stack(&st, dir, fn, cfg);
   assert_err(err);
@@ -115,7 +117,6 @@ void test_stack_add(void) {
   }
 
   struct merged_table *mt = stack_merged(st);
-  
   for (int i = 0; i < N; i++) {
     struct iterator it = {};
     int err = merged_table_seek_ref(mt, &it, refs[i].ref_name);
@@ -128,7 +129,6 @@ void test_stack_add(void) {
     iterator_destroy(&it);
     ref_record_clear(&dest);
   }
-
   stack_destroy(st);
   for (int i = 0; i < N; i++) {
     free(refs[i].value);

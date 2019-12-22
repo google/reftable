@@ -29,6 +29,8 @@ int merged_iter_init(struct merged_iter *mi) {
 
     if (err > 0) {
       iterator_destroy(&mi->stack[i]);
+      record_clear(rec);
+      free(record_yield(&rec));
     } else {
       struct pq_entry e = {
           .rec = rec,
@@ -43,11 +45,11 @@ int merged_iter_init(struct merged_iter *mi) {
 
 void merged_iter_close(void *p) {
   struct merged_iter *mi = (struct merged_iter *)p;
-
   merged_iter_pqueue_clear(&mi->pq);
   for (int i = 0; i < mi->stack_len; i++) {
     iterator_destroy(&mi->stack[i]);
   }
+  free(mi->stack);
 }
 
 int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
@@ -63,6 +65,8 @@ int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
 
   if (err > 0) {
     iterator_destroy(&mi->stack[idx]);
+    record_clear(rec);
+    free(record_yield(&rec));
     return 0;
   }
 
@@ -156,14 +160,28 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
   return 0;
 }
 
-void merged_table_free(struct merged_table *m) {
-  if (m == NULL) {
+void merged_table_close(struct merged_table* mt) {
+  for (int i = 0; i < mt->stack_len; i++) {
+    reader_free(mt->stack[i]);
+  }
+  free(mt->stack);
+  mt->stack = NULL;
+  mt->stack_len = 0;
+}
+
+/* clears the list of subtable, without affecting the readers themselves. */
+void merged_table_clear(struct merged_table *mt) {
+  free(mt->stack);
+  mt->stack = NULL;
+  mt->stack_len = 0;
+}
+
+void merged_table_free(struct merged_table *mt) {
+  if (mt == NULL) {
     return;
   }
-  // XXX delete readers? close readers?
-  free(m->stack);
-  m->stack = NULL;
-  free(m);
+  merged_table_clear(mt);
+  free(mt);
 }
 
 uint64_t merged_max_update_index(struct merged_table *mt) { return mt->max; }
@@ -173,22 +191,29 @@ uint64_t merged_min_update_index(struct merged_table *mt) { return mt->min; }
 int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
                              struct record rec) {
   struct iterator *iters = calloc(sizeof(struct iterator), mt->stack_len);
+  int err = 0;
   for (int i = 0; i < mt->stack_len; i++) {
-    int err = reader_seek(mt->stack[i], &iters[i], rec);
-    if (err < 0) {
-      // XXX leak.
-      return err;
+    if (err == 0) {
+      err = reader_seek(mt->stack[i], &iters[i], rec);
     }
   }
-
+  if (err < 0) {
+    for (int i = 0; i < mt->stack_len; i++) {
+      iterator_destroy(&iters[i]);
+    }
+    free(iters);
+    return err;
+  }
+  
   struct merged_iter merged = {
       .stack = iters,
       .stack_len = mt->stack_len,
       .typ = record_type(rec),
   };
 
-  int err = merged_iter_init(&merged);
+  err = merged_iter_init(&merged);
   if (err < 0) {
+    merged_iter_close(&merged);
     return err;
   }
 

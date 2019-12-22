@@ -107,6 +107,7 @@ void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e) {
 void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq) {
   for (int i = 0; i < pq->len; i++) {
     record_clear(pq->heap[i].rec);
+    free(record_yield(&pq->heap[i].rec));
   }
   free(pq->heap);
   pq->heap = NULL;
