@@ -465,7 +465,7 @@ void writer_clear_index(struct writer *w) {
   w->index_cap = 0;
 }
 
-const int debug = 1;
+const int debug = 0;
 
 int writer_flush_block(struct writer *w) {
   if (w->block_writer == NULL) {
