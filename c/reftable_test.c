@@ -189,7 +189,7 @@ void test_table_refs_for(bool indexed) {
   char **want_names = calloc(sizeof(char *), N+1);
 
   int want_names_len = 0;
-  byte want_hash[HASH_SIZE];
+  byte want_hash[SHA1_SIZE];
   set_test_hash(want_hash, 4);
 
   struct write_options opts = {
@@ -223,8 +223,8 @@ void test_table_refs_for(bool indexed) {
       int n = writer_add_ref(w, &ref);
       assert(n == 0);
 
-      if (0 == memcmp(hash1, want_hash, HASH_SIZE) ||
-          0 == memcmp(hash2, want_hash, HASH_SIZE)) {
+      if (0 == memcmp(hash1, want_hash, SHA1_SIZE) ||
+          0 == memcmp(hash2, want_hash, SHA1_SIZE)) {
         want_names[want_names_len++] = strdup(name);
       }
     }
@@ -251,7 +251,7 @@ void test_table_refs_for(bool indexed) {
   assert(err == 0);
   iterator_destroy(&it);
   
-  err = reader_refs_for(&rd, &it, want_hash);
+  err = reader_refs_for(&rd, &it, want_hash, SHA1_SIZE);
   assert(err == 0);
 
   struct ref_record ref = {};

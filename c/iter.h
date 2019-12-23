@@ -17,6 +17,7 @@
 
 #include "block.h"
 #include "record.h"
+#include "slice.h"
 
 struct iterator_vtable {
   int (*next)(void *iter_arg, struct record rec);
@@ -29,7 +30,7 @@ bool iterator_is_null(struct iterator it);
 
 struct filtering_ref_iterator {
   struct reader *r;
-  byte *oid;
+  struct slice oid;
   bool double_check;
   struct iterator it;
 };

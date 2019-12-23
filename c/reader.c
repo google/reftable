@@ -572,7 +572,7 @@ int reader_refs_for_indexed(struct reader *r, struct iterator *it, byte *oid) {
   return 0;
 }
 
-int reader_refs_for(struct reader *r, struct iterator *it, byte *oid) {
+int reader_refs_for(struct reader *r, struct iterator *it, byte *oid, int oid_len) {
   if (r->obj_offsets.present) {
     return reader_refs_for_indexed(r, it, oid);
   }
@@ -585,7 +585,8 @@ int reader_refs_for(struct reader *r, struct iterator *it, byte *oid) {
 
   struct filtering_ref_iterator *filter =
       calloc(sizeof(struct filtering_ref_iterator), 1);
-  filter->oid = oid;
+  slice_resize(&filter->oid, oid_len);
+  memcpy(filter->oid.buf, oid, oid_len);
   filter->r = r;
   filter->double_check = false;
   iterator_from_table_iter(&filter->it, ti);

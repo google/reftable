@@ -244,7 +244,7 @@ int reader_seek_ref(struct reader *r, struct iterator *it, char *name);
 void reader_free(struct reader *);
 
 /* return an iterator for the refs pointing to oid */
-int reader_refs_for(struct reader *r, struct iterator *it, byte *oid);
+int reader_refs_for(struct reader *r, struct iterator *it, byte *oid, int oid_len);
 
 /* return the max_update_index for a table */
 uint64_t reader_max_update_index(struct reader *r);

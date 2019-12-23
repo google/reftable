@@ -61,6 +61,7 @@ int iterator_next_ref(struct iterator it, struct ref_record *ref) {
 void filtering_ref_iterator_close(void *iter_arg) {
   struct filtering_ref_iterator *fri =
       (struct filtering_ref_iterator *)iter_arg;
+  free(slice_yield(&fri->oid));
   iterator_destroy(&fri->it);
 }
 
@@ -95,8 +96,8 @@ int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
     }
 
     if ((ref->target_value != NULL &&
-         0 == memcmp(fri->oid, ref->target_value, HASH_SIZE)) ||
-        (ref->value != NULL && 0 == memcmp(fri->oid, ref->value, HASH_SIZE))) {
+         0 == memcmp(fri->oid.buf, ref->target_value, fri->oid.len)) ||
+        (ref->value != NULL && 0 == memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
       return 0;
     }
   }

@@ -15,6 +15,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define SHA1_SIZE 20
 #define HASH_SIZE 20
 #define VERSION 1
 #define HEADER_SIZE 24
