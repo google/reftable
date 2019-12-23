@@ -123,7 +123,6 @@ void test_stack_add(void) {
     ref_record_clear(&dest);
   }
 
-
   // cleanup
   stack_destroy(st);
   for (int i = 0; i < N; i++) {

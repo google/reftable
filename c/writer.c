@@ -360,6 +360,12 @@ static void write_object_record(void *void_arg, void *key) {
   assert(err == 0);
 
  exit:
+  ;
+}
+
+static void object_record_free(void *void_arg, void *key) {
+  struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
+  
   free(entry->offsets);
   entry->offsets = NULL;
   free(slice_yield(&entry->hash));
@@ -379,9 +385,6 @@ int writer_dump_object_index(struct writer *w) {
   if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &write_object_record, &closure);
   }
-
-  tree_free(w->obj_index_tree);
-  w->obj_index_tree = NULL;
 
   if (closure.err < 0) {
     return closure.err;
@@ -404,6 +407,12 @@ int writer_finish_public_section(struct writer *w) {
     if (err < 0) {
       return err;
     }
+  }
+
+  if (w->obj_index_tree != NULL) { 
+    infix_walk(w->obj_index_tree, &object_record_free, NULL);
+    tree_free(w->obj_index_tree);
+    w->obj_index_tree = NULL;
   }
 
   w->block_writer = NULL;

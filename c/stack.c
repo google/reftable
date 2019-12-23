@@ -134,6 +134,8 @@ int stack_reload_once(struct stack* st, char **names) {
     names++;
 
     struct reader *rd = NULL;
+    // this is linear; we assume compaction keeps the number of tables
+    // under control so this is not quadratic.
     for (int j = 0; j < cur_len; j++) {
       if (cur[j] !=NULL && 0 == strcmp(cur[j]->name, name)) {
 	rd = cur[j];
@@ -176,6 +178,12 @@ int stack_reload_once(struct stack* st, char **names) {
     merged_table_free(st->merged);
   }
   st->merged = new_merged;
+
+  for (int i = 0; i < cur_len; i++) {
+    if (cur[i] != NULL) {
+      reader_close(cur[i]);
+    }
+  }
   
  exit:
   free(slice_yield(&table_path));
@@ -320,6 +328,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   struct slice temp_tab_name = {};
   struct slice tab_name = {};
   struct slice next_name = {};
+  struct slice table_list = {};
   struct writer *wr = NULL;
   
   slice_set_string(&lock_name, st->list_file);
@@ -387,7 +396,6 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     goto exit;
   }
 
-  struct slice table_list = {};
   for (int i = 0; i < st->merged->stack_len; i++) {
     slice_append_string(&table_list, st->merged->stack[i]->name);
     slice_append_string(&table_list, "\n");
@@ -414,7 +422,6 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
 	  err = IO_ERROR;
 	  goto exit;
   }
-   
   err = close(lock_fd);
   lock_fd = 0;
   if (err < 0) {
@@ -450,6 +457,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   free(slice_yield(&temp_tab_name));
   free(slice_yield(&tab_name));
   free(slice_yield(&next_name));
+  free(slice_yield(&table_list));
   writer_free(wr);
   return err;
 }
@@ -484,7 +492,8 @@ int stack_compact_locked(struct stack* st, int first, int last, struct slice* te
   if (err < 0) {
     goto exit;
   }
-
+  writer_free(wr);
+  
   err = close(tab_fd);
   tab_fd = 0;
   
@@ -535,7 +544,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first, int last
       break;
     }
     if (err < 0) {
-      goto exit;
+      break;
     }
     if (first == 0 && ref_record_is_deletion(&ref)) {
       continue;
@@ -543,10 +552,11 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first, int last
     
     err = writer_add_ref(wr, &ref);
     if (err < 0) {
-      goto exit;
+      break;
     }
   }
  exit:
+  iterator_destroy(&it);
   if (mt != NULL) {
     merged_table_clear(mt);
     merged_table_free(mt);
