@@ -16,6 +16,7 @@ package reftable
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/binary"
 	"math/rand"
 	"reflect"
@@ -56,6 +57,7 @@ func testRecordRoundTrip(t *testing.T, inputs []record) {
 	buf := make([]byte, 1024)
 	out := buf
 
+	hashSize := sha1.Size
 	lastKey := ""
 	for i, in := range inputs {
 		n, _, ok := encodeKey(out, lastKey, in.key(), in.valType())
@@ -63,7 +65,7 @@ func testRecordRoundTrip(t *testing.T, inputs []record) {
 			t.Fatalf("key encode")
 		}
 		out = out[n:]
-		n, ok = in.encode(out)
+		n, ok = in.encode(out, hashSize)
 		if !ok {
 			t.Fatalf("encode %d failed", i)
 		}
@@ -91,7 +93,7 @@ func testRecordRoundTrip(t *testing.T, inputs []record) {
 		}
 		buf = buf[n:]
 
-		n, ok = rec.decode(buf, key, valType)
+		n, ok = rec.decode(buf, key, valType, hashSize)
 		if !ok {
 			t.Fatalf("decode %d failed", len(results))
 		}

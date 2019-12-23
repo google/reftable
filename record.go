@@ -139,7 +139,7 @@ func (r *RefRecord) String() string {
 	return fmt.Sprintf("ref(%s)", r.RefName)
 }
 
-func (r *RefRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
+func (r *RefRecord) decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool) {
 	*r = RefRecord{}
 	start := buf
 	r.RefName = key
@@ -198,7 +198,7 @@ func (r *RefRecord) valType() uint8 {
 	return valueType
 }
 
-func (r *RefRecord) encode(buf []byte) (n int, fits bool) {
+func (r *RefRecord) encode(buf []byte, hashSize int) (n int, fits bool) {
 	start := buf
 
 	s, ok := putVarInt(buf, uint64(r.UpdateIndex))
@@ -261,7 +261,7 @@ func (r *objRecord) valType() uint8 {
 	return lower
 }
 
-func (r *objRecord) encode(buf []byte) (n int, fits bool) {
+func (r *objRecord) encode(buf []byte, hashSize int) (n int, fits bool) {
 	start := buf
 
 	if len(r.Offsets) == 0 || len(r.Offsets) >= 8 {
@@ -294,7 +294,7 @@ func (r *objRecord) encode(buf []byte) (n int, fits bool) {
 	return len(start) - len(buf), true
 }
 
-func (r *objRecord) decode(buf []byte, prefix string, cnt3 uint8) (n int, ok bool) {
+func (r *objRecord) decode(buf []byte, prefix string, cnt3 uint8, hashSize int) (n int, ok bool) {
 	*r = objRecord{}
 
 	start := buf
@@ -363,7 +363,7 @@ func (r *indexRecord) String() string {
 	return fmt.Sprintf("idx(%s)", r.LastKey)
 }
 
-func (r *indexRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
+func (r *indexRecord) decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool) {
 	*r = indexRecord{}
 	start := buf
 	r.LastKey = key
@@ -377,7 +377,7 @@ func (r *indexRecord) decode(buf []byte, key string, valType uint8) (n int, ok b
 	return len(start) - len(buf), true
 }
 
-func (r *indexRecord) encode(buf []byte) (n int, ok bool) {
+func (r *indexRecord) encode(buf []byte, hashSize int) (n int, ok bool) {
 	start := buf
 
 	s, ok := putVarInt(buf, uint64(r.Offset))
@@ -486,7 +486,7 @@ func (l *LogRecord) valType() uint8 {
 	return 0x1
 }
 
-func (l *LogRecord) encode(buf []byte) (n int, fits bool) {
+func (l *LogRecord) encode(buf []byte, hashSize int) (n int, fits bool) {
 	if l.Old == nil {
 		l.Old = make([]byte, hashSize)
 	}
@@ -568,7 +568,7 @@ func (l *LogRecord) decodeKey(key string) bool {
 	return true
 }
 
-func (l *LogRecord) decode(buf []byte, key string, valType uint8) (n int, ok bool) {
+func (l *LogRecord) decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool) {
 	*l = LogRecord{}
 	start := buf
 

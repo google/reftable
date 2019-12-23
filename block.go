@@ -17,6 +17,7 @@ package reftable
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -38,6 +39,7 @@ type blockWriter struct {
 	blockSize       uint32
 	headerOff       uint32
 	restartInterval int
+	hashSize        int
 
 	// mutable
 	next     uint32
@@ -52,6 +54,7 @@ func newBlockWriter(typ byte, buf []byte, headerOff uint32) *blockWriter {
 		buf:       buf,
 		headerOff: headerOff,
 		blockSize: uint32(len(buf)),
+		hashSize:  sha1.Size,
 	}
 
 	bw.buf[headerOff] = typ
@@ -81,7 +84,7 @@ func (w *blockWriter) add(r record) bool {
 	}
 	buf = buf[n:]
 
-	n, ok = r.encode(buf)
+	n, ok = r.encode(buf, w.hashSize)
 	if !ok {
 		return false
 	}
@@ -169,6 +172,9 @@ type blockReader struct {
 	// indicates where the next block will be
 	fullBlockSize uint32
 
+	// The size of the hash value in bytes, ie. 20 for SHA1.
+	hashSize int
+
 	restartCount uint16
 }
 
@@ -226,6 +232,7 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 		headerOff:     headerOff,
 		restartCount:  restartCount,
 		restartBytes:  restartBytes,
+		hashSize:      sha1.Size,
 	}
 
 	return br, nil
@@ -323,7 +330,7 @@ func (bi *blockIter) Next(r record) (bool, error) {
 	}
 	buf = buf[n:]
 
-	if n, ok := r.decode(buf, key, valType); !ok {
+	if n, ok := r.decode(buf, key, valType, bi.br.hashSize); !ok {
 		return false, fmtError
 	} else {
 		buf = buf[n:]

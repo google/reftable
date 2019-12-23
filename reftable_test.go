@@ -16,6 +16,7 @@ package reftable
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"math"
 	"reflect"
@@ -31,7 +32,7 @@ func TestTableObjectIDLen(t *testing.T) {
 
 	obj2ref := map[string]string{}
 	for i := 0; i < 8; i++ {
-		h := bytes.Repeat([]byte{'~'}, 20)
+		h := bytes.Repeat([]byte{'~'}, sha1.Size)
 		h[4] = byte(i)
 
 		refName := string('a'+i) + suffix

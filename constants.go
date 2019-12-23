@@ -16,7 +16,6 @@ package reftable
 
 var magic = [4]byte{'R', 'E', 'F', 'T'}
 
-const hashSize = 20
 const version = 1
 const headerSize = 24
 const footerSize = 68

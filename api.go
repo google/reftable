@@ -30,8 +30,8 @@ type record interface {
 
 	valType() uint8
 	// XXX negative n == error.s
-	encode(buf []byte) (n int, fits bool)
-	decode(buf []byte, key string, valType uint8) (n int, ok bool)
+	encode(buf []byte, hashSize int) (n int, fits bool)
+	decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool)
 }
 
 // Table is a read interface for reftables, either file reftables or merged reftables.
