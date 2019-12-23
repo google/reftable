@@ -38,6 +38,14 @@
     abort();                                                                \
   }
 
+#define assert_streq(a, b)			\
+  if (0  != strcmp(a,b)) {						\
+    fflush(stderr);                                                         \
+    fflush(stdout);                                                         \
+    fprintf(stderr, "%s:%d: %s (%s) != %s (%s)\n", __FILE__, __LINE__, #a, a, #b,  b); \
+    abort();                                                                \
+  }
+
 #define assert(c)                                                           \
   if (!(c)) {                                                               \
     fflush(stderr);                                                         \
