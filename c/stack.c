@@ -633,8 +633,8 @@ int stack_compact_range(struct stack *st, int first, int last) {
     }
 
     close(lock_file_fd);
-    subtable_locks[j] = (char*)slice_yield(&subtab_lock);
-    delete_on_success[j] = (char*)slice_yield(&subtab_name);
+    subtable_locks[j] = (char*)slice_as_string(&subtab_lock);
+    delete_on_success[j] = (char*)slice_as_string(&subtab_name);
     j++;
   }
 
