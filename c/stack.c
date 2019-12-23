@@ -734,3 +734,31 @@ int stack_compact_range(struct stack *st, int first, int last) {
 int stack_compact_all(struct stack* st) {
   return stack_compact_range(st, 0, st->merged->stack_len-1);
 }
+
+int stack_compact_range_stats(struct stack *st, int first, int last) {
+  int err = stack_compact_range(st, first, last);
+  if (err > 0) {
+    st->stats.failures++;
+  }
+  return err;
+}
+
+struct segment {
+  int start, end;
+  int log;
+  uint64_t bytes_t;
+};
+
+int segment_size(struct segment *s) {
+  return s->end - s->start;
+}
+
+int fastlog2(uint64_t sz) {
+  assert(sz > 0);
+  int l = 0;
+  for (; sz; sz /= 2) {
+    l++;
+  }
+  return l - 1;
+}
+

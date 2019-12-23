@@ -131,7 +131,15 @@ void test_stack_add(void) {
   }
 }
 
+void test_log2(void) {
+  assert(1 == fastlog2(3));
+  assert(2 == fastlog2(4));
+  assert(2 == fastlog2(5));
+}
+
+
 int main() {
+  add_test_case("test_log2", &test_log2);
   add_test_case("test_parse_names", &test_parse_names);
   add_test_case("test_read_file", &test_read_file);
   add_test_case("test_names_equal", &test_names_equal);

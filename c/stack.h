@@ -36,6 +36,7 @@ struct stack {
 int read_lines(const char* filename, char ***lines);
 int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*arg), void *arg);
 int stack_write_compact(struct stack *st, struct writer *wr, int first, int last);
+int fastlog2(uint64_t sz);
 
 #endif
    
