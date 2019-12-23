@@ -667,6 +667,7 @@ int stack_compact_range(struct stack *st, int first, int last) {
   struct slice new_table_path={};
   slice_set_string(&new_table_path, st->reftable_dir);
   slice_append_string(&new_table_path, "/");
+
   slice_append(&new_table_path, new_table_name);
 
   err = rename(slice_as_string(&temp_tab_name),
@@ -693,6 +694,7 @@ int stack_compact_range(struct stack *st, int first, int last) {
     goto exit;
   }
   err = close(lock_file_fd);
+  lock_file_fd = 0;
   if (err < 0) {
     unlink(slice_as_string(&new_table_path));
     goto exit;

@@ -82,8 +82,7 @@ void test_stack_add(void) {
   printf("%s\n", dir);
   char fn[256] = "";
   strcat(fn, dir);
-  strcat(fn, "/");
-  strcat(fn, "refs");
+  strcat(fn, "/refs");
 
   struct write_options cfg = {  };
   struct stack *st = NULL;
@@ -106,8 +105,9 @@ void test_stack_add(void) {
     assert_err(err);
   }
 
-  // XXX compact here.
-
+  err = stack_compact_all(st);
+  assert_err(err);
+  
   struct merged_table *mt = stack_merged(st);
   for (int i = 0; i < N; i++) {
     struct iterator it = {};
@@ -122,8 +122,6 @@ void test_stack_add(void) {
     ref_record_clear(&dest);
   }
 
-  err = stack_compact_all(st);
-  assert_err(err);
 
   // cleanup
   stack_destroy(st);
@@ -131,7 +129,6 @@ void test_stack_add(void) {
     free(refs[i].value);
     free(refs[i].ref_name);
   }
-
 }
 
 int main() {
