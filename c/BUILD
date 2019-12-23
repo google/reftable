@@ -33,6 +33,7 @@ cc_library(
     copts = [
         "-Wall",
         "-Werror",
+	"-fvisibility=protected",
     ],
     deps = [ "@zlib//:zlib" ],
 )
