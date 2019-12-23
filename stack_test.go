@@ -151,3 +151,12 @@ func TestTombstones(t *testing.T) {
 		t.Errorf("got %v, but value should not be there", r)
 	}
 }
+
+func TestSuggestCompactionSegment(t *testing.T) {
+	sizes := []uint64{128, 64, 17, 16, 9, 9, 9, 16, 16}
+	min := suggestCompactionSegment(sizes)
+
+	if min.start != 2 || min.end != 7 {
+		t.Fatalf("got seg %v, want [2,7)", min)
+	}
+}

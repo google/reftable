@@ -548,7 +548,7 @@ func log2(sz uint64) int {
 	return l - 1
 }
 
-func segments(sizes []uint64) []segment {
+func sizesToSegments(sizes []uint64) []segment {
 	var cur segment
 	var res []segment
 	for i, sz := range sizes {
@@ -569,26 +569,22 @@ func segments(sizes []uint64) []segment {
 }
 
 func suggestCompactionSegment(sizes []uint64) *segment {
-	segs := segments(sizes)
+	segs := sizesToSegments(sizes)
 
-	var minIdx = -1
-	var minLog = 64
-	for i, s := range segs {
+	minSeg := segment{log: 64}
+	for _, s := range segs {
 		if s.size() == 1 {
 			continue
 		}
 
-		if s.log < minLog {
-			minIdx = i
-			minLog = s.log
+		if s.log < minSeg.log {
+			minSeg = s
 		}
 	}
-
-	if minIdx == -1 {
+	if minSeg.size() == 0 {
 		return nil
 	}
 
-	minSeg := &segs[minIdx]
 	for minSeg.start > 0 {
 		prev := minSeg.start - 1
 		if log2(minSeg.bytes) < log2(sizes[prev]) {
@@ -599,7 +595,7 @@ func suggestCompactionSegment(sizes []uint64) *segment {
 		minSeg.bytes += sizes[prev]
 	}
 
-	return minSeg
+	return &minSeg
 }
 
 // AutoCompact runs a compaction if the stack looks imbalanced.
