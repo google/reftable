@@ -137,8 +137,40 @@ void test_log2(void) {
   assert(2 == fastlog2(5));
 }
 
+void test_sizes_to_segments(void) {
+  uint64_t sizes[] = {2, 3, 4, 5, 7, 9};
+  // .................0  1  2  3  4  5
+
+  int seglen = 0;
+  struct segment* segs = sizes_to_segments(&seglen, sizes, ARRAYSIZE(sizes));
+  assert(segs[2].log == 3);
+  assert(segs[2].start == 5);
+  assert(segs[2].end == 6);
+
+  assert(segs[1].log == 2);
+  assert(segs[1].start == 2);
+  assert(segs[1].end == 5);
+}
+
+void test_suggest_compaction_segment(void) {
+  {
+    uint64_t sizes[] = {128, 64, 17, 16, 9, 9, 9, 16, 16};
+    // .................0    1    2  3   4  5  6
+    struct segment min = suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
+    assert(min.start == 2);
+    assert(min.end == 7);
+  }
+  
+  {
+    uint64_t sizes[] = {64, 32, 16, 8, 4, 2};
+    struct segment result = suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
+    assert(result.start == result.end);
+  }
+}
 
 int main() {
+  add_test_case("test_suggest_compaction_segment", &test_suggest_compaction_segment);
+  add_test_case("test_sizes_to_segments", &test_sizes_to_segments);
   add_test_case("test_log2", &test_log2);
   add_test_case("test_parse_names", &test_parse_names);
   add_test_case("test_read_file", &test_read_file);

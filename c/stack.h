@@ -38,5 +38,14 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
 int stack_write_compact(struct stack *st, struct writer *wr, int first, int last);
 int fastlog2(uint64_t sz);
 
+struct segment {
+  int start, end;
+  int log;
+  uint64_t bytes;
+};
+
+struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n);
+struct segment suggest_compaction_segment(uint64_t*sizes, int n);
+
 #endif
    

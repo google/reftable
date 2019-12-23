@@ -743,12 +743,6 @@ int stack_compact_range_stats(struct stack *st, int first, int last) {
   return err;
 }
 
-struct segment {
-  int start, end;
-  int log;
-  uint64_t bytes_t;
-};
-
 int segment_size(struct segment *s) {
   return s->end - s->start;
 }
@@ -762,3 +756,58 @@ int fastlog2(uint64_t sz) {
   return l - 1;
 }
 
+struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n) {
+  struct segment *segs = calloc(sizeof(struct segment), n);
+  int next = 0;
+  struct segment cur = {};
+  for (int i = 0; i < n; i++) {
+    int log = fastlog2(sizes[i]);
+    if (cur.log != log && cur.bytes > 0) {
+      segs[next++] = cur;
+      struct segment fresh  = {
+	     .start = i,
+      };
+
+      cur = fresh;
+    }
+
+    cur.log  = log;
+    cur.end = i+1;
+    cur.bytes += sizes[i];
+  }
+
+  segs[next++] = cur;
+  *seglen = next;
+  return segs;
+}
+
+struct segment suggest_compaction_segment(uint64_t*sizes, int n) {
+  int seglen = 0;
+  struct segment *segs = sizes_to_segments(&seglen, sizes, n);
+
+  struct segment min_seg = {
+			    .log = 64,
+  };
+  for (int i = 0; i < seglen; i++) {
+    if (segment_size(&segs[i]) == 1 ) {
+      continue;
+    }
+
+    if (segs[i].log < min_seg.log) {
+      min_seg = segs[i];
+    }
+  }
+
+  while (min_seg.start > 0) {
+    int prev  = min_seg.start -1;
+    if (fastlog2(min_seg.bytes) < fastlog2(sizes[prev])) {
+      break;
+    }
+
+    min_seg.start = prev;
+    min_seg.bytes += sizes[prev];
+  }
+
+  free(segs);
+  return min_seg;
+}
