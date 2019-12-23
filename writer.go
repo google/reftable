@@ -183,7 +183,9 @@ func (w *Writer) AddRef(r *RefRecord) error {
 // ascending order.
 func (w *Writer) AddLog(l *LogRecord) error {
 	if w.blockWriter != nil && w.blockWriter.getType() == blockTypeRef {
-		w.finishPublicSection()
+		if err := w.finishPublicSection(); err != nil {
+			return nil
+		}
 	}
 
 	w.next -= uint64(w.paddedWriter.pendingPadding)
