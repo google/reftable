@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -235,8 +236,9 @@ func (st *Stack) add(write func(w *Writer) error) error {
 		return ErrLockFailure
 	}
 
+	var names []string
 	for _, e := range st.stack {
-		fmt.Fprintf(f, "%s\n", e.name)
+		names = append(names, e.name)
 	}
 
 	next := st.NextUpdateIndex()
@@ -269,10 +271,14 @@ func (st *Stack) add(write func(w *Writer) error) error {
 	}
 
 	dest := fn + ".ref"
-	fmt.Fprintf(f, "%s\n", dest)
+	names = append(names, dest)
 	dest = filepath.Join(st.reftableDir, dest)
 	if err := os.Rename(tab.Name(), dest); err != nil {
-		// XXX LockFailure?
+		return err
+	}
+
+	if _, err := f.Write([]byte(strings.Join(names, "\n"))); err != nil {
+		os.Remove(dest)
 		return err
 	}
 
@@ -483,16 +489,16 @@ func (st *Stack) compactRange(first, last int) (bool, error) {
 		return false, err
 	}
 
-	var buf bytes.Buffer
+	var names []string
 	for i := 0; i < first; i++ {
-		fmt.Fprintf(&buf, "%s\n", st.stack[i].name)
+		names = append(names, st.stack[i].name)
 	}
-	fmt.Fprintf(&buf, "%s\n", fn)
+	names = append(names, fn)
 	for i := last + 1; i < len(st.stack); i++ {
-		fmt.Fprintf(&buf, "%s\n", st.stack[i].name)
+		names = append(names, st.stack[i].name)
 	}
 
-	if _, err := lockFile.Write(buf.Bytes()); err != nil {
+	if _, err := lockFile.Write([]byte(strings.Join(names, "\n"))); err != nil {
 		os.Remove(destTable)
 		return false, err
 	}
