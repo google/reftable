@@ -300,4 +300,7 @@ int stack_reload(struct stack *st);
 /* compacts all reftables into a giant table. */
 int stack_compact_all(struct stack* st);
 
+/* heuristically compact unbalanced table stack. */ 
+int stack_auto_compact(struct stack *st);
+
 #endif

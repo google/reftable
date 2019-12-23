@@ -308,7 +308,7 @@ int stack_add(struct stack* st, int (*write)(struct writer *wr, void*arg), void 
     return err;
   }
 
-  return 0 ; //  stack_autocompact(st);
+  return stack_auto_compact(st);
 }
 
 void format_name(struct slice *dest, uint64_t min, uint64_t max) {
@@ -810,4 +810,24 @@ struct segment suggest_compaction_segment(uint64_t*sizes, int n) {
 
   free(segs);
   return min_seg;
+}
+
+uint64_t *stack_table_sizes_for_compaction(struct stack *st) {
+  uint64_t *sizes  = calloc(sizeof(uint64_t), st->merged->stack_len);
+  for (int i = 0 ; i < st->merged->stack_len; i++) {
+    // overhead is 24 + 68 = 92.
+    sizes[i] = st->merged->stack[i]->size  - 91;
+  }
+  return sizes;
+}
+
+int stack_auto_compact(struct stack *st) {
+  uint64_t *sizes = stack_table_sizes_for_compaction(st);
+
+  struct segment seg = suggest_compaction_segment(sizes, st->merged->stack_len);
+  if (segment_size(&seg) > 0) {
+    return stack_compact_range_stats(st, seg.start, seg.end-1);
+  }
+
+  return 0;
 }
