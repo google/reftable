@@ -74,7 +74,7 @@ struct write_options {
 /* ref_record holds a ref database entry target_value */
 struct ref_record {
   char *ref_name;  // Name of the ref, malloced.
-  uint64_t update_index;
+  uint64_t update_index; // Logical timestamp at which this value is written
   byte *value;         // SHA1, or NULL. malloced.
   byte *target_value;  // peeled annotated tag, or NULL. malloced.
   char *target;        // symref, or NULL. malloced.
