@@ -24,7 +24,8 @@ struct block_writer {
   uint32_t block_size;
   uint32_t header_off;
   int restart_interval;
-
+  int hash_size;
+  
   uint32_t next;
   uint32_t *restarts;
   uint32_t restart_len;
@@ -34,7 +35,7 @@ struct block_writer {
 };
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
-                       uint32_t block_size, uint32_t header_off);
+                       uint32_t block_size, uint32_t header_off, int hash_size);
 byte block_writer_type(struct block_writer *bw);
 int block_writer_add(struct block_writer *w, struct record rec);
 int block_writer_finish(struct block_writer *w);
@@ -44,7 +45,8 @@ void block_writer_clear(struct block_writer *bw);
 struct block_reader {
   uint32_t header_off;
   struct block block;
-
+  int hash_size;
+  
   // size of the data, excluding restart data.
   uint32_t block_len;
   byte *restart_bytes;
@@ -59,7 +61,8 @@ struct block_iter {
 };
 
 int block_reader_init(struct block_reader *br, struct block *bl,
-                      uint32_t header_off, uint32_t table_block_size);
+                      uint32_t header_off, uint32_t table_block_size,
+		      int hash_size);
 void block_reader_start(struct block_reader *br, struct block_iter *it);
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
                       struct slice want);

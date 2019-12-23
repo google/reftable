@@ -75,14 +75,14 @@ void test_common_prefix() {
 }
 
 void set_hash(byte *h, int j) {
-  for (int i = 0; i < HASH_SIZE; i++) {
+  for (int i = 0; i < SHA1_SIZE; i++) {
     h[i] = (j >> i) & 0xff;
   }
 }
 
 void test_ref_record_roundtrip() {
-  byte testHash1[HASH_SIZE] = {};
-  byte testHash2[HASH_SIZE] = {};
+  byte testHash1[SHA1_SIZE] = {};
+  byte testHash2[SHA1_SIZE] = {};
 
   set_hash(testHash1, 1);
   set_hash(testHash1, 2);
@@ -115,13 +115,13 @@ void test_ref_record_roundtrip() {
         .buf = buf,
         .len = sizeof(buf),
     };
-    int n = record_encode(rec, dest);
+    int n = record_encode(rec, dest, SHA1_SIZE);
     assert(n > 0);
 
     struct ref_record out = {};
     struct record rec_out = {};
     record_from_ref(&rec_out, &out);
-    int m = record_decode(rec_out, key, i, dest);
+    int m = record_decode(rec_out, key, i, dest, SHA1_SIZE);
     assert(n == m);
 
     assert((out.value != NULL) == (in.value != NULL));
@@ -178,7 +178,7 @@ void print_bytes(byte *p, int l) {
 }
 
 void test_obj_record_roundtrip() {
-  byte testHash1[HASH_SIZE] = {};
+  byte testHash1[SHA1_SIZE] = {};
   set_hash(testHash1, 1);
   uint64_t till9[] = {1, 2, 3, 4, 500, 600, 700, 800, 9000};
 
@@ -212,13 +212,13 @@ void test_obj_record_roundtrip() {
         .buf = buf,
         .len = sizeof(buf),
     };
-    int n = record_encode(rec, dest);
+    int n = record_encode(rec, dest, SHA1_SIZE);
     assert(n > 0);
     byte extra = record_val_type(rec);
     struct obj_record out = {};
     struct record rec_out = {};
     record_from_obj(&rec_out, &out);
-    int m = record_decode(rec_out, key, extra, dest);
+    int m = record_decode(rec_out, key, extra, dest, SHA1_SIZE);
     assert(n == m);
 
     assert(in.hash_prefix_len == out.hash_prefix_len);
@@ -249,14 +249,14 @@ void test_index_record_roundtrip() {
       .buf = buf,
       .len = sizeof(buf),
   };
-  int n = record_encode(rec, dest);
+  int n = record_encode(rec, dest, SHA1_SIZE);
   assert(n > 0);
 
   byte extra = record_val_type(rec);
   struct index_record out = {};
   struct record out_rec;
   record_from_index(&out_rec, &out);
-  int m = record_decode(out_rec, key, extra, dest);
+  int m = record_decode(out_rec, key, extra, dest, SHA1_SIZE);
   assert(m == n);
 
   assert(in.offset == out.offset);

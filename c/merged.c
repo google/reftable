@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 
+#include "constants.h"
 #include "iter.h"
 #include "pq.h"
 #include "reader.h"
@@ -114,7 +115,7 @@ int merged_iter_next(void *p, struct record rec) {
     free(record_yield(&top.rec));
   }
 
-  record_copy_from(rec, entry.rec);
+  record_copy_from(rec, entry.rec, mi->hash_size);
   record_clear(entry.rec);
   free(record_yield(&entry.rec));
   free(slice_yield(&entry_key));
@@ -151,6 +152,7 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
       .stack_len = n,
       .min = first_min,
       .max = last_max,
+      .hash_size = SHA1_SIZE,
   };
 
   *dest = calloc(sizeof(struct merged_table), 1);
@@ -207,6 +209,7 @@ int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
       .stack = iters,
       .stack_len = mt->stack_len,
       .typ = record_type(rec),
+      .hash_size = mt->hash_size,
   };
 
   err = merged_iter_init(&merged);

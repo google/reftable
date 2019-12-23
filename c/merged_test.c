@@ -105,8 +105,8 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
 }
 
 void test_merged(void) {
-  byte hash1[HASH_SIZE];
-  byte hash2[HASH_SIZE];
+  byte hash1[SHA1_SIZE];
+  byte hash2[SHA1_SIZE];
 
   set_test_hash(hash1, 1);
   set_test_hash(hash2, 2);
@@ -172,7 +172,6 @@ void test_merged(void) {
     if (err > 0) {
       break;
     }
-    ref_record_print(&ref);
     if (len == cap) {
       cap = 2 * cap + 1;
       out = realloc(out, sizeof(struct ref_record) * cap);
@@ -189,7 +188,7 @@ void test_merged(void) {
   };
   assert(ARRAYSIZE(want) == len);
   for (int i = 0; i < len; i++) {
-    assert(ref_record_equal(&want[i], &out[i]));
+    assert(ref_record_equal(&want[i], &out[i], SHA1_SIZE));
   }
   for (int i = 0; i < len; i++) {
     ref_record_clear(&out[i]);

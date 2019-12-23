@@ -57,7 +57,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   {
     struct ref_record ref = {};
     for (int i = 0; i < N; i++) {
-      byte hash[HASH_SIZE];
+      byte hash[SHA1_SIZE];
       set_test_hash(hash, i);
 
       char name[100];
@@ -201,7 +201,7 @@ void test_table_refs_for(bool indexed) {
   {
     struct ref_record ref = {};
     for (int i = 0; i < N; i++) {
-      byte hash[20];
+      byte hash[SHA1_SIZE];
       memset(hash, i, sizeof(hash));
       char fill[51] = {};
       memset(fill, 'x', 50);
@@ -211,8 +211,8 @@ void test_table_refs_for(bool indexed) {
       name[40] = 0;
       ref.ref_name = name;
 
-      byte hash1[20];
-      byte hash2[20];
+      byte hash1[SHA1_SIZE];
+      byte hash2[SHA1_SIZE];
 
       set_test_hash(hash1, i / 4);
       set_test_hash(hash2, 3 + i / 4);

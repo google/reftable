@@ -85,13 +85,13 @@ struct ref_record {
 bool ref_record_is_deletion(const struct ref_record *ref);
 
 /* prints a ref_record onto stdout */
-void ref_record_print(struct ref_record *ref);
+void ref_record_print(struct ref_record *ref, int hash_size);
 
 /* frees and nulls all pointer values. */
 void ref_record_clear(struct ref_record *ref);
 
 /* returns whether two ref_records are the same */
-bool ref_record_equal(struct ref_record *a, struct ref_record *b);
+bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size);
 
 /* log_record holds a reflog entry */
 struct log_record {

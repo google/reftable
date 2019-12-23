@@ -86,7 +86,7 @@ void writer_reinit_block_writer(struct writer *w, byte typ) {
   }
 
   block_writer_init(&w->block_writer_data, typ, w->block, w->opts.block_size,
-                    block_start);
+                    block_start, w->hash_size);
   w->block_writer = &w->block_writer_data;
   w->block_writer->restart_interval = w->opts.restart_interval;
 }
@@ -98,6 +98,7 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
     abort();
   }
   struct writer *wp = calloc(sizeof(struct writer), 1);
+  wp->hash_size = SHA1_SIZE;
   wp->block = calloc(opts->block_size, 1);
   wp->write = writer_func;
   wp->write_arg = writer_arg;
@@ -221,7 +222,7 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
   if (ref->value != NULL) {
     struct slice h = {
         .buf = ref->value,
-        .len = HASH_SIZE,
+        .len = w->hash_size,
     };
 
     writer_index_hash(w, h);
@@ -229,7 +230,7 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
   if (ref->target_value != NULL) {
     struct slice h = {
         .buf = ref->target_value,
-        .len = HASH_SIZE,
+        .len = w->hash_size,
     };
     writer_index_hash(w, h);
   }

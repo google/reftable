@@ -35,6 +35,7 @@ struct reader_offsets {
 struct reader {
   struct block_source source;
   char *name;
+  int hash_size;
   uint64_t size;
   uint32_t block_size;
   uint64_t min_update_index;

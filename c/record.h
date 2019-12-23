@@ -21,10 +21,10 @@
 struct record_vtable {
   void (*key)(const void *rec, struct slice *dest);
   byte (*type)();
-  void (*copy_from)(void *rec, const void *src);
+  void (*copy_from)(void *rec, const void *src, int hash_size);
   byte (*val_type)(const void *rec);
-  int (*encode)(const void *rec, struct slice dest);
-  int (*decode)(void *rec, struct slice key, byte extra, struct slice src);
+  int (*encode)(const void *rec, struct slice dest, int hash_size);
+  int (*decode)(void *rec, struct slice key, byte extra, struct slice src, int hash_size);
   void (*clear)(void *rec);
 };
 
@@ -62,11 +62,11 @@ struct obj_record {
 
 void record_key(struct record rec, struct slice *dest);
 byte record_type(struct record rec);
-void record_copy_from(struct record rec, struct record src);
+void record_copy_from(struct record rec, struct record src, int hash_size);
 byte record_val_type(struct record rec);
-int record_encode(struct record rec, struct slice dest);
+int record_encode(struct record rec, struct slice dest, int hash_size);
 int record_decode(struct record rec, struct slice key, byte extra,
-                  struct slice src);
+                  struct slice src, int hash_size);
 void record_clear(struct record rec);
 void *record_yield(struct record *rec);
 void record_from_obj(struct record *rec, struct obj_record *objrec);

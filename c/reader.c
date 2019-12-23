@@ -82,7 +82,8 @@ int init_reader(struct reader *r, struct block_source source, const char *name) 
   r->size = block_source_size(source) - FOOTER_SIZE;
   r->source = source;
   r->name = strdup(name);
-
+  r->hash_size = SHA1_SIZE;
+  
   struct block footer = {};
   struct block header = {};
 
@@ -251,7 +252,7 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
     header_off = HEADER_SIZE;
   }
 
-  return block_reader_init(br, &block, header_off, r->block_size);
+  return block_reader_init(br, &block, header_off, r->block_size, r->hash_size);
 }
 
 int table_iter_next_block(struct table_iter *dest, struct table_iter *src) {
@@ -560,7 +561,7 @@ int reader_refs_for_indexed(struct reader *r, struct iterator *it, byte *oid) {
   }
 
   struct indexed_table_ref_iter *itr = NULL;
-  err = new_indexed_table_ref_iter(&itr, r, oid, got.offsets, got.offset_len);
+  err = new_indexed_table_ref_iter(&itr, r, oid, r->hash_size, got.offsets, got.offset_len);
   if (err < 0) {
     record_clear(got_rec);
     return err;

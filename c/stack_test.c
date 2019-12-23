@@ -96,7 +96,7 @@ void test_stack_add(void) {
     char buf[256];
     sprintf(buf, "branch%02d", i);
     refs[i].ref_name = strdup(buf);
-    refs[i].value = malloc(HASH_SIZE);
+    refs[i].value = malloc(SHA1_SIZE);
     refs[i].update_index = i + 1;
     set_test_hash(refs[i].value , i);
   }
@@ -118,7 +118,7 @@ void test_stack_add(void) {
     struct ref_record dest = {};
     err = iterator_next_ref(it, &dest);
     assert_err(err);
-    assert(ref_record_equal(&dest, refs + i));
+    assert(ref_record_equal(&dest, refs + i, SHA1_SIZE));
     iterator_destroy(&it);
     ref_record_clear(&dest);
   }

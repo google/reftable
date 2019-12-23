@@ -40,7 +40,7 @@ void iterator_from_filtering_ref_iterator(struct iterator *,
 
 struct indexed_table_ref_iter {
   struct reader *r;
-  byte *oid;
+  struct slice oid;
 
   // mutable
   uint64_t *offsets;
@@ -56,7 +56,7 @@ struct indexed_table_ref_iter {
 void iterator_from_indexed_table_ref_iter(struct iterator *it,
                                           struct indexed_table_ref_iter *itr);
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-                               struct reader *r, byte *oid, uint64_t *offsets,
+                               struct reader *r, byte *oid, int oid_len, uint64_t *offsets,
                                int offset_len);
 
 #endif

@@ -117,6 +117,7 @@ void iterator_from_filtering_ref_iterator(struct iterator *it,
 void indexed_table_ref_iter_close(void *p) {
   struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
   reader_return_block(it->r, &it->block_reader.block);
+  free(slice_yield(&it->oid));
 }
 
 int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
@@ -165,20 +166,21 @@ int indexed_table_ref_iter_next(void *p, struct record rec) {
       continue;
     }
 
-    if (0 == memcmp(it->oid, ref->target_value, HASH_SIZE) ||
-        0 == memcmp(it->oid, ref->value, HASH_SIZE)) {
+    if (0 == memcmp(it->oid.buf, ref->target_value, it->oid.len) ||
+        0 == memcmp(it->oid.buf, ref->value, it->oid.len)) {
       return 0;
     }
   }
 }
 
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-                               struct reader *r, byte *oid, uint64_t *offsets,
+                               struct reader *r, byte *oid, int oid_len, uint64_t *offsets,
                                int offset_len) {
   struct indexed_table_ref_iter *itr =
       calloc(sizeof(struct indexed_table_ref_iter), 1);
   itr->r = r;
-  itr->oid = oid;
+  slice_resize(&itr->oid, oid_len);
+  memcpy(itr->oid.buf, oid, oid_len);
 
   itr->offsets = offsets;
   itr->offset_len = offset_len;

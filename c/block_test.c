@@ -65,7 +65,7 @@ void test_block_read_write() {
   block.len = block_size;
 
   struct block_writer bw = {};
-  block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off);
+  block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off, SHA1_SIZE);
   struct ref_record ref = {};
   struct record rec = {};
   record_from_ref(&rec, &ref);
@@ -74,7 +74,7 @@ void test_block_read_write() {
     char name[100];
     sprintf(name, "branch%02d", i);
 
-    byte hash[20];
+    byte hash[SHA1_SIZE];
     memset(hash, i, sizeof(hash));
 
     ref.ref_name = name;
@@ -92,7 +92,7 @@ void test_block_read_write() {
   block_writer_clear(&bw);
 
   struct block_reader br = {};
-  block_reader_init(&br, &block, header_off, block_size);
+  block_reader_init(&br, &block, header_off, block_size, SHA1_SIZE);
 
   struct block_iter it = {};
   block_reader_start(&br, &it);
@@ -104,9 +104,10 @@ void test_block_read_write() {
     if (r > 0) {
       break;
     }
-    assert(0 == strcmp(names[j], ref.ref_name));
+    assert_streq(names[j], ref.ref_name);
     j++;
   }
+  
   record_clear(rec);
   block_iter_close(&it);
 

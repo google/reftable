@@ -27,8 +27,9 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
                                   struct slice key);
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
-                       uint32_t block_size, uint32_t header_off) {
+                       uint32_t block_size, uint32_t header_off, int hash_size) {
   bw->buf = buf;
+  bw->hash_size = hash_size;
   bw->block_size = block_size;
   bw->header_off = header_off;
   bw->buf[header_off] = typ;
@@ -65,7 +66,7 @@ int block_writer_add(struct block_writer *w, struct record rec) {
   out.buf += n;
   out.len -= n;
 
-  n = record_encode(rec, out);
+  n = record_encode(rec, out, w->hash_size);
   if (n < 0) {
     goto err;
   }
@@ -132,7 +133,7 @@ byte block_reader_type(struct block_reader *r) {
 }
 
 int block_reader_init(struct block_reader *br, struct block *block,
-                      uint32_t header_off, uint32_t table_block_size) {
+                      uint32_t header_off, uint32_t table_block_size, int hash_size) {
   uint32_t full_block_size = table_block_size;
   byte typ = block->data[header_off];
 
@@ -161,6 +162,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
   block->data = NULL;
   block->len = 0;
 
+  br->hash_size = hash_size;
   br->block_len = restart_start;
   br->full_block_size = full_block_size;
   br->header_off = header_off;
@@ -239,7 +241,7 @@ int block_iter_next(struct block_iter *it, struct record rec) {
 
   in.buf += n;
   in.len -= n;
-  n = record_decode(rec, key, extra, in);
+  n = record_decode(rec, key, extra, in, it->br->hash_size);
   if (n < 0) {
     return -1;
   }
