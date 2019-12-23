@@ -17,6 +17,7 @@ package reftable
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -81,7 +82,7 @@ func TestTableObjectIDLen(t *testing.T) {
 func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, cfg Config) (*Writer, *Reader) {
 	buf := &bytes.Buffer{}
 	var min, max uint64
-	min = 0xfffffffff
+	min = math.MaxUint64
 	for _, r := range refs {
 		if r.UpdateIndex < min {
 			min = r.UpdateIndex
@@ -202,7 +203,7 @@ func TestTableRoundTrip(t *testing.T) {
 		}
 	}
 
-	iter, err = reader.SeekLog("", maxUint64)
+	iter, err = reader.SeekLog("", math.MaxUint64)
 	if err != nil {
 		t.Fatalf("start(g): %v", err)
 	}

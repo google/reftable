@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -378,7 +379,7 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 		}
 	}
 
-	it, err = merged.SeekLog("", 0xffffffffffffffff)
+	it, err = merged.SeekLog("", math.MaxUint64)
 	if err != nil {
 		return err
 	}

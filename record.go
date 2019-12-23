@@ -18,6 +18,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 )
 
 func newRecord(typ byte, key string) record {
@@ -444,10 +445,8 @@ func decodeKey(buf []byte, prevKey string) (n int, key string, value uint8, ok b
 	return len(start) - len(buf), string(name), value, true
 }
 
-const maxUint64 = 0xffffffffffffffff
-
 func revInt64(t uint64) uint64 {
-	return maxUint64 - t
+	return math.MaxUint64 - t
 }
 
 func encodeString(buf []byte, val string) (n int, ok bool) {
