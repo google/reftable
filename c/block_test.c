@@ -122,7 +122,7 @@ void test_block_read_write() {
     n = block_iter_next(&it, rec);
     assert(n == 0);
 
-    assert(strcmp(names[i], ref.ref_name) == 0);
+    assert_streq(names[i], ref.ref_name);
 
     want.len--;
     n = block_reader_seek(&br, &it, want);
@@ -130,7 +130,7 @@ void test_block_read_write() {
 
     n = block_iter_next(&it, rec);
     assert(n == 0);
-    assert(strcmp(names[10 * (i / 10)], ref.ref_name) == 0);
+    assert_streq(names[10 * (i / 10)], ref.ref_name);
 
     block_iter_close(&it);
   }
