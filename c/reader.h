@@ -24,7 +24,7 @@ uint64_t block_source_size(struct block_source source);
 int block_source_read_block(struct block_source source, struct block *dest,
                             uint64_t off, uint32_t size);
 void block_source_return_block(struct block_source source, struct block *ret);
-void block_source_close(struct block_source source);
+void block_source_close(struct block_source *source);
 
 struct reader_offsets {
   bool present;

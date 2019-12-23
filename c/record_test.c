@@ -81,11 +81,6 @@ void set_hash(byte *h, int j) {
 }
 
 void test_ref_record_roundtrip() {
-  byte testHash1[SHA1_SIZE] = {};
-  byte testHash2[SHA1_SIZE] = {};
-
-  set_hash(testHash1, 1);
-  set_hash(testHash1, 2);
   for (int i = 0; i <= 3; i++) {
     printf("subtest %d\n", i);
     struct ref_record in = {};
@@ -93,17 +88,20 @@ void test_ref_record_roundtrip() {
       case 0:
         break;
       case 1:
-        in.value = testHash1;
+        in.value = malloc(SHA1_SIZE);
+	set_hash(in.value, 1);
         break;
       case 2:
-        in.value = testHash1;
-        in.target_value = testHash2;
+        in.value = malloc(SHA1_SIZE);
+	set_hash(in.value, 1);
+        in.target_value = malloc(SHA1_SIZE);
+	set_hash(in.target_value, 2);
         break;
       case 3:
-        in.target = "target";
+        in.target = strdup("target");
         break;
     }
-    in.ref_name = "refs/heads/master";
+    in.ref_name = strdup("refs/heads/master");
 
     struct record rec = {};
     record_from_ref(&rec, &in);
@@ -129,6 +127,7 @@ void test_ref_record_roundtrip() {
     assert((out.target != NULL) == (in.target != NULL));
     free(slice_yield(&key));
     record_clear(rec_out);
+    ref_record_clear(&in);
   }
 }
 
@@ -267,12 +266,12 @@ void test_index_record_roundtrip() {
 }
 
 int main() {
+  add_test_case("test_ref_record_roundtrip", &test_ref_record_roundtrip);
   add_test_case("varint_roundtrip", &varint_roundtrip);
   add_test_case("test_key_roundtrip", &test_key_roundtrip);
   add_test_case("test_common_prefix", &test_common_prefix);
-  add_test_case("test_ref_record_roundtrip", &test_ref_record_roundtrip);
   add_test_case("test_obj_record_roundtrip", &test_obj_record_roundtrip);
-  add_test_case("test_obj_record_roundtrip", &test_index_record_roundtrip);
+  add_test_case("test_index_record_roundtrip", &test_index_record_roundtrip);
   add_test_case("test_u24_roundtrip", &test_u24_roundtrip);
   test_main();
 }

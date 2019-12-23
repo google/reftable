@@ -90,7 +90,7 @@ void test_stack_add(void) {
   int err = new_stack(&st, dir, fn, cfg);
   assert_err(err);
 
-  struct ref_record refs[4] = {};
+  struct ref_record refs[2] = {};
   int N = ARRAYSIZE(refs);
   for (int i = 0; i < N; i++) {
     char buf[256];
@@ -150,6 +150,7 @@ void test_sizes_to_segments(void) {
   assert(segs[1].log == 2);
   assert(segs[1].start == 2);
   assert(segs[1].end == 5);
+  free(segs);
 }
 
 void test_suggest_compaction_segment(void) {

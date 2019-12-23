@@ -116,6 +116,7 @@ void iterator_from_filtering_ref_iterator(struct iterator *it,
 
 void indexed_table_ref_iter_close(void *p) {
   struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
+  block_iter_close(&it->cur);
   reader_return_block(it->r, &it->block_reader.block);
   free(slice_yield(&it->oid));
 }

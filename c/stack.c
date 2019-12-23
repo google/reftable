@@ -182,6 +182,7 @@ int stack_reload_once(struct stack* st, char **names) {
   for (int i = 0; i < cur_len; i++) {
     if (cur[i] != NULL) {
       reader_close(cur[i]);
+      reader_free(cur[i]);
     }
   }
   
@@ -576,6 +577,8 @@ int stack_compact_range(struct stack *st, int first, int last) {
   struct slice temp_tab_name = {};
   struct slice new_table_name = {};
   struct slice lock_file_name = {};
+  struct slice ref_list_contents = {};
+  struct slice new_table_path={};
 
   st->stats.attempts++;
   int err = 0;
@@ -659,7 +662,6 @@ int stack_compact_range(struct stack *st, int first, int last) {
 	      st->merged->stack[last]->max_update_index);
   slice_append_string(&new_table_name, ".ref");
 
-  struct slice new_table_path={};
   slice_set_string(&new_table_path, st->reftable_dir);
   slice_append_string(&new_table_path, "/");
 
@@ -671,7 +673,6 @@ int stack_compact_range(struct stack *st, int first, int last) {
     goto exit;
   }
 
-  struct slice ref_list_contents = {};
   for (int i =0; i < first; i++) {
     slice_append_string(&ref_list_contents, st->merged->stack[i]->name);
     slice_append_string(&ref_list_contents, "\n");
@@ -708,8 +709,6 @@ int stack_compact_range(struct stack *st, int first, int last) {
 
   err = stack_reload(st);
  exit:
-  
-  free(slice_yield(&temp_tab_name));
   for (char **p = subtable_locks; *p; p++) {
     unlink(*p);
   }
@@ -722,6 +721,10 @@ int stack_compact_range(struct stack *st, int first, int last) {
   if (have_lock) {
     unlink(slice_as_string(&lock_file_name));
   }
+  free(slice_yield(&new_table_name));
+  free(slice_yield(&new_table_path));
+  free(slice_yield(&ref_list_contents));
+  free(slice_yield(&temp_tab_name));
   free(slice_yield(&lock_file_name));
   return err;
 }
@@ -779,7 +782,6 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n) {
 struct segment suggest_compaction_segment(uint64_t*sizes, int n) {
   int seglen = 0;
   struct segment *segs = sizes_to_segments(&seglen, sizes, n);
-
   struct segment min_seg = {
 			    .log = 64,
   };
@@ -818,8 +820,8 @@ uint64_t *stack_table_sizes_for_compaction(struct stack *st) {
 
 int stack_auto_compact(struct stack *st) {
   uint64_t *sizes = stack_table_sizes_for_compaction(st);
-
   struct segment seg = suggest_compaction_segment(sizes, st->merged->stack_len);
+  free(sizes);
   if (segment_size(&seg) > 0) {
     return stack_compact_range_stats(st, seg.start, seg.end-1);
   }

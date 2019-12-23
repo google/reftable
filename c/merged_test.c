@@ -202,6 +202,8 @@ void test_merged(void) {
   merged_table_free(mt);
 }
 
+// XXX test refs_for(oid)
+
 int main() {
   add_test_case("test_pq", &test_pq);
   add_test_case("test_merged", &test_merged);

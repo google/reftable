@@ -40,8 +40,13 @@ void block_source_return_block(struct block_source source,
   source.ops->return_block(source.arg, blockp);
 }
 
-void block_source_close(struct block_source source) {
-  source.ops->close(source.arg);
+void block_source_close(struct block_source *source) {
+  if (source->ops == NULL) {
+    return;
+  }
+  
+  source->ops->close(source->arg);
+  source->ops = NULL;
 }
 
 struct reader_offsets *reader_offsets_for(struct reader *r, byte typ) {
@@ -511,7 +516,7 @@ int reader_seek_ref(struct reader *r, struct iterator *it, char *name) {
 }
 
 void reader_close(struct reader *r) {
-  block_source_close(r->source);
+  block_source_close(&r->source);
   free(r->name);
   r->name = NULL;
 }

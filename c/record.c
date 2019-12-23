@@ -154,7 +154,8 @@ void ref_record_copy_from(void *rec, const void *src_rec, int hash_size) {
   struct ref_record *ref = (struct ref_record *)rec;
   struct ref_record *src = (struct ref_record *)src_rec;
 
-  memset(ref, 0, sizeof(struct ref_record));
+  // This is simple and correct, but we could probably reuse the hash fields.
+  ref_record_clear(ref);
   if (src->ref_name != NULL) {
     ref->ref_name = strdup(src->ref_name);
   }
@@ -289,7 +290,6 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
                       struct slice in, int hash_size) {
   assert(hash_size > 0);
   struct ref_record *r = (struct ref_record *)rec;
-
   struct slice start = in;
   int n = get_var_int(&r->update_index, in);
   if (n < 0) {
@@ -302,6 +302,11 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
   r->ref_name = realloc(r->ref_name, key.len + 1);
   memcpy(r->ref_name, key.buf, key.len);
   r->ref_name[key.len] = 0;
+
+  bool seen_value = false;
+  bool seen_target_value = false;
+  bool seen_target = false;
+  
   switch (val_type) {
     case 1:
     case 2:
@@ -312,6 +317,7 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
       if (r->value == NULL) {
         r->value = malloc(hash_size);
       }
+      seen_value = true;
       memcpy(r->value, in.buf, hash_size);
       in.buf += hash_size;
       in.len -= hash_size;
@@ -321,6 +327,7 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
       if (r->target_value == NULL) {
         r->target_value = malloc(hash_size);
       }
+      seen_target_value = true;
       memcpy(r->target_value, in.buf, hash_size);
       in.buf += hash_size;
       in.len -= hash_size;
@@ -333,12 +340,8 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
       }
       in.buf += n;
       in.len -= n;
-
-      if (r->target != NULL) {
-        free(r->target);
-      }
-      r->target = slice_to_string(dest);
-      free(slice_yield(&dest));
+      seen_target = true;
+      r->target = (char*)slice_as_string(&dest);
     } break;
 
     case 0:
@@ -346,6 +349,19 @@ int ref_record_decode(void *rec, struct slice key, byte val_type,
     default:
       abort();
       break;
+  }
+
+  if (!seen_target && r->target != NULL) {
+    free(r->target);
+    r->target = NULL;
+  }
+  if (!seen_target_value && r->target_value != NULL) {
+    free(r->target_value);
+    r->target_value = NULL;
+  }
+  if (!seen_value && r->value != NULL) {
+    free(r->value);
+    r->value = NULL;
   }
 
   return start.len - in.len;

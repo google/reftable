@@ -41,7 +41,7 @@ void test_buffer(void) {
   assert(0 == memcmp(out.data, "el", 2));
 
   block_source_return_block(source, &out);
-  block_source_close(source);
+  block_source_close(&source);
   free(slice_yield(&buf));
 }
 
@@ -272,9 +272,9 @@ void test_table_refs_for(bool indexed) {
   assert(j == want_names_len)
 
   free(slice_yield(&buf));
-  reader_close(&rd);
   free_names(want_names);
   iterator_destroy(&it);
+  reader_close(&rd);
 }
 
 void test_table_refs_for_no_index(void) { test_table_refs_for(false); }
