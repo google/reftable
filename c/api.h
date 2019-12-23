@@ -303,4 +303,12 @@ int stack_compact_all(struct stack* st);
 /* heuristically compact unbalanced table stack. */ 
 int stack_auto_compact(struct stack *st);
 
+/* statistics on past compactions. */
+struct compaction_stats {
+  uint64_t bytes;
+  int attempts;
+  int failures;
+};
+
+struct compaction_stats *stack_compaction_stats(struct stack *st);
 #endif

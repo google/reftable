@@ -17,12 +17,6 @@
 
 #include "api.h"
 
-struct compaction_stats {
-  uint64_t bytes;
-  int attempts;
-  int failures;
-};
-
 struct stack {
   char *list_file;
   char *reftable_dir;

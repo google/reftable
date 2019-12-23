@@ -526,7 +526,9 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first, int last
   int subtabs_len = last - first + 1;
   struct reader** subtabs = calloc(sizeof(struct reader*), last - first + 1);
   for (int i = first, j = 0; i <= last; i++) {
-    subtabs[j++] = st->merged->stack[i];
+    struct reader *t = st->merged->stack[i];
+    subtabs[j++] = t;
+    st->stats.bytes += t->size;
   }
 
   struct merged_table *mt = NULL;
@@ -830,4 +832,8 @@ int stack_auto_compact(struct stack *st) {
   }
 
   return 0;
+}
+
+struct compaction_stats *stack_compaction_stats(struct stack *st) {
+  return &st->stats;
 }
