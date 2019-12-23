@@ -23,6 +23,7 @@
 
 #include "api.h"
 #include "block.h"
+#include "constants.h"
 #include "record.h"
 #include "tree.h"
 

@@ -16,13 +16,11 @@
 #define BASICS_H
 
 #include <stdint.h>
+#include "api.h"
 
 #define true 1
 #define false 0
 #define ARRAYSIZE(a) sizeof(a) / sizeof(a[0])
-
-typedef uint8_t byte;
-typedef byte bool;
 
 void put_u24(byte *out, uint32_t i);
 uint32_t get_u24(byte *in);

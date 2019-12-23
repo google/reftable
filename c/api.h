@@ -15,9 +15,10 @@
 #ifndef API_H
 #define API_H
 
-#include "basics.h"
-#include "constants.h"
-#include "slice.h"
+#include <stdint.h>
+
+typedef uint8_t byte;
+typedef byte bool;
 
 /* block_source is a generic wrapper for a seekable readable file.
    It is generally passed around by value.
@@ -311,4 +312,5 @@ struct compaction_stats {
 };
 
 struct compaction_stats *stack_compaction_stats(struct stack *st);
+
 #endif

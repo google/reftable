@@ -17,6 +17,7 @@
 #include "api.h"
 #include "basics.h"
 #include "block.h"
+#include "constants.h"
 #include "pq.h"
 #include "reader.h"
 #include "record.h"

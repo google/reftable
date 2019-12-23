@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "constants.h"
 #include "blocksource.h"
 #include "record.h"
 

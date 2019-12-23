@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "constants.h"
 
 int is_block_type(byte typ) {
   switch (typ) {

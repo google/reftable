@@ -18,6 +18,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "constants.h"
+
 struct test_case **test_cases;
 int test_case_len;
 int test_case_cap;

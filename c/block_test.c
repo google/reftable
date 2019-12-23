@@ -18,6 +18,7 @@
 
 #include "api.h"
 #include "basics.h"
+#include "constants.h"
 #include "record.h"
 #include "test_framework.h"
 

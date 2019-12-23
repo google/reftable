@@ -21,6 +21,7 @@
 
 #include "api.h"
 #include "block.h"
+#include "constants.h"
 #include "iter.h"
 #include "record.h"
 #include "tree.h"

@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "api.h"
+#include "constants.h"
 #include "block.h"
 #include "reader.h"
 
