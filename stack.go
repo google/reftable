@@ -63,8 +63,8 @@ func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
 	return st, nil
 }
 
-func (s *Stack) readNames() ([]string, error) {
-	c, err := ioutil.ReadFile(s.listFile)
+func (st *Stack) readNames() ([]string, error) {
+	c, err := ioutil.ReadFile(st.listFile)
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
@@ -85,21 +85,21 @@ func (s *Stack) readNames() ([]string, error) {
 
 // Returns the merged stack. The stack is only valid until the next
 // write, as writes may trigger reloads
-func (s *Stack) Merged() *Merged {
-	return s.merged
+func (st *Stack) Merged() *Merged {
+	return st.merged
 }
 
 // Close releases file descriptors associated with this stack.
-func (s *Stack) Close() {
-	for _, r := range s.stack {
+func (st *Stack) Close() {
+	for _, r := range st.stack {
 		r.Close()
 	}
-	s.stack = nil
+	st.stack = nil
 }
 
-func (s *Stack) reloadOnce(names []string) error {
+func (st *Stack) reloadOnce(names []string) error {
 	cur := map[string]*Reader{}
-	for _, r := range s.stack {
+	for _, r := range st.stack {
 		cur[r.Name()] = r
 	}
 
@@ -115,7 +115,7 @@ func (s *Stack) reloadOnce(names []string) error {
 		if rd != nil {
 			delete(cur, name)
 		} else {
-			bs, err := NewFileBlockSource(filepath.Join(s.reftableDir, name))
+			bs, err := NewFileBlockSource(filepath.Join(st.reftableDir, name))
 			if err != nil {
 				return err
 			}
@@ -129,7 +129,7 @@ func (s *Stack) reloadOnce(names []string) error {
 	}
 
 	// success. Swap.
-	s.stack = newTables
+	st.stack = newTables
 	for _, v := range cur {
 		v.Close()
 	}
@@ -137,22 +137,22 @@ func (s *Stack) reloadOnce(names []string) error {
 	return nil
 }
 
-func (s *Stack) reload() error {
+func (st *Stack) reload() error {
 	var delay time.Duration
 	deadline := time.Now().Add(5 * time.Second / 2)
 	for time.Now().Before(deadline) {
-		names, err := s.readNames()
+		names, err := st.readNames()
 		if err != nil {
 			return err
 		}
-		err = s.reloadOnce(names)
+		err = st.reloadOnce(names)
 		if err == nil {
 			break
 		}
 		if !os.IsNotExist(err) {
 			return err
 		}
-		after, err := s.readNames()
+		after, err := st.readNames()
 		if err != nil {
 			return err
 		}
@@ -166,7 +166,7 @@ func (s *Stack) reload() error {
 	}
 
 	var tabs []*Reader
-	for _, r := range s.stack {
+	for _, r := range st.stack {
 		tabs = append(tabs, r)
 	}
 
@@ -174,7 +174,7 @@ func (s *Stack) reload() error {
 	if err != nil {
 		return err
 	}
-	s.merged = m
+	st.merged = m
 	return nil
 }
 
@@ -182,17 +182,17 @@ func (s *Stack) reload() error {
 // the stack is reloaded, so the transaction may be retried.
 var ErrLockFailure = errors.New("reftable: lock failure")
 
-func (s *Stack) UpToDate() (bool, error) {
-	names, err := s.readNames()
+func (st *Stack) UpToDate() (bool, error) {
+	names, err := st.readNames()
 	if err != nil {
 		return false, err
 	}
 
-	if len(names) != len(s.stack) {
+	if len(names) != len(st.stack) {
 		return false, nil
 	}
 
-	for i, e := range s.stack {
+	for i, e := range st.stack {
 		if e.name != names[i] {
 			return false, nil
 		}
@@ -201,19 +201,19 @@ func (s *Stack) UpToDate() (bool, error) {
 }
 
 // Add a new reftable to stack, transactionally.
-func (s *Stack) Add(write func(w *Writer) error) error {
-	if err := s.add(write); err != nil {
+func (st *Stack) Add(write func(w *Writer) error) error {
+	if err := st.add(write); err != nil {
 		if err == ErrLockFailure {
-			s.reload()
+			st.reload()
 		}
 		return err
 	}
 
-	return s.AutoCompact()
+	return st.AutoCompact()
 }
 
-func (s *Stack) add(write func(w *Writer) error) error {
-	lockFile := s.listFile + ".lock"
+func (st *Stack) add(write func(w *Writer) error) error {
+	lockFile := st.listFile + ".lock"
 	f, err := os.OpenFile(lockFile, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
 	if os.IsExist(err) {
 		return ErrLockFailure
@@ -229,25 +229,25 @@ func (s *Stack) add(write func(w *Writer) error) error {
 		}
 	}()
 
-	if ok, err := s.UpToDate(); err != nil {
+	if ok, err := st.UpToDate(); err != nil {
 		return err
 	} else if !ok {
 		return ErrLockFailure
 	}
 
-	for _, e := range s.stack {
+	for _, e := range st.stack {
 		fmt.Fprintf(f, "%s\n", e.name)
 	}
 
-	next := s.NextUpdateIndex()
+	next := st.NextUpdateIndex()
 	fn := formatName(next, next)
-	tab, err := ioutil.TempFile(s.reftableDir, fn+"*.ref")
+	tab, err := ioutil.TempFile(st.reftableDir, fn+"*.ref")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(f.Name())
 
-	wr, err := NewWriter(tab, &s.cfg)
+	wr, err := NewWriter(tab, &st.cfg)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (s *Stack) add(write func(w *Writer) error) error {
 
 	dest := fn + ".ref"
 	fmt.Fprintf(f, "%s\n", dest)
-	dest = filepath.Join(s.reftableDir, dest)
+	dest = filepath.Join(st.reftableDir, dest)
 	if err := os.Rename(tab.Name(), dest); err != nil {
 		// XXX LockFailure?
 		return err
@@ -281,13 +281,13 @@ func (s *Stack) add(write func(w *Writer) error) error {
 		return err
 	}
 
-	if err := os.Rename(lockFile, s.listFile); err != nil {
+	if err := os.Rename(lockFile, st.listFile); err != nil {
 		os.Remove(dest)
 		return err
 	}
 	lockFile = ""
 
-	return s.reload()
+	return st.reload()
 }
 
 func formatName(min, max uint64) string {
@@ -295,20 +295,20 @@ func formatName(min, max uint64) string {
 }
 
 // NextUpdateIndex returns the update index at which to write the next table.
-func (s *Stack) NextUpdateIndex() uint64 {
-	if sz := len(s.stack); sz > 0 {
-		return s.stack[sz-1].MaxUpdateIndex() + 1
+func (st *Stack) NextUpdateIndex() uint64 {
+	if sz := len(st.stack); sz > 0 {
+		return st.stack[sz-1].MaxUpdateIndex() + 1
 	}
 	return 1
 }
 
 // compactLocked writes the compacted version of tables [first,last]
 // into a temporary file, whose name is returned.
-func (s *Stack) compactLocked(first, last int) (string, error) {
-	fn := formatName(s.stack[first].MinUpdateIndex(),
-		s.stack[last].MaxUpdateIndex())
+func (st *Stack) compactLocked(first, last int) (string, error) {
+	fn := formatName(st.stack[first].MinUpdateIndex(),
+		st.stack[last].MaxUpdateIndex())
 
-	tmpTable, err := ioutil.TempFile(s.reftableDir, fn+"_*.ref")
+	tmpTable, err := ioutil.TempFile(st.reftableDir, fn+"_*.ref")
 	if err != nil {
 		return "", err
 	}
@@ -320,12 +320,12 @@ func (s *Stack) compactLocked(first, last int) (string, error) {
 		}
 	}()
 
-	wr, err := NewWriter(tmpTable, &s.cfg)
+	wr, err := NewWriter(tmpTable, &st.cfg)
 	if err != nil {
 		return "", err
 	}
 
-	if err := s.writeCompact(wr, first, last); err != nil {
+	if err := st.writeCompact(wr, first, last); err != nil {
 		return "", err
 	}
 
@@ -341,14 +341,14 @@ func (s *Stack) compactLocked(first, last int) (string, error) {
 	return tmpTable.Name(), nil
 }
 
-func (s *Stack) writeCompact(wr *Writer, first, last int) error {
+func (st *Stack) writeCompact(wr *Writer, first, last int) error {
 	// do it.
-	wr.SetLimits(s.stack[first].MinUpdateIndex(),
-		s.stack[last].MaxUpdateIndex())
+	wr.SetLimits(st.stack[first].MinUpdateIndex(),
+		st.stack[last].MaxUpdateIndex())
 
 	var subtabs []*Reader
 	for i := first; i <= last; i++ {
-		subtabs = append(subtabs, s.stack[i])
+		subtabs = append(subtabs, st.stack[i])
 	}
 
 	merged, err := NewMerged(subtabs)
@@ -400,21 +400,21 @@ func (s *Stack) writeCompact(wr *Writer, first, last int) error {
 	return nil
 }
 
-func (s *Stack) compactRangeStats(first, last int) (bool, error) {
-	ok, err := s.compactRange(first, last)
+func (st *Stack) compactRangeStats(first, last int) (bool, error) {
+	ok, err := st.compactRange(first, last)
 	if !ok {
-		s.Stats.Failures++
+		st.Stats.Failures++
 	}
 	return ok, err
 }
 
-func (s *Stack) compactRange(first, last int) (bool, error) {
+func (st *Stack) compactRange(first, last int) (bool, error) {
 	if first >= last {
 		return true, nil
 	}
-	s.Stats.Attempts++
+	st.Stats.Attempts++
 
-	lockFileName := s.listFile + ".lock"
+	lockFileName := st.listFile + ".lock"
 	lockFile, err := os.OpenFile(lockFileName, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
 	if os.IsExist(err) {
 		return false, nil
@@ -427,7 +427,7 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 		}
 	}()
 
-	if ok, err := s.UpToDate(); !ok || err != nil {
+	if ok, err := st.UpToDate(); !ok || err != nil {
 		return false, err
 	}
 
@@ -439,7 +439,7 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 		}
 	}()
 	for i := first; i <= last; i++ {
-		subtab := filepath.Join(s.reftableDir, s.stack[i].name)
+		subtab := filepath.Join(st.reftableDir, st.stack[i].name)
 		subtabLock := subtab + ".lock"
 		l, err := os.OpenFile(subtabLock, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
 
@@ -459,12 +459,12 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 	}
 	lockFileName = ""
 
-	tmpTable, err := s.compactLocked(first, last)
+	tmpTable, err := st.compactLocked(first, last)
 	if err != nil {
 		return false, err
 	}
 
-	lockFileName = s.listFile + ".lock"
+	lockFileName = st.listFile + ".lock"
 	lockFile, err = os.OpenFile(lockFileName, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return false, err
@@ -473,11 +473,11 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 	defer lockFile.Close()
 
 	fn := formatName(
-		s.stack[first].MinUpdateIndex(),
-		s.stack[last].MaxUpdateIndex())
+		st.stack[first].MinUpdateIndex(),
+		st.stack[last].MaxUpdateIndex())
 
 	fn += ".ref"
-	destTable := filepath.Join(s.reftableDir, fn)
+	destTable := filepath.Join(st.reftableDir, fn)
 
 	if err := os.Rename(tmpTable, destTable); err != nil {
 		return false, err
@@ -485,11 +485,11 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 
 	var buf bytes.Buffer
 	for i := 0; i < first; i++ {
-		fmt.Fprintf(&buf, "%s\n", s.stack[i].name)
+		fmt.Fprintf(&buf, "%s\n", st.stack[i].name)
 	}
 	fmt.Fprintf(&buf, "%s\n", fn)
-	for i := last + 1; i < len(s.stack); i++ {
-		fmt.Fprintf(&buf, "%s\n", s.stack[i].name)
+	for i := last + 1; i < len(st.stack); i++ {
+		fmt.Fprintf(&buf, "%s\n", st.stack[i].name)
 	}
 
 	if _, err := lockFile.Write(buf.Bytes()); err != nil {
@@ -501,7 +501,7 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 		os.Remove(destTable)
 	}
 
-	if err := os.Rename(lockFileName, s.listFile); err != nil {
+	if err := os.Rename(lockFileName, st.listFile); err != nil {
 		os.Remove(destTable)
 		return false, err
 	}
@@ -511,13 +511,13 @@ func (s *Stack) compactRange(first, last int) (bool, error) {
 		os.Remove(nm)
 	}
 
-	err = s.reload()
+	err = st.reload()
 	return true, err
 }
 
-func (s *Stack) tableSizesForCompaction() []uint64 {
+func (st *Stack) tableSizesForCompaction() []uint64 {
 	var res []uint64
-	for _, t := range s.stack {
+	for _, t := range st.stack {
 		// overhead is 92 bytes
 		res = append(res, t.size-91)
 	}
@@ -531,7 +531,7 @@ type segment struct {
 	bytes uint64
 }
 
-func (s *segment) size() int { return s.end - s.start }
+func (st *segment) size() int { return st.end - st.start }
 
 func log2(sz uint64) int {
 	base := uint64(2)
@@ -572,13 +572,13 @@ func suggestCompactionSegment(sizes []uint64) *segment {
 	segs := sizesToSegments(sizes)
 
 	minSeg := segment{log: 64}
-	for _, s := range segs {
-		if s.size() == 1 {
+	for _, st := range segs {
+		if st.size() == 1 {
 			continue
 		}
 
-		if s.log < minSeg.log {
-			minSeg = s
+		if st.log < minSeg.log {
+			minSeg = st
 		}
 	}
 	if minSeg.size() == 0 {
@@ -599,18 +599,18 @@ func suggestCompactionSegment(sizes []uint64) *segment {
 }
 
 // AutoCompact runs a compaction if the stack looks imbalanced.
-func (s *Stack) AutoCompact() error {
-	sizes := s.tableSizesForCompaction()
+func (st *Stack) AutoCompact() error {
+	sizes := st.tableSizesForCompaction()
 	seg := suggestCompactionSegment(sizes)
 	if seg != nil {
-		_, err := s.compactRangeStats(seg.start, seg.end-1)
+		_, err := st.compactRangeStats(seg.start, seg.end-1)
 		return err
 	}
 	return nil
 }
 
 // CompactAll compacts the entire stack.
-func (s *Stack) CompactAll() error {
-	_, err := s.compactRange(0, len(s.stack)-1)
+func (st *Stack) CompactAll() error {
+	_, err := st.compactRange(0, len(st.stack)-1)
 	return err
 }
