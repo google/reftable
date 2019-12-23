@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "constants.h"
 
 int is_block_type(byte typ) {

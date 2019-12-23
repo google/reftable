@@ -15,7 +15,7 @@
 #ifndef BLOCKSOURCE_H
 #define BLOCKSOURCE_H
 
-#include "api.h"
+#include "reftable.h"
 
 uint64_t block_source_size(struct block_source source);
 int block_source_read_block(struct block_source source, struct block *dest,

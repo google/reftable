@@ -15,7 +15,7 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-#include "api.h"
+#include "reftable.h"
 #include "basics.h"
 #include "block.h"
 #include "slice.h"

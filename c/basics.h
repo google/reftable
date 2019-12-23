@@ -16,7 +16,7 @@
 #define BASICS_H
 
 #include <stdint.h>
-#include "api.h"
+#include "reftable.h"
 
 #define true 1
 #define false 0

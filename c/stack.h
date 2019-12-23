@@ -15,7 +15,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "api.h"
+#include "reftable.h"
 
 struct stack {
   char *list_file;

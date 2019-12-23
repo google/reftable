@@ -15,7 +15,7 @@
 #ifndef SLICE_H
 #define SLICE_H
 
-#include "api.h"
+#include "reftable.h"
 #include "basics.h"
 
 struct slice {

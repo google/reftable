@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "basics.h"
 #include "constants.h"
 #include "test_framework.h"

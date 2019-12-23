@@ -15,7 +15,7 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
-#include "api.h"
+#include "reftable.h"
 #include "basics.h"
 #include "record.h"
 

@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "block.h"
 #include "iter.h"
 #include "record.h"

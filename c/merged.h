@@ -15,7 +15,7 @@
 #ifndef MERGED_H
 #define MERGED_H
 
-#include "api.h"
+#include "reftable.h"
 #include "pq.h"
 
 struct merged_table {

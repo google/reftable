@@ -15,7 +15,6 @@ cc_library(
         "writer.c",
     ],
     hdrs = [
-        "api.h",
         "basics.h",
         "block.h",
         "blocksource.h",
@@ -25,6 +24,7 @@ cc_library(
 	"pq.h",
         "reader.h",
         "record.h",
+        "reftable.h",
         "slice.h",
 	"stack.h",
         "tree.h",

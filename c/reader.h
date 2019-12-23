@@ -15,7 +15,7 @@
 #ifndef READER_H
 #define READER_H
 
-#include "api.h"
+#include "reftable.h"
 #include "block.h"
 #include "record.h"
 

@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "stack.h"
 #include "merged.h"
 #include "reader.h"

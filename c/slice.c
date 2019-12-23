@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "api.h"
+#include "reftable.h"
 
 void slice_set_string(struct slice *s, const char *str) {
   if (str == NULL) {

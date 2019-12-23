@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "constants.h"
 #include "block.h"
 #include "reader.h"

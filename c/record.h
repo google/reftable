@@ -15,7 +15,7 @@
 #ifndef RECORD_H
 #define RECORD_H
 
-#include "api.h"
+#include "reftable.h"
 #include "slice.h"
 
 struct record_ops {

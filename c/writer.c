@@ -21,7 +21,7 @@
 #include <string.h>
 #include <zlib.h>
 
-#include "api.h"
+#include "reftable.h"
 #include "block.h"
 #include "constants.h"
 #include "record.h"

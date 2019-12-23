@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef API_H
-#define API_H
+#ifndef REFTABLE_H
+#define REFTABLE_H
 
 #include <stdint.h>
 

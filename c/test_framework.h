@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "api.h"
+#include "reftable.h"
 
 #ifdef NDEBUG
 #undef NDEBUG

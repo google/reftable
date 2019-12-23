@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "api.h"
+#include "reftable.h"
 
-#include "api.h"
+#include "reftable.h"
 #include "basics.h"
 #include "record.h"
 #include "test_framework.h"
