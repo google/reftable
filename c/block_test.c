@@ -27,7 +27,7 @@ struct binsearch_args {
   int *arr;
 };
 
-int binsearch_func(int i, void *void_args) {
+static int binsearch_func(int i, void *void_args) {
   struct binsearch_args *args = (struct binsearch_args *)void_args;
 
   return args->key < args->arr[i];

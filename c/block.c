@@ -40,6 +40,8 @@ byte block_writer_type(struct block_writer *bw) {
   return bw->buf[bw->header_off];
 }
 
+/* adds the record to the block. Returns -1 if it does not fit, 0 on
+   success */
 int block_writer_add(struct block_writer *w, struct record rec) {
   struct slice last = w->last_key;
   if (w->entries % w->restart_interval == 0) {
@@ -184,7 +186,7 @@ struct restart_find_args {
   int error;
 };
 
-int key_less(int idx, void *args) {
+static int restart_key_less(int idx, void *args) {
   struct restart_find_args *a = (struct restart_find_args *)args;
   uint32_t off = block_reader_restart_offset(a->r, idx);
   struct slice in = {
@@ -194,7 +196,8 @@ int key_less(int idx, void *args) {
   in.buf += off;
   in.len -= off;
 
-  // XXX could avoid alloc here.
+  /* the restart key is verbatim in the block, so this could avoid the
+     alloc for decoding the key */
   struct slice rkey = {};
   struct slice last_key = {};
   byte extra;
@@ -280,7 +283,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
       .r = br,
   };
 
-  int i = binsearch(br->restart_count, &key_less, &args);
+  int i = binsearch(br->restart_count, &restart_key_less, &args);
   if (args.error) {
     return -1;
   }

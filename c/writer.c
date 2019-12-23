@@ -124,7 +124,7 @@ struct obj_index_tree_node {
   int offset_cap;
 };
 
-int obj_index_tree_node_compare(const void *a, const void *b) {
+static int obj_index_tree_node_compare(const void *a, const void *b) {
   return slice_compare(((const struct obj_index_tree_node *)a)->hash,
                        ((const struct obj_index_tree_node *)b)->hash);
 }
@@ -193,7 +193,6 @@ int writer_add_record(struct writer *w, struct record rec) {
   writer_reinit_block_writer(w, typ);
   err = block_writer_add(w->block_writer, rec);
   if (err < 0) {
-    // XXX error code.
     result = err;
     goto exit;
   }
@@ -305,7 +304,7 @@ struct common_prefix_arg {
   int max;
 };
 
-void update_common(void *void_arg, void *key) {
+static void update_common(void *void_arg, void *key) {
   struct common_prefix_arg *arg = (struct common_prefix_arg *)void_arg;
   struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
   if (arg->last != NULL) {
@@ -322,7 +321,7 @@ struct write_record_arg {
   int err;
 };
 
-void write_object_record(void *void_arg, void *key) {
+static void write_object_record(void *void_arg, void *key) {
   struct write_record_arg *arg = (struct write_record_arg *)void_arg;
   struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 

@@ -58,26 +58,26 @@ int block_source_from_file(struct block_source *block_src, const char *name);
 
 /* write_options sets options for writing a single reftable. */
 struct write_options {
-  // do not pad out blocks to block size.
+  /* do not pad out blocks to block size. */
   bool unpadded;
 
-  // the blocksize. Should be less than 2^24.
+  /* the blocksize. Should be less than 2^24. */
   uint32_t block_size;
 
-  // do not generate a SHA1 => ref index.
+  /* do not generate a SHA1 => ref index. */
   bool skip_index_objects;
 
-  // how often to write complete keys in each block.
+  /* how often to write complete keys in each block. */
   int restart_interval;
 };
 
 /* ref_record holds a ref database entry target_value */
 struct ref_record {
-  char *ref_name;  // Name of the ref, malloced.
-  uint64_t update_index; // Logical timestamp at which this value is written
-  byte *value;         // SHA1, or NULL. malloced.
-  byte *target_value;  // peeled annotated tag, or NULL. malloced.
-  char *target;        // symref, or NULL. malloced.
+  char *ref_name;  /* Name of the ref, malloced. */
+  uint64_t update_index; /* Logical timestamp at which this value is written */
+  byte *value;         /* SHA1, or NULL. malloced. */
+  byte *target_value;  /* peeled annotated tag, or NULL. malloced. */
+  char *target;        /* symref, or NULL. malloced. */
 };
 
 
@@ -124,39 +124,39 @@ void iterator_destroy(struct iterator *it);
 
 /* block_stats holds statistics for a single block type */
 struct block_stats {
-  // total number of entries written
+  /* total number of entries written */
   int entries;
-  // total number of key restarts
+  /* total number of key restarts */
   int restarts;
-  // total number of blocks
+  /* total number of blocks */
   int blocks;
-  // total number of index blocks
+  /* total number of index blocks */
   int index_blocks;
-  // depth of the index
+  /* depth of the index */
   int max_index_level;
 
-  // offset of the first block for this type
+  /* offset of the first block for this type */
   uint64_t offset;
-  // offset of the top level index block for this type, or 0 if not present
+  /* offset of the top level index block for this type, or 0 if not present */
   uint64_t index_offset;
 };
 
 /* stats holds overall statistics for a single reftable */
 struct stats {
-  // total number of blocks written.
+  /* total number of blocks written. */
   int blocks;
-  // stats for ref data
+  /* stats for ref data */
   struct block_stats ref_stats;
-  // stats for the SHA1 to ref map.
+  /* stats for the SHA1 to ref map. */
   struct block_stats obj_stats;
-  // stats for index blocks
+  /* stats for index blocks */
   struct block_stats idx_stats;
 
-  // disambiguation length of shortened object IDs.
+  /* disambiguation length of shortened object IDs. */
   int object_id_len;
 };
 
-// different types of errors
+/* different types of errors */
 
 /* Unexpected file system behavior */
 #define IO_ERROR -2
@@ -230,9 +230,10 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
      if (err > 0) {
        break;
      }
-     if (err == 0) {
-       // value found.
+     if (err < 0) {
+       ..error handling..
      }
+     ..found..
    }
    iterator_destroy(&it);
    ref_record_clear(&ref);
