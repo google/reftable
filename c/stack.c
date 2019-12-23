@@ -46,8 +46,6 @@ int new_stack(struct stack **dest, const char *dir,
   return err;
 }
 
-
-
 int read_lines(const char *filename, char ***namesp) {
   FILE *f = fopen(filename, "r");
   if (f == NULL) {
@@ -322,23 +320,21 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   struct slice temp_tab_name = {};
   struct slice tab_name = {};
   struct slice next_name = {};
-  struct slice lock_suffix = {};
   struct writer *wr = NULL;
   
   slice_set_string(&lock_name, st->list_file);
-  slice_set_string(&lock_suffix, ".lock");
-  slice_append(&lock_name, lock_suffix);
+  slice_append_string(&lock_name, ".lock");
 
-  int tab_fd = 0;
   int err = 0;
-  int fd = 0;
-  fd = open(slice_as_string(&lock_name), O_EXCL|O_CREAT|O_WRONLY, 0644);
-  if (fd < 0) {
+  int tab_fd = 0;
+  int lock_fd = 0;
+  lock_fd = open(slice_as_string(&lock_name), O_EXCL|O_CREAT|O_WRONLY, 0644);
+  if (lock_fd < 0) {
     if (errno == EEXIST) {
       err = LOCK_ERROR;
       goto exit;
     }
-    err = -1;
+    err = IO_ERROR;
     goto exit;
   }
 
@@ -352,16 +348,6 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     goto exit;
   }
 
-  for (int i = 0; i < st->merged->stack_len; i++) {
-   char buf[1024];
-   int n = sprintf(buf, "%s\n", st->merged->stack[i]->name);
-   n = write(fd, buf, n);
-   if (n  < 0) {
-     err = IO_ERROR;
-     goto exit;
-   }
-  }
-  
   uint64_t next_update_index = stack_next_update_index(st);
 
   slice_resize(&next_name, 0);
@@ -373,13 +359,12 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   slice_append_string(&temp_tab_name, "XXXXXX");
 
   tab_fd = mkstemp((char*)slice_as_string(&temp_tab_name));
-  if (tab_fd < 0 ) {
+  if (tab_fd < 0) {
     err = IO_ERROR;
     goto exit;
   }
 
-
-  wr = new_writer( fd_writer, &tab_fd, &st->cfg);
+  wr = new_writer(fd_writer, &tab_fd, &st->cfg);
   err = write_table(wr, arg);
   if (err < 0) {
     goto exit;
@@ -397,20 +382,24 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     goto exit;
   }
 
-  // TODO check min_update_index
-  slice_append_string(&next_name, ".ref");
-
-  slice_set_string(&tab_name, st->reftable_dir);
-  slice_append_string(&tab_name, "/");
-
   if (wr->min_update_index < next_update_index) {
     err = API_ERROR;
     goto exit;
   }
 
-  slice_resize(&next_name, 0);
+  struct slice table_list = {};
+  for (int i = 0; i < st->merged->stack_len; i++) {
+    slice_append_string(&table_list, st->merged->stack[i]->name);
+    slice_append_string(&table_list, "\n");
+  }
+  
   format_name(&next_name, wr->min_update_index, wr->max_update_index);
   slice_append_string(&next_name, ".ref");
+  slice_append(&table_list, next_name);
+  slice_append_string(&table_list, "\n");
+
+  slice_set_string(&tab_name, st->reftable_dir);
+  slice_append_string(&tab_name, "/");
   slice_append(&tab_name, next_name);
    
   err = rename(slice_as_string(&temp_tab_name), slice_as_string(&tab_name));
@@ -418,21 +407,16 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     err = IO_ERROR;
     goto exit;
   }
-
   free(slice_yield(&temp_tab_name));
-   
-  {
-    char buf[1024];
-    int n = sprintf(buf, "%s\n", slice_as_string(&next_name));
-    n = write(fd, buf, n);
-    if (n  < 0) {
-      err = IO_ERROR;
-      goto exit;
-    }
-  }
 
-  err = close(fd);
-  fd = 0;
+  err = write(lock_fd, table_list.buf, table_list.len);
+  if (err < 0) {
+	  err = IO_ERROR;
+	  goto exit;
+  }
+   
+  err = close(lock_fd);
+  lock_fd = 0;
   if (err < 0) {
     unlink(slice_as_string(&tab_name));
     err = IO_ERROR;
@@ -457,12 +441,11 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
   }
   unlink(slice_as_string(&lock_name));
   
-  if (fd > 0) {
-    close(fd);
-    fd = 0;
+  if (lock_fd > 0) {
+    close(lock_fd);
+    lock_fd = 0;
   }
 
-  free(slice_yield(&lock_suffix));
   free(slice_yield(&lock_name));
   free(slice_yield(&temp_tab_name));
   free(slice_yield(&tab_name));
@@ -574,7 +557,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first, int last
 }
 
 
-// <  0: error. 0 == OK,  > 0 attempt failed; could retry.
+// <  0: error. 0 == OK, > 0 attempt failed; could retry.
 int stack_compact_range(struct stack *st, int first, int last) {
   if (first >= last) {
     return 0;
@@ -587,12 +570,11 @@ int stack_compact_range(struct stack *st, int first, int last) {
   st->stats.attempts++;
   int err = 0;
 
-  // XXX in function?
   slice_set_string(&lock_file_name, st->list_file);
   slice_append_string(&lock_file_name, ".lock");
 
   int have_lock = false;
-  int lock_file_fd = open(slice_as_string(&lock_file_name), O_EXCL| O_CREAT|O_WRONLY, 0644);
+  int lock_file_fd = open(slice_as_string(&lock_file_name), O_EXCL|O_CREAT|O_WRONLY, 0644);
   if (lock_file_fd < 0){
     if (errno == EEXIST) {
       err = 1;
@@ -622,20 +604,22 @@ int stack_compact_range(struct stack *st, int first, int last) {
     slice_append_string(&subtab_lock, ".lock");
 
     int lock_file_fd = open(slice_as_string(&subtab_lock), O_EXCL| O_CREAT|O_WRONLY, 0644);
-    if (lock_file_fd < 0) {
-      // XXX mem leak for slices
+    if (lock_file_fd > 0) {
+      close(lock_file_fd);
+    } else if (lock_file_fd < 0) {
       if (errno == EEXIST) {
 	err = 1;
-	goto exit;
       }
       err = IO_ERROR;
-      goto exit;
-    }
+    } 
 
-    close(lock_file_fd);
     subtable_locks[j] = (char*)slice_as_string(&subtab_lock);
     delete_on_success[j] = (char*)slice_as_string(&subtab_name);
     j++;
+
+    if (err != 0) {
+      goto exit;
+    }
   }
 
   err = unlink(slice_as_string(&lock_file_name));
