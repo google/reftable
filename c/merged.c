@@ -121,14 +121,14 @@ int merged_iter_next(void *p, struct record rec) {
   return 0;
 }
 
-struct iterator_ops merged_iter_ops = {
+struct iterator_vtable merged_iter_vtable = {
     .next = &merged_iter_next,
     .close = &merged_iter_close,
 };
 
 void iterator_from_merged_iter(struct iterator *it, struct merged_iter *mi) {
   it->iter_arg = mi;
-  it->ops = &merged_iter_ops;
+  it->ops = &merged_iter_vtable;
 }
 
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {

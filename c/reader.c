@@ -312,14 +312,14 @@ void table_iter_close(void *p) {
   block_iter_close(&ti->bi);
 }
 
-struct iterator_ops table_iter_ops = {
+struct iterator_vtable table_iter_vtable = {
     .next = &table_iter_next_void,
     .close = &table_iter_close,
 };
 
 void iterator_from_table_iter(struct iterator *it, struct table_iter *ti) {
   it->iter_arg = ti;
-  it->ops = &table_iter_ops;
+  it->ops = &table_iter_vtable;
 }
 
 int reader_table_iter_at(struct reader *r, struct table_iter *ti, uint64_t off,

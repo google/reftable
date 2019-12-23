@@ -387,7 +387,7 @@ int decode_key(struct slice *key, byte *extra, struct slice last_key,
   return start_len - in.len;
 }
 
-struct record_ops ref_record_ops = {
+struct record_vtable ref_record_vtable = {
     .key = &ref_record_key,
     .type = &ref_record_type,
     .copy_from = &ref_record_copy_from,
@@ -524,7 +524,7 @@ int obj_record_decode(void *rec, struct slice key, byte val_type,
   return start.len - in.len;
 }
 
-struct record_ops obj_record_ops = {
+struct record_vtable obj_record_vtable = {
     .key = &obj_record_key,
     .type = &obj_record_type,
     .copy_from = &obj_record_copy_from,
@@ -613,7 +613,7 @@ int index_record_decode(void *rec, struct slice key, byte val_type,
   return start.len - in.len;
 }
 
-struct record_ops index_record_ops = {
+struct record_vtable index_record_vtable = {
     .key = &index_record_key,
     .type = &index_record_type,
     .copy_from = &index_record_copy_from,
@@ -650,17 +650,17 @@ void record_clear(struct record rec) { return rec.ops->clear(rec.data); }
 
 void record_from_ref(struct record *rec, struct ref_record *ref_rec) {
   rec->data = ref_rec;
-  rec->ops = &ref_record_ops;
+  rec->ops = &ref_record_vtable;
 }
 
 void record_from_obj(struct record *rec, struct obj_record *obj_rec) {
   rec->data = obj_rec;
-  rec->ops = &obj_record_ops;
+  rec->ops = &obj_record_vtable;
 }
 
 void record_from_index(struct record *rec, struct index_record *index_rec) {
   rec->data = index_rec;
-  rec->ops = &index_record_ops;
+  rec->ops = &index_record_vtable;
 }
 
 void *record_yield(struct record *rec) {

@@ -28,14 +28,14 @@ int empty_iterator_next(void *arg, struct record rec) { return 1; }
 
 void empty_iterator_close(void *arg) {}
 
-struct iterator_ops empty_ops = {
+struct iterator_vtable empty_vtable = {
     .next = &empty_iterator_next,
     .close = &empty_iterator_close,
 };
 
 void iterator_set_empty(struct iterator *it) {
   it->iter_arg = NULL;
-  it->ops = &empty_ops;
+  it->ops = &empty_vtable;
 }
 
 int iterator_next(struct iterator it, struct record rec) {
@@ -102,7 +102,7 @@ int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
   }
 }
 
-struct iterator_ops filtering_ref_iterator_ops = {
+struct iterator_vtable filtering_ref_iterator_vtable = {
     .next = &filtering_ref_iterator_next,
     .close = &filtering_ref_iterator_close,
 };
@@ -110,7 +110,7 @@ struct iterator_ops filtering_ref_iterator_ops = {
 void iterator_from_filtering_ref_iterator(struct iterator *it,
                                           struct filtering_ref_iterator *fri) {
   it->iter_arg = fri;
-  it->ops = &filtering_ref_iterator_ops;
+  it->ops = &filtering_ref_iterator_vtable;
 }
 
 void indexed_table_ref_iter_close(void *p) {
@@ -190,7 +190,7 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
   return err;
 }
 
-struct iterator_ops indexed_table_ref_iter_ops = {
+struct iterator_vtable indexed_table_ref_iter_vtable = {
     .next = &indexed_table_ref_iter_next,
     .close = &indexed_table_ref_iter_close,
 };
@@ -198,5 +198,5 @@ struct iterator_ops indexed_table_ref_iter_ops = {
 void iterator_from_indexed_table_ref_iter(struct iterator *it,
                                           struct indexed_table_ref_iter *itr) {
   it->iter_arg = itr;
-  it->ops = &indexed_table_ref_iter_ops;
+  it->ops = &indexed_table_ref_iter_vtable;
 }

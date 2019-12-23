@@ -62,7 +62,7 @@ int file_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   return size;
 }
 
-struct block_source_ops file_ops = {
+struct block_source_vtable file_vtable = {
     .size = &file_size,
     .read_block = &file_read_block,
     .return_block = &file_return_block,
@@ -88,7 +88,7 @@ int block_source_from_file(struct block_source *bs, const char *name) {
   p->size = st.st_size;
   p->fd = fd;
   
-  bs->ops = &file_ops;
+  bs->ops = &file_vtable;
   bs->arg = p;
   return 0;
 }

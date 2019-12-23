@@ -155,7 +155,7 @@ int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   return size;
 }
 
-struct block_source_ops slice_ops = {
+struct block_source_vtable slice_vtable = {
     .size = &slice_size,
     .read_block = &slice_read_block,
     .return_block = &slice_return_block,
@@ -163,6 +163,6 @@ struct block_source_ops slice_ops = {
 };
 
 void block_source_from_slice(struct block_source *bs, struct slice *buf) {
-  bs->ops = &slice_ops;
+  bs->ops = &slice_vtable;
   bs->arg = buf;
 }

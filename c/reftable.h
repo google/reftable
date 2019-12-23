@@ -24,7 +24,7 @@ typedef byte bool;
    It is generally passed around by value.
  */
 struct block_source {
-  struct block_source_ops *ops;
+  struct block_source_vtable *ops;
   void *arg;
 };
 
@@ -37,8 +37,8 @@ struct block {
   struct block_source source;
 };
 
-/* block_source_ops are the operations that make up block_source */
-struct block_source_ops {
+/* block_source_vtable are the operations that make up block_source */
+struct block_source_vtable {
   /* returns the size of a block source */
   uint64_t (*size)(void *source);
   
@@ -110,7 +110,7 @@ struct log_record {
    reftable. It is generally passed around by value.
 */
 struct iterator {
-  struct iterator_ops *ops;
+  struct iterator_vtable *ops;
   void *iter_arg;
 };
 

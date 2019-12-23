@@ -18,7 +18,7 @@
 #include "reftable.h"
 #include "slice.h"
 
-struct record_ops {
+struct record_vtable {
   void (*key)(const void *rec, struct slice *dest);
   byte (*type)();
   void (*copy_from)(void *rec, const void *src);
@@ -31,7 +31,7 @@ struct record_ops {
 /* record is a generic wrapper for differnt types of records. */
 struct record {
   void *data;
-  struct record_ops *ops;
+  struct record_vtable *ops;
 };
 
 int get_var_int(uint64_t *dest, struct slice in);
@@ -41,7 +41,7 @@ int common_prefix_size(struct slice a, struct slice b);
 int is_block_type(byte typ);
 struct record new_record(byte typ);
 
-extern struct record_ops ref_record_ops;
+extern struct record_vtable ref_record_vtable;
 
 int encode_key(bool *restart, struct slice dest, struct slice prev_key,
                struct slice key, byte extra);

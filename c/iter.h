@@ -18,7 +18,7 @@
 #include "block.h"
 #include "record.h"
 
-struct iterator_ops {
+struct iterator_vtable {
   int (*next)(void *iter_arg, struct record rec);
   void (*close)(void *iter_arg);
 };
