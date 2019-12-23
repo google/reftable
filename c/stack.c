@@ -31,12 +31,12 @@
 
 int new_stack(struct stack **dest, const char *dir,
 	      const char *list_file,
-	      struct write_options cfg) {
+	      struct write_options config) {
   *dest = NULL;
   struct stack *p = calloc(sizeof(struct stack),1);
   p->list_file = strdup(list_file);
   p->reftable_dir = strdup(dir);
-  p->cfg = cfg;
+  p->config = config;
   int err = stack_reload(p);
   if (err < 0) {
     stack_destroy(p);
@@ -364,7 +364,7 @@ int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*a
     goto exit;
   }
 
-  wr = new_writer(fd_writer, &tab_fd, &st->cfg);
+  wr = new_writer(fd_writer, &tab_fd, &st->config);
   err = write_table(wr, arg);
   if (err < 0) {
     goto exit;
@@ -474,7 +474,7 @@ int stack_compact_locked(struct stack* st, int first, int last, struct slice* te
      
   int tab_fd = mkstemp((char*)slice_as_string(temp_tab));
 
-  struct writer *wr = new_writer(fd_writer, &tab_fd, &st->cfg);
+  struct writer *wr = new_writer(fd_writer, &tab_fd, &st->config);
 
   int err = stack_write_compact(st, wr, first, last);
   if (err < 0) {
@@ -633,7 +633,6 @@ int stack_compact_range(struct stack *st, int first, int last) {
     goto exit;
   }
 
-  // XXX in function?
   lock_file_fd = open(slice_as_string(&lock_file_name), O_EXCL| O_CREAT|O_WRONLY, 0644);
   if (lock_file_fd < 0){
     if (errno == EEXIST) {

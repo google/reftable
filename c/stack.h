@@ -20,8 +20,8 @@
 struct stack {
   char *list_file;
   char *reftable_dir;
-  // XXX config
-  struct write_options cfg;
+
+  struct write_options config;
 
   struct merged_table *merged;
   struct compaction_stats stats;

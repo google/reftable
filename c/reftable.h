@@ -278,7 +278,7 @@ struct stack;
 */
 int new_stack(struct stack **dest, const char *dir,
 	      const char *list_file,
-	      struct write_options cfg);
+	      struct write_options config);
 
 /* returns the update_index at which a next table should be written. */
 uint64_t stack_next_update_index(struct stack* st);
