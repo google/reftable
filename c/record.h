@@ -72,7 +72,7 @@ void *record_yield(struct record *rec);
 void record_from_obj(struct record *rec, struct obj_record *objrec);
 void record_from_index(struct record *rec, struct index_record *idxrec);
 void record_from_ref(struct record *rec, struct ref_record *refrec);
-void record_from_log(struct record *rec, struct log_record *objrec);
+void record_from_log(struct record *rec, struct log_record *logrec);
 struct ref_record *record_as_ref(struct record ref);
 
 #endif

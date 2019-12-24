@@ -131,6 +131,47 @@ void test_ref_record_roundtrip() {
   }
 }
 
+void test_log_record_roundtrip() {
+  struct log_record in = {
+			  .ref_name = strdup("refs/heads/master"),
+			  .old_hash = malloc(SHA1_SIZE),
+			  .new_hash = malloc(SHA1_SIZE),
+			  .name = strdup("han-wen"),
+			  .email = strdup("hanwen@google.com"),
+			  .message = strdup("test"),
+			  .update_index = 42,
+			  .time = 1577123507,
+			  .tz_offset = 100,
+  };
+
+  struct record rec = {};
+  record_from_log(&rec, &in);
+
+  struct slice key = {};
+  record_key(rec, &key);
+
+  byte buf[1024];
+  struct slice dest = {
+		       .buf = buf,
+		       .len = sizeof(buf),
+  };
+  
+  int n = record_encode(rec, dest, SHA1_SIZE);
+  assert(n > 0);
+  
+  struct log_record out = {};
+  struct record rec_out = {};
+  record_from_log(&rec_out, &out);
+  int valtype = record_val_type(rec);
+  int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
+  assert(n == m);
+
+  assert(log_record_equal(&in, &out, SHA1_SIZE));
+  log_record_clear(&in);
+  free(slice_yield(&key));
+  record_clear(rec_out);
+}
+
 void test_u24_roundtrip() {
   uint32_t in = 0x112233;
   byte dest[3];
@@ -266,6 +307,7 @@ void test_index_record_roundtrip() {
 }
 
 int main() {
+  add_test_case("test_log_record_roundtrip", &test_log_record_roundtrip);
   add_test_case("test_ref_record_roundtrip", &test_ref_record_roundtrip);
   add_test_case("varint_roundtrip", &varint_roundtrip);
   add_test_case("test_key_roundtrip", &test_key_roundtrip);
