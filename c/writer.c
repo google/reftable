@@ -35,6 +35,8 @@ struct block_stats *writer_block_stats(struct writer *w, byte typ) {
       return &w->stats.obj_stats;
     case 'i':
       return &w->stats.idx_stats;
+    case 'g':
+      return &w->stats.log_stats;
   }
   assert(false);
 }
@@ -235,6 +237,19 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
     writer_index_hash(w, h);
   }
   return 0;
+}
+
+
+int writer_add_log(struct writer *w, struct log_record *log) {
+  if (w->block_writer != NULL && block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
+    int err = writer_finish_public_section(w);
+    if (err < 0) {
+      return err;
+    }
+  }
+  struct record rec = {};
+  record_from_log(&rec, log);
+  return writer_add_record(w, rec);
 }
 
 int writer_finish_section(struct writer *w) {

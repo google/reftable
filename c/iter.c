@@ -58,6 +58,12 @@ int iterator_next_ref(struct iterator it, struct ref_record *ref) {
   return iterator_next(it, rec);
 }
 
+int iterator_next_log(struct iterator it, struct log_record *log) {
+  struct record rec = {};
+  record_from_log(&rec, log);
+  return iterator_next(it, rec);
+}
+
 void filtering_ref_iterator_close(void *iter_arg) {
   struct filtering_ref_iterator *fri =
       (struct filtering_ref_iterator *)iter_arg;

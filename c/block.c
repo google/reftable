@@ -143,11 +143,10 @@ int block_reader_init(struct block_reader *br, struct block *block,
 
   uint32_t sz = get_u24(block->data + header_off + 1);
 
-  if (typ == BLOCK_TYPE_LOG) {
+  if (false && typ == BLOCK_TYPE_LOG) {
     /* TODO: decompress log block, record how many bytes consumed. */
-    abort();
 
-    block_source_return_block(block->source, block);
+    // block_source_return_block(block->source, block);
   } else if (full_block_size == 0) {
     full_block_size = sz;
   }

@@ -88,6 +88,82 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   w = NULL;
 }
 
+
+void test_log_write_read(void) {
+  int N = 2; 
+  char **names = calloc(sizeof(char *), N+1);
+
+  struct write_options opts = {
+      .block_size = 256,
+  };
+
+  struct slice buf = {};
+  struct writer *w = new_writer(&slice_write_void, &buf, &opts);
+
+  {
+    struct log_record log = {};
+    for (int i = 0; i < N; i++) {
+      byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
+      set_test_hash(hash1, i);
+      set_test_hash(hash2, i+1);
+
+      char name[100];
+      sprintf(name, "refs/heads/branch%02d", i);
+
+      log.ref_name = name;
+      log.update_index = i;
+      log.old_hash = hash1;
+      log.new_hash = hash2;
+      
+      names[i] = strdup(name);
+
+      int n = writer_add_log(w, &log);
+      assert(n == 0);
+    }
+  }
+
+  int n = writer_close(w);
+  assert(n == 0);
+
+  struct stats *stats = writer_stats(w);
+  for (int i = 0; i < stats->ref_stats.blocks; i++) {
+    int off = i * opts.block_size;
+    if (off == 0) {
+      off = HEADER_SIZE;
+    }
+    assert(buf.buf[off] == 'g');
+  }
+
+  writer_free(w);
+  w = NULL;
+
+  struct block_source source = {};
+  block_source_from_slice(&source, &buf);
+
+  struct reader rd = {};
+  int err = init_reader(&rd, source, "file.log");
+  assert(err == 0);
+
+  struct iterator it = {};
+  err = reader_seek_log(&rd, &it, "", 0xffffffff);
+  assert(err == 0);
+
+
+  struct log_record log = {};
+  int i = 0;
+  while (true) {
+    int err = iterator_next_log(it, &log);
+    if (err > 0) {
+      break;
+    }
+    
+    assert_err(err);
+    assert_streq(names[i], log.ref_name);
+    assert(i == log.update_index);
+    i++;
+  }
+}
+
 void test_table_read_write_sequential(void) {
   char **names;
   struct slice buf = {};
@@ -282,6 +358,7 @@ void test_table_refs_for_no_index(void) { test_table_refs_for(false); }
 void test_table_refs_for_obj_index(void) { test_table_refs_for(true); }
 
 int main() {
+  add_test_case("test_log_write_read", test_log_write_read);
   add_test_case("test_table_write_small_table", &test_table_write_small_table);
   add_test_case("test_buffer", &test_buffer);
   add_test_case("test_table_read_write_sequential",

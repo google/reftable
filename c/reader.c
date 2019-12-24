@@ -515,6 +515,16 @@ int reader_seek_ref(struct reader *r, struct iterator *it, char *name) {
   return reader_seek(r, it, rec);
 }
 
+int reader_seek_log(struct reader *r, struct iterator *it, char *name, uint64_t update_index) {
+  struct log_record log = {
+      .ref_name = name,
+      .update_index = update_index,
+  };
+  struct record rec = {};
+  record_from_log(&rec, &log);
+  return reader_seek(r, it, rec);
+}
+
 void reader_close(struct reader *r) {
   block_source_close(&r->source);
   free(r->name);

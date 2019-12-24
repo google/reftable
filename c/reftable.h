@@ -97,14 +97,21 @@ bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size)
 struct log_record {
   char *ref_name;
   uint64_t update_index;
-  char *new_hash;
-  char *old_hash;
+  byte *new_hash;
+  byte *old_hash;
   char *name;
   char *email;
   uint64_t time;
   uint64_t tz_offset;
   char *message;
 };
+
+/* frees and nulls all pointer values. */
+void log_record_clear(struct log_record *log);
+
+/* returns whether two records are equal. */
+bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
+
 
 /* iterator is the generic interface for walking over data stored in a
    reftable. It is generally passed around by value.
@@ -118,6 +125,11 @@ struct iterator {
    end of iteration.
 */
 int iterator_next_ref(struct iterator it, struct ref_record *ref);
+
+/* reads the next log_record. Returns < 0 for error, 0 for OK and > 0:
+   end of iteration.
+*/
+int iterator_next_log(struct iterator it, struct log_record *log);
 
 /* releases resources associated with an iterator. */
 void iterator_destroy(struct iterator *it);
@@ -151,6 +163,8 @@ struct stats {
   struct block_stats obj_stats;
   /* stats for index blocks */
   struct block_stats idx_stats;
+  /* stats for log blocks */
+  struct block_stats log_stats;
 
   /* disambiguation length of shortened object IDs. */
   int object_id_len;
@@ -189,11 +203,16 @@ int fd_writer(void* fdp, byte*data, int size);
  */   
 void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
 
-/* writer_add_ref adds a ref_record. Must be called in ascending
+/* adds a ref_record. Must be called in ascending
    order. The update_index must be within the limits set by
    writer_set_limits(), or API_ERROR is returned.
  */
 int writer_add_ref(struct writer *w, struct ref_record *ref);
+
+/* adds a log_record. Must be called in ascending order (with more
+   recent log entries first.)
+ */
+int writer_add_log(struct writer *w, struct log_record *log);
 
 /* writer_close finalizes the reftable. The writer is retained so statistics can
  * be inspected. */
@@ -239,6 +258,9 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
    ref_record_clear(&ref);
  */
 int reader_seek_ref(struct reader *r, struct iterator *it, char *name);
+
+/* seek to logs for the given name, older than update_index. */
+int reader_seek_log(struct reader *r, struct iterator *it, char *name, uint64_t update_index);
 
 /* closes and deallocates a reader. */
 void reader_free(struct reader *);

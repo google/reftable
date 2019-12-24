@@ -47,5 +47,6 @@ struct writer {
 
 int writer_flush_block(struct writer *w);
 void writer_clear_index(struct writer *w);
+int writer_finish_public_section(struct writer *w);
 
 #endif
