@@ -195,6 +195,9 @@ struct stats {
  */
 #define API_ERROR -6
 
+/* Decompression error */
+#define ZLIB_ERROR -7
+
 const char *error_str(int err); 
 
 /* new_writer creates a new writer */

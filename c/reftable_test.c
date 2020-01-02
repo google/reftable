@@ -126,14 +126,14 @@ void test_log_write_read(void) {
   assert(n == 0);
 
   struct stats *stats = writer_stats(w);
-  for (int i = 0; i < stats->ref_stats.blocks; i++) {
+  assert(stats->log_stats.blocks > 0);
+  for (int i = 0; i < stats->log_stats.blocks; i++) {
     int off = i * opts.block_size;
     if (off == 0) {
       off = HEADER_SIZE;
     }
-    assert(buf.buf[off] == 'g');
+    assert(buf.buf[off] == BLOCK_TYPE_LOG);
   }
-
   writer_free(w);
   w = NULL;
 
@@ -148,7 +148,6 @@ void test_log_write_read(void) {
   err = reader_seek_log(&rd, &it, "", 0xffffffff);
   assert(err == 0);
 
-
   struct log_record log = {};
   int i = 0;
   while (true) {
@@ -162,6 +161,13 @@ void test_log_write_read(void) {
     assert(i == log.update_index);
     i++;
   }
+  assert(i == N);
+
+  // cleanup.
+  iterator_destroy(&it);
+  free(slice_yield(&buf));
+  free_names(names);
+  reader_close(&rd);
 }
 
 void test_table_read_write_sequential(void) {
@@ -375,6 +381,5 @@ int main() {
                 &test_table_refs_for_no_index);
   add_test_case("test_table_read_write_refs_for_obj_index",
                 &test_table_refs_for_obj_index);
-  
   test_main();
 }

@@ -32,12 +32,18 @@ uint64_t block_source_size(struct block_source source) {
 
 int block_source_read_block(struct block_source source, struct block *dest,
                             uint64_t off, uint32_t size) {
-  return source.ops->read_block(source.arg, dest, off, size);
+  int result = source.ops->read_block(source.arg, dest, off, size);
+  dest->source = source;
+  return result;
 }
 
 void block_source_return_block(struct block_source source,
                                struct block *blockp) {
   source.ops->return_block(source.arg, blockp);
+  blockp->data = NULL;
+  blockp->len = 0;
+  blockp->source.ops = NULL;
+  blockp->source.arg = NULL;
 }
 
 void block_source_close(struct block_source *source) {

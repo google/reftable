@@ -17,6 +17,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "zlib.h"
 
 #include "reftable.h"
 #include "constants.h"
@@ -124,7 +127,23 @@ int block_writer_finish(struct block_writer *w) {
   w->next += 2;
   put_u24(w->buf + 1 + w->header_off, w->next);
 
-  // TODO - do log compression here.
+  if (block_writer_type(w) == BLOCK_TYPE_LOG) {
+    int block_header_skip  = 4 + w->header_off;
+    struct slice compressed = {};
+    slice_resize(&compressed, w->next - block_header_skip);
+    
+    uLongf dest_len  = compressed.len;
+    uLongf src_len  = w->next - block_header_skip;
+    int z_err = compress2(compressed.buf, &dest_len,
+			  w->buf + block_header_skip, src_len,
+			  9);
+    if (z_err != Z_OK) {
+      free(slice_yield(&compressed));
+      return ZLIB_ERROR;
+    }
+    memcpy(w->buf + block_header_skip, compressed.buf, dest_len);
+    w->next = dest_len + block_header_skip;
+  }
   return w->next;
 }
 
@@ -143,10 +162,26 @@ int block_reader_init(struct block_reader *br, struct block *block,
 
   uint32_t sz = get_u24(block->data + header_off + 1);
 
-  if (false && typ == BLOCK_TYPE_LOG) {
-    /* TODO: decompress log block, record how many bytes consumed. */
-
-    // block_source_return_block(block->source, block);
+  if (typ == BLOCK_TYPE_LOG) {
+    struct slice uncompressed = {};
+    slice_resize(&uncompressed, sz);
+    int block_header_skip  = 4 + header_off;
+    memcpy(uncompressed.buf, block->data, block_header_skip);
+    
+    uLongf dst_len = uncompressed.len - block_header_skip;
+    uLongf src_len = block->len - block_header_skip;
+    int z_err = uncompress2(uncompressed.buf + block_header_skip, &dst_len,
+			    block->data + block_header_skip, &src_len);
+    if (z_err != Z_OK) {
+      free(slice_yield(&uncompressed));
+      return ZLIB_ERROR;
+    }
+    
+    block_source_return_block(block->source, block);
+    block->data = uncompressed.buf;
+    block->len = dst_len;
+    block->source = malloc_block_source();
+    full_block_size = src_len + block_header_skip;
   } else if (full_block_size == 0) {
     full_block_size = sz;
   }
