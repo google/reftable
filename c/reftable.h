@@ -190,6 +190,8 @@ struct stats {
 /* Misuse of the API on writing. */
 #define API_ERROR -6
 
+const char *error_str(int err); 
+
 /* new_writer creates a new writer */
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
                           void *writer_arg, struct write_options *opts);

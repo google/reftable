@@ -169,3 +169,17 @@ void parse_names(char *buf, int size, char ***namesp) {
   names[names_len] = NULL;
   *namesp = names;
 }
+
+const char *error_str(int err) {
+  switch (err) {
+  case IO_ERROR: return "I/O error";
+  case FORMAT_ERROR: return "FORMAT_ERROR";
+  case NOT_EXIST_ERROR: return "NOT_EXIST_ERROR";
+  case LOCK_ERROR: return "LOCK_ERROR";
+  case API_ERROR: return "API_ERROR";
+  case -1: return "general error";
+  default: return "unknown error code";
+  }
+}
+
+
