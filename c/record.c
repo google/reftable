@@ -566,6 +566,16 @@ struct record_vtable obj_record_vtable = {
     .clear = &obj_record_clear,
 };
 
+void log_record_print(struct log_record *log, int hash_size) {
+  char hex[SHA256_SIZE+1] = {};
+
+  printf("log{%s(%ld) %s <%s> %lu %04d\n", log->ref_name, log->update_index,
+	 log->name, log->email, log->time, log->tz_offset);
+  hex_format(hex, log->old_hash, hash_size);
+  printf("%s => ", hex);
+  hex_format(hex, log->new_hash, hash_size);
+  printf("%s\n\n%s\n}\n", hex, log->message);
+}
 
 byte log_record_type() { return BLOCK_TYPE_LOG; }
 

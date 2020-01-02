@@ -102,7 +102,7 @@ struct log_record {
   char *name;
   char *email;
   uint64_t time;
-  uint64_t tz_offset;
+  int16_t tz_offset;
   char *message;
 };
 
@@ -112,6 +112,7 @@ void log_record_clear(struct log_record *log);
 /* returns whether two records are equal. */
 bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
 
+void log_record_print(struct log_record *log, int hash_size);
 
 /* iterator is the generic interface for walking over data stored in a
    reftable. It is generally passed around by value.
