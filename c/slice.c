@@ -166,3 +166,24 @@ void block_source_from_slice(struct block_source *bs, struct slice *buf) {
   bs->ops = &slice_vtable;
   bs->arg = buf;
 }
+
+
+void malloc_return_block(void *b, struct block *dest) {
+#ifndef NDEBUG
+  memset(dest->data, 0xff, dest->len);
+#endif
+  free(dest->data);
+}
+
+struct block_source_vtable malloc_vtable = {
+    .return_block = &malloc_return_block,
+};
+
+struct block_source malloc_block_source_instance = {
+				    .ops = &malloc_vtable,
+};
+
+struct block_source malloc_block_source() {
+  return malloc_block_source_instance;
+}
+
