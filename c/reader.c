@@ -285,6 +285,9 @@ int table_iter_next_block(struct table_iter *dest, struct table_iter *src) {
 }
 
 int table_iter_next(struct table_iter *ti, struct record rec) {
+  if (record_type(rec) != ti->typ) {
+    return API_ERROR;
+  }
   if (ti->finished) {
     return 1;
   }

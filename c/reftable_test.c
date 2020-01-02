@@ -233,6 +233,10 @@ void test_table_read_write_seek(bool index) {
     int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
 
+    struct log_record log = {};
+    err = iterator_next_log(it, &log);
+    assert(err == API_ERROR);
+    
     struct ref_record ref = {};
     err = iterator_next_ref(it, &ref);
     assert(err == 0);
