@@ -109,5 +109,10 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "dump",
+    srcs = [ "dump.c", ],
+    deps = [ ":reftable" ],
+)
 
 
