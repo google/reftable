@@ -20,7 +20,7 @@
 #include "reader.h"
 #include "merged.h"
 
-int merged_iter_init(struct merged_iter *mi) {
+static int merged_iter_init(struct merged_iter *mi) {
   for (int i = 0; i < mi->stack_len; i++) {
     struct record rec = new_record(mi->typ);
     int err = iterator_next(mi->stack[i], rec);
@@ -44,7 +44,7 @@ int merged_iter_init(struct merged_iter *mi) {
   return 0;
 }
 
-void merged_iter_close(void *p) {
+static void merged_iter_close(void *p) {
   struct merged_iter *mi = (struct merged_iter *)p;
   merged_iter_pqueue_clear(&mi->pq);
   for (int i = 0; i < mi->stack_len; i++) {
@@ -53,7 +53,7 @@ void merged_iter_close(void *p) {
   free(mi->stack);
 }
 
-int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
+static int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
   if (iterator_is_null(mi->stack[idx])) {
     return 0;
   }
@@ -79,7 +79,7 @@ int merged_iter_advance_subiter(struct merged_iter *mi, int idx) {
   return 0;
 }
 
-int merged_iter_next(void *p, struct record rec) {
+static int merged_iter_next(void *p, struct record rec) {
   struct merged_iter *mi = (struct merged_iter *)p;
   if (merged_iter_pqueue_is_empty(mi->pq)) {
     return 1;
@@ -127,7 +127,7 @@ struct iterator_vtable merged_iter_vtable = {
     .close = &merged_iter_close,
 };
 
-void iterator_from_merged_iter(struct iterator *it, struct merged_iter *mi) {
+static void iterator_from_merged_iter(struct iterator *it, struct merged_iter *mi) {
   it->iter_arg = mi;
   it->ops = &merged_iter_vtable;
 }
@@ -188,7 +188,7 @@ uint64_t merged_max_update_index(struct merged_table *mt) { return mt->max; }
 
 uint64_t merged_min_update_index(struct merged_table *mt) { return mt->min; }
 
-int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
+static int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
                              struct record rec) {
   struct iterator *iters = calloc(sizeof(struct iterator), mt->stack_len);
   int err = 0;
@@ -225,9 +225,9 @@ int merged_table_seek_record(struct merged_table *mt, struct iterator *it,
 }
 
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
-                          char *name) {
+                          const char *name) {
   struct ref_record ref = {
-			   .ref_name = name,
+			   .ref_name = (char*)name,
   };
   struct record rec = {};
   record_from_ref(&rec, &ref);

@@ -55,7 +55,7 @@ void block_source_close(struct block_source *source) {
   source->ops = NULL;
 }
 
-struct reader_offsets *reader_offsets_for(struct reader *r, byte typ) {
+static struct reader_offsets *reader_offsets_for(struct reader *r, byte typ) {
   switch (typ) {
     case BLOCK_TYPE_REF:
       return &r->ref_offsets;
@@ -67,7 +67,7 @@ struct reader_offsets *reader_offsets_for(struct reader *r, byte typ) {
   abort();
 }
 
-int reader_get_block(struct reader *r, struct block *dest, uint64_t off,
+static int reader_get_block(struct reader *r, struct block *dest, uint64_t off,
                      uint32_t sz) {
   if (off >= r->size) {
     return 0;
@@ -180,7 +180,7 @@ struct table_iter {
   bool finished;
 };
 
-void table_iter_copy_from(struct table_iter *dest, struct table_iter *src) {
+static void table_iter_copy_from(struct table_iter *dest, struct table_iter *src) {
   dest->r = src->r;
   dest->typ = src->typ;
   dest->block_off = src->block_off;
@@ -188,7 +188,7 @@ void table_iter_copy_from(struct table_iter *dest, struct table_iter *src) {
   block_iter_copy_from(&dest->bi, &src->bi);
 }
 
-int table_iter_next_in_block(struct table_iter *ti, struct record rec) {
+static int table_iter_next_in_block(struct table_iter *ti, struct record rec) {
   int res = block_iter_next(&ti->bi, rec);
   if (res == 0 && record_type(rec) == BLOCK_TYPE_REF) {
     ((struct ref_record *)rec.data)->update_index += ti->r->min_update_index;
@@ -197,7 +197,7 @@ int table_iter_next_in_block(struct table_iter *ti, struct record rec) {
   return res;
 }
 
-void table_iter_block_done(struct table_iter *ti) {
+static void table_iter_block_done(struct table_iter *ti) {
   if (ti->bi.br == NULL) {
     return;
   }
@@ -209,7 +209,7 @@ void table_iter_block_done(struct table_iter *ti) {
   ti->bi.next_off = 0;
 }
 
-int32_t extract_block_size(byte *data, byte *typ, uint64_t off) {
+static int32_t extract_block_size(byte *data, byte *typ, uint64_t off) {
   if (off == 0) {
     data += 24;
   }
@@ -266,7 +266,7 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
   return block_reader_init(br, &block, header_off, r->block_size, r->hash_size);
 }
 
-int table_iter_next_block(struct table_iter *dest, struct table_iter *src) {
+static int table_iter_next_block(struct table_iter *dest, struct table_iter *src) {
   uint64_t next_block_off = src->block_off + src->bi.br->full_block_size;
   dest->r = src->r;
   dest->typ = src->typ;
@@ -290,7 +290,7 @@ int table_iter_next_block(struct table_iter *dest, struct table_iter *src) {
   return 0;
 }
 
-int table_iter_next(struct table_iter *ti, struct record rec) {
+static int table_iter_next(struct table_iter *ti, struct record rec) {
   if (record_type(rec) != ti->typ) {
     return API_ERROR;
   }
@@ -317,11 +317,11 @@ int table_iter_next(struct table_iter *ti, struct record rec) {
   return block_iter_next(&ti->bi, rec);
 }
 
-int table_iter_next_void(void *ti, struct record rec) {
+static int table_iter_next_void(void *ti, struct record rec) {
   return table_iter_next((struct table_iter *)ti, rec);
 }
 
-void table_iter_close(void *p) {
+static void table_iter_close(void *p) {
   struct table_iter *ti = (struct table_iter *)p;
   table_iter_block_done(ti);
   block_iter_close(&ti->bi);
@@ -332,12 +332,12 @@ struct iterator_vtable table_iter_vtable = {
     .close = &table_iter_close,
 };
 
-void iterator_from_table_iter(struct iterator *it, struct table_iter *ti) {
+static void iterator_from_table_iter(struct iterator *it, struct table_iter *ti) {
   it->iter_arg = ti;
   it->ops = &table_iter_vtable;
 }
 
-int reader_table_iter_at(struct reader *r, struct table_iter *ti, uint64_t off,
+static int reader_table_iter_at(struct reader *r, struct table_iter *ti, uint64_t off,
                          byte typ) {
   struct block_reader br = {};
   int err = reader_init_block_reader(r, &br, off, typ);
@@ -354,7 +354,7 @@ int reader_table_iter_at(struct reader *r, struct table_iter *ti, uint64_t off,
   return 0;
 }
 
-int reader_start(struct reader *r, struct table_iter *ti, byte typ,
+static int reader_start(struct reader *r, struct table_iter *ti, byte typ,
                  bool index) {
   struct reader_offsets *offs = reader_offsets_for(r, typ);
   uint64_t off = offs->offset;
@@ -369,7 +369,7 @@ int reader_start(struct reader *r, struct table_iter *ti, byte typ,
   return reader_table_iter_at(r, ti, off, typ);
 }
 
-int reader_seek_linear(struct reader *r, struct table_iter *ti,
+static int reader_seek_linear(struct reader *r, struct table_iter *ti,
                        struct record want) {
   struct record rec = new_record(record_type(want));
   struct slice want_key = {};
@@ -417,7 +417,7 @@ exit:
   return err;
 }
 
-int reader_seek_indexed(struct reader *r, struct iterator *it,
+static int reader_seek_indexed(struct reader *r, struct iterator *it,
                         struct record rec) {
   struct index_record want_index = {};
   record_key(rec, &want_index.last_key);
@@ -478,7 +478,7 @@ exit:
   return err;
 }
 
-int reader_seek_internal(struct reader *r, struct iterator *it,
+static int reader_seek_internal(struct reader *r, struct iterator *it,
                          struct record rec) {
   struct reader_offsets *offs = reader_offsets_for(r, record_type(rec));
   uint64_t idx = offs->index_offset;
@@ -515,18 +515,18 @@ int reader_seek(struct reader *r, struct iterator *it, struct record rec) {
   return reader_seek_internal(r, it, rec);
 }
 
-int reader_seek_ref(struct reader *r, struct iterator *it, char *name) {
+int reader_seek_ref(struct reader *r, struct iterator *it, const char *name) {
   struct ref_record ref = {
-      .ref_name = name,
+			   .ref_name = (char*)name,
   };
   struct record rec = {};
   record_from_ref(&rec, &ref);
   return reader_seek(r, it, rec);
 }
 
-int reader_seek_log(struct reader *r, struct iterator *it, char *name, uint64_t update_index) {
+int reader_seek_log(struct reader *r, struct iterator *it, const char *name, uint64_t update_index) {
   struct log_record log = {
-      .ref_name = name,
+      .ref_name = (char*)name,
       .update_index = update_index,
   };
   struct record rec = {};
@@ -556,7 +556,7 @@ void reader_free(struct reader *r) {
   free(r);
 }
 
-int reader_refs_for_indexed(struct reader *r, struct iterator *it, byte *oid) {
+static int reader_refs_for_indexed(struct reader *r, struct iterator *it, byte *oid) {
   struct obj_record want = {
       .hash_prefix = oid,
       .hash_prefix_len = r->object_id_len,

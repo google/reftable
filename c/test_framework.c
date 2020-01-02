@@ -52,3 +52,30 @@ void test_main() {
 void set_test_hash(byte *p, int i) {
   memset(p, (byte)i, SHA1_SIZE);
 }
+
+void print_names(char **a) {
+  if (a == NULL || *a == NULL) {
+    puts("[]");
+    return;
+  }
+  puts("[");
+  char **p = a;
+  while (*p) {
+    puts(*p);
+    p++;
+  }
+  puts("]");
+}
+
+int names_equal(char **a, char **b) {
+  while (*a && *b) {
+    if (0 != strcmp(*a, *b)) {
+      return 0;
+    }
+
+    a++;
+    b++;
+  }
+
+  return *a == *b;
+}

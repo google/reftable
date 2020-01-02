@@ -20,7 +20,7 @@
 
 struct record_vtable {
   void (*key)(const void *rec, struct slice *dest);
-  byte (*type)();
+  byte (*type)(void);
   void (*copy_from)(void *rec, const void *src, int hash_size);
   byte (*val_type)(const void *rec);
   int (*encode)(const void *rec, struct slice dest, int hash_size);

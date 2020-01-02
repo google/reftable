@@ -137,16 +137,16 @@ int slice_write_void(void *b, byte *data, int sz) {
   return slice_write((struct slice *)b, data, sz);
 }
 
-uint64_t slice_size(void *b) { return ((struct slice *)b)->len; }
+static uint64_t slice_size(void *b) { return ((struct slice *)b)->len; }
 
-void slice_return_block(void *b, struct block *dest) {
+static void slice_return_block(void *b, struct block *dest) {
   memset(dest->data, 0xff, dest->len);
   free(dest->data);
 }
 
-void slice_close(void *b) {}
+static void slice_close(void *b) {}
 
-int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
+static int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   struct slice *b = (struct slice *)v;
   assert(off + size <= b->len);
   dest->data = calloc(size, 1);
@@ -168,10 +168,8 @@ void block_source_from_slice(struct block_source *bs, struct slice *buf) {
 }
 
 
-void malloc_return_block(void *b, struct block *dest) {
-#ifndef NDEBUG
+static void malloc_return_block(void *b, struct block *dest) {
   memset(dest->data, 0xff, dest->len);
-#endif
   free(dest->data);
 }
 
@@ -183,7 +181,7 @@ struct block_source malloc_block_source_instance = {
 				    .ops = &malloc_vtable,
 };
 
-struct block_source malloc_block_source() {
+struct block_source malloc_block_source(void) {
   return malloc_block_source_instance;
 }
 

@@ -33,14 +33,14 @@ struct file_block_source {
   uint64_t size;
 };
 
-uint64_t file_size(void *b) { return ((struct file_block_source *)b)->size; }
+static uint64_t file_size(void *b) { return ((struct file_block_source *)b)->size; }
 
-void file_return_block(void *b, struct block *dest) {
+static void file_return_block(void *b, struct block *dest) {
   memset(dest->data, 0xff, dest->len);
   free(dest->data);
 }
 
-void file_close(void *b) {
+static void file_close(void *b) {
   int fd  = ((struct file_block_source *)b)->fd;
   if (fd > 0) {
     close(fd);
@@ -50,7 +50,7 @@ void file_close(void *b) {
   free(b);
 }
 
-int file_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
+static int file_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
   struct file_block_source *b = (struct file_block_source *)v;
   assert(off + size <= b->size);
   dest->data = malloc(size);

@@ -24,9 +24,9 @@
 
 bool iterator_is_null(struct iterator it) { return it.ops == NULL; }
 
-int empty_iterator_next(void *arg, struct record rec) { return 1; }
+static int empty_iterator_next(void *arg, struct record rec) { return 1; }
 
-void empty_iterator_close(void *arg) {}
+static void empty_iterator_close(void *arg) {}
 
 struct iterator_vtable empty_vtable = {
     .next = &empty_iterator_next,
@@ -64,14 +64,14 @@ int iterator_next_log(struct iterator it, struct log_record *log) {
   return iterator_next(it, rec);
 }
 
-void filtering_ref_iterator_close(void *iter_arg) {
+static void filtering_ref_iterator_close(void *iter_arg) {
   struct filtering_ref_iterator *fri =
       (struct filtering_ref_iterator *)iter_arg;
   free(slice_yield(&fri->oid));
   iterator_destroy(&fri->it);
 }
 
-int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
+static int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
   struct filtering_ref_iterator *fri =
       (struct filtering_ref_iterator *)iter_arg;
   struct ref_record *ref = (struct ref_record *)rec.data;
@@ -120,14 +120,14 @@ void iterator_from_filtering_ref_iterator(struct iterator *it,
   it->ops = &filtering_ref_iterator_vtable;
 }
 
-void indexed_table_ref_iter_close(void *p) {
+static void indexed_table_ref_iter_close(void *p) {
   struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
   block_iter_close(&it->cur);
   reader_return_block(it->r, &it->block_reader.block);
   free(slice_yield(&it->oid));
 }
 
-int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
+static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
   if (it->offset_idx == it->offset_len) {
     it->finished = true;
     return 1;
@@ -151,7 +151,7 @@ int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
   return 0;
 }
 
-int indexed_table_ref_iter_next(void *p, struct record rec) {
+static int indexed_table_ref_iter_next(void *p, struct record rec) {
   struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
   struct ref_record *ref = (struct ref_record *)rec.data;
 

@@ -40,6 +40,6 @@ void slice_append(struct slice* dest, struct slice add);
 struct block_source;
 void block_source_from_slice(struct block_source *bs, struct slice *buf);
 
-struct block_source malloc_block_source();
+struct block_source malloc_block_source(void);
 
 #endif

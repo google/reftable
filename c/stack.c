@@ -111,7 +111,7 @@ void stack_destroy(struct stack *st) {
   free(st);
 }
 
-int stack_reload_once(struct stack* st, char **names) {
+static int stack_reload_once(struct stack* st, char **names) {
   int cur_len = st->merged == NULL ? 0 : st->merged->stack_len;
   struct reader **cur = calloc(sizeof(struct reader*), cur_len);
   for (int i = 0; i < cur_len; i++) {
@@ -196,13 +196,8 @@ int stack_reload_once(struct stack* st, char **names) {
   return err;
 }
 
-// XXX const?
-struct merged_table *stack_merged(struct stack* st) {
-  return st->merged;
-}
-
 // return negative if a before b.
-int tv_cmp(struct timeval *a, struct timeval *b) {
+static int tv_cmp(struct timeval *a, struct timeval *b) {
   time_t diff =  a->tv_sec - b->tv_sec;
   if (diff != 0) {
       return diff;
@@ -277,7 +272,7 @@ int stack_reload(struct stack* st) {
 // -1 = error
 // 0 = up to date
 // 1 = changed.
-int stack_uptodate(struct stack *st) {
+static int stack_uptodate(struct stack *st) {
     char **names = NULL;
     int err = read_lines(st->list_file, &names);
     if (err < 0) {
@@ -318,7 +313,7 @@ int stack_add(struct stack* st, int (*write)(struct writer *wr, void*arg), void 
   return stack_auto_compact(st);
 }
 
-void format_name(struct slice *dest, uint64_t min, uint64_t max) {
+static void format_name(struct slice *dest, uint64_t min, uint64_t max) {
   char buf [1024];
   sprintf(buf, "%012lx-%012lx", min, max);
   slice_set_string(dest, buf);
@@ -471,7 +466,7 @@ uint64_t stack_next_update_index(struct stack* st) {
   return 1;
 }
    
-int stack_compact_locked(struct stack* st, int first, int last, struct slice* temp_tab) {
+static int stack_compact_locked(struct stack* st, int first, int last, struct slice* temp_tab) {
   struct slice next_name= {};
   format_name(&next_name, reader_min_update_index(st->merged->stack[first]),
 	      reader_max_update_index(st->merged->stack[first]));
@@ -569,7 +564,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first, int last
 
 
 // <  0: error. 0 == OK, > 0 attempt failed; could retry.
-int stack_compact_range(struct stack *st, int first, int last) {
+static int stack_compact_range(struct stack *st, int first, int last) {
   if (first >= last) {
     return 0;
   }
@@ -733,7 +728,7 @@ int stack_compact_all(struct stack* st) {
   return stack_compact_range(st, 0, st->merged->stack_len-1);
 }
 
-int stack_compact_range_stats(struct stack *st, int first, int last) {
+static int stack_compact_range_stats(struct stack *st, int first, int last) {
   int err = stack_compact_range(st, first, last);
   if (err > 0) {
     st->stats.failures++;
@@ -741,7 +736,7 @@ int stack_compact_range_stats(struct stack *st, int first, int last) {
   return err;
 }
 
-int segment_size(struct segment *s) {
+static int segment_size(struct segment *s) {
   return s->end - s->start;
 }
 
@@ -809,7 +804,7 @@ struct segment suggest_compaction_segment(uint64_t*sizes, int n) {
   return min_seg;
 }
 
-uint64_t *stack_table_sizes_for_compaction(struct stack *st) {
+static uint64_t *stack_table_sizes_for_compaction(struct stack *st) {
   uint64_t *sizes  = calloc(sizeof(uint64_t), st->merged->stack_len);
   for (int i = 0 ; i < st->merged->stack_len; i++) {
     // overhead is 24 + 68 = 92.

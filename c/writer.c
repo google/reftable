@@ -27,7 +27,7 @@
 #include "record.h"
 #include "tree.h"
 
-struct block_stats *writer_block_stats(struct writer *w, byte typ) {
+static struct block_stats *writer_block_stats(struct writer *w, byte typ) {
   switch (typ) {
     case 'r':
       return &w->stats.ref_stats;
@@ -41,7 +41,7 @@ struct block_stats *writer_block_stats(struct writer *w, byte typ) {
   assert(false);
 }
 
-int padded_write(struct writer *w, struct slice out, int padding) {
+static int padded_write(struct writer *w, struct slice out, int padding) {
   if (w->pending_padding > 0) {
     byte *zeroed = calloc(w->pending_padding, 1);
     int n = w->write(w->write_arg, zeroed, w->pending_padding);
@@ -62,7 +62,7 @@ int padded_write(struct writer *w, struct slice out, int padding) {
   return n;
 }
 
-void options_set_defaults(struct write_options *opts) {
+static void options_set_defaults(struct write_options *opts) {
   if (opts->restart_interval == 0) {
     opts->restart_interval = 16;
   }
@@ -72,7 +72,7 @@ void options_set_defaults(struct write_options *opts) {
   }
 }
 
-int writer_write_header(struct writer *w, byte *dest) {
+static int writer_write_header(struct writer *w, byte *dest) {
   strcpy((char *)dest, "REFT");
   dest[4] = 1;  // version
   put_u24(dest + 5, w->opts.block_size);
@@ -81,7 +81,7 @@ int writer_write_header(struct writer *w, byte *dest) {
   return 24;
 }
 
-void writer_reinit_block_writer(struct writer *w, byte typ) {
+static void writer_reinit_block_writer(struct writer *w, byte typ) {
   int block_start = 0;
   if (w->next == 0) {
     block_start = writer_write_header(w, w->block);
@@ -132,7 +132,7 @@ static int obj_index_tree_node_compare(const void *a, const void *b) {
                        ((const struct obj_index_tree_node *)b)->hash);
 }
 
-void writer_index_hash(struct writer *w, struct slice hash) {
+static void writer_index_hash(struct writer *w, struct slice hash) {
   if (w->opts.skip_index_objects) {
     return;
   }
@@ -166,7 +166,7 @@ void writer_index_hash(struct writer *w, struct slice hash) {
   key->offsets[key->offset_len++] = off;
 }
 
-int writer_add_record(struct writer *w, struct record rec) {
+static int writer_add_record(struct writer *w, struct record rec) {
   int result = -1;
   struct slice key = {};
   record_key(rec, &key);
@@ -252,7 +252,7 @@ int writer_add_log(struct writer *w, struct log_record *log) {
   return writer_add_record(w, rec);
 }
 
-int writer_finish_section(struct writer *w) {
+static int writer_finish_section(struct writer *w) {
   w->last_key.len = 0;
   byte typ = block_writer_type(w->block_writer);
   int err = writer_flush_block(w);
@@ -387,7 +387,7 @@ static void object_record_free(void *void_arg, void *key) {
   free(entry);
 }
 
-int writer_dump_object_index(struct writer *w) {
+static int writer_dump_object_index(struct writer *w) {
   struct common_prefix_arg common = {};
   if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &update_common, &common);

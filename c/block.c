@@ -206,7 +206,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
   return 0;
 }
 
-uint32_t block_reader_restart_offset(struct block_reader *br, int i) {
+static uint32_t block_reader_restart_offset(struct block_reader *br, int i) {
   return get_u24(br->restart_bytes + 3 * i);
 }
 

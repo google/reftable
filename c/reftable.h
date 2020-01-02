@@ -267,10 +267,10 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
    iterator_destroy(&it);
    ref_record_clear(&ref);
  */
-int reader_seek_ref(struct reader *r, struct iterator *it, char *name);
+int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 
 /* seek to logs for the given name, older than update_index. */
-int reader_seek_log(struct reader *r, struct iterator *it, char *name, uint64_t update_index);
+int reader_seek_log(struct reader *r, struct iterator *it, const char *name, uint64_t update_index);
 
 /* closes and deallocates a reader. */
 void reader_free(struct reader *);
@@ -294,7 +294,13 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
 
 /* returns an iterator positioned just before 'name' */
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
-                          char *name);
+                          const char *name);
+
+/* returns the max update_index covered by this merged table. */
+uint64_t merged_max_update_index(struct merged_table *mt);
+
+/* returns the min update_index covered by this merged table. */
+uint64_t merged_min_update_index(struct merged_table *mt);
 
 /* closes readers for the merged tables */
 void merged_table_close(struct merged_table* mt);
@@ -323,7 +329,7 @@ int stack_add(struct stack* st, int (*write_table)(struct writer *wr, void *writ
 /* returns the merged_table for seeking. This table is valid until the
    next write or reload, and should not be closed or deleted.
 */
-struct merged_table *stack_merged(struct stack* st);
+struct merged_table *stack_merged_table(struct stack* st);
 
 /* frees all resources associated with the stack. */
 void stack_destroy(struct stack *st);

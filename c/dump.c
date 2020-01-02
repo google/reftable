@@ -19,7 +19,7 @@
 #include <string.h>
 
 
-int dump_table(const char *tablename) {
+static int dump_table(const char *tablename) {
   struct block_source src = {};
   int err =  block_source_from_file(&src, tablename);
   if (err < 0) {

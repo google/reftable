@@ -109,32 +109,6 @@ void free_names(char **a) {
   free(a);
 }
 
-void print_names(char **a) {
-  if (a == NULL || *a == NULL) {
-    puts("[]");
-    return;
-  }
-  puts("[");
-  char **p = a;
-  while (*p) {
-    puts(*p);
-    p++;
-  }
-  puts("]");
-}
-
-int names_equal(char **a, char **b) {
-  while (*a && *b) {
-    if (0 != strcmp(*a, *b)) {
-      return 0;
-    }
-
-    a++;
-    b++;
-  }
-
-  return *a == *b;
-}
 
 /* parse a newline separated list of names. Empty names are discarded. */
 void parse_names(char *buf, int size, char ***namesp) {
