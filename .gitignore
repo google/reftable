@@ -2,3 +2,4 @@
 cmd/cmd
 bazel-*
 TAGS
+*.o
