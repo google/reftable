@@ -67,15 +67,3 @@ void print_names(char **a) {
   puts("]");
 }
 
-int names_equal(char **a, char **b) {
-  while (*a && *b) {
-    if (0 != strcmp(*a, *b)) {
-      return 0;
-    }
-
-    a++;
-    b++;
-  }
-
-  return *a == *b;
-}

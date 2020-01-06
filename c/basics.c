@@ -98,10 +98,10 @@ int binsearch(int sz, int (*f)(int k, void *args), void *args) {
 }
 
 void free_names(char **a) {
-  if (a == NULL) {
+  char **p = a;
+  if (p == NULL) {
     return;
   }
-  char **p = a;
   while (*p) {
     free(*p);
     p++;
@@ -142,6 +142,19 @@ void parse_names(char *buf, int size, char ***namesp) {
 
   names[names_len] = NULL;
   *namesp = names;
+}
+
+int names_equal(char **a, char **b) {
+  while (*a && *b) {
+    if (0 != strcmp(*a, *b)) {
+      return 0;
+    }
+
+    a++;
+    b++;
+  }
+
+  return *a == *b;
 }
 
 const char *error_str(int err) {

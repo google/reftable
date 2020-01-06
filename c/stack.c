@@ -32,8 +32,8 @@
 int new_stack(struct stack **dest, const char *dir,
 	      const char *list_file,
 	      struct write_options config) {
-  *dest = NULL;
   struct stack *p = calloc(sizeof(struct stack),1);
+  *dest = NULL;
   p->list_file = strdup(list_file);
   p->reftable_dir = strdup(dir);
   p->config = config;

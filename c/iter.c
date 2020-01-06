@@ -135,8 +135,9 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) 
 
   reader_return_block(it->r, &it->block_reader.block);
 
-  uint64_t off = it->offsets[it->offset_idx++];
 
+  {
+  uint64_t off = it->offsets[it->offset_idx++];
   int err =
       reader_init_block_reader(it->r, &it->block_reader, off, BLOCK_TYPE_REF);
   if (err < 0) {
@@ -146,7 +147,7 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) 
     // indexed block does not exist.
     return FORMAT_ERROR;
   }
-
+  }
   block_reader_start(&it->block_reader, &it->cur);
   return 0;
 }
@@ -185,13 +186,16 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
                                int offset_len) {
   struct indexed_table_ref_iter *itr =
       calloc(sizeof(struct indexed_table_ref_iter), 1);
+  int err = 0;
+  
   itr->r = r;
   slice_resize(&itr->oid, oid_len);
   memcpy(itr->oid.buf, oid, oid_len);
 
   itr->offsets = offsets;
   itr->offset_len = offset_len;
-  int err = indexed_table_ref_iter_next_block(itr);
+
+  err = indexed_table_ref_iter_next_block(itr);
   if (err < 0) {
     free(itr);
   } else {

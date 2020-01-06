@@ -54,8 +54,7 @@ static int file_read_block(void *v, struct block *dest, uint64_t off, uint32_t s
   struct file_block_source *b = (struct file_block_source *)v;
   assert(off + size <= b->size);
   dest->data = malloc(size);
-  int n = pread(b->fd, dest->data, size, off);
-  if (n != size) {
+  if (pread(b->fd, dest->data, size, off) != size) {
     return -1;
   }
   dest->len = size;
@@ -70,6 +69,8 @@ struct block_source_vtable file_vtable = {
 };
 
 int block_source_from_file(struct block_source *bs, const char *name) {
+  struct stat st = {};
+  int err = 0;
   int fd = open(name, O_RDONLY);
   if (fd < 0) {
     if (errno == ENOENT) {
@@ -78,18 +79,19 @@ int block_source_from_file(struct block_source *bs, const char *name) {
     return -1;
   }
 
-  struct stat st = {};
-  int err = fstat(fd, &st);
+  err = fstat(fd, &st);
   if (err < 0) {
     return -1;
   }
 
-  struct file_block_source *p = calloc(sizeof(struct file_block_source), 1);
-  p->size = st.st_size;
-  p->fd = fd;
+  {
+    struct file_block_source *p = calloc(sizeof(struct file_block_source), 1);
+    p->size = st.st_size;
+    p->fd = fd;
   
-  bs->ops = &file_vtable;
-  bs->arg = p;
+    bs->ops = &file_vtable;
+    bs->arg = p;
+  }
   return 0;
 }
 

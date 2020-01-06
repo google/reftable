@@ -30,14 +30,15 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
     }
   }
 
-  struct tree_node *n = *rootp;
-  int res = compare(key, n->key);
-  if (res < 0) {
-    return tree_search(key, &n->left, compare, insert);
-  } else if (res > 0) {
-    return tree_search(key, &n->right, compare, insert);
+  {
+    int res = compare(key, (*rootp)->key);
+    if (res < 0) {
+      return tree_search(key, &(*rootp)->left, compare, insert);
+    } else if (res > 0) {
+      return tree_search(key, &(*rootp)->right, compare, insert);
+    }
   }
-  return n;
+  return *rootp;
 }
 
 void infix_walk(struct tree_node *t, void (*action)(void *arg, void *key),

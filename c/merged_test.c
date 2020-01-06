@@ -104,6 +104,54 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
   w = NULL;
 }
 
+static struct merged_table *merged_table_from_records(struct ref_record **refs, int *sizes, struct slice *buf, int n) {
+  struct block_source *source = calloc(n, sizeof(*source));
+  struct reader **rd = calloc(n, sizeof(*rd));
+  for (int i = 0; i < n; i++) {
+    write_test_table(&buf[i], refs[i], sizes[i]);
+    block_source_from_slice(&source[i], &buf[i]);
+
+    int err = new_reader(&rd[i], source[i], "name");
+    assert(err == 0);
+  }
+
+  struct merged_table *mt = NULL;
+  int err = new_merged_table(&mt, rd, n);
+  assert(err == 0);
+  return mt;
+}
+
+void test_merged_between(void) {
+  byte hash1[SHA1_SIZE];
+  byte hash2[SHA1_SIZE];
+
+  set_test_hash(hash1, 1);
+  set_test_hash(hash2, 2);
+  struct ref_record r1[] = {{
+                                .ref_name = "b",
+                                .update_index = 1,
+                                .value = hash1,
+			     }};
+  struct ref_record r2[] = {{
+      .ref_name = "a",
+      .update_index = 2,
+  }};
+
+  struct ref_record *refs[] = {r1, r2};
+  int sizes[] = {1, 1};
+  struct slice bufs[2] = {};
+  struct merged_table *mt = merged_table_from_records(refs, sizes, bufs, 2);
+
+  struct iterator it = {};
+  int err = merged_table_seek_ref(mt, &it, "a");
+  assert(err == 0);
+
+  struct ref_record ref = {};
+  err = iterator_next_ref(it, &ref);
+  assert_err(err);
+  assert(ref.update_index == 2);
+}
+
 void test_merged(void) {
   byte hash1[SHA1_SIZE];
   byte hash2[SHA1_SIZE];
@@ -144,23 +192,12 @@ void test_merged(void) {
 
   struct ref_record *refs[] = {r1, r2, r3};
   int sizes[3] = {3, 1, 2};
-  struct slice buf[3] = {};
-  struct block_source source[3] = {};
-  struct reader **rd = calloc(sizeof(struct reader*), 3);
-  for (int i = 0; i < 3; i++) {
-    write_test_table(&buf[i], refs[i], sizes[i]);
-    block_source_from_slice(&source[i], &buf[i]);
-
-    int err = new_reader(&rd[i], source[i], "name");
-    assert(err == 0);
-  }
-
-  struct merged_table *mt = NULL;
-  int err = new_merged_table(&mt, rd, 3);
-  assert(err == 0);
+  struct slice bufs[3] = {};
+  
+  struct merged_table *mt = merged_table_from_records(refs, sizes, bufs, 3);
 
   struct iterator it = {};
-  err = merged_table_seek_ref(mt, &it, "a");
+  int err = merged_table_seek_ref(mt, &it, "a");
   assert(err == 0);
 
   struct ref_record *out = NULL;
@@ -195,8 +232,8 @@ void test_merged(void) {
   }
   free(out);
   
-  for (int i = 0 ; i < ARRAYSIZE(buf); i++) {
-    free(slice_yield(&buf[i]));
+  for (int i = 0 ; i < 3; i++) {
+    free(slice_yield(&bufs[i]));
   }
   merged_table_close(mt);
   merged_table_free(mt);
@@ -205,6 +242,7 @@ void test_merged(void) {
 // XXX test refs_for(oid)
 
 int main() {
+  add_test_case("test_merged_between", &test_merged_between);
   add_test_case("test_pq", &test_pq);
   add_test_case("test_merged", &test_merged);
   test_main();

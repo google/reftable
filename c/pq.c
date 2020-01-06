@@ -20,11 +20,11 @@
 int pq_less(struct pq_entry a, struct pq_entry b) {
   struct slice ak = {};
   struct slice bk = {};
-
+  int cmp = 0;
   record_key(a.rec, &ak);
   record_key(b.rec, &bk);
 
-  int cmp = slice_compare(ak, bk);
+  cmp = slice_compare(ak, bk);
 
   free(slice_yield(&ak));
   free(slice_yield(&bk));
@@ -53,11 +53,12 @@ void merged_iter_pqueue_check(struct merged_iter_pqueue pq) {
 }
 
 struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq) {
+  int i = 0;
   struct pq_entry e = pq->heap[0];
   pq->heap[0] = pq->heap[pq->len - 1];
   pq->len--;
 
-  int i = 0;
+  i = 0;
   while (i < pq->len) {
     int min = i;
     int j = 2 * i + 1;
@@ -73,10 +74,12 @@ struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq) {
       break;
     }
 
-    struct pq_entry tmp = pq->heap[min];
-    pq->heap[min] = pq->heap[i];
-    pq->heap[i] = tmp;
-
+    {
+      struct pq_entry tmp = pq->heap[min];
+      pq->heap[min] = pq->heap[i];
+      pq->heap[i] = tmp;
+    }
+    
     i = min;
   }
 
@@ -84,22 +87,26 @@ struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq) {
 }
 
 void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e) {
+  int i = 0;
   if (pq->len == pq->cap) {
     pq->cap = 2 * pq->cap + 1;
     pq->heap = realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
   }
 
   pq->heap[pq->len++] = e;
-  int i = pq->len - 1;
+  i = pq->len - 1;
   while (i > 0) {
     int j = (i - 1) / 2;
     if (pq_less(pq->heap[j], pq->heap[i])) {
       break;
     }
 
-    struct pq_entry tmp = pq->heap[j];
-    pq->heap[j] = pq->heap[i];
-    pq->heap[i] = tmp;
+    {
+      struct pq_entry tmp = pq->heap[j];
+      pq->heap[j] = pq->heap[i];
+      pq->heap[i] = tmp;
+    }
+    
     i = j;
   }
 }

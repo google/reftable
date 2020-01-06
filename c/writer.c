@@ -42,6 +42,7 @@ static struct block_stats *writer_block_stats(struct writer *w, byte typ) {
 }
 
 static int padded_write(struct writer *w, struct slice out, int padding) {
+  int n = 0;
   if (w->pending_padding > 0) {
     byte *zeroed = calloc(w->pending_padding, 1);
     int n = w->write(w->write_arg, zeroed, w->pending_padding);
@@ -54,7 +55,7 @@ static int padded_write(struct writer *w, struct slice out, int padding) {
   }
 
   w->pending_padding = padding;
-  int n = w->write(w->write_arg, out.buf, out.len);
+  n = w->write(w->write_arg, out.buf, out.len);
   if (n < 0) {
     return n;
   }
@@ -95,11 +96,12 @@ static void writer_reinit_block_writer(struct writer *w, byte typ) {
 
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
                           void *writer_arg, struct write_options *opts) {
+  struct writer *wp = calloc(sizeof(struct writer), 1);
   options_set_defaults(opts);
   if (opts->block_size >= (1 << 24)) {
+    // TODO - error return?
     abort();
   }
-  struct writer *wp = calloc(sizeof(struct writer), 1);
   wp->hash_size = SHA1_SIZE;
   wp->block = calloc(opts->block_size, 1);
   wp->write = writer_func;
@@ -133,14 +135,11 @@ static int obj_index_tree_node_compare(const void *a, const void *b) {
 }
 
 static void writer_index_hash(struct writer *w, struct slice hash) {
-  if (w->opts.skip_index_objects) {
-    return;
-  }
-
   uint64_t off = w->next;
 
-  struct obj_index_tree_node want = {};
-  want.hash = hash;
+  struct obj_index_tree_node want = {
+				     .hash = hash
+  };
 
   struct tree_node *node =
       tree_search(&want, &w->obj_index_tree, &obj_index_tree_node_compare, 0);
@@ -169,31 +168,31 @@ static void writer_index_hash(struct writer *w, struct slice hash) {
 static int writer_add_record(struct writer *w, struct record rec) {
   int result = -1;
   struct slice key = {};
+  int err = 0;
   record_key(rec, &key);
   if (slice_compare(w->last_key, key) >= 0) {
     goto exit;
   }
 
   slice_copy(&w->last_key, key);
-  byte typ = record_type(rec);
   if (w->block_writer == NULL) {
-    writer_reinit_block_writer(w, typ);
+    writer_reinit_block_writer(w, record_type(rec));
   }
 
-  assert(block_writer_type(w->block_writer) == typ);
+  assert(block_writer_type(w->block_writer) == record_type(rec));
 
   if (block_writer_add(w->block_writer, rec) == 0) {
     result = 0;
     goto exit;
   }
 
-  int err = writer_flush_block(w);
+  err = writer_flush_block(w);
   if (err < 0) {
     result = err;
     goto exit;
   }
 
-  writer_reinit_block_writer(w, typ);
+  writer_reinit_block_writer(w, record_type(rec));
   err = block_writer_add(w->block_writer, rec);
   if (err < 0) {
     result = err;
@@ -207,32 +206,34 @@ exit:
 }
 
 int writer_add_ref(struct writer *w, struct ref_record *ref) {
+  struct record rec = {};
+  struct ref_record copy = *ref;
+  int err = 0;
+  
   if (ref->update_index < w->min_update_index ||
       ref->update_index > w->max_update_index) {
     return API_ERROR;
   }
 
-  struct record rec = {};
-  struct ref_record copy = *ref;
   record_from_ref(&rec, &copy);
   copy.update_index -= w->min_update_index;
-  int err = writer_add_record(w, rec);
+  err = writer_add_record(w, rec);
   if (err < 0) {
     return err;
   }
 
-  if (ref->value != NULL) {
+  if ( !w->opts.skip_index_objects && ref->value != NULL) {
     struct slice h = {
-        .buf = ref->value,
-        .len = w->hash_size,
+		      .buf = ref->value,
+		      .len = w->hash_size,
     };
 
     writer_index_hash(w, h);
   }
-  if (ref->target_value != NULL) {
+  if (!w->opts.skip_index_objects && ref->target_value != NULL) {
     struct slice h = {
-        .buf = ref->target_value,
-        .len = w->hash_size,
+		      .buf = ref->target_value,
+		      .len = w->hash_size,
     };
     writer_index_hash(w, h);
   }
@@ -247,27 +248,26 @@ int writer_add_log(struct writer *w, struct log_record *log) {
       return err;
     }
   }
-  struct record rec = {};
-  record_from_log(&rec, log);
-  return writer_add_record(w, rec);
+
+  {
+    struct record rec = {};
+    record_from_log(&rec, log);
+    return writer_add_record(w, rec);
+  }
 }
 
 static int writer_finish_section(struct writer *w) {
-  w->last_key.len = 0;
+  w->last_key.len = 0;		/* XXX: how can we record index entries correctly? */
   byte typ = block_writer_type(w->block_writer);
+  uint64_t index_start = 0;
+  int max_level = 0;
+  int threshold = w->opts.unpadded ? 1 : 3;
+  int before_blocks = w->stats.idx_stats.blocks;
   int err = writer_flush_block(w);
   if (err < 0) {
     return err;
   }
 
-  uint64_t index_start = 0;
-  int max_level = 0;
-  int threshold = 3;
-  if (w->opts.unpadded) {
-    threshold = 1;
-  }
-
-  int before_blocks = w->stats.idx_stats.blocks;
   while (w->index_len > threshold) {
     max_level++;
     index_start = w->next;

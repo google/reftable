@@ -26,11 +26,13 @@ void slice_set_string(struct slice *s, const char *str) {
     return;
   }
 
-  int l = strlen(str);
-  l++;  // \0
-  slice_resize(s, l);
-  memcpy(s->buf, str, l);
-  s->len = l - 1;
+  {
+    int l = strlen(str);
+    l++;  // \0
+    slice_resize(s, l);
+    memcpy(s->buf, str, l);
+    s->len = l - 1;
+  }
 }
 
 void slice_resize(struct slice *s, int l) {
@@ -101,10 +103,7 @@ bool slice_equal(struct slice a, struct slice b) {
 }
 
 int slice_compare(struct slice a, struct slice b) {
-  int min = b.len;
-  if (a.len < b.len) {
-    min = a.len;
-  }
+  int min = a.len < b.len ? a.len : b.len;
   int res = memcmp(a.buf, b.buf, min);
   if (res != 0) {
     return res;
