@@ -629,8 +629,8 @@ static int reader_refs_for_indexed(struct reader *r, struct iterator *it,
   return 0;
 }
 
-int reader_refs_for_unindexed(struct reader *r, struct iterator *it, byte *oid,
-                              int oid_len) {
+static int reader_refs_for_unindexed(struct reader *r, struct iterator *it, byte *oid,
+				     int oid_len) {
   struct table_iter *ti = calloc(sizeof(struct table_iter), 1);
   struct filtering_ref_iterator *filter = NULL;
   int err = reader_start(r, ti, BLOCK_TYPE_REF, false);

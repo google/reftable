@@ -1,3 +1,26 @@
+
+# Mirror core-git COPTS so reftable compiles without warning in CGit.
+GIT_COPTS = [
+        "-Wall",
+        "-Werror",
+	"-Wdeclaration-after-statement",
+	"-Wstrict-prototypes",
+	"-Wformat-security",
+	"-Wno-format-zero-length",
+	"-Wold-style-definition",
+	"-Woverflow",
+	"-Wpointer-arith",
+	"-Wstrict-prototypes",
+	"-Wunused",
+	"-Wvla",
+	"-Wextra",	
+	"-Wmissing-prototypes",
+	"-Wno-empty-body",
+	"-Wno-missing-field-initializers",
+	"-Wno-sign-compare",
+	"-Wno-unused-parameter"
+]
+
 cc_library(
     name = "reftable",
     srcs = [
@@ -30,13 +53,8 @@ cc_library(
         "tree.h",
         "writer.h",
     ],
-    copts = [
-        "-Wall",
-        "-Werror",
-	"-fvisibility=protected",
-	"-Wdeclaration-after-statement",
-    ],
     deps = [ "@zlib//:zlib" ],
+    copts = [ "-fvisibility=protected" ] + GIT_COPTS,
 )
 
 cc_library(
