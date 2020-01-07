@@ -41,7 +41,8 @@ static struct block_stats *writer_block_stats(struct writer *w, byte typ) {
   assert(false);
 }
 
-static int padded_write(struct writer *w, struct slice out, int padding) {
+/* write data, queuing the padding for the next write. Returns negative for error. */
+static int padded_write(struct writer *w, byte *data, size_t len, int padding) {
   int n = 0;
   if (w->pending_padding > 0) {
     byte *zeroed = calloc(w->pending_padding, 1);
@@ -55,12 +56,12 @@ static int padded_write(struct writer *w, struct slice out, int padding) {
   }
 
   w->pending_padding = padding;
-  n = w->write(w->write_arg, out.buf, out.len);
+  n = w->write(w->write_arg, data, len);
   if (n < 0) {
     return n;
   }
   n += padding;
-  return n;
+  return 0;
 }
 
 static void options_set_defaults(struct write_options *opts) {
@@ -257,7 +258,6 @@ int writer_add_log(struct writer *w, struct log_record *log) {
 }
 
 static int writer_finish_section(struct writer *w) {
-  w->last_key.len = 0;		/* XXX: how can we record index entries correctly? */
   byte typ = block_writer_type(w->block_writer);
   uint64_t index_start = 0;
   int max_level = 0;
@@ -269,11 +269,15 @@ static int writer_finish_section(struct writer *w) {
   }
 
   while (w->index_len > threshold) {
+    struct index_record *idx = NULL;
+    int idx_len = 0;
+
     max_level++;
     index_start = w->next;
     writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
-    struct index_record *idx = w->index;
-    int idx_len = w->index_len;
+
+    idx = w->index;
+    idx_len = w->index_len;
 
     w->index = NULL;
     w->index_len = 0;
@@ -285,10 +289,13 @@ static int writer_finish_section(struct writer *w) {
         continue;
       }
 
-      int err = writer_flush_block(w);
-      if (err < 0) {
-        return err;
+      {
+	int err = writer_flush_block(w);
+	if (err < 0) {
+	  return err;
+	}
       }
+      
       writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
       err = block_writer_add(w->block_writer, rec);
@@ -307,10 +314,15 @@ static int writer_finish_section(struct writer *w) {
     return err;
   }
 
-  struct block_stats *bstats = writer_block_stats(w, typ);
-  bstats->index_blocks = w->stats.idx_stats.blocks - before_blocks;
-  bstats->index_offset = index_start;
-  bstats->max_index_level = max_level;
+  {
+    struct block_stats *bstats = writer_block_stats(w, typ);
+    bstats->index_blocks = w->stats.idx_stats.blocks - before_blocks;
+    bstats->index_offset = index_start;
+    bstats->max_index_level = max_level;
+  }
+  
+  // Reinit lastKey, as the next section can start with any key.
+  w->last_key.len = 0;
 
   return 0;
 }
@@ -340,39 +352,38 @@ struct write_record_arg {
 static void write_object_record(void *void_arg, void *key) {
   struct write_record_arg *arg = (struct write_record_arg *)void_arg;
   struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
-
-  if (arg->err < 0) {
-    goto exit;
-  }
-
   struct obj_record obj_rec = {
       .hash_prefix = entry->hash.buf,
       .hash_prefix_len = arg->w->stats.object_id_len,
       .offsets = entry->offsets,
       .offset_len = entry->offset_len,
   };
-
   struct record rec = {};
-  record_from_obj(&rec, &obj_rec);
-  int err = block_writer_add(arg->w->block_writer, rec);
-  if (err == 0) {
+  if (arg->err < 0) {
     goto exit;
   }
 
-  err = writer_flush_block(arg->w);
-  if (err < 0) {
-    arg->err = err;
+  record_from_obj(&rec, &obj_rec);
+  arg->err = block_writer_add(arg->w->block_writer, rec);
+  if (arg->err == 0) {
+    goto exit;
+  }
+
+  arg->err = writer_flush_block(arg->w);
+  if (arg->err < 0) {
     goto exit;
   }
 
   writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
-  err = block_writer_add(arg->w->block_writer, rec);
-  if (err == 0) {
+  arg->err = block_writer_add(arg->w->block_writer, rec);
+  if (arg->err == 0) {
     goto exit;
   }
   obj_rec.offset_len = 0;
-  err = block_writer_add(arg->w->block_writer, rec);
-  assert(err == 0);
+  arg->err = block_writer_add(arg->w->block_writer, rec);
+
+  // Should be able to write into a fresh block.
+  assert(arg->err == 0);
 
  exit:
   ;
@@ -388,6 +399,7 @@ static void object_record_free(void *void_arg, void *key) {
 }
 
 static int writer_dump_object_index(struct writer *w) {
+  struct write_record_arg closure = {.w = w};
   struct common_prefix_arg common = {};
   if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &update_common, &common);
@@ -396,7 +408,6 @@ static int writer_dump_object_index(struct writer *w) {
 
   writer_reinit_block_writer(w, BLOCK_TYPE_OBJ);
 
-  struct write_record_arg closure = {.w = w};
   if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &write_object_record, &closure);
   }
@@ -408,17 +419,20 @@ static int writer_dump_object_index(struct writer *w) {
 }
 
 int writer_finish_public_section(struct writer *w) {
+  byte typ = 0;
+  int err = 0;
+  
   if (w->block_writer == NULL) {
     return 0;
   }
 
-  byte typ = block_writer_type(w->block_writer);
-  int err = writer_finish_section(w);
+  typ = block_writer_type(w->block_writer);
+  err = writer_finish_section(w);
   if (err < 0) {
     return err;
   }
   if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects && w->stats.ref_stats.index_blocks > 0) {
-    int err = writer_dump_object_index(w);
+    err = writer_dump_object_index(w);
     if (err < 0) {
       return err;
     }
@@ -435,10 +449,11 @@ int writer_finish_public_section(struct writer *w) {
 }
 
 int writer_close(struct writer *w) {
-  writer_finish_public_section(w);
-
   byte footer[68];
   byte *p = footer;
+  
+  writer_finish_public_section(w);
+
   writer_write_header(w, footer);
   p += 24;
   put_u64(p, w->stats.ref_stats.index_offset);
@@ -456,22 +471,17 @@ int writer_close(struct writer *w) {
   put_u64(p, 0);
   p += 8;
 
-  uint32_t crc = crc32(0, footer, p-footer);
-  put_u32(p, crc);
+  put_u32(p, crc32(0, footer, p-footer));
   p += 4;
   w->pending_padding = 0;
 
-  struct slice out = {
-      .buf = footer,
-      .len = sizeof(footer),
-  };
-  int n = padded_write(w, out, 0);
-  if (n < 0) {
-    return n;
+  {
+    int n = padded_write(w, footer, sizeof(footer), 0);
+    if (n < 0) {
+      return n;
+    }
   }
-
-  assert(n == sizeof(footer));
-
+  
   // free up memory.
   block_writer_clear(&w->block_writer_data);
   writer_clear_index(w);
@@ -492,29 +502,23 @@ void writer_clear_index(struct writer *w) {
 
 const int debug = 0;
 
-int writer_flush_block(struct writer *w) {
-  if (w->block_writer == NULL) {
-    return 0;
-  }
-  if (w->block_writer->entries == 0) {
-    return 0;
-  }
-
+static int writer_flush_nonempty_block(struct writer *w) {
   byte typ = block_writer_type(w->block_writer);
-
   struct block_stats *bstats = writer_block_stats(w, typ);
-  if (bstats->blocks == 0) {
-    bstats->offset = w->next;
-  }
-
+  uint64_t block_typ_off = (bstats->blocks == 0) ? w->next : 0;
   int raw_bytes = block_writer_finish(w->block_writer);
+  int padding = 0;
+  int err = 0;
   if (raw_bytes < 0) {
     return raw_bytes;
   }
 
-  int padding = w->opts.block_size - raw_bytes;
-  if (w->opts.unpadded || typ == BLOCK_TYPE_LOG) {
-    padding = 0;
+  if (!w->opts.unpadded && typ != BLOCK_TYPE_LOG) {
+    padding = w->opts.block_size - raw_bytes;
+  }
+
+  if (block_typ_off > 0) {
+    bstats->offset = block_typ_off;
   }
 
   bstats->entries += w->block_writer->entries;
@@ -527,13 +531,9 @@ int writer_flush_block(struct writer *w) {
             get_u24(w->block + w->block_writer->header_off + 1));
   }
 
-  struct slice out = {
-      .buf = w->block,
-      .len = raw_bytes,
-  };
-  int n = padded_write(w, out, padding);
-  if (n < 0) {
-    return n;
+  err = padded_write(w, w->block, raw_bytes, padding);
+  if (err < 0) {
+    return err;
   }
 
   if (w->index_cap == w->index_len) {
@@ -541,17 +541,31 @@ int writer_flush_block(struct writer *w) {
     w->index = realloc(w->index, sizeof(struct index_record) * w->index_cap);
   }
 
-  struct index_record ir = {
+  {
+    struct index_record ir = {
       .offset = w->next,
-  };
-  slice_copy(&ir.last_key, w->block_writer->last_key);
-  w->index[w->index_len] = ir;
+    };
+    slice_copy(&ir.last_key, w->block_writer->last_key);
+    w->index[w->index_len] = ir;
+  }
+  
   w->index_len++;
-  w->next += n;
+  w->next += padding + raw_bytes;
   block_writer_reset(&w->block_writer_data);
   w->block_writer = NULL;
   return 0;
 }
+
+int writer_flush_block(struct writer *w) {
+  if (w->block_writer == NULL) {
+    return 0;
+  }
+  if (w->block_writer->entries == 0) {
+    return 0;
+  }
+  return writer_flush_nonempty_block(w);
+}
+
 
 struct stats *writer_stats(struct writer *w) {
   return &w->stats;

@@ -38,5 +38,6 @@ int binsearch(int sz, int (*f)(int k, void *args), void *args);
 void free_names(char **a);
 void parse_names(char *buf, int size, char ***namesp);
 int names_equal(char **a, char **b);
+int names_length(char **names);
 
 #endif

@@ -34,6 +34,7 @@ cc_library(
         "-Wall",
         "-Werror",
 	"-fvisibility=protected",
+	"-Wdeclaration-after-statement",
     ],
     deps = [ "@zlib//:zlib" ],
 )

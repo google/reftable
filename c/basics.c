@@ -109,6 +109,13 @@ void free_names(char **a) {
   free(a);
 }
 
+int names_length(char **names) {
+  int len = 0;
+  for (char **p = names; *p; p++) {
+    len ++;
+  }
+  return len;
+}
 
 /* parse a newline separated list of names. Empty names are discarded. */
 void parse_names(char *buf, int size, char ***namesp) {
