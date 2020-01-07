@@ -397,7 +397,6 @@ func (w *Writer) dumpObjectIndex() error {
 }
 
 func (w *Writer) finishSection() error {
-	w.lastKey = ""
 	typ := w.blockWriter.getType()
 	if err := w.flushBlock(); err != nil {
 		return err
@@ -441,6 +440,9 @@ func (w *Writer) finishSection() error {
 	blockStats.IndexBlocks = w.Stats.idxStats.Blocks - before
 	blockStats.IndexOffset = indexStart
 	blockStats.MaxIndexLevel = maxLevel
+
+	// Reinit lastKey, as the next section can start with any key.
+	w.lastKey = ""
 	return nil
 }
 
