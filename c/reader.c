@@ -635,7 +635,7 @@ static int reader_refs_for_unindexed(struct reader *r, struct iterator *it, byte
   struct filtering_ref_iterator *filter = NULL;
   int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
   if (err < 0) {
-    //    free(ti); // XXX?
+    free(ti);
     return err;
   }
 
