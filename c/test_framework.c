@@ -15,8 +15,8 @@
 #include "test_framework.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "constants.h"
 
@@ -49,9 +49,7 @@ void test_main() {
   }
 }
 
-void set_test_hash(byte *p, int i) {
-  memset(p, (byte)i, SHA1_SIZE);
-}
+void set_test_hash(byte *p, int i) { memset(p, (byte)i, SHA1_SIZE); }
 
 void print_names(char **a) {
   if (a == NULL || *a == NULL) {
@@ -66,4 +64,3 @@ void print_names(char **a) {
   }
   puts("]");
 }
-

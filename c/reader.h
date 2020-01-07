@@ -15,9 +15,9 @@
 #ifndef READER_H
 #define READER_H
 
-#include "reftable.h"
 #include "block.h"
 #include "record.h"
+#include "reftable.h"
 
 uint64_t block_source_size(struct block_source source);
 
@@ -50,7 +50,7 @@ struct reader {
 int init_reader(struct reader *r, struct block_source source, const char *name);
 int reader_seek(struct reader *r, struct iterator *it, struct record rec);
 void reader_close(struct reader *r);
-const char* reader_name(struct reader *r);
+const char *reader_name(struct reader *r);
 void reader_return_block(struct reader *r, struct block *p);
 int reader_init_block_reader(struct reader *r, struct block_reader *br,
                              uint64_t next_off, byte want_typ);

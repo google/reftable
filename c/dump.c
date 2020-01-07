@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "reftable.h"
-
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
+#include "reftable.h"
 
 static int dump_table(const char *tablename) {
   struct block_source src = {};
-  int err =  block_source_from_file(&src, tablename);
+  int err = block_source_from_file(&src, tablename);
   if (err < 0) {
     return err;
   }
@@ -43,10 +42,10 @@ static int dump_table(const char *tablename) {
     while (1) {
       err = iterator_next_ref(it, &ref);
       if (err > 0) {
-	break;
+        break;
       }
       if (err < 0) {
-	return err;
+        return err;
       }
       ref_record_print(&ref, 20);
     }
@@ -65,10 +64,10 @@ static int dump_table(const char *tablename) {
     while (1) {
       err = iterator_next_log(it, &log);
       if (err > 0) {
-	break;
+        break;
       }
       if (err < 0) {
-	return err;
+        return err;
       }
       log_record_print(&log, 20);
     }
@@ -83,13 +82,13 @@ int main(int argc, char *argv[]) {
   const char *table = NULL;
   while ((opt = getopt(argc, argv, "t:")) != -1) {
     switch (opt) {
-    case 't':
-      table = strdup(optarg);
-      break;
-    case '?':
-      printf("usage: %s [-table tablefile]\n", argv[0]);
-      return 2;
-      break;
+      case 't':
+        table = strdup(optarg);
+        break;
+      case '?':
+        printf("usage: %s [-table tablefile]\n", argv[0]);
+        return 2;
+        break;
     }
   }
 
@@ -102,4 +101,3 @@ int main(int argc, char *argv[]) {
   }
   return 0;
 }
-  

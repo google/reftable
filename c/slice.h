@@ -15,8 +15,8 @@
 #ifndef SLICE_H
 #define SLICE_H
 
-#include "reftable.h"
 #include "basics.h"
+#include "reftable.h"
 
 struct slice {
   byte *buf;
@@ -35,7 +35,7 @@ void slice_resize(struct slice *s, int l);
 int slice_compare(struct slice a, struct slice b);
 int slice_write(struct slice *b, byte *data, int sz);
 int slice_write_void(void *b, byte *data, int sz);
-void slice_append(struct slice* dest, struct slice add);
+void slice_append(struct slice *dest, struct slice add);
 
 struct block_source;
 void block_source_from_slice(struct block_source *bs, struct slice *buf);

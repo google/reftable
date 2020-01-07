@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "merged.h"
+
 #include <string.h>
 
-#include "reftable.h"
 #include "basics.h"
 #include "block.h"
 #include "constants.h"
 #include "pq.h"
 #include "reader.h"
 #include "record.h"
+#include "reftable.h"
 #include "test_framework.h"
-#include "merged.h"
 
 void test_pq(void) {
   char *names[54] = {};
-  int N = ARRAYSIZE(names)-1;
+  int N = ARRAYSIZE(names) - 1;
 
   for (int i = 0; i < N; i++) {
     char name[100];
@@ -104,7 +105,10 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
   w = NULL;
 }
 
-static struct merged_table *merged_table_from_records(struct ref_record **refs, int *sizes, struct slice *buf, int n) {
+static struct merged_table *merged_table_from_records(struct ref_record **refs,
+                                                      int *sizes,
+                                                      struct slice *buf,
+                                                      int n) {
   struct block_source *source = calloc(n, sizeof(*source));
   struct reader **rd = calloc(n, sizeof(*rd));
   for (int i = 0; i < n; i++) {
@@ -128,10 +132,10 @@ void test_merged_between(void) {
   set_test_hash(hash1, 1);
   set_test_hash(hash2, 2);
   struct ref_record r1[] = {{
-                                .ref_name = "b",
-                                .update_index = 1,
-                                .value = hash1,
-			     }};
+      .ref_name = "b",
+      .update_index = 1,
+      .value = hash1,
+  }};
   struct ref_record r2[] = {{
       .ref_name = "a",
       .update_index = 2,
@@ -193,7 +197,7 @@ void test_merged(void) {
   struct ref_record *refs[] = {r1, r2, r3};
   int sizes[3] = {3, 1, 2};
   struct slice bufs[3] = {};
-  
+
   struct merged_table *mt = merged_table_from_records(refs, sizes, bufs, 3);
 
   struct iterator it = {};
@@ -203,7 +207,7 @@ void test_merged(void) {
   struct ref_record *out = NULL;
   int len = 0;
   int cap = 0;
-  while (len < 100) { // cap loops/recursion.
+  while (len < 100) {  // cap loops/recursion.
     struct ref_record ref = {};
     int err = iterator_next_ref(it, &ref);
     if (err > 0) {
@@ -216,7 +220,7 @@ void test_merged(void) {
     out[len++] = ref;
   }
   iterator_destroy(&it);
-  
+
   struct ref_record want[] = {
       r2[0],
       r1[1],
@@ -231,8 +235,8 @@ void test_merged(void) {
     ref_record_clear(&out[i]);
   }
   free(out);
-  
-  for (int i = 0 ; i < 3; i++) {
+
+  for (int i = 0; i < 3; i++) {
     free(slice_yield(&bufs[i]));
   }
   merged_table_close(mt);

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <unistd.h>
-#include <string.h>
-
 #include "stack.h"
 
-#include "reftable.h"
+#include <string.h>
+#include <unistd.h>
+
 #include "basics.h"
 #include "constants.h"
 #include "record.h"
+#include "reftable.h"
 #include "test_framework.h"
 
 void test_read_file(void) {
@@ -29,7 +29,7 @@ void test_read_file(void) {
   assert(fd > 0);
 
   char out[1024] = "line1\n\nline2\nline3";
-  
+
   int n = write(fd, out, strlen(out));
   assert(n == strlen(out));
   int err = close(fd);
@@ -59,16 +59,16 @@ void test_parse_names(void) {
 }
 
 void test_names_equal(void) {
-  char *a[]  = { "a", "b", "c", NULL };
-  char *b[]  = { "a", "b", "d", NULL };
-  char *c[]  = { "a", "b",  NULL };
+  char *a[] = {"a", "b", "c", NULL};
+  char *b[] = {"a", "b", "d", NULL};
+  char *c[] = {"a", "b", NULL};
 
   assert(names_equal(a, a));
   assert(!names_equal(a, b));
   assert(!names_equal(a, c));
 }
 
-int write_test_ref(struct writer *wr, void*arg) {
+int write_test_ref(struct writer *wr, void *arg) {
   struct ref_record *ref = arg;
 
   writer_set_limits(wr, ref->update_index, ref->update_index);
@@ -85,7 +85,7 @@ void test_stack_add(void) {
   strcat(fn, dir);
   strcat(fn, "/refs");
 
-  struct write_options cfg = {  };
+  struct write_options cfg = {};
   struct stack *st = NULL;
   int err = new_stack(&st, dir, fn, cfg);
   assert_err(err);
@@ -98,9 +98,9 @@ void test_stack_add(void) {
     refs[i].ref_name = strdup(buf);
     refs[i].value = malloc(SHA1_SIZE);
     refs[i].update_index = i + 1;
-    set_test_hash(refs[i].value , i);
+    set_test_hash(refs[i].value, i);
   }
-  
+
   for (int i = 0; i < N; i++) {
     int err = stack_add(st, &write_test_ref, &refs[i]);
     assert_err(err);
@@ -108,7 +108,7 @@ void test_stack_add(void) {
 
   err = stack_compact_all(st);
   assert_err(err);
-  
+
   struct merged_table *mt = stack_merged_table(st);
   for (int i = 0; i < N; i++) {
     struct iterator it = {};
@@ -142,7 +142,7 @@ void test_sizes_to_segments(void) {
   // .................0  1  2  3  4  5
 
   int seglen = 0;
-  struct segment* segs = sizes_to_segments(&seglen, sizes, ARRAYSIZE(sizes));
+  struct segment *segs = sizes_to_segments(&seglen, sizes, ARRAYSIZE(sizes));
   assert(segs[2].log == 3);
   assert(segs[2].start == 5);
   assert(segs[2].end == 6);
@@ -161,7 +161,7 @@ void test_suggest_compaction_segment(void) {
     assert(min.start == 2);
     assert(min.end == 7);
   }
-  
+
   {
     uint64_t sizes[] = {64, 32, 16, 8, 4, 2};
     struct segment result = suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
@@ -170,7 +170,8 @@ void test_suggest_compaction_segment(void) {
 }
 
 int main() {
-  add_test_case("test_suggest_compaction_segment", &test_suggest_compaction_segment);
+  add_test_case("test_suggest_compaction_segment",
+                &test_suggest_compaction_segment);
   add_test_case("test_sizes_to_segments", &test_sizes_to_segments);
   add_test_case("test_log2", &test_log2);
   add_test_case("test_parse_names", &test_parse_names);

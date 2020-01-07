@@ -27,9 +27,11 @@ struct stack {
   struct compaction_stats stats;
 };
 
-int read_lines(const char* filename, char ***lines);
-int stack_try_add(struct stack* st, int (*write_table)(struct writer *wr, void*arg), void *arg);
-int stack_write_compact(struct stack *st, struct writer *wr, int first, int last);
+int read_lines(const char *filename, char ***lines);
+int stack_try_add(struct stack *st,
+                  int (*write_table)(struct writer *wr, void *arg), void *arg);
+int stack_write_compact(struct stack *st, struct writer *wr, int first,
+                        int last);
 int fastlog2(uint64_t sz);
 
 struct segment {
@@ -39,7 +41,6 @@ struct segment {
 };
 
 struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n);
-struct segment suggest_compaction_segment(uint64_t*sizes, int n);
+struct segment suggest_compaction_segment(uint64_t *sizes, int n);
 
 #endif
-   

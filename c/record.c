@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "reftable.h"
 #include "constants.h"
+#include "reftable.h"
 
 int is_block_type(byte typ) {
   switch (typ) {
@@ -151,7 +151,8 @@ static void ref_record_key(const void *r, struct slice *dest) {
   slice_set_string(dest, rec->ref_name);
 }
 
-static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size) {
+static void ref_record_copy_from(void *rec, const void *src_rec,
+                                 int hash_size) {
   struct ref_record *ref = (struct ref_record *)rec;
   struct ref_record *src = (struct ref_record *)src_rec;
   assert(hash_size > 0);
@@ -197,7 +198,7 @@ static void hex_format(char *dest, byte *src, int hash_size) {
 }
 
 void ref_record_print(struct ref_record *ref, int hash_size) {
-  char hex[SHA256_SIZE+1] = {};
+  char hex[SHA256_SIZE + 1] = {};
 
   printf("ref{%s(%ld) ", ref->ref_name, ref->update_index);
   if (ref->value != NULL) {
@@ -301,13 +302,13 @@ static int ref_record_encode(const void *rec, struct slice s, int hash_size) {
 }
 
 static int ref_record_decode(void *rec, struct slice key, byte val_type,
-                      struct slice in, int hash_size) {
+                             struct slice in, int hash_size) {
   struct ref_record *r = (struct ref_record *)rec;
   struct slice start = in;
   bool seen_value = false;
   bool seen_target_value = false;
   bool seen_target = false;
-  
+
   int n = get_var_int(&r->update_index, in);
   if (n < 0) {
     return n;
@@ -355,7 +356,7 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
       in.buf += n;
       in.len -= n;
       seen_target = true;
-      r->target = (char*)slice_as_string(&dest);
+      r->target = (char *)slice_as_string(&dest);
     } break;
 
     case 0:
@@ -422,13 +423,13 @@ int decode_key(struct slice *key, byte *extra, struct slice last_key,
 }
 
 struct record_vtable ref_record_vtable = {
-					  .key = &ref_record_key,
-					  .type = &ref_record_type,
-					  .copy_from = &ref_record_copy_from,
-					  .val_type = &ref_record_val_type,
-					  .encode = &ref_record_encode,
-					  .decode = &ref_record_decode,
-					  .clear = &ref_record_clear_void,
+    .key = &ref_record_key,
+    .type = &ref_record_type,
+    .copy_from = &ref_record_copy_from,
+    .val_type = &ref_record_val_type,
+    .encode = &ref_record_encode,
+    .decode = &ref_record_decode,
+    .clear = &ref_record_clear_void,
 };
 
 static byte obj_record_type(void) { return BLOCK_TYPE_OBJ; }
@@ -439,7 +440,8 @@ static void obj_record_key(const void *r, struct slice *dest) {
   memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
 }
 
-static void obj_record_copy_from(void *rec, const void *src_rec, int hash_size) {
+static void obj_record_copy_from(void *rec, const void *src_rec,
+                                 int hash_size) {
   struct obj_record *ref = (struct obj_record *)rec;
   const struct obj_record *src = (const struct obj_record *)src_rec;
 
@@ -496,7 +498,7 @@ static int obj_record_encode(const void *rec, struct slice s, int hash_size) {
     for (int i = 1; i < r->offset_len; i++) {
       int n = put_var_int(s, r->offsets[i] - last);
       if (n < 0) {
-	return -1;
+        return -1;
       }
       s.buf += n;
       s.len -= n;
@@ -507,7 +509,7 @@ static int obj_record_encode(const void *rec, struct slice s, int hash_size) {
 }
 
 static int obj_record_decode(void *rec, struct slice key, byte val_type,
-                      struct slice in, int hash_size) {
+                             struct slice in, int hash_size) {
   struct slice start = in;
   struct obj_record *r = (struct obj_record *)rec;
   uint64_t count = val_type;
@@ -550,7 +552,7 @@ static int obj_record_decode(void *rec, struct slice key, byte val_type,
       uint64_t delta = 0;
       int n = get_var_int(&delta, in);
       if (n < 0) {
-	return n;
+        return n;
       }
 
       in.buf += n;
@@ -574,10 +576,10 @@ struct record_vtable obj_record_vtable = {
 };
 
 void log_record_print(struct log_record *log, int hash_size) {
-  char hex[SHA256_SIZE+1] = {};
+  char hex[SHA256_SIZE + 1] = {};
 
   printf("log{%s(%ld) %s <%s> %lu %04d\n", log->ref_name, log->update_index,
-	 log->name, log->email, log->time, log->tz_offset);
+         log->name, log->email, log->time, log->tz_offset);
   hex_format(hex, log->old_hash, hash_size);
   printf("%s => ", hex);
   hex_format(hex, log->new_hash, hash_size);
@@ -591,20 +593,21 @@ static void log_record_key(const void *r, struct slice *dest) {
   int len = strlen(rec->ref_name);
   uint64_t ts = 0;
   slice_resize(dest, len + 9);
-  memcpy(dest->buf, rec->ref_name, len+1);
+  memcpy(dest->buf, rec->ref_name, len + 1);
   ts = (~ts) - rec->update_index;
   put_u64(dest->buf + 1 + len, ts);
 }
 
-static void log_record_copy_from(void *rec, const void *src_rec, int hash_size) {
+static void log_record_copy_from(void *rec, const void *src_rec,
+                                 int hash_size) {
   struct log_record *dst = (struct log_record *)rec;
   const struct log_record *src = (const struct log_record *)src_rec;
 
   *dst = *src;
-  dst->ref_name =strdup(dst->ref_name);
-  dst->email =strdup(dst->email);
-  dst->name =strdup(dst->name);
-  dst->message =strdup(dst->message);
+  dst->ref_name = strdup(dst->ref_name);
+  dst->email = strdup(dst->email);
+  dst->name = strdup(dst->name);
+  dst->message = strdup(dst->message);
   if (dst->new_hash != NULL) {
     dst->new_hash = malloc(hash_size);
     memcpy(dst->new_hash, src->new_hash, hash_size);
@@ -630,9 +633,7 @@ void log_record_clear(struct log_record *r) {
   memset(r, 0, sizeof(struct log_record));
 }
 
-static byte log_record_val_type(const void *rec) {
-  return 1;
-}
+static byte log_record_val_type(const void *rec) { return 1; }
 
 static byte zero[SHA256_SIZE] = {};
 
@@ -645,11 +646,11 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size) {
   if (oldh == NULL) {
     oldh = zero;
   }
-  if (newh == NULL){
+  if (newh == NULL) {
     newh = zero;
   }
 
-  if (s.len < 2*hash_size) {
+  if (s.len < 2 * hash_size) {
     return -1;
   }
 
@@ -664,7 +665,7 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size) {
   }
   s.len -= n;
   s.buf += n;
-  
+
   n = encode_string(r->email ? r->email : "", s);
   if (n < 0) {
     return -1;
@@ -686,42 +687,42 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size) {
   put_u16(s.buf, r->tz_offset);
   s.buf += 2;
   s.len -= 2;
-  
+
   n = encode_string(r->message ? r->message : "", s);
   if (n < 0) {
     return -1;
   }
   s.len -= n;
   s.buf += n;
-  
+
   return start.len - s.len;
 }
 
 static int log_record_decode(void *rec, struct slice key, byte val_type,
-                      struct slice in, int hash_size) {
+                             struct slice in, int hash_size) {
   struct slice start = in;
   struct log_record *r = (struct log_record *)rec;
   uint64_t max = 0;
   uint64_t ts = 0;
   struct slice dest = {};
   int n;
-    
-  if (key.len <= 9 || key.buf[key.len-9] != 0) {
+
+  if (key.len <= 9 || key.buf[key.len - 9] != 0) {
     return FORMAT_ERROR;
   }
 
   r->ref_name = realloc(r->ref_name, key.len - 8);
-  memcpy(r->ref_name, key.buf, key.len-8);
-  ts = get_u64(key.buf + key.len-8);
-  
-  r->update_index  = (~max) - ts;
+  memcpy(r->ref_name, key.buf, key.len - 8);
+  ts = get_u64(key.buf + key.len - 8);
+
+  r->update_index = (~max) - ts;
 
   if (in.len < 2 * hash_size) {
     return FORMAT_ERROR;
   }
-  
-  r->old_hash  = realloc(r->old_hash, hash_size);
-  r->new_hash  = realloc(r->new_hash, hash_size);
+
+  r->old_hash = realloc(r->old_hash, hash_size);
+  r->new_hash = realloc(r->new_hash, hash_size);
 
   memcpy(r->old_hash, in.buf, hash_size);
   memcpy(r->new_hash, in.buf + hash_size, hash_size);
@@ -735,11 +736,11 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
   }
   in.len -= n;
   in.buf += n;
-  
+
   r->name = realloc(r->name, dest.len + 1);
   memcpy(r->name, dest.buf, dest.len);
   r->name[dest.len] = 0;
-  
+
   slice_resize(&dest, 0);
   n = decode_string(&dest, in);
   if (n < 0) {
@@ -767,7 +768,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
   r->tz_offset = get_u16(in.buf);
   in.buf += 2;
   in.len -= 2;
-		
+
   slice_resize(&dest, 0);
   n = decode_string(&dest, in);
   if (n < 0) {
@@ -779,20 +780,20 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
   r->message = realloc(r->message, dest.len + 1);
   memcpy(r->message, dest.buf, dest.len);
   r->message[dest.len] = 0;
-    
+
   return start.len - in.len;
 
- error:
+error:
   free(slice_yield(&dest));
   return FORMAT_ERROR;
 }
 
 static bool null_streq(char *a, char *b) {
   char *empty = "";
-  if (a == NULL){
+  if (a == NULL) {
     a = empty;
   }
-  if (b == NULL){
+  if (b == NULL) {
     b = empty;
   }
   return 0 == strcmp(a, b);
@@ -808,15 +809,14 @@ static bool zero_hash_eq(byte *a, byte *b, int sz) {
   return 0 == memcmp(a, b, sz);
 }
 
-bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size) {
-  return null_streq(a->name, b->name)
-    && null_streq(a->email, b->email)
-    && null_streq(a->message, b->message)
-    && zero_hash_eq(a->old_hash, b->old_hash, hash_size)
-    && zero_hash_eq(a->new_hash, b->new_hash, hash_size)
-    && a->time == b->time
-    && a->tz_offset == b->tz_offset
-    && a->update_index == b->update_index;
+bool log_record_equal(struct log_record *a, struct log_record *b,
+                      int hash_size) {
+  return null_streq(a->name, b->name) && null_streq(a->email, b->email) &&
+         null_streq(a->message, b->message) &&
+         zero_hash_eq(a->old_hash, b->old_hash, hash_size) &&
+         zero_hash_eq(a->new_hash, b->new_hash, hash_size) &&
+         a->time == b->time && a->tz_offset == b->tz_offset &&
+         a->update_index == b->update_index;
 }
 
 struct record_vtable log_record_vtable = {
@@ -865,7 +865,8 @@ static void index_record_key(const void *r, struct slice *dest) {
   slice_copy(dest, rec->last_key);
 }
 
-static void index_record_copy_from(void *rec, const void *src_rec, int hash_size) {
+static void index_record_copy_from(void *rec, const void *src_rec,
+                                   int hash_size) {
   struct index_record *dst = (struct index_record *)rec;
   struct index_record *src = (struct index_record *)src_rec;
 
@@ -880,7 +881,8 @@ static void index_record_clear(void *rec) {
 
 static byte index_record_val_type(const void *rec) { return 0; }
 
-static int index_record_encode(const void *rec, struct slice out, int hash_size) {
+static int index_record_encode(const void *rec, struct slice out,
+                               int hash_size) {
   const struct index_record *r = (const struct index_record *)rec;
   struct slice start = out;
 
@@ -896,11 +898,11 @@ static int index_record_encode(const void *rec, struct slice out, int hash_size)
 }
 
 static int index_record_decode(void *rec, struct slice key, byte val_type,
-                        struct slice in, int hash_size) {
+                               struct slice in, int hash_size) {
   struct slice start = in;
   struct index_record *r = (struct index_record *)rec;
   int n = 0;
-  
+
   slice_copy(&r->last_key, key);
 
   n = get_var_int(&r->offset, in);
@@ -995,11 +997,13 @@ static bool str_equal(char *a, char *b) {
   return a == b;
 }
 
-bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size) {
+bool ref_record_equal(struct ref_record *a, struct ref_record *b,
+                      int hash_size) {
   assert(hash_size > 0);
   return 0 == strcmp(a->ref_name, b->ref_name) &&
-    a->update_index == b->update_index && hash_equal(a->value, b->value, hash_size) &&
-    hash_equal(a->target_value, b->target_value, hash_size) &&
+         a->update_index == b->update_index &&
+         hash_equal(a->value, b->value, hash_size) &&
+         hash_equal(a->target_value, b->target_value, hash_size) &&
          str_equal(a->target, b->target);
 }
 

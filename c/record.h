@@ -24,7 +24,8 @@ struct record_vtable {
   void (*copy_from)(void *rec, const void *src, int hash_size);
   byte (*val_type)(const void *rec);
   int (*encode)(const void *rec, struct slice dest, int hash_size);
-  int (*decode)(void *rec, struct slice key, byte extra, struct slice src, int hash_size);
+  int (*decode)(void *rec, struct slice key, byte extra, struct slice src,
+                int hash_size);
   void (*clear)(void *rec);
 };
 

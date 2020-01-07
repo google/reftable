@@ -14,8 +14,8 @@
 
 #include "basics.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void put_u24(byte *out, uint32_t i) {
@@ -112,7 +112,7 @@ void free_names(char **a) {
 int names_length(char **names) {
   int len = 0;
   for (char **p = names; *p; p++) {
-    len ++;
+    len++;
   }
   return len;
 }
@@ -122,7 +122,7 @@ void parse_names(char *buf, int size, char ***namesp) {
   char **names = NULL;
   int names_cap = 0;
   int names_len = 0;
-	    
+
   char *p = buf;
   char *end = buf + size;
   while (p < end) {
@@ -134,8 +134,8 @@ void parse_names(char *buf, int size, char ***namesp) {
     }
     if (p < next) {
       if (names_len == names_cap) {
-	names_cap = 2*names_cap + 1;
-	names = realloc(names, names_cap * sizeof(char*));
+        names_cap = 2 * names_cap + 1;
+        names = realloc(names, names_cap * sizeof(char *));
       }
       names[names_len++] = strdup(p);
     }
@@ -143,8 +143,8 @@ void parse_names(char *buf, int size, char ***namesp) {
   }
 
   if (names_len == names_cap) {
-    names_cap = 2*names_cap + 1;
-    names = realloc(names, names_cap * sizeof(char*));
+    names_cap = 2 * names_cap + 1;
+    names = realloc(names, names_cap * sizeof(char *));
   }
 
   names[names_len] = NULL;
@@ -166,14 +166,19 @@ int names_equal(char **a, char **b) {
 
 const char *error_str(int err) {
   switch (err) {
-  case IO_ERROR: return "I/O error";
-  case FORMAT_ERROR: return "FORMAT_ERROR";
-  case NOT_EXIST_ERROR: return "NOT_EXIST_ERROR";
-  case LOCK_ERROR: return "LOCK_ERROR";
-  case API_ERROR: return "API_ERROR";
-  case -1: return "general error";
-  default: return "unknown error code";
+    case IO_ERROR:
+      return "I/O error";
+    case FORMAT_ERROR:
+      return "FORMAT_ERROR";
+    case NOT_EXIST_ERROR:
+      return "NOT_EXIST_ERROR";
+    case LOCK_ERROR:
+      return "LOCK_ERROR";
+    case API_ERROR:
+      return "API_ERROR";
+    case -1:
+      return "general error";
+    default:
+      return "unknown error code";
   }
 }
-
-

@@ -15,9 +15,9 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-#include "reftable.h"
 #include "basics.h"
 #include "block.h"
+#include "reftable.h"
 #include "slice.h"
 #include "tree.h"
 

@@ -18,11 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "reftable.h"
-
-#include "reftable.h"
 #include "basics.h"
 #include "record.h"
+#include "reftable.h"
 #include "test_framework.h"
 
 void test_slice(void) {
@@ -39,7 +37,6 @@ void test_slice(void) {
   free(slice_yield(&s));
   free(slice_yield(&t));
 }
-
 
 int main() {
   add_test_case("test_slice", &test_slice);

@@ -17,10 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "reftable.h"
-#include "constants.h"
 #include "block.h"
+#include "constants.h"
 #include "reader.h"
+#include "reftable.h"
 
 bool iterator_is_null(struct iterator it) { return it.ops == NULL; }
 
@@ -103,7 +103,8 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
 
     if ((ref->target_value != NULL &&
          0 == memcmp(fri->oid.buf, ref->target_value, fri->oid.len)) ||
-        (ref->value != NULL && 0 == memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
+        (ref->value != NULL &&
+         0 == memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
       return 0;
     }
   }
@@ -127,7 +128,8 @@ static void indexed_table_ref_iter_close(void *p) {
   free(slice_yield(&it->oid));
 }
 
-static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) {
+static int indexed_table_ref_iter_next_block(
+    struct indexed_table_ref_iter *it) {
   if (it->offset_idx == it->offset_len) {
     it->finished = true;
     return 1;
@@ -135,18 +137,17 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it) 
 
   reader_return_block(it->r, &it->block_reader.block);
 
-
   {
-  uint64_t off = it->offsets[it->offset_idx++];
-  int err =
-      reader_init_block_reader(it->r, &it->block_reader, off, BLOCK_TYPE_REF);
-  if (err < 0) {
-    return err;
-  }
-  if (err > 0) {
-    // indexed block does not exist.
-    return FORMAT_ERROR;
-  }
+    uint64_t off = it->offsets[it->offset_idx++];
+    int err =
+        reader_init_block_reader(it->r, &it->block_reader, off, BLOCK_TYPE_REF);
+    if (err < 0) {
+      return err;
+    }
+    if (err > 0) {
+      // indexed block does not exist.
+      return FORMAT_ERROR;
+    }
   }
   block_reader_start(&it->block_reader, &it->cur);
   return 0;
@@ -182,12 +183,12 @@ static int indexed_table_ref_iter_next(void *p, struct record rec) {
 }
 
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-                               struct reader *r, byte *oid, int oid_len, uint64_t *offsets,
-                               int offset_len) {
+                               struct reader *r, byte *oid, int oid_len,
+                               uint64_t *offsets, int offset_len) {
   struct indexed_table_ref_iter *itr =
       calloc(sizeof(struct indexed_table_ref_iter), 1);
   int err = 0;
-  
+
   itr->r = r;
   slice_resize(&itr->oid, oid_len);
   memcpy(itr->oid.buf, oid, oid_len);

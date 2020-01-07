@@ -41,14 +41,14 @@ struct block {
 struct block_source_vtable {
   /* returns the size of a block source */
   uint64_t (*size)(void *source);
-  
+
   /* reads a segment from the block source. It is an error to read
      beyond the end of the block */
   int (*read_block)(void *source, struct block *dest, uint64_t off,
                     uint32_t size);
   /* mark the block as read; may return the data back to malloc */
   void (*return_block)(void *source, struct block *blockp);
-  
+
   /* release all resources associated with the block source */
   void (*close)(void *source);
 };
@@ -73,13 +73,12 @@ struct write_options {
 
 /* ref_record holds a ref database entry target_value */
 struct ref_record {
-  char *ref_name;  /* Name of the ref, malloced. */
+  char *ref_name;        /* Name of the ref, malloced. */
   uint64_t update_index; /* Logical timestamp at which this value is written */
-  byte *value;         /* SHA1, or NULL. malloced. */
-  byte *target_value;  /* peeled annotated tag, or NULL. malloced. */
-  char *target;        /* symref, or NULL. malloced. */
+  byte *value;           /* SHA1, or NULL. malloced. */
+  byte *target_value;    /* peeled annotated tag, or NULL. malloced. */
+  char *target;          /* symref, or NULL. malloced. */
 };
-
 
 /* returns whether 'ref' represents a deletion */
 bool ref_record_is_deletion(const struct ref_record *ref);
@@ -91,7 +90,8 @@ void ref_record_print(struct ref_record *ref, int hash_size);
 void ref_record_clear(struct ref_record *ref);
 
 /* returns whether two ref_records are the same */
-bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size);
+bool ref_record_equal(struct ref_record *a, struct ref_record *b,
+                      int hash_size);
 
 /* log_record holds a reflog entry */
 struct log_record {
@@ -110,7 +110,8 @@ struct log_record {
 void log_record_clear(struct log_record *log);
 
 /* returns whether two records are equal. */
-bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
+bool log_record_equal(struct log_record *a, struct log_record *b,
+                      int hash_size);
 
 void log_record_print(struct log_record *log, int hash_size);
 
@@ -191,26 +192,26 @@ struct stats {
 /* Misuse of the API:
    - on writing a ref_record outside the table limits
    - on writing a ref or log record before the stack's next_update_index
-   - on reading a ref_record from log iterator, or vice versa. 
+   - on reading a ref_record from log iterator, or vice versa.
  */
 #define API_ERROR -6
 
 /* Decompression error */
 #define ZLIB_ERROR -7
 
-const char *error_str(int err); 
+const char *error_str(int err);
 
 /* new_writer creates a new writer */
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
                           void *writer_arg, struct write_options *opts);
 
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
-int fd_writer(void* fdp, byte*data, int size);
+int fd_writer(void *fdp, byte *data, int size);
 
 /* Set the range of update indices for the records we will add.  When
    writing a table into a stack, the min should be at least
-   stack_next_update_index(), or API_ERROR is returned. 
- */   
+   stack_next_update_index(), or API_ERROR is returned.
+ */
 void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
 
 /* adds a ref_record. Must be called in ascending
@@ -270,13 +271,15 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
 int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 
 /* seek to logs for the given name, older than update_index. */
-int reader_seek_log(struct reader *r, struct iterator *it, const char *name, uint64_t update_index);
+int reader_seek_log(struct reader *r, struct iterator *it, const char *name,
+                    uint64_t update_index);
 
 /* closes and deallocates a reader. */
 void reader_free(struct reader *);
 
 /* return an iterator for the refs pointing to oid */
-int reader_refs_for(struct reader *r, struct iterator *it, byte *oid, int oid_len);
+int reader_refs_for(struct reader *r, struct iterator *it, byte *oid,
+                    int oid_len);
 
 /* return the max_update_index for a table */
 uint64_t reader_max_update_index(struct reader *r);
@@ -303,33 +306,35 @@ uint64_t merged_max_update_index(struct merged_table *mt);
 uint64_t merged_min_update_index(struct merged_table *mt);
 
 /* closes readers for the merged tables */
-void merged_table_close(struct merged_table* mt);
+void merged_table_close(struct merged_table *mt);
 
 /* releases memory for the merged_table */
 void merged_table_free(struct merged_table *m);
 
-/* a stack is a stack of reftables, which can be mutated by pushing a table to the top of the stack */
+/* a stack is a stack of reftables, which can be mutated by pushing a table to
+ * the top of the stack */
 struct stack;
 
-/* open a new reftable stack. The tables will be stored in 'dir', while the list of
-   tables is in 'list_file'. Typically, this should be .git/reftables
-   and .git/refs respectively. 
+/* open a new reftable stack. The tables will be stored in 'dir', while the list
+   of tables is in 'list_file'. Typically, this should be .git/reftables and
+   .git/refs respectively.
 */
-int new_stack(struct stack **dest, const char *dir,
-	      const char *list_file,
-	      struct write_options config);
+int new_stack(struct stack **dest, const char *dir, const char *list_file,
+              struct write_options config);
 
 /* returns the update_index at which a next table should be written. */
-uint64_t stack_next_update_index(struct stack* st);
+uint64_t stack_next_update_index(struct stack *st);
 
 /* add a new table to the stack. The write_table function must call
    writer_set_limits, add refs and return an error value. */
-int stack_add(struct stack* st, int (*write_table)(struct writer *wr, void *write_arg), void *write_arg);
+int stack_add(struct stack *st,
+              int (*write_table)(struct writer *wr, void *write_arg),
+              void *write_arg);
 
 /* returns the merged_table for seeking. This table is valid until the
    next write or reload, and should not be closed or deleted.
 */
-struct merged_table *stack_merged_table(struct stack* st);
+struct merged_table *stack_merged_table(struct stack *st);
 
 /* frees all resources associated with the stack. */
 void stack_destroy(struct stack *st);
@@ -338,9 +343,9 @@ void stack_destroy(struct stack *st);
 int stack_reload(struct stack *st);
 
 /* compacts all reftables into a giant table. */
-int stack_compact_all(struct stack* st);
+int stack_compact_all(struct stack *st);
 
-/* heuristically compact unbalanced table stack. */ 
+/* heuristically compact unbalanced table stack. */
 int stack_auto_compact(struct stack *st);
 
 /* statistics on past compactions. */

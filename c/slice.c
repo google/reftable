@@ -50,9 +50,9 @@ void slice_resize(struct slice *s, int l) {
 void slice_append_string(struct slice *d, const char *s) {
   int l1 = d->len;
   int l2 = strlen(s);
-  
+
   slice_resize(d, l2 + l1);
-  memcpy(d->buf + l1, s, l2); 
+  memcpy(d->buf + l1, s, l2);
 }
 
 void slice_append(struct slice *s, struct slice a) {
@@ -76,14 +76,14 @@ void slice_copy(struct slice *dest, struct slice src) {
 
 /* return the underlying data as char*. len is left unchanged, but
    a \0 is added at the end. */
-const char *slice_as_string(struct slice* s) {
+const char *slice_as_string(struct slice *s) {
   if (s->cap == s->len) {
     int l = s->len;
-    slice_resize(s, l+1);
+    slice_resize(s, l + 1);
     s->len = l;
   }
   s->buf[s->len] = 0;
-  return (const char*) s->buf;
+  return (const char *)s->buf;
 }
 
 /* return a newly malloced string for this slice */
@@ -145,7 +145,8 @@ static void slice_return_block(void *b, struct block *dest) {
 
 static void slice_close(void *b) {}
 
-static int slice_read_block(void *v, struct block *dest, uint64_t off, uint32_t size) {
+static int slice_read_block(void *v, struct block *dest, uint64_t off,
+                            uint32_t size) {
   struct slice *b = (struct slice *)v;
   assert(off + size <= b->len);
   dest->data = calloc(size, 1);
@@ -166,7 +167,6 @@ void block_source_from_slice(struct block_source *bs, struct slice *buf) {
   bs->arg = buf;
 }
 
-
 static void malloc_return_block(void *b, struct block *dest) {
   memset(dest->data, 0xff, dest->len);
   free(dest->data);
@@ -177,10 +177,9 @@ struct block_source_vtable malloc_vtable = {
 };
 
 struct block_source malloc_block_source_instance = {
-				    .ops = &malloc_vtable,
+    .ops = &malloc_vtable,
 };
 
 struct block_source malloc_block_source(void) {
   return malloc_block_source_instance;
 }
-

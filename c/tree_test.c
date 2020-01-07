@@ -14,9 +14,9 @@
 
 #include "tree.h"
 
-#include "reftable.h"
 #include "basics.h"
 #include "record.h"
+#include "reftable.h"
 #include "test_framework.h"
 
 static int test_compare(const void *a, const void *b) { return a - b; }

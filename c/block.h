@@ -15,9 +15,9 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
-#include "reftable.h"
 #include "basics.h"
 #include "record.h"
+#include "reftable.h"
 
 struct block_writer {
   byte *buf;
@@ -25,7 +25,7 @@ struct block_writer {
   uint32_t header_off;
   int restart_interval;
   int hash_size;
-  
+
   uint32_t next;
   uint32_t *restarts;
   uint32_t restart_len;
@@ -46,7 +46,7 @@ struct block_reader {
   uint32_t header_off;
   struct block block;
   int hash_size;
-  
+
   // size of the data, excluding restart data.
   uint32_t block_len;
   byte *restart_bytes;
@@ -62,7 +62,7 @@ struct block_iter {
 
 int block_reader_init(struct block_reader *br, struct block *bl,
                       uint32_t header_off, uint32_t table_block_size,
-		      int hash_size);
+                      int hash_size);
 void block_reader_start(struct block_reader *br, struct block_iter *it);
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
                       struct slice want);

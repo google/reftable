@@ -21,10 +21,10 @@
 #include <string.h>
 #include <zlib.h>
 
-#include "reftable.h"
 #include "block.h"
 #include "constants.h"
 #include "record.h"
+#include "reftable.h"
 #include "tree.h"
 
 static struct block_stats *writer_block_stats(struct writer *w, byte typ) {
@@ -41,7 +41,8 @@ static struct block_stats *writer_block_stats(struct writer *w, byte typ) {
   assert(false);
 }
 
-/* write data, queuing the padding for the next write. Returns negative for error. */
+/* write data, queuing the padding for the next write. Returns negative for
+ * error. */
 static int padded_write(struct writer *w, byte *data, size_t len, int padding) {
   int n = 0;
   if (w->pending_padding > 0) {
@@ -138,9 +139,7 @@ static int obj_index_tree_node_compare(const void *a, const void *b) {
 static void writer_index_hash(struct writer *w, struct slice hash) {
   uint64_t off = w->next;
 
-  struct obj_index_tree_node want = {
-				     .hash = hash
-  };
+  struct obj_index_tree_node want = {.hash = hash};
 
   struct tree_node *node =
       tree_search(&want, &w->obj_index_tree, &obj_index_tree_node_compare, 0);
@@ -149,7 +148,7 @@ static void writer_index_hash(struct writer *w, struct slice hash) {
     key = calloc(sizeof(struct obj_index_tree_node), 1);
     slice_copy(&key->hash, hash);
     tree_search((void *)key, &w->obj_index_tree, &obj_index_tree_node_compare,
-		1);
+                1);
   } else {
     key = node->key;
   }
@@ -210,7 +209,7 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
   struct record rec = {};
   struct ref_record copy = *ref;
   int err = 0;
-  
+
   if (ref->update_index < w->min_update_index ||
       ref->update_index > w->max_update_index) {
     return API_ERROR;
@@ -223,27 +222,27 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
     return err;
   }
 
-  if ( !w->opts.skip_index_objects && ref->value != NULL) {
+  if (!w->opts.skip_index_objects && ref->value != NULL) {
     struct slice h = {
-		      .buf = ref->value,
-		      .len = w->hash_size,
+        .buf = ref->value,
+        .len = w->hash_size,
     };
 
     writer_index_hash(w, h);
   }
   if (!w->opts.skip_index_objects && ref->target_value != NULL) {
     struct slice h = {
-		      .buf = ref->target_value,
-		      .len = w->hash_size,
+        .buf = ref->target_value,
+        .len = w->hash_size,
     };
     writer_index_hash(w, h);
   }
   return 0;
 }
 
-
 int writer_add_log(struct writer *w, struct log_record *log) {
-  if (w->block_writer != NULL && block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
+  if (w->block_writer != NULL &&
+      block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
     int err = writer_finish_public_section(w);
     if (err < 0) {
       return err;
@@ -290,12 +289,12 @@ static int writer_finish_section(struct writer *w) {
       }
 
       {
-	int err = writer_flush_block(w);
-	if (err < 0) {
-	  return err;
-	}
+        int err = writer_flush_block(w);
+        if (err < 0) {
+          return err;
+        }
       }
-      
+
       writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
       err = block_writer_add(w->block_writer, rec);
@@ -320,7 +319,7 @@ static int writer_finish_section(struct writer *w) {
     bstats->index_offset = index_start;
     bstats->max_index_level = max_level;
   }
-  
+
   // Reinit lastKey, as the next section can start with any key.
   w->last_key.len = 0;
 
@@ -385,13 +384,12 @@ static void write_object_record(void *void_arg, void *key) {
   // Should be able to write into a fresh block.
   assert(arg->err == 0);
 
- exit:
-  ;
+exit:;
 }
 
 static void object_record_free(void *void_arg, void *key) {
   struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
-  
+
   free(entry->offsets);
   entry->offsets = NULL;
   free(slice_yield(&entry->hash));
@@ -421,7 +419,7 @@ static int writer_dump_object_index(struct writer *w) {
 int writer_finish_public_section(struct writer *w) {
   byte typ = 0;
   int err = 0;
-  
+
   if (w->block_writer == NULL) {
     return 0;
   }
@@ -431,14 +429,15 @@ int writer_finish_public_section(struct writer *w) {
   if (err < 0) {
     return err;
   }
-  if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects && w->stats.ref_stats.index_blocks > 0) {
+  if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects &&
+      w->stats.ref_stats.index_blocks > 0) {
     err = writer_dump_object_index(w);
     if (err < 0) {
       return err;
     }
   }
 
-  if (w->obj_index_tree != NULL) { 
+  if (w->obj_index_tree != NULL) {
     infix_walk(w->obj_index_tree, &object_record_free, NULL);
     tree_free(w->obj_index_tree);
     w->obj_index_tree = NULL;
@@ -451,7 +450,7 @@ int writer_finish_public_section(struct writer *w) {
 int writer_close(struct writer *w) {
   byte footer[68];
   byte *p = footer;
-  
+
   writer_finish_public_section(w);
 
   writer_write_header(w, footer);
@@ -471,7 +470,7 @@ int writer_close(struct writer *w) {
   put_u64(p, 0);
   p += 8;
 
-  put_u32(p, crc32(0, footer, p-footer));
+  put_u32(p, crc32(0, footer, p - footer));
   p += 4;
   w->pending_padding = 0;
 
@@ -481,7 +480,7 @@ int writer_close(struct writer *w) {
       return n;
     }
   }
-  
+
   // free up memory.
   block_writer_clear(&w->block_writer_data);
   writer_clear_index(w);
@@ -543,12 +542,12 @@ static int writer_flush_nonempty_block(struct writer *w) {
 
   {
     struct index_record ir = {
-      .offset = w->next,
+        .offset = w->next,
     };
     slice_copy(&ir.last_key, w->block_writer->last_key);
     w->index[w->index_len] = ir;
   }
-  
+
   w->index_len++;
   w->next += padding + raw_bytes;
   block_writer_reset(&w->block_writer_data);
@@ -565,7 +564,6 @@ int writer_flush_block(struct writer *w) {
   }
   return writer_flush_nonempty_block(w);
 }
-
 
 struct stats *writer_stats(struct writer *w) {
   return &w->stats;

@@ -15,14 +15,14 @@
 #ifndef MERGED_H
 #define MERGED_H
 
-#include "reftable.h"
 #include "pq.h"
+#include "reftable.h"
 
 struct merged_table {
   struct reader **stack;
   int stack_len;
   int hash_size;
-  
+
   uint64_t min;
   uint64_t max;
 };
@@ -36,6 +36,5 @@ struct merged_iter {
 } merged_iter;
 
 void merged_table_clear(struct merged_table *mt);
-
 
 #endif

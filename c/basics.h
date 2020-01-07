@@ -16,6 +16,7 @@
 #define BASICS_H
 
 #include <stdint.h>
+
 #include "reftable.h"
 
 #define true 1

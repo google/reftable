@@ -16,9 +16,9 @@
 
 #include <string.h>
 
-#include "reftable.h"
 #include "basics.h"
 #include "constants.h"
+#include "reftable.h"
 #include "test_framework.h"
 
 void varint_roundtrip() {
@@ -89,13 +89,13 @@ void test_ref_record_roundtrip() {
         break;
       case 1:
         in.value = malloc(SHA1_SIZE);
-	set_hash(in.value, 1);
+        set_hash(in.value, 1);
         break;
       case 2:
         in.value = malloc(SHA1_SIZE);
-	set_hash(in.value, 1);
+        set_hash(in.value, 1);
         in.target_value = malloc(SHA1_SIZE);
-	set_hash(in.target_value, 2);
+        set_hash(in.target_value, 2);
         break;
       case 3:
         in.target = strdup("target");
@@ -133,15 +133,15 @@ void test_ref_record_roundtrip() {
 
 void test_log_record_roundtrip() {
   struct log_record in = {
-			  .ref_name = strdup("refs/heads/master"),
-			  .old_hash = malloc(SHA1_SIZE),
-			  .new_hash = malloc(SHA1_SIZE),
-			  .name = strdup("han-wen"),
-			  .email = strdup("hanwen@google.com"),
-			  .message = strdup("test"),
-			  .update_index = 42,
-			  .time = 1577123507,
-			  .tz_offset = 100,
+      .ref_name = strdup("refs/heads/master"),
+      .old_hash = malloc(SHA1_SIZE),
+      .new_hash = malloc(SHA1_SIZE),
+      .name = strdup("han-wen"),
+      .email = strdup("hanwen@google.com"),
+      .message = strdup("test"),
+      .update_index = 42,
+      .time = 1577123507,
+      .tz_offset = 100,
   };
 
   struct record rec = {};
@@ -152,13 +152,13 @@ void test_log_record_roundtrip() {
 
   byte buf[1024];
   struct slice dest = {
-		       .buf = buf,
-		       .len = sizeof(buf),
+      .buf = buf,
+      .len = sizeof(buf),
   };
-  
+
   int n = record_encode(rec, dest, SHA1_SIZE);
   assert(n > 0);
-  
+
   struct log_record out = {};
   struct record rec_out = {};
   record_from_log(&rec_out, &out);

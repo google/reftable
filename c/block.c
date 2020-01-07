@@ -15,22 +15,22 @@
 #include "block.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
-#include "zlib.h"
-
-#include "reftable.h"
-#include "constants.h"
 #include "blocksource.h"
+#include "constants.h"
 #include "record.h"
+#include "reftable.h"
+#include "zlib.h"
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
                                   struct slice key);
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
-                       uint32_t block_size, uint32_t header_off, int hash_size) {
+                       uint32_t block_size, uint32_t header_off,
+                       int hash_size) {
   bw->buf = buf;
   bw->hash_size = hash_size;
   bw->block_size = block_size;
@@ -48,7 +48,8 @@ byte block_writer_type(struct block_writer *bw) {
    success */
 int block_writer_add(struct block_writer *w, struct record rec) {
   struct slice empty = {};
-  struct slice last = w->entries % w->restart_interval == 0 ? empty : w->last_key;
+  struct slice last =
+      w->entries % w->restart_interval == 0 ? empty : w->last_key;
   struct slice out = {
       .buf = w->buf + w->next,
       .len = w->block_size - w->next,
@@ -59,7 +60,7 @@ int block_writer_add(struct block_writer *w, struct record rec) {
   bool restart = false;
   struct slice key = {};
   int n = 0;
-  
+
   record_key(rec, &key);
   n = encode_key(&restart, out, last, key, record_val_type(rec));
   if (n < 0) {
@@ -127,16 +128,15 @@ int block_writer_finish(struct block_writer *w) {
   put_u24(w->buf + 1 + w->header_off, w->next);
 
   if (block_writer_type(w) == BLOCK_TYPE_LOG) {
-    int block_header_skip  = 4 + w->header_off;
+    int block_header_skip = 4 + w->header_off;
     struct slice compressed = {};
     uLongf dest_len = 0, src_len = 0;
     slice_resize(&compressed, w->next - block_header_skip);
-    
-    dest_len  = compressed.len;
-    src_len  = w->next - block_header_skip;
-    if (Z_OK != compress2(compressed.buf, &dest_len,
-			  w->buf + block_header_skip, src_len,
-			  9)) {
+
+    dest_len = compressed.len;
+    src_len = w->next - block_header_skip;
+    if (Z_OK != compress2(compressed.buf, &dest_len, w->buf + block_header_skip,
+                          src_len, 9)) {
       free(slice_yield(&compressed));
       return ZLIB_ERROR;
     }
@@ -151,7 +151,8 @@ byte block_reader_type(struct block_reader *r) {
 }
 
 int block_reader_init(struct block_reader *br, struct block *block,
-                      uint32_t header_off, uint32_t table_block_size, int hash_size) {
+                      uint32_t header_off, uint32_t table_block_size,
+                      int hash_size) {
   uint32_t full_block_size = table_block_size;
   byte typ = block->data[header_off];
   uint32_t sz = get_u24(block->data + header_off + 1);
@@ -162,22 +163,22 @@ int block_reader_init(struct block_reader *br, struct block *block,
 
   if (typ == BLOCK_TYPE_LOG) {
     struct slice uncompressed = {};
-    int block_header_skip  = 4 + header_off;
+    int block_header_skip = 4 + header_off;
     uLongf dst_len = sz - block_header_skip;
     uLongf src_len = block->len - block_header_skip;
 
     slice_resize(&uncompressed, sz);
     memcpy(uncompressed.buf, block->data, block_header_skip);
-    
+
     if (Z_OK != uncompress2(uncompressed.buf + block_header_skip, &dst_len,
-			    block->data + block_header_skip, &src_len)) {
+                            block->data + block_header_skip, &src_len)) {
       free(slice_yield(&uncompressed));
       return ZLIB_ERROR;
     }
-    
+
     block_source_return_block(block->source, block);
     block->data = uncompressed.buf;
-    block->len = dst_len;	/* XXX: 4 bytes missing? */
+    block->len = dst_len; /* XXX: 4 bytes missing? */
     block->source = malloc_block_source();
     full_block_size = src_len + block_header_skip;
   } else if (full_block_size == 0) {
@@ -202,7 +203,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
     br->restart_count = restart_count;
     br->restart_bytes = restart_bytes;
   }
-  
+
   return 0;
 }
 
@@ -226,8 +227,8 @@ static int restart_key_less(int idx, void *args) {
   struct restart_find_args *a = (struct restart_find_args *)args;
   uint32_t off = block_reader_restart_offset(a->r, idx);
   struct slice in = {
-		     .buf = a->r->block.data + off,
-		     .len = a->r->block_len - off,
+      .buf = a->r->block.data + off,
+      .len = a->r->block_len - off,
   };
 
   /* the restart key is verbatim in the block, so this could avoid the
@@ -262,8 +263,8 @@ int block_iter_next(struct block_iter *it, struct record rec) {
 
   {
     struct slice in = {
-		       .buf = it->br->block.data + it->next_off,
-		       .len = it->br->block_len - it->next_off,
+        .buf = it->br->block.data + it->next_off,
+        .len = it->br->block_len - it->next_off,
     };
     struct slice start = in;
     struct slice key = {};
@@ -293,8 +294,8 @@ int block_reader_first_key(struct block_reader *br, struct slice *key) {
   struct slice empty = {};
   int off = br->header_off + 4;
   struct slice in = {
-		     .buf = br->block.data + off,
-		     .len = br->block_len - off,
+      .buf = br->block.data + off,
+      .len = br->block_len - off,
   };
 
   byte extra = 0;
@@ -316,8 +317,8 @@ void block_iter_close(struct block_iter *it) {
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
                       struct slice want) {
   struct restart_find_args args = {
-				   .key = want,
-				   .r = br,
+      .key = want,
+      .r = br,
   };
 
   int i = binsearch(br->restart_count, &restart_key_less, &args);
@@ -344,14 +345,14 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 
       err = block_iter_next(&next, rec);
       if (err < 0) {
-	result = -1;
-	goto exit;
+        result = -1;
+        goto exit;
       }
 
       record_key(rec, &key);
       if (err > 0 || slice_compare(key, want) >= 0) {
-	result = 0;
-	goto exit;
+        result = 0;
+        goto exit;
       }
 
       block_iter_copy_from(it, &next);
@@ -362,7 +363,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
     free(slice_yield(&next.last_key));
     record_clear(rec);
     free(record_yield(&rec));
-  
+
     return result;
   }
 }

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "reftable.h"
+
 #include <string.h>
 
-#include "reftable.h"
 #include "basics.h"
 #include "block.h"
 #include "constants.h"
@@ -46,7 +47,7 @@ void test_buffer(void) {
 }
 
 void write_table(char ***names, struct slice *buf, int N, int block_size) {
-  *names = calloc(sizeof(char *), N+1);
+  *names = calloc(sizeof(char *), N + 1);
 
   struct write_options opts = {
       .block_size = block_size,
@@ -88,10 +89,9 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   w = NULL;
 }
 
-
 void test_log_write_read(void) {
-  int N = 2; 
-  char **names = calloc(sizeof(char *), N+1);
+  int N = 2;
+  char **names = calloc(sizeof(char *), N + 1);
 
   struct write_options opts = {
       .block_size = 256,
@@ -105,7 +105,7 @@ void test_log_write_read(void) {
     for (int i = 0; i < N; i++) {
       byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
       set_test_hash(hash1, i);
-      set_test_hash(hash2, i+1);
+      set_test_hash(hash2, i + 1);
 
       char name[100];
       sprintf(name, "refs/heads/branch%02d", i);
@@ -114,7 +114,7 @@ void test_log_write_read(void) {
       log.update_index = i;
       log.old_hash = hash1;
       log.new_hash = hash2;
-      
+
       names[i] = strdup(name);
 
       int n = writer_add_log(w, &log);
@@ -155,7 +155,7 @@ void test_log_write_read(void) {
     if (err > 0) {
       break;
     }
-    
+
     assert_err(err);
     assert_streq(names[i], log.ref_name);
     assert(i == log.update_index);
@@ -212,11 +212,11 @@ void test_table_write_small_table(void) {
   struct slice buf = {};
   int N = 1;
   write_table(&names, &buf, N, 4096);
-  assert(buf.len  < 200);
+  assert(buf.len < 200);
   free(slice_yield(&buf));
   free_names(names);
 }
-  
+
 void test_table_read_write_seek(bool index) {
   char **names;
   struct slice buf = {};
@@ -242,7 +242,7 @@ void test_table_read_write_seek(bool index) {
     struct log_record log = {};
     err = iterator_next_log(it, &log);
     assert(err == API_ERROR);
-    
+
     struct ref_record ref = {};
     err = iterator_next_ref(it, &ref);
     assert(err == 0);
@@ -272,7 +272,7 @@ void test_table_read_write_seek_index(void) {
 void test_table_refs_for(bool indexed) {
   int N = 50;
 
-  char **want_names = calloc(sizeof(char *), N+1);
+  char **want_names = calloc(sizeof(char *), N + 1);
 
   int want_names_len = 0;
   byte want_hash[SHA1_SIZE];
@@ -336,7 +336,7 @@ void test_table_refs_for(bool indexed) {
   err = reader_seek_ref(&rd, &it, "");
   assert(err == 0);
   iterator_destroy(&it);
-  
+
   err = reader_refs_for(&rd, &it, want_hash, SHA1_SIZE);
   assert(err == 0);
 
@@ -357,7 +357,7 @@ void test_table_refs_for(bool indexed) {
   }
   assert(j == want_names_len)
 
-  free(slice_yield(&buf));
+      free(slice_yield(&buf));
   free_names(want_names);
   iterator_destroy(&it);
   reader_close(&rd);

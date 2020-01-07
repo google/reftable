@@ -16,10 +16,10 @@
 
 #include <string.h>
 
-#include "reftable.h"
 #include "basics.h"
 #include "constants.h"
 #include "record.h"
+#include "reftable.h"
 #include "test_framework.h"
 
 struct binsearch_args {
@@ -65,7 +65,8 @@ void test_block_read_write() {
   block.len = block_size;
 
   struct block_writer bw = {};
-  block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off, SHA1_SIZE);
+  block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size, header_off,
+                    SHA1_SIZE);
   struct ref_record ref = {};
   struct record rec = {};
   record_from_ref(&rec, &ref);
@@ -107,7 +108,7 @@ void test_block_read_write() {
     assert_streq(names[j], ref.ref_name);
     j++;
   }
-  
+
   record_clear(rec);
   block_iter_close(&it);
 
