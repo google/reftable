@@ -844,3 +844,27 @@ int stack_auto_compact(struct stack *st) {
 struct compaction_stats *stack_compaction_stats(struct stack *st) {
   return &st->stats;
 }
+
+int stack_read_ref(struct stack *st, const char *refname,
+                   struct ref_record *ref) {
+  struct iterator it = {};
+  struct merged_table *mt = stack_merged_table(st);
+  int err = merged_table_seek_ref(mt, &it, refname);
+  if (err) {
+    goto exit;
+  }
+
+  err = iterator_next_ref(it, ref);
+  if (err) {
+    goto exit;
+  }
+
+  if (0 != strcmp(ref->ref_name, refname) || ref_record_is_deletion(ref)) {
+    err = 1;
+    goto exit;
+  }
+
+exit:
+  iterator_destroy(&it);
+  return err;
+}

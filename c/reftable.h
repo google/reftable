@@ -348,6 +348,11 @@ int stack_compact_all(struct stack *st);
 /* heuristically compact unbalanced table stack. */
 int stack_auto_compact(struct stack *st);
 
+/* convenience function to read a single ref. Returns < 0 for error, 0
+   for success, and 1 if ref not found. */
+int stack_read_ref(struct stack *st, const char *refname,
+                   struct ref_record *ref);
+
 /* statistics on past compactions. */
 struct compaction_stats {
   uint64_t bytes;

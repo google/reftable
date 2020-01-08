@@ -109,17 +109,11 @@ void test_stack_add(void) {
   err = stack_compact_all(st);
   assert_err(err);
 
-  struct merged_table *mt = stack_merged_table(st);
   for (int i = 0; i < N; i++) {
-    struct iterator it = {};
-    int err = merged_table_seek_ref(mt, &it, refs[i].ref_name);
-    assert_err(err);
-
     struct ref_record dest = {};
-    err = iterator_next_ref(it, &dest);
+    int err = stack_read_ref(st, refs[i].ref_name, &dest);
     assert_err(err);
     assert(ref_record_equal(&dest, refs + i, SHA1_SIZE));
-    iterator_destroy(&it);
     ref_record_clear(&dest);
   }
 

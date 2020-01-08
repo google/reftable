@@ -217,6 +217,35 @@ void test_table_write_small_table(void) {
   free_names(names);
 }
 
+void test_table_read_api(void) {
+  char **names;
+  struct slice buf = {};
+  int N = 50;
+  write_table(&names, &buf, N, 256);
+
+  struct reader rd = {};
+  struct block_source source = {};
+  block_source_from_slice(&source, &buf);
+
+  int err = init_reader(&rd, source, "file.ref");
+  assert(err == 0);
+
+  struct iterator it = {};
+  err = reader_seek_ref(&rd, &it, names[0]);
+  assert(err == 0);
+
+  struct log_record log = {};
+  err = iterator_next_log(it, &log);
+  assert(err == API_ERROR);
+
+  free(slice_yield(&buf));
+  for (int i = 0; i < N; i++) {
+    free(names[i]);
+  }
+  free(names);
+  reader_close(&rd);
+}
+
 void test_table_read_write_seek(bool index) {
   char **names;
   struct slice buf = {};
@@ -238,11 +267,6 @@ void test_table_read_write_seek(bool index) {
     struct iterator it = {};
     int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
-
-    struct log_record log = {};
-    err = iterator_next_log(it, &log);
-    assert(err == API_ERROR);
-
     struct ref_record ref = {};
     err = iterator_next_ref(it, &ref);
     assert(err == 0);
@@ -371,6 +395,7 @@ int main() {
   add_test_case("test_log_write_read", test_log_write_read);
   add_test_case("test_table_write_small_table", &test_table_write_small_table);
   add_test_case("test_buffer", &test_buffer);
+  add_test_case("test_table_read_api", &test_table_read_api);
   add_test_case("test_table_read_write_sequential",
                 &test_table_read_write_sequential);
   add_test_case("test_table_read_write_seek_linear",
