@@ -1007,6 +1007,11 @@ bool ref_record_equal(struct ref_record *a, struct ref_record *b,
          str_equal(a->target, b->target);
 }
 
+int ref_record_compare_name(const void *a, const void *b) {
+  return strcmp(((struct ref_record *)a)->ref_name,
+                ((struct ref_record *)b)->ref_name);
+}
+
 bool ref_record_is_deletion(const struct ref_record *ref) {
   return ref->value == NULL && ref->target == NULL && ref->target_value == NULL;
 }

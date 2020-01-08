@@ -220,6 +220,10 @@ void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
  */
 int writer_add_ref(struct writer *w, struct ref_record *ref);
 
+/* Convenience function to add multiple refs. Will sort the refs by
+   name before adding. */
+int writer_add_refs(struct writer *w, struct ref_record *refs, int n);
+
 /* adds a log_record. Must be called in ascending order (with more
    recent log entries first.)
  */

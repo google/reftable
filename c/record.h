@@ -76,4 +76,7 @@ void record_from_ref(struct record *rec, struct ref_record *refrec);
 void record_from_log(struct record *rec, struct log_record *logrec);
 struct ref_record *record_as_ref(struct record ref);
 
+// for qsort.
+int ref_record_compare_name(const void *a, const void *b);
+
 #endif

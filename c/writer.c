@@ -240,6 +240,15 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
   return 0;
 }
 
+int writer_add_refs(struct writer *w, struct ref_record *refs, int n) {
+  int err = 0;
+  qsort(refs, n, sizeof(struct ref_record), ref_record_compare_name);
+  for (int i = 0; err == 0 && i < n; i++) {
+    err = writer_add_ref(w, &refs[i]);
+  }
+  return err;
+}
+
 int writer_add_log(struct writer *w, struct log_record *log) {
   if (w->block_writer != NULL &&
       block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
