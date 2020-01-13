@@ -192,24 +192,23 @@ func (i *tableIter) nextInBlock(rec record) (bool, error) {
 
 // Next implements the Iterator interface
 func (i *tableIter) Next(rec record) (bool, error) {
-	if i.finished {
-		return false, nil
-	}
+	for {
+		if i.finished {
+			return false, nil
+		}
 
-	ok, err := i.nextInBlock(rec)
-	if err != nil || ok {
-		return ok, err
+		ok, err := i.nextInBlock(rec)
+		if err != nil || ok {
+			return ok, err
+		}
+		ok, err = i.nextBlock()
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return ok, err
+		}
 	}
-	ok, err = i.nextBlock()
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return ok, err
-	}
-	// XXX this is wrong. It should recurse/loop, or the
-	// MinUpdateIndex is not subtracted.
-	return ok, err
 }
 
 // extractBlockSize returns the block size from the block header

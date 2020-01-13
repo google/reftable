@@ -23,6 +23,8 @@
 #include "record.h"
 #include "test_framework.h"
 
+static const update_index = 5;
+
 void test_buffer(void) {
   struct slice buf = {};
 
@@ -55,6 +57,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
 
   struct writer *w = new_writer(&slice_write_void, buf, &opts);
 
+  writer_set_limits(w, update_index, update_index);
   {
     struct ref_record ref = {};
     for (int i = 0; i < N; i++) {
@@ -66,6 +69,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
 
       ref.ref_name = name;
       ref.value = hash;
+      ref.update_index = update_index;
       (*names)[i] = strdup(name);
 
       fflush(stdout);
@@ -196,6 +200,8 @@ void test_table_read_write_sequential(void) {
       break;
     }
     assert(0 == strcmp(names[j], ref.ref_name));
+    assert(update_index == ref.update_index);
+
     j++;
     ref_record_clear(&ref);
   }

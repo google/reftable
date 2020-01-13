@@ -303,32 +303,33 @@ static int table_iter_next_block(struct table_iter *dest,
 }
 
 static int table_iter_next(struct table_iter *ti, struct record rec) {
-  int err = 0;
-  struct table_iter next = {};
-
   if (record_type(rec) != ti->typ) {
     return API_ERROR;
   }
-  if (ti->finished) {
-    return 1;
-  }
 
-  err = table_iter_next_in_block(ti, rec);
-  if (err <= 0) {
-    return err;
-  }
+  while (true) {
+    struct table_iter next = {};
+    int err = 0;
+    if (ti->finished) {
+      return 1;
+    }
 
-  err = table_iter_next_block(&next, ti);
-  if (err != 0) {
-    ti->finished = true;
+    err = table_iter_next_in_block(ti, rec);
+    if (err <= 0) {
+      return err;
+    }
+
+    err = table_iter_next_block(&next, ti);
+    if (err != 0) {
+      ti->finished = true;
+    }
+    table_iter_block_done(ti);
+    if (err != 0) {
+      return err;
+    }
+    table_iter_copy_from(ti, &next);
+    block_iter_close(&next.bi);
   }
-  table_iter_block_done(ti);
-  if (err != 0) {
-    return err;
-  }
-  table_iter_copy_from(ti, &next);
-  block_iter_close(&next.bi);
-  return block_iter_next(&ti->bi, rec);
 }
 
 static int table_iter_next_void(void *ti, struct record rec) {
