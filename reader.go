@@ -184,6 +184,9 @@ func (i *tableIter) nextInBlock(rec record) (bool, error) {
 			r.UpdateIndex += i.r.header.MinUpdateIndex
 		}
 	}
+	if err != nil {
+		err = fmt.Errorf("block %c, off %d: %v", i.typ, i.blockOff, err)
+	}
 	return ok, err
 }
 
@@ -204,7 +207,9 @@ func (i *tableIter) Next(rec record) (bool, error) {
 	if !ok {
 		return ok, err
 	}
-	return i.bi.Next(rec)
+	// XXX this is wrong. It should recurse/loop, or the
+	// MinUpdateIndex is not subtracted.
+	return ok, err
 }
 
 // extractBlockSize returns the block size from the block header
@@ -264,10 +269,12 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 
 // nextBlock moves to the next block, or returns false fi there is none.
 func (i *tableIter) nextBlock() (bool, error) {
+	// XXX this is wrong. If the 'r' block is a followed by a 'g'
+	// block, this will read into random uncompressed data.
 	nextBlockOff := i.blockOff + uint64(i.bi.br.fullBlockSize)
 	br, err := i.r.newBlockReader(nextBlockOff, i.typ)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("next block %c off 0x%x: %v", i.typ, nextBlockOff, err)
 	}
 	if br == nil {
 		i.finished = true

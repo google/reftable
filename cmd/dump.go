@@ -33,7 +33,7 @@ func main() {
 
 	if *tabName != "" {
 		if err := dumpTableFile(*tabName); err != nil {
-			log.Fatal(err)
+			log.Fatalf("dumpTableFile(%s): %v", *tabName, err)
 		}
 	}
 
@@ -118,6 +118,8 @@ func dumpTable(tab reftable.Table) error {
 
 		fmt.Printf("%#v\n", rec)
 	}
+
+	fmt.Printf("** LOGS **\n")
 
 	var neg int64
 	neg = -1

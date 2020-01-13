@@ -198,17 +198,20 @@ func (m *Merged) SeekRef(name string) (*Iterator, error) {
 
 func (m *Merged) seek(rec record) (iterator, error) {
 	var its []iterator
+	var names []string
 	for _, t := range m.stack {
 		iter, err := t.seekRecord(rec)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("reftable: seek %s: %v", t.Name(), err)
 		}
 		its = append(its, iter)
+		names = append(names, t.Name())
 	}
 
 	merged := &mergedIter{
 		typ:   rec.typ(),
 		stack: its,
+		names: names,
 	}
 
 	if err := merged.init(); err != nil {
@@ -223,9 +226,12 @@ func (m *Merged) seek(rec record) (iterator, error) {
 type mergedIter struct {
 	// TODO: We could short-circuit the entries coming from the
 	// base stack
-	typ   byte
-	pq    mergedIterPQueue
+	typ byte
+	pq  mergedIterPQueue
+
+	// Fixed side arrays, matched with merged.stack
 	stack []iterator
+	names []string
 }
 
 func (it *mergedIter) init() error {
@@ -233,7 +239,7 @@ func (it *mergedIter) init() error {
 		rec := newRecord(it.typ, "")
 		ok, err := sub.Next(rec)
 		if err != nil {
-			return err
+			return fmt.Errorf("init %s: %v", it.names[i], err)
 		}
 		if ok {
 			it.pq.add(pqEntry{
@@ -257,7 +263,7 @@ func (m *mergedIter) advanceSubIter(index int) error {
 	r := newRecord(m.typ, "")
 	ok, err := m.stack[index].Next(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("next %s: %v", m.names[index], err)
 	}
 
 	if !ok {

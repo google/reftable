@@ -11,14 +11,14 @@ Suggestions for improvement of the file format:
 
 * Reftable v1 starts with a 24-byte file header, which requires special
   casing. Headers allow streaming reads of the file, but this is not
-  useful for reftable. 
+  useful for reftable.
 
-* The Footer misses some offsets (start of Ref section)  
+* The Footer misses some offsets (start of Ref section)
 
 * MaxUpdateIndex must be specified upfront, but it can be
   automatically computed. MaxUpdateIndex has no use in streaming reads
   either.
-  
+
 * Currently log blocks are encoded as 'g' u24(uncompressed). This
   means navigating among log blocks means having to uncompress them,
   and needs more special handling.
@@ -34,6 +34,9 @@ Suggestions for improvement of the file format:
 * spec is unclear: if a file has just log blocks, do the log restart
   offsets include the 24 byte file header? They do, but it's not
   completely obvious.
+
+* For reading the next 'r' block, you have to peek in two places, either at the
+  start of the padding (next block is a 'g'), or at the next block size.
 
 
 Problems with Reftable v1
@@ -61,7 +64,7 @@ dulwich etc.)
 * Record types are hardcoded, making backward compatibility more
   difficult, should any extra data types ever need to be stored in
   reftable
-  
+
 * Overall, the format is extremely optimized, but does it by fusing
   the container format (sorted key/value store with prefix compression
   and indices) with business logic (ie. Git specific concepts such as
@@ -114,7 +117,7 @@ The body is structured as follows:
    padding
 
 Keys are prefix-compressed:
- 
+
   varint(prefix-size) varint(suffix-size << 3 | extra-3 ) suffix
 
 The extra-3 bits are used just as in reftable v1.
@@ -152,7 +155,7 @@ Ref keys are
 
 Obj keys are
 
-  'b' OBJ-ID 
+  'b' OBJ-ID
 
 Log keys are
 

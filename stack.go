@@ -123,7 +123,7 @@ func (st *Stack) reloadOnce(names []string) error {
 
 			rd, err = NewReader(bs, name)
 			if err != nil {
-				return err
+				return fmt.Errorf("NewReader(%s): %v", name, err)
 			}
 		}
 		newTables = append(newTables, rd)
