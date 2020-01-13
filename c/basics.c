@@ -176,6 +176,8 @@ const char *error_str(int err) {
       return "LOCK_ERROR";
     case API_ERROR:
       return "API_ERROR";
+    case ZLIB_ERROR:
+      return "ZLIB_ERROR";
     case -1:
       return "general error";
     default:

@@ -34,7 +34,7 @@
   if (c != 0) {                                                              \
     fflush(stderr);                                                          \
     fflush(stdout);                                                          \
-    fprintf(stderr, "%s: %d: error == %d, want 0\n", __FILE__, __LINE__, c); \
+    fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", __FILE__, __LINE__, c, error_str(c)); \
     abort();                                                                 \
   }
 
