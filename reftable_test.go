@@ -489,6 +489,10 @@ func TestTableUpdateIndexAcrossBlockBoundary(t *testing.T) {
 		t.Fatalf("got %d blocks want %d", got, want)
 	}
 
+	if got, want := w.Stats.RefStats.Entries, 2; got != want {
+		t.Fatalf("got %d entries want %d", got, want)
+	}
+
 	it, err := r.SeekRef("B")
 	if err != nil {
 		t.Fatalf("SeekRef: %v", err)
@@ -502,5 +506,45 @@ func TestTableUpdateIndexAcrossBlockBoundary(t *testing.T) {
 
 	if got, want := ref.UpdateIndex, records[1].UpdateIndex; got != want {
 		t.Fatalf("got UpdateIndex %d, want %d", got, want)
+	}
+}
+
+func TestUnalignedBlock(t *testing.T) {
+	records := []RefRecord{{
+		RefName:     fmt.Sprintf("A%0*d", 200, 0),
+		UpdateIndex: 2,
+	}, {
+		RefName:     fmt.Sprintf("B%0*d", 200, 0),
+		UpdateIndex: 2,
+	}}
+
+	var logs []LogRecord
+	for i := 0; i < 10; i++ {
+		logs = append(logs, LogRecord{
+			RefName: fmt.Sprintf("branch%02d", i),
+			Message: strings.Repeat("x", 160),
+		})
+	}
+	w, r := constructTestTable(t, records, logs, Config{
+		BlockSize: 256,
+	})
+
+	if got, want := w.Stats.RefStats.Blocks, 2; got != want {
+		t.Fatalf("got %d blocks want %d", got, want)
+	}
+
+	it, err := r.SeekRef("B")
+	if err != nil {
+		t.Fatalf("SeekRef: %v", err)
+	}
+
+	var ref RefRecord
+	ok, err := it.NextRef(&ref)
+	if err != nil || !ok {
+		t.Fatalf("Next: %v, %v", ok, err)
+	}
+
+	if _, err := it.NextRef(&ref); err != nil {
+		t.Fatalf("Next: %v", err)
 	}
 }

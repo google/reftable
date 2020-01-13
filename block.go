@@ -218,6 +218,13 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 	} else if fullBlockSize == 0 {
 		// unaligned table.
 		fullBlockSize = sz
+	} else if sz < fullBlockSize && int(sz) < len(block) && block[sz] != 0 {
+		// If the block is smaller than the full block size,
+		// it is padded (data followed by '\0') or the next
+		// block is unaligned. It would be better to require
+		// that the caller sets up the right sizes, but then
+		// the caller must also handle zlib (de)compression.
+		fullBlockSize = sz
 	}
 	block = block[:sz]
 
