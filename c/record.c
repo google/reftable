@@ -1015,3 +1015,17 @@ int ref_record_compare_name(const void *a, const void *b) {
 bool ref_record_is_deletion(const struct ref_record *ref) {
   return ref->value == NULL && ref->target == NULL && ref->target_value == NULL;
 }
+
+int log_record_compare_key(const void *a, const void *b) {
+  struct log_record *la = (struct log_record *)a;
+  struct log_record *lb = (struct log_record *)b;
+
+  int cmp  = strcmp(la->ref_name, lb->ref_name);
+  if (cmp) {
+    return cmp;
+  }
+  if (la->update_index > lb->update_index) {
+    return -1;
+  }
+  return (la->update_index < lb->update_index) ? 1 : 0;
+}

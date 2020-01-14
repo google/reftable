@@ -267,6 +267,16 @@ int writer_add_log(struct writer *w, struct log_record *log) {
   }
 }
 
+int writer_add_logs(struct writer *w, struct log_record *logs, int n) {
+  int err = 0;
+  qsort(logs, n, sizeof(struct log_record), log_record_compare_key);
+  for (int i = 0; err == 0 && i < n; i++) {
+    err = writer_add_log(w, &logs[i]);
+  }
+  return err;
+}
+
+
 static int writer_finish_section(struct writer *w) {
   byte typ = block_writer_type(w->block_writer);
   uint64_t index_start = 0;

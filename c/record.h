@@ -79,4 +79,7 @@ struct ref_record *record_as_ref(struct record ref);
 // for qsort.
 int ref_record_compare_name(const void *a, const void *b);
 
+// for qsort.
+int log_record_compare_key(const void *a, const void *b);
+
 #endif

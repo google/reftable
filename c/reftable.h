@@ -229,6 +229,11 @@ int writer_add_refs(struct writer *w, struct ref_record *refs, int n);
  */
 int writer_add_log(struct writer *w, struct log_record *log);
 
+/* Convenience function to add multiple logs. Will sort the records by
+   key before adding. */
+int writer_add_logs(struct writer *w, struct log_record *logs, int n);
+
+
 /* writer_close finalizes the reftable. The writer is retained so statistics can
  * be inspected. */
 int writer_close(struct writer *w);
