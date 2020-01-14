@@ -23,7 +23,7 @@
 #include "record.h"
 #include "test_framework.h"
 
-static const update_index = 5;
+static const int update_index = 5;
 
 void test_buffer(void) {
   struct slice buf = {};
@@ -104,6 +104,22 @@ void test_log_write_read(void) {
   struct slice buf = {};
   struct writer *w = new_writer(&slice_write_void, &buf, &opts);
 
+  writer_set_limits(w, 0, N);
+  {
+    struct ref_record ref = {};
+    for (int i = 0; i < N; i++) {
+      char name[256];
+      sprintf(name, "b%02d%0*d", i, 130, 7);
+      names[i] = strdup(name);
+      puts(name);
+      ref.ref_name = name;
+      ref.update_index = i;
+
+      int err = writer_add_ref(w, &ref);
+      assert_err(err);
+    }
+  }
+
   {
     struct log_record log = {};
     for (int i = 0; i < N; i++) {
@@ -111,18 +127,13 @@ void test_log_write_read(void) {
       set_test_hash(hash1, i);
       set_test_hash(hash2, i + 1);
 
-      char name[100];
-      sprintf(name, "refs/heads/branch%02d", i);
-
-      log.ref_name = name;
+      log.ref_name = names[i];
       log.update_index = i;
       log.old_hash = hash1;
       log.new_hash = hash2;
 
-      names[i] = strdup(name);
-
-      int n = writer_add_log(w, &log);
-      assert(n == 0);
+      int err = writer_add_log(w, &log);
+      assert_err(err);
     }
   }
 
@@ -131,13 +142,6 @@ void test_log_write_read(void) {
 
   struct stats *stats = writer_stats(w);
   assert(stats->log_stats.blocks > 0);
-  for (int i = 0; i < stats->log_stats.blocks; i++) {
-    int off = i * opts.block_size;
-    if (off == 0) {
-      off = HEADER_SIZE;
-    }
-    assert(buf.buf[off] == BLOCK_TYPE_LOG);
-  }
   writer_free(w);
   w = NULL;
 
@@ -148,27 +152,47 @@ void test_log_write_read(void) {
   int err = init_reader(&rd, source, "file.log");
   assert(err == 0);
 
-  struct iterator it = {};
-  err = reader_seek_log(&rd, &it, "", 0xffffffff);
-  assert(err == 0);
+  {
+    struct iterator it = {};
+    err = reader_seek_ref(&rd, &it, names[N-1]);
+    assert(err == 0);
 
-  struct log_record log = {};
-  int i = 0;
-  while (true) {
-    int err = iterator_next_log(it, &log);
-    if (err > 0) {
-      break;
+    struct ref_record ref = {};
+    err = iterator_next_ref(it, &ref);
+    assert_err(err);
+
+    // end of iteration.
+    err = iterator_next_ref(it, &ref);
+    assert(0 < err);
+
+    iterator_destroy(&it);
+    ref_record_clear(&ref);
+  }
+
+  {
+    struct iterator it = {};
+    err = reader_seek_log(&rd, &it, "", 0xffffffff);
+    assert(err == 0);
+
+    struct log_record log = {};
+    int i = 0;
+    while (true) {
+      int err = iterator_next_log(it, &log);
+      if (err > 0) {
+        break;
+      }
+
+      assert_err(err);
+      assert_streq(names[i], log.ref_name);
+      assert(i == log.update_index);
+      i++;
     }
 
-    assert_err(err);
-    assert_streq(names[i], log.ref_name);
-    assert(i == log.update_index);
-    i++;
+    assert(i == N);
+    iterator_destroy(&it);
   }
-  assert(i == N);
 
   // cleanup.
-  iterator_destroy(&it);
   free(slice_yield(&buf));
   free_names(names);
   reader_close(&rd);
@@ -385,9 +409,9 @@ void test_table_refs_for(bool indexed) {
     j++;
     ref_record_clear(&ref);
   }
-  assert(j == want_names_len)
+  assert(j == want_names_len);
 
-      free(slice_yield(&buf));
+  free(slice_yield(&buf));
   free_names(want_names);
   iterator_destroy(&it);
   reader_close(&rd);

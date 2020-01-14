@@ -260,8 +260,10 @@ int writer_add_log(struct writer *w, struct log_record *log) {
 
   {
     struct record rec = {};
+    int err;
     record_from_log(&rec, log);
-    return writer_add_record(w, rec);
+    err = writer_add_record(w, rec);
+    return err;
   }
 }
 
@@ -471,12 +473,9 @@ int writer_close(struct writer *w) {
   put_u64(p, w->stats.obj_stats.index_offset);
   p += 8;
 
-  // Logs not supported.
-  put_u64(p, 0);
+  put_u64(p, w->stats.log_stats.offset);
   p += 8;
-
-  // Log index not supported.
-  put_u64(p, 0);
+  put_u64(p, w->stats.log_stats.index_offset);
   p += 8;
 
   put_u32(p, crc32(0, footer, p - footer));

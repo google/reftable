@@ -38,6 +38,7 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
   bw->buf[header_off] = typ;
   bw->next = header_off + 4;
   bw->restart_interval = 16;
+  bw->entries = 0;
 }
 
 byte block_writer_type(struct block_writer *bw) {
@@ -135,6 +136,7 @@ int block_writer_finish(struct block_writer *w) {
 
     dest_len = compressed.len;
     src_len = w->next - block_header_skip;
+
     if (Z_OK != compress2(compressed.buf, &dest_len, w->buf + block_header_skip,
                           src_len, 9)) {
       free(slice_yield(&compressed));
@@ -182,6 +184,11 @@ int block_reader_init(struct block_reader *br, struct block *block,
     block->source = malloc_block_source();
     full_block_size = src_len + block_header_skip;
   } else if (full_block_size == 0) {
+    full_block_size = sz;
+  } else if (sz < full_block_size && sz < block->len && block->data[sz] != 0) {
+    // If the block is smaller than the full block size,
+    // it is padded (data followed by '\0') or the next
+    // block is unaligned.
     full_block_size = sz;
   }
 
