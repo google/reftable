@@ -91,9 +91,19 @@ func NewReader(src BlockSource, name string) (*Reader, error) {
 		src:  src,
 		name: name,
 	}
+	headblock, err := src.ReadBlock(0, headerSize)
+	if err != nil {
+		return nil, err
+	}
+
 	footblock, err := src.ReadBlock(r.size, footerSize)
 	if err != nil {
 		return nil, err
+	}
+
+	if 0 != bytes.Compare(headblock, footblock[:headerSize]) {
+		return nil, fmt.Errorf("reftable: start header %q != tail header %q",
+			headblock, footblock[:headerSize])
 	}
 
 	footBuf := bytes.NewBuffer(footblock)
@@ -273,7 +283,7 @@ func (i *tableIter) nextBlock() (bool, error) {
 	nextBlockOff := i.blockOff + uint64(i.bi.br.fullBlockSize)
 	br, err := i.r.newBlockReader(nextBlockOff, i.typ)
 	if err != nil {
-		return false, fmt.Errorf("next block %c off 0x%x: %v", i.typ, nextBlockOff, err)
+		return false, fmt.Errorf("reftable: reading %c block at 0x%x: %v", i.typ, nextBlockOff, err)
 	}
 	if br == nil {
 		i.finished = true

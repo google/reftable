@@ -115,8 +115,7 @@ func (w *Writer) newBlockWriter(typ byte) *blockWriter {
 
 	var blockStart uint32
 	if w.next == 0 {
-		hb := w.headerBytes()
-		blockStart = uint32(copy(block, hb))
+		blockStart = headerSize
 	}
 
 	bw := newBlockWriter(typ, block, blockStart)
@@ -290,6 +289,10 @@ func (w *Writer) flushBlock() error {
 		blockStats.Offset = w.next
 	}
 	raw := w.blockWriter.finish()
+	if w.next == 0 {
+		copy(raw, w.headerBytes())
+	}
+
 	padding := int(w.cfg.BlockSize) - len(raw)
 	if w.cfg.Unaligned || typ == blockTypeLog {
 		padding = 0
