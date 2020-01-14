@@ -87,7 +87,7 @@ static int writer_write_header(struct writer *w, byte *dest) {
 static void writer_reinit_block_writer(struct writer *w, byte typ) {
   int block_start = 0;
   if (w->next == 0) {
-    block_start = writer_write_header(w, w->block);
+    block_start = HEADER_SIZE;
   }
 
   block_writer_init(&w->block_writer_data, typ, w->block, w->opts.block_size,
@@ -536,6 +536,10 @@ static int writer_flush_nonempty_block(struct writer *w) {
   if (debug) {
     fprintf(stderr, "block %c off %ld sz %d (%d)\n", typ, w->next, raw_bytes,
             get_u24(w->block + w->block_writer->header_off + 1));
+  }
+
+  if (w->next == 0) {
+    writer_write_header(w, w->block);
   }
 
   err = padded_write(w, w->block, raw_bytes, padding);
