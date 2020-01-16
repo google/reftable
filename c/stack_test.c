@@ -77,6 +77,15 @@ int write_test_ref(struct writer *wr, void *arg) {
   return err;
 }
 
+int write_test_log(struct writer *wr, void *arg) {
+  struct log_record *log = arg;
+
+  writer_set_limits(wr, log->update_index, log->update_index);
+  int err = writer_add_log(wr, log);
+
+  return err;
+}
+
 void test_stack_add(void) {
   char dir[256] = "/tmp/stack.XXXXXX";
   assert(mkdtemp(dir));
@@ -91,6 +100,7 @@ void test_stack_add(void) {
   assert_err(err);
 
   struct ref_record refs[2] = {};
+  struct log_record logs[2] = {};
   int N = ARRAYSIZE(refs);
   for (int i = 0; i < N; i++) {
     char buf[256];
@@ -99,10 +109,21 @@ void test_stack_add(void) {
     refs[i].value = malloc(SHA1_SIZE);
     refs[i].update_index = i + 1;
     set_test_hash(refs[i].value, i);
+
+    logs[i].ref_name = strdup(buf);
+    logs[i].update_index = N + i+1;
+    logs[i].new_hash = malloc(SHA1_SIZE);
+    logs[i].email = strdup("identity@invalid");
+    set_test_hash(logs[i].new_hash, i);
   }
 
   for (int i = 0; i < N; i++) {
     int err = stack_add(st, &write_test_ref, &refs[i]);
+    assert_err(err);
+  }
+
+  for (int i = 0; i < N; i++) {
+    int err = stack_add(st, &write_test_log, &logs[i]);
     assert_err(err);
   }
 
@@ -117,11 +138,19 @@ void test_stack_add(void) {
     ref_record_clear(&dest);
   }
 
+  for (int i = 0; i < N; i++) {
+    struct log_record dest = {};
+    int err = stack_read_log(st, refs[i].ref_name, &dest);
+    assert_err(err);
+    assert(log_record_equal(&dest, logs + i, SHA1_SIZE));
+    log_record_clear(&dest);
+  }
+
   // cleanup
   stack_destroy(st);
   for (int i = 0; i < N; i++) {
-    free(refs[i].value);
-    free(refs[i].ref_name);
+    ref_record_clear(&refs[i]);
+    log_record_clear(&logs[i]);
   }
 }
 

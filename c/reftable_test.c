@@ -171,7 +171,7 @@ void test_log_write_read(void) {
 
   {
     struct iterator it = {};
-    err = reader_seek_log(&rd, &it, "", 0xffffffff);
+    err = reader_seek_log(&rd, &it, "");
     assert(err == 0);
 
     struct log_record log = {};

@@ -55,8 +55,7 @@ static int dump_table(const char *tablename) {
 
   {
     struct iterator it = {};
-    uint64_t max = ~((uint64_t)0);
-    err = reader_seek_log(r, &it, "", max);
+    err = reader_seek_log(r, &it, "");
     if (err < 0) {
       return err;
     }

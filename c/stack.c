@@ -528,6 +528,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
   int err = 0;
   struct iterator it = {};
   struct ref_record ref = {};
+  struct log_record log = {};
 
   for (int i = first, j = 0; i <= last; i++) {
     struct reader *t = st->merged->stack[i];
@@ -566,6 +567,32 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
       break;
     }
   }
+
+  err = merged_table_seek_log(mt, &it, "");
+  if (err < 0) {
+    goto exit;
+  }
+
+  while (true) {
+    err = iterator_next_log(it, &log);
+    if (err > 0) {
+      err = 0;
+      break;
+    }
+    if (err < 0) {
+      break;
+    }
+    if (first == 0 && log_record_is_deletion(&log)) {
+      continue;
+    }
+
+    err = writer_add_log(wr, &log);
+    if (err < 0) {
+      break;
+    }
+  }
+
+
 exit:
   iterator_destroy(&it);
   if (mt != NULL) {
@@ -860,6 +887,30 @@ int stack_read_ref(struct stack *st, const char *refname,
   }
 
   if (0 != strcmp(ref->ref_name, refname) || ref_record_is_deletion(ref)) {
+    err = 1;
+    goto exit;
+  }
+
+exit:
+  iterator_destroy(&it);
+  return err;
+}
+
+int stack_read_log(struct stack *st, const char *refname,
+                   struct log_record *log) {
+  struct iterator it = {};
+  struct merged_table *mt = stack_merged_table(st);
+  int err = merged_table_seek_log(mt, &it, refname);
+  if (err) {
+    goto exit;
+  }
+
+  err = iterator_next_log(it, log);
+  if (err) {
+    goto exit;
+  }
+
+  if (0 != strcmp(log->ref_name, refname) || log_record_is_deletion(log)) {
     err = 1;
     goto exit;
   }

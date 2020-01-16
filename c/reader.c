@@ -554,7 +554,7 @@ int reader_seek_ref(struct reader *r, struct iterator *it, const char *name) {
   return reader_seek(r, it, rec);
 }
 
-int reader_seek_log(struct reader *r, struct iterator *it, const char *name,
+int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
                     uint64_t update_index) {
   struct log_record log = {
       .ref_name = (char *)name,
@@ -563,6 +563,11 @@ int reader_seek_log(struct reader *r, struct iterator *it, const char *name,
   struct record rec = {};
   record_from_log(&rec, &log);
   return reader_seek(r, it, rec);
+}
+
+int reader_seek_log(struct reader *r, struct iterator *it, const char *name) {
+  uint64_t max = ~((uint64_t)0);
+  return reader_seek_log_at(r, it, name, max);
 }
 
 void reader_close(struct reader *r) {

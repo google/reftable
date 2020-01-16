@@ -1029,3 +1029,8 @@ int log_record_compare_key(const void *a, const void *b) {
   }
   return (la->update_index < lb->update_index) ? 1 : 0;
 }
+
+bool log_record_is_deletion(const struct log_record *log) {
+  // XXX
+  return false;
+}

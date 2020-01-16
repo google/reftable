@@ -249,3 +249,20 @@ int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
   record_from_ref(&rec, &ref);
   return merged_table_seek_record(mt, it, rec);
 }
+
+int merged_table_seek_log_at(struct merged_table *mt, struct iterator *it,
+                             const char *name, uint64_t update_index) {
+  struct log_record log = {
+      .ref_name = (char *)name,
+      .update_index = update_index,
+  };
+  struct record rec = {};
+  record_from_log(&rec, &log);
+  return merged_table_seek_record(mt, it, rec);
+}
+
+int merged_table_seek_log(struct merged_table *mt, struct iterator *it,
+                          const char *name) {
+  uint64_t max = ~((uint64_t)0);
+  return merged_table_seek_log_at(mt, it, name, max);
+}

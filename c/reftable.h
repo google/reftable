@@ -106,6 +106,9 @@ struct log_record {
   char *message;
 };
 
+/* returns whether 'ref' represents the deletion of a log record. */
+bool log_record_is_deletion(const struct log_record *log);
+
 /* frees and nulls all pointer values. */
 void log_record_clear(struct log_record *log);
 
@@ -280,8 +283,11 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
 int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 
 /* seek to logs for the given name, older than update_index. */
-int reader_seek_log(struct reader *r, struct iterator *it, const char *name,
-                    uint64_t update_index);
+int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
+                       uint64_t update_index);
+
+/* seek to newest log entry for given name. */
+int reader_seek_log(struct reader *r, struct iterator *it, const char *name);
 
 /* closes and deallocates a reader. */
 void reader_free(struct reader *);
@@ -306,6 +312,14 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
 
 /* returns an iterator positioned just before 'name' */
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
+                          const char *name);
+
+/* returns an iterator for log entry, at given update_index */
+int merged_table_seek_log_at(struct merged_table *mt, struct iterator *it,
+                             const char *name, uint64_t update_index);
+
+/* like merged_table_seek_log_at but look for the newest entry. */
+int merged_table_seek_log(struct merged_table *mt, struct iterator *it,
                           const char *name);
 
 /* returns the max update_index covered by this merged table. */
@@ -361,6 +375,11 @@ int stack_auto_compact(struct stack *st);
    for success, and 1 if ref not found. */
 int stack_read_ref(struct stack *st, const char *refname,
                    struct ref_record *ref);
+
+/* convenience function to read a single log. Returns < 0 for error, 0
+   for success, and 1 if ref not found. */
+int stack_read_log(struct stack *st, const char *refname,
+                   struct log_record *log);
 
 /* statistics on past compactions. */
 struct compaction_stats {
