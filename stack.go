@@ -57,11 +57,19 @@ func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
 		cfg:         cfg,
 	}
 
-	if err := st.reload(); err != nil {
+	if err := st.reload(true); err != nil {
 		return nil, err
 	}
 
 	return st, nil
+}
+
+func (st *Stack) String() string {
+	var nms []string
+	for _, r := range st.stack {
+		nms = append(nms, r.Name())
+	}
+	return fmt.Sprintf("%v", nms)
 }
 
 func (st *Stack) readNames() ([]string, error) {
@@ -98,8 +106,9 @@ func (st *Stack) Close() {
 	st.stack = nil
 }
 
-func (st *Stack) reloadOnce(names []string) error {
+func (st *Stack) reloadOnce(names []string, reuseOpen bool) error {
 	cur := map[string]*Reader{}
+
 	for _, r := range st.stack {
 		cur[r.Name()] = r
 	}
@@ -113,7 +122,7 @@ func (st *Stack) reloadOnce(names []string) error {
 
 	for _, name := range names {
 		rd := cur[name]
-		if rd != nil {
+		if reuseOpen && rd != nil {
 			delete(cur, name)
 		} else {
 			bs, err := NewFileBlockSource(filepath.Join(st.reftableDir, name))
@@ -138,7 +147,7 @@ func (st *Stack) reloadOnce(names []string) error {
 	return nil
 }
 
-func (st *Stack) reload() error {
+func (st *Stack) reload(reuseOpen bool) error {
 	var delay time.Duration
 	deadline := time.Now().Add(5 * time.Second / 2)
 	for time.Now().Before(deadline) {
@@ -146,7 +155,7 @@ func (st *Stack) reload() error {
 		if err != nil {
 			return err
 		}
-		err = st.reloadOnce(names)
+		err = st.reloadOnce(names, reuseOpen)
 		if err == nil {
 			break
 		}
@@ -205,7 +214,7 @@ func (st *Stack) UpToDate() (bool, error) {
 func (st *Stack) Add(write func(w *Writer) error) error {
 	if err := st.add(write); err != nil {
 		if err == ErrLockFailure {
-			st.reload()
+			st.reload(true)
 		}
 		return err
 	}
@@ -293,7 +302,7 @@ func (st *Stack) add(write func(w *Writer) error) error {
 	}
 	lockFile = ""
 
-	return st.reload()
+	return st.reload(true)
 }
 
 func formatName(min, max uint64) string {
@@ -310,7 +319,7 @@ func (st *Stack) NextUpdateIndex() uint64 {
 
 // compactLocked writes the compacted version of tables [first,last]
 // into a temporary file, whose name is returned.
-func (st *Stack) compactLocked(first, last int) (string, error) {
+func (st *Stack) compactLocked(first, last int, expiration *LogExpirationConfig) (string, error) {
 	fn := formatName(st.stack[first].MinUpdateIndex(),
 		st.stack[last].MaxUpdateIndex())
 
@@ -331,7 +340,7 @@ func (st *Stack) compactLocked(first, last int) (string, error) {
 		return "", err
 	}
 
-	if err := st.writeCompact(wr, first, last); err != nil {
+	if err := st.writeCompact(wr, first, last, expiration); err != nil {
 		return "", err
 	}
 
@@ -347,7 +356,7 @@ func (st *Stack) compactLocked(first, last int) (string, error) {
 	return tmpTable.Name(), nil
 }
 
-func (st *Stack) writeCompact(wr *Writer, first, last int) error {
+func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpirationConfig) error {
 	// do it.
 	wr.SetLimits(st.stack[first].MinUpdateIndex(),
 		st.stack[last].MaxUpdateIndex())
@@ -399,6 +408,19 @@ func (st *Stack) writeCompact(wr *Writer, first, last int) error {
 			break
 		}
 
+		if expiration != nil {
+			if expiration.Time > 0 && rec.Time < expiration.Time {
+				continue
+			}
+
+			if expiration.MaxUpdateIndex != 0 && rec.UpdateIndex > expiration.MaxUpdateIndex {
+				continue
+			}
+			if expiration.MinUpdateIndex != 0 && rec.UpdateIndex < expiration.MinUpdateIndex {
+				continue
+			}
+		}
+
 		if err := wr.AddLog(&rec); err != nil {
 			return err
 		}
@@ -406,16 +428,16 @@ func (st *Stack) writeCompact(wr *Writer, first, last int) error {
 	return nil
 }
 
-func (st *Stack) compactRangeStats(first, last int) (bool, error) {
-	ok, err := st.compactRange(first, last)
+func (st *Stack) compactRangeStats(first, last int, expiration *LogExpirationConfig) (bool, error) {
+	ok, err := st.compactRange(first, last, expiration)
 	if !ok {
 		st.Stats.Failures++
 	}
 	return ok, err
 }
 
-func (st *Stack) compactRange(first, last int) (bool, error) {
-	if first >= last {
+func (st *Stack) compactRange(first, last int, expiration *LogExpirationConfig) (bool, error) {
+	if first >= last && expiration == nil {
 		return true, nil
 	}
 	st.Stats.Attempts++
@@ -465,7 +487,7 @@ func (st *Stack) compactRange(first, last int) (bool, error) {
 	}
 	lockFileName = ""
 
-	tmpTable, err := st.compactLocked(first, last)
+	tmpTable, err := st.compactLocked(first, last, expiration)
 	if err != nil {
 		return false, err
 	}
@@ -511,13 +533,19 @@ func (st *Stack) compactRange(first, last int) (bool, error) {
 		os.Remove(destTable)
 		return false, err
 	}
-
 	lockFileName = ""
 	for _, nm := range deleteOnSuccess {
-		os.Remove(nm)
+		if nm != destTable {
+			// reflog expiry might cause us to reopen a
+			// new file with the same name.
+			os.Remove(nm)
+		}
 	}
 
-	err = st.reload()
+	// If we expire log entries on a full compaction we write a
+	// table with the same the (min,max) update index, but we have
+	// to read from disk again.
+	err = st.reload(expiration == nil)
 	return true, err
 }
 
@@ -609,14 +637,14 @@ func (st *Stack) AutoCompact() error {
 	sizes := st.tableSizesForCompaction()
 	seg := suggestCompactionSegment(sizes)
 	if seg != nil {
-		_, err := st.compactRangeStats(seg.start, seg.end-1)
+		_, err := st.compactRangeStats(seg.start, seg.end-1, nil)
 		return err
 	}
 	return nil
 }
 
-// CompactAll compacts the entire stack.
-func (st *Stack) CompactAll() error {
-	_, err := st.compactRange(0, len(st.stack)-1)
+// CompactAll compacts the entire stack. If expiration is given, expire log entries.
+func (st *Stack) CompactAll(expiration *LogExpirationConfig) error {
+	_, err := st.compactRange(0, len(st.stack)-1, expiration)
 	return err
 }

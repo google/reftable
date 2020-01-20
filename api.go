@@ -48,6 +48,12 @@ type Iterator struct {
 	impl iterator
 }
 
+type LogExpirationConfig struct {
+	Time           uint64
+	MaxUpdateIndex uint64
+	MinUpdateIndex uint64
+}
+
 // Options define write options for reftables.
 type Config struct {
 	// If set, do not pad blocks to blocksize.

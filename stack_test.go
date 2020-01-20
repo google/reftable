@@ -133,7 +133,7 @@ func TestTombstones(t *testing.T) {
 			t.Fatalf("write %d: %v", i, err)
 		}
 	}
-	if err := st.CompactAll(); err != nil {
+	if err := st.CompactAll(nil); err != nil {
 		t.Fatal(err)
 	}
 	m := st.Merged()
@@ -158,5 +158,94 @@ func TestSuggestCompactionSegment(t *testing.T) {
 
 	if min.start != 2 || min.end != 7 {
 		t.Fatalf("got seg %v, want [2,7)", min)
+	}
+}
+
+func TestCompactionReflogExpiry(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		Unaligned: true,
+	}
+
+	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	N := 20
+	logmap := map[int]*LogRecord{}
+	for i := 1; i < N; i++ {
+		if err := st.Add(func(w *Writer) error {
+			log := LogRecord{
+				RefName:     fmt.Sprintf("branch%02d", i),
+				New:         testHash(i),
+				UpdateIndex: uint64(i),
+				Time:        uint64(i),
+			}
+			w.SetLimits(uint64(i), uint64(i))
+			logmap[i] = &log
+			if err := w.AddLog(&log); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("write %d: %v", i, err)
+		}
+	}
+
+	logConfig := LogExpirationConfig{
+		Time: 10,
+	}
+
+	if err := st.CompactAll(&logConfig); err != nil {
+		t.Fatalf("CompactAll: %v", err)
+	}
+
+	have := func(i int) bool {
+		name := logmap[i].RefName
+
+		var max uint64
+		max = ^max
+		logRec, err := ReadLogAt(st.Merged(), name, max)
+		if err != nil {
+			t.Fatalf("ReadLogAt %v", err)
+		}
+		return logRec != nil
+	}
+
+	if !have(11) {
+		t.Fatalf("misses entry @21")
+	}
+	if have(9) {
+		t.Fatalf("has entry @19")
+	}
+
+	logConfig = LogExpirationConfig{MinUpdateIndex: 15}
+	if err := st.CompactAll(&logConfig); err != nil {
+		t.Fatalf("CompactAll: %v", err)
+	}
+
+	it, err := st.Merged().SeekLog("", 0xffffff)
+	for {
+		var l LogRecord
+		ok, err := it.NextLog(&l)
+		if !ok || err != nil {
+			break
+		}
+	}
+
+	if have(14) {
+		t.Fatalf("has log entry @14")
+	}
+
+	if !have(16) {
+		t.Fatalf("misses log entry @16")
 	}
 }
