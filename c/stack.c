@@ -119,7 +119,7 @@ static struct reader **stack_copy_readers(struct stack *st, int cur_len) {
   return cur;
 }
 
-static int stack_reload_once(struct stack *st, char **names) {
+static int stack_reload_once(struct stack *st, char **names, bool reuse_open) {
   int cur_len = st->merged == NULL ? 0 : st->merged->stack_len;
   struct reader **cur = stack_copy_readers(st, cur_len);
   int err = 0;
@@ -136,7 +136,7 @@ static int stack_reload_once(struct stack *st, char **names) {
 
     // this is linear; we assume compaction keeps the number of tables
     // under control so this is not quadratic.
-    for (int j = 0; j < cur_len; j++) {
+    for (int j = 0; reuse_open && j < cur_len; j++) {
       if (cur[j] != NULL && 0 == strcmp(cur[j]->name, name)) {
         rd = cur[j];
         cur[j] = NULL;
@@ -207,7 +207,7 @@ static int tv_cmp(struct timeval *a, struct timeval *b) {
   return udiff;
 }
 
-int stack_reload(struct stack *st) {
+static int stack_reload_maybe_reuse(struct stack *st, bool reuse_open) {
   struct timeval deadline = {};
   int err = gettimeofday(&deadline, NULL);
   int64_t delay = 0;
@@ -238,7 +238,7 @@ int stack_reload(struct stack *st) {
       free_names(names);
       return err;
     }
-    err = stack_reload_once(st, names);
+    err = stack_reload_once(st, names, reuse_open);
     if (err == 0) {
       free_names(names);
       break;
@@ -267,6 +267,10 @@ int stack_reload(struct stack *st) {
   }
 
   return 0;
+}
+
+int stack_reload(struct stack *st) {
+  return stack_reload_maybe_reuse(st, true);
 }
 
 // -1 = error
@@ -471,7 +475,7 @@ uint64_t stack_next_update_index(struct stack *st) {
 }
 
 static int stack_compact_locked(struct stack *st, int first, int last,
-                                struct slice *temp_tab) {
+                                struct slice *temp_tab, struct log_expiry_config *config) {
   struct slice next_name = {};
   int tab_fd = -1;
   struct writer *wr = NULL;
@@ -488,7 +492,7 @@ static int stack_compact_locked(struct stack *st, int first, int last,
   tab_fd = mkstemp((char *)slice_as_string(temp_tab));
   wr = new_writer(fd_writer, &tab_fd, &st->config);
 
-  err = stack_write_compact(st, wr, first, last);
+  err = stack_write_compact(st, wr, first, last, config);
   if (err < 0) {
     goto exit;
   }
@@ -515,7 +519,7 @@ exit:
 }
 
 int stack_write_compact(struct stack *st, struct writer *wr, int first,
-                        int last) {
+                        int last, struct log_expiry_config *config) {
   int subtabs_len = last - first + 1;
   struct reader **subtabs = calloc(sizeof(struct reader *), last - first + 1);
   struct merged_table *mt = NULL;
@@ -580,6 +584,16 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
       continue;
     }
 
+    // XXX collect stats?
+
+    if (config != NULL && config->time > 0 && log.time < config->time) {
+      continue;
+    }
+
+    if (config != NULL && config->min_update_index > 0 && log.update_index < config->min_update_index) {
+      continue;
+    }
+
     err = writer_add_log(wr, &log);
     if (err < 0) {
       break;
@@ -599,7 +613,7 @@ exit:
 }
 
 // <  0: error. 0 == OK, > 0 attempt failed; could retry.
-static int stack_compact_range(struct stack *st, int first, int last) {
+static int stack_compact_range(struct stack *st, int first, int last, struct log_expiry_config *expiry) {
   struct slice temp_tab_name = {};
   struct slice new_table_name = {};
   struct slice lock_file_name = {};
@@ -612,7 +626,7 @@ static int stack_compact_range(struct stack *st, int first, int last) {
   char **delete_on_success = calloc(sizeof(char *), compact_count + 1);
   char **subtable_locks = calloc(sizeof(char *), compact_count + 1);
 
-  if (first >= last) {
+  if (first > last || (expiry == NULL && first == last)) {
     err = 0;
     goto exit;
   }
@@ -676,7 +690,7 @@ static int stack_compact_range(struct stack *st, int first, int last) {
   }
   have_lock = false;
 
-  err = stack_compact_locked(st, first, last, &temp_tab_name);
+  err = stack_compact_locked(st, first, last, &temp_tab_name, expiry);
   if (err < 0) {
     goto exit;
   }
@@ -739,10 +753,12 @@ static int stack_compact_range(struct stack *st, int first, int last) {
   have_lock = false;
 
   for (char **p = delete_on_success; *p; p++) {
-    unlink(*p);
+    if (0 != strcmp(*p, slice_as_string(&new_table_path))) {
+      unlink(*p);
+    }
   }
 
-  err = stack_reload(st);
+  err = stack_reload_maybe_reuse(st, first < last);
 exit:
   for (char **p = subtable_locks; *p; p++) {
     unlink(*p);
@@ -764,12 +780,12 @@ exit:
   return err;
 }
 
-int stack_compact_all(struct stack *st) {
-  return stack_compact_range(st, 0, st->merged->stack_len - 1);
+int stack_compact_all(struct stack *st, struct log_expiry_config *config) {
+  return stack_compact_range(st, 0, st->merged->stack_len - 1, config);
 }
 
-static int stack_compact_range_stats(struct stack *st, int first, int last) {
-  int err = stack_compact_range(st, first, last);
+static int stack_compact_range_stats(struct stack *st, int first, int last, struct log_expiry_config *config) {
+  int err = stack_compact_range(st, first, last, config);
   if (err > 0) {
     st->stats.failures++;
   }
@@ -856,7 +872,7 @@ int stack_auto_compact(struct stack *st) {
   struct segment seg = suggest_compaction_segment(sizes, st->merged->stack_len);
   free(sizes);
   if (segment_size(&seg) > 0) {
-    return stack_compact_range_stats(st, seg.start, seg.end - 1);
+    return stack_compact_range_stats(st, seg.start, seg.end - 1, NULL);
   }
 
   return 0;

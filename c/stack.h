@@ -25,7 +25,7 @@ int read_lines(const char *filename, char ***lines);
 int stack_try_add(struct stack *st,
                   int (*write_table)(struct writer *wr, void *arg), void *arg);
 int stack_write_compact(struct stack *st, struct writer *wr, int first,
-                        int last);
+                        int last, struct log_expiry_config *config);
 int fastlog2(uint64_t sz);
 
 struct segment {

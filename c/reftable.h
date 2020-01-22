@@ -359,8 +359,17 @@ void stack_destroy(struct stack *st);
 /* reloads the stack if necessary. */
 int stack_reload(struct stack *st);
 
-/* compacts all reftables into a giant table. */
-int stack_compact_all(struct stack *st);
+/* Policy for expiring reflog entries. */
+struct log_expiry_config {
+  /* Drop entries older than this timestamp */
+  uint64_t time;
+
+  /* Drop older entries */
+  uint64_t min_update_index;
+};
+
+/* compacts all reftables into a giant table. Expire reflog entries if config is non-NULL */
+int stack_compact_all(struct stack *st, struct log_expiry_config *config);
 
 /* heuristically compact unbalanced table stack. */
 int stack_auto_compact(struct stack *st);

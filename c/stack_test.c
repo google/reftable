@@ -121,7 +121,7 @@ void test_stack_add(void) {
     assert_err(err);
   }
 
-  err = stack_compact_all(st);
+  err = stack_compact_all(st, NULL);
   assert_err(err);
 
   for (int i = 0; i < N; i++) {
@@ -186,7 +186,73 @@ void test_suggest_compaction_segment(void) {
   }
 }
 
+void test_reflog_expire(void) {
+  char dir[256] = "/tmp/stack.XXXXXX";
+  assert(mkdtemp(dir));
+  printf("%s\n", dir);
+  char fn[256] = "";
+  strcat(fn, dir);
+  strcat(fn, "/refs");
+
+  struct write_options cfg = {};
+  struct stack *st = NULL;
+  int err = new_stack(&st, dir, fn, cfg);
+  assert_err(err);
+
+  struct log_record logs[20] = {};
+  int N = ARRAYSIZE(logs) -1;
+  for (int i = 1; i <= N; i++) {
+    char buf[256];
+    sprintf(buf, "branch%02d", i);
+
+    logs[i].ref_name = strdup(buf);
+    logs[i].update_index = i;
+    logs[i].time = i;
+    logs[i].new_hash = malloc(SHA1_SIZE);
+    logs[i].email = strdup("identity@invalid");
+    set_test_hash(logs[i].new_hash, i);
+  }
+
+  for (int i = 1; i <= N; i++) {
+    int err = stack_add(st, &write_test_log, &logs[i]);
+    assert_err(err);
+  }
+
+  err = stack_compact_all(st, NULL);
+  assert_err(err);
+
+  struct log_expiry_config expiry = {
+    .time = 10,
+  };
+  err = stack_compact_all(st, &expiry);
+  assert_err(err);
+
+  struct log_record log = {};
+  err = stack_read_log(st, logs[9].ref_name, &log);
+  assert(err == 1);
+
+  err = stack_read_log(st, logs[11].ref_name, &log);
+  assert_err(err);
+
+  expiry.min_update_index = 15;
+  err = stack_compact_all(st, &expiry);
+  assert_err(err);
+
+  err = stack_read_log(st, logs[14].ref_name, &log);
+  assert(err == 1);
+
+  err = stack_read_log(st, logs[16].ref_name, &log);
+  assert_err(err);
+
+  // cleanup
+  stack_destroy(st);
+  for (int i = 0; i < N; i++) {
+    log_record_clear(&logs[i]);
+  }
+}
+
 int main() {
+  add_test_case("test_reflog_expire", test_reflog_expire);
   add_test_case("test_suggest_compaction_segment",
                 &test_suggest_compaction_segment);
   add_test_case("test_sizes_to_segments", &test_sizes_to_segments);
