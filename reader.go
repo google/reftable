@@ -58,6 +58,14 @@ type Reader struct {
 	offsets map[byte]readerOffsets
 }
 
+func (r *Reader) DebugData() string {
+	return fmt.Sprintf("name %s, sz %d: 'r' %#v, 'o' %#v 'g' %#v", r.name, r.size,
+		r.offsets['r'],
+		r.offsets['o'],
+		r.offsets['g'],
+	)
+}
+
 func (r *Reader) Close() {
 	r.src.Close()
 }

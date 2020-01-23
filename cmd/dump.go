@@ -90,6 +90,8 @@ func dumpTableFile(nm string) error {
 		return err
 	}
 
+	fmt.Printf("** DEBUG **\n%s\n", r.DebugData())
+
 	return dumpTable(r)
 
 }
@@ -99,6 +101,8 @@ func dumpTable(tab reftable.Table) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("** REFS **\n")
 
 	for {
 		var rec reftable.RefRecord
@@ -134,5 +138,6 @@ func dumpTable(tab reftable.Table) error {
 
 		fmt.Printf("%#v\n", rec)
 	}
+
 	return nil
 }
