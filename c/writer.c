@@ -259,6 +259,9 @@ int writer_add_log(struct writer *w, struct log_record *log) {
     }
   }
 
+  w->next -= w->pending_padding;
+  w->pending_padding = 0;
+
   {
     struct record rec = {};
     int err;

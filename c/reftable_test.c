@@ -66,11 +66,29 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
       ref.update_index = update_index;
       (*names)[i] = strdup(name);
 
-      fflush(stdout);
       int n = writer_add_ref(w, &ref);
       assert(n == 0);
     }
   }
+  {
+    struct log_record log = {};
+    for (int i = 0; i < N; i++) {
+      byte hash[SHA1_SIZE];
+      set_test_hash(hash, i);
+
+      char name[100];
+      sprintf(name, "refs/heads/branch%02d", i);
+
+      log.ref_name = name;
+      log.new_hash = hash;
+      log.update_index = update_index;
+      log.message = "message";
+
+      int n = writer_add_log(w, &log);
+      assert(n == 0);
+    }
+  }
+
   int n = writer_close(w);
   assert(n == 0);
 
