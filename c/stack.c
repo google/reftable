@@ -369,7 +369,7 @@ int stack_try_add(struct stack *st,
   slice_set_string(&temp_tab_name, st->reftable_dir);
   slice_append_string(&temp_tab_name, "/");
   slice_append(&temp_tab_name, next_name);
-  slice_append_string(&temp_tab_name, "XXXXXX");
+  slice_append_string(&temp_tab_name, ".temp.XXXXXX");
 
   tab_fd = mkstemp((char *)slice_as_string(&temp_tab_name));
   if (tab_fd < 0) {
@@ -487,7 +487,7 @@ static int stack_compact_locked(struct stack *st, int first, int last,
   slice_set_string(temp_tab, st->reftable_dir);
   slice_append_string(temp_tab, "/");
   slice_append(temp_tab, next_name);
-  slice_append_string(temp_tab, "XXXXXX");
+  slice_append_string(temp_tab, ".temp.XXXXXX");
 
   tab_fd = mkstemp((char *)slice_as_string(temp_tab));
   wr = new_writer(fd_writer, &tab_fd, &st->config);

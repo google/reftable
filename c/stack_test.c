@@ -18,7 +18,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "test_framework.h"
 
 void test_read_file(void) {
-  char fn[256] = "/tmp/stack.XXXXXX";
+  char fn[256] = "/tmp/stack.test_read_file.XXXXXX";
   int fd = mkstemp(fn);
   assert(fd > 0);
 
@@ -81,7 +81,7 @@ int write_test_log(struct writer *wr, void *arg) {
 }
 
 void test_stack_add(void) {
-  char dir[256] = "/tmp/stack.XXXXXX";
+  char dir[256] = "/tmp/stack.test_stack_add.XXXXXX";
   assert(mkdtemp(dir));
   printf("%s\n", dir);
   char fn[256] = "";
@@ -187,7 +187,7 @@ void test_suggest_compaction_segment(void) {
 }
 
 void test_reflog_expire(void) {
-  char dir[256] = "/tmp/stack.XXXXXX";
+  char dir[256] = "/tmp/stack.test_reflog_expire.XXXXXX";
   assert(mkdtemp(dir));
   printf("%s\n", dir);
   char fn[256] = "";
