@@ -156,6 +156,10 @@ func (w *Writer) SetLimits(min, max uint64) {
 
 // AddRef adds a RefRecord to the table. AddRef must be called in ascending order. AddRef cannot be called after AddLog is called.
 func (w *Writer) AddRef(r *RefRecord) error {
+	if r.RefName == "" {
+		return fmt.Errorf("reftable: must specify RefName")
+	}
+
 	if r.UpdateIndex < w.minUpdateIndex || r.UpdateIndex > w.maxUpdateIndex {
 		return fmt.Errorf("reftable: UpdateIndex %d outside bounds [%d, %d]",
 			r.UpdateIndex, w.minUpdateIndex, w.maxUpdateIndex)
@@ -175,6 +179,10 @@ func (w *Writer) AddRef(r *RefRecord) error {
 // AddLog adds a LogRecord to the table. AddLog must be called in
 // ascending order.
 func (w *Writer) AddLog(l *LogRecord) error {
+	if l.RefName == "" {
+		return fmt.Errorf("reftable: must specify RefName")
+	}
+
 	if w.blockWriter != nil && w.blockWriter.getType() == blockTypeRef {
 		if err := w.finishPublicSection(); err != nil {
 			return nil

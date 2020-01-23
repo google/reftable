@@ -204,6 +204,9 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
   struct ref_record copy = *ref;
   int err = 0;
 
+  if (ref->ref_name == NULL) {
+    return API_ERROR;
+  }
   if (ref->update_index < w->min_update_index ||
       ref->update_index > w->max_update_index) {
     return API_ERROR;
@@ -244,6 +247,10 @@ int writer_add_refs(struct writer *w, struct ref_record *refs, int n) {
 }
 
 int writer_add_log(struct writer *w, struct log_record *log) {
+  if (log->ref_name == NULL) {
+    return API_ERROR;
+  }
+
   if (w->block_writer != NULL &&
       block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
     int err = writer_finish_public_section(w);

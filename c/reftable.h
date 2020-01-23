@@ -187,6 +187,7 @@ struct stats {
 #define LOCK_ERROR -5
 
 /* Misuse of the API:
+   - on writing a record with NULL ref_name.
    - on writing a ref_record outside the table limits
    - on writing a ref or log record before the stack's next_update_index
    - on reading a ref_record from log iterator, or vice versa.
