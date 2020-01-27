@@ -13,8 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #ifndef REFTABLE_STANDALONE
 #include "git-compat-util.h"
-#endif
-
+#else
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -28,5 +27,10 @@ https://developers.google.com/open-source/licenses/bsd
 #include <unistd.h>
 #include <zlib.h>
 
+#define PRIuMAX "lu"
+#define PRIdMAX "ld"
+#define PRIxMAX "lx"
+
+#endif
 
 #endif
