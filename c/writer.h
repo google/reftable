@@ -16,27 +16,27 @@ https://developers.google.com/open-source/licenses/bsd
 #include "tree.h"
 
 struct writer {
-  int (*write)(void *, byte *, int);
-  void *write_arg;
-  int pending_padding;
-  int hash_size;
-  struct slice last_key;
+	int (*write)(void *, byte *, int);
+	void *write_arg;
+	int pending_padding;
+	int hash_size;
+	struct slice last_key;
 
-  uint64_t next;
-  uint64_t min_update_index, max_update_index;
-  struct write_options opts;
+	uint64_t next;
+	uint64_t min_update_index, max_update_index;
+	struct write_options opts;
 
-  byte *block;
-  struct block_writer *block_writer;
-  struct block_writer block_writer_data;
-  struct index_record *index;
-  int index_len;
-  int index_cap;
+	byte *block;
+	struct block_writer *block_writer;
+	struct block_writer block_writer_data;
+	struct index_record *index;
+	int index_len;
+	int index_cap;
 
-  // tree for use with tsearch
-  struct tree_node *obj_index_tree;
+	// tree for use with tsearch
+	struct tree_node *obj_index_tree;
 
-  struct stats stats;
+	struct stats stats;
 };
 
 int writer_flush_block(struct writer *w);

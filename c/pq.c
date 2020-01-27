@@ -10,108 +10,115 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-int pq_less(struct pq_entry a, struct pq_entry b) {
-  struct slice ak = {};
-  struct slice bk = {};
-  int cmp = 0;
-  record_key(a.rec, &ak);
-  record_key(b.rec, &bk);
+int pq_less(struct pq_entry a, struct pq_entry b)
+{
+	struct slice ak = {};
+	struct slice bk = {};
+	int cmp = 0;
+	record_key(a.rec, &ak);
+	record_key(b.rec, &bk);
 
-  cmp = slice_compare(ak, bk);
+	cmp = slice_compare(ak, bk);
 
-  free(slice_yield(&ak));
-  free(slice_yield(&bk));
+	free(slice_yield(&ak));
+	free(slice_yield(&bk));
 
-  if (cmp == 0) {
-    return a.index > b.index;
-  }
+	if (cmp == 0) {
+		return a.index > b.index;
+	}
 
-  return cmp < 0;
+	return cmp < 0;
 }
 
-struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq) {
-  return pq.heap[0];
+struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq)
+{
+	return pq.heap[0];
 }
 
-bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq) {
-  return pq.len == 0;
+bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq)
+{
+	return pq.len == 0;
 }
 
-void merged_iter_pqueue_check(struct merged_iter_pqueue pq) {
-  int i = 0;
-  for (i = 1; i < pq.len; i++) {
-    int parent = (i - 1) / 2;
+void merged_iter_pqueue_check(struct merged_iter_pqueue pq)
+{
+	int i = 0;
+	for (i = 1; i < pq.len; i++) {
+		int parent = (i - 1) / 2;
 
-    assert(pq_less(pq.heap[parent], pq.heap[i]));
-  }
+		assert(pq_less(pq.heap[parent], pq.heap[i]));
+	}
 }
 
-struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq) {
-  int i = 0;
-  struct pq_entry e = pq->heap[0];
-  pq->heap[0] = pq->heap[pq->len - 1];
-  pq->len--;
+struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq)
+{
+	int i = 0;
+	struct pq_entry e = pq->heap[0];
+	pq->heap[0] = pq->heap[pq->len - 1];
+	pq->len--;
 
-  i = 0;
-  while (i < pq->len) {
-    int min = i;
-    int j = 2 * i + 1;
-    int k = 2 * i + 2;
-    if (j < pq->len && pq_less(pq->heap[j], pq->heap[i])) {
-      min = j;
-    }
-    if (k < pq->len && pq_less(pq->heap[k], pq->heap[min])) {
-      min = k;
-    }
+	i = 0;
+	while (i < pq->len) {
+		int min = i;
+		int j = 2 * i + 1;
+		int k = 2 * i + 2;
+		if (j < pq->len && pq_less(pq->heap[j], pq->heap[i])) {
+			min = j;
+		}
+		if (k < pq->len && pq_less(pq->heap[k], pq->heap[min])) {
+			min = k;
+		}
 
-    if (min == i) {
-      break;
-    }
+		if (min == i) {
+			break;
+		}
 
-    {
-      struct pq_entry tmp = pq->heap[min];
-      pq->heap[min] = pq->heap[i];
-      pq->heap[i] = tmp;
-    }
+		{
+			struct pq_entry tmp = pq->heap[min];
+			pq->heap[min] = pq->heap[i];
+			pq->heap[i] = tmp;
+		}
 
-    i = min;
-  }
+		i = min;
+	}
 
-  return e;
+	return e;
 }
 
-void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e) {
-  int i = 0;
-  if (pq->len == pq->cap) {
-    pq->cap = 2 * pq->cap + 1;
-    pq->heap = realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
-  }
+void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e)
+{
+	int i = 0;
+	if (pq->len == pq->cap) {
+		pq->cap = 2 * pq->cap + 1;
+		pq->heap = realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
+	}
 
-  pq->heap[pq->len++] = e;
-  i = pq->len - 1;
-  while (i > 0) {
-    int j = (i - 1) / 2;
-    if (pq_less(pq->heap[j], pq->heap[i])) {
-      break;
-    }
+	pq->heap[pq->len++] = e;
+	i = pq->len - 1;
+	while (i > 0) {
+		int j = (i - 1) / 2;
+		if (pq_less(pq->heap[j], pq->heap[i])) {
+			break;
+		}
 
-    {
-      struct pq_entry tmp = pq->heap[j];
-      pq->heap[j] = pq->heap[i];
-      pq->heap[i] = tmp;
-    }
+		{
+			struct pq_entry tmp = pq->heap[j];
+			pq->heap[j] = pq->heap[i];
+			pq->heap[i] = tmp;
+		}
 
-    i = j;
-  }
+		i = j;
+	}
 }
 
-void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq) {
-  int i = 0;
-  for (i = 0; i < pq->len; i++) {
-    record_clear(pq->heap[i].rec);
-    free(record_yield(&pq->heap[i].rec));
-  }
-  free(pq->heap);
-  pq->heap = NULL;
-  pq->len = pq->cap = 0;
+void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
+{
+	int i = 0;
+	for (i = 0; i < pq->len; i++) {
+		record_clear(pq->heap[i].rec);
+		free(record_yield(&pq->heap[i].rec));
+	}
+	free(pq->heap);
+	pq->heap = NULL;
+	pq->len = pq->cap = 0;
 }

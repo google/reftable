@@ -12,16 +12,16 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 
 struct pq_entry {
-  struct record rec;
-  int index;
+	struct record rec;
+	int index;
 };
 
 int pq_less(struct pq_entry a, struct pq_entry b);
 
 struct merged_iter_pqueue {
-  struct pq_entry *heap;
-  int len;
-  int cap;
+	struct pq_entry *heap;
+	int len;
+	int cap;
 };
 
 struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq);

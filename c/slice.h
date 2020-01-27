@@ -13,9 +13,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 
 struct slice {
-  byte *buf;
-  int len;
-  int cap;
+	byte *buf;
+	int len;
+	int cap;
 };
 
 void slice_set_string(struct slice *dest, const char *);

@@ -23,35 +23,36 @@ https://developers.google.com/open-source/licenses/bsd
 #undef assert
 #endif
 
-#define assert_err(c)                                                         \
-  if (c != 0) {                                                               \
-    fflush(stderr);                                                           \
-    fflush(stdout);                                                           \
-    fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", __FILE__, __LINE__, \
-            c, error_str(c));                                                 \
-    abort();                                                                  \
-  }
+#define assert_err(c)                                                 \
+	if (c != 0) {                                                 \
+		fflush(stderr);                                       \
+		fflush(stdout);                                       \
+		fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", \
+			__FILE__, __LINE__, c, error_str(c));         \
+		abort();                                              \
+	}
 
-#define assert_streq(a, b)                                                    \
-  if (strcmp(a, b)) {                                                         \
-    fflush(stderr);                                                           \
-    fflush(stdout);                                                           \
-    fprintf(stderr, "%s:%d: %s (%s) != %s (%s)\n", __FILE__, __LINE__, #a, a, \
-            #b, b);                                                           \
-    abort();                                                                  \
-  }
+#define assert_streq(a, b)                                               \
+	if (strcmp(a, b)) {                                              \
+		fflush(stderr);                                          \
+		fflush(stdout);                                          \
+		fprintf(stderr, "%s:%d: %s (%s) != %s (%s)\n", __FILE__, \
+			__LINE__, #a, a, #b, b);                         \
+		abort();                                                 \
+	}
 
-#define assert(c)                                                             \
-  if (!(c)) {                                                                 \
-    fflush(stderr);                                                           \
-    fflush(stdout);                                                           \
-    fprintf(stderr, "%s: %d: failed assertion %s\n", __FILE__, __LINE__, #c); \
-    abort();                                                                  \
-  }
+#define assert(c)                                                          \
+	if (!(c)) {                                                        \
+		fflush(stderr);                                            \
+		fflush(stdout);                                            \
+		fprintf(stderr, "%s: %d: failed assertion %s\n", __FILE__, \
+			__LINE__, #c);                                     \
+		abort();                                                   \
+	}
 
 struct test_case {
-  const char *name;
-  void (*testfunc)();
+	const char *name;
+	void (*testfunc)();
 };
 
 struct test_case *new_test_case(const char *name, void (*testfunc)());
