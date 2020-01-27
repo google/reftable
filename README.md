@@ -44,7 +44,7 @@ See https://github.com/hanwen/git/tree/reftable.
 
 * Original discussion on JGit-dev:  https://www.eclipse.org/lists/jgit-dev/msg03389.html
 
-* First design discussion on git@vger: https://public-inbox.org/git/CAJo=hJtTp2eA3z9wW9cHo-nA7kK40vVThqh6inXpbCcqfdMP9g@mail.gmail.com/
+* First design discussion on git@vger: https://public-inbox.org/git/CAJo=hJtyof=HRy=2sLP0ng0uZ4=S-DpZ5dR1aF+VHVETKG20OQ@mail.gmail.com/
 
 * Last design discussion on git@vger: https://public-inbox.org/git/CAJo=hJsZcAM9sipdVr7TMD-FD2V2W6_pvMQ791EGCDsDkQ033w@mail.gmail.com/
 
