@@ -8,10 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "block.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "system.h"
 
 #include "blocksource.h"
 #include "constants.h"

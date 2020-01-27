@@ -8,7 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "record.h"
 
-#include <string.h>
+#include "system.h"
 
 #include "basics.h"
 #include "constants.h"

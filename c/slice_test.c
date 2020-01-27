@@ -8,9 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "slice.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include "system.h"
 
 #include "basics.h"
 #include "record.h"

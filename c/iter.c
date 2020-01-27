@@ -8,8 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "iter.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include "system.h"
 
 #include "block.h"
 #include "constants.h"

@@ -1,24 +1,23 @@
-
 # Mirror core-git COPTS so reftable compiles without warning in CGit.
 GIT_COPTS = [
-        "-Wall",
-        "-Werror",
-	"-Wdeclaration-after-statement",
-	"-Wstrict-prototypes",
-	"-Wformat-security",
-	"-Wno-format-zero-length",
-	"-Wold-style-definition",
-	"-Woverflow",
-	"-Wpointer-arith",
-	"-Wstrict-prototypes",
-	"-Wunused",
-	"-Wvla",
-	"-Wextra",	
-	"-Wmissing-prototypes",
-	"-Wno-empty-body",
-	"-Wno-missing-field-initializers",
-	"-Wno-sign-compare",
-	"-Wno-unused-parameter"
+    "-Wall",
+    "-Werror",
+    "-Wdeclaration-after-statement",
+    "-Wstrict-prototypes",
+    "-Wformat-security",
+    "-Wno-format-zero-length",
+    "-Wold-style-definition",
+    "-Woverflow",
+    "-Wpointer-arith",
+    "-Wstrict-prototypes",
+    "-Wunused",
+    "-Wvla",
+    "-Wextra",
+    "-Wmissing-prototypes",
+    "-Wno-empty-body",
+    "-Wno-missing-field-initializers",
+    "-Wno-sign-compare",
+    "-Wno-unused-parameter",
 ]
 
 cc_library(
@@ -28,12 +27,12 @@ cc_library(
         "block.c",
         "file.c",
         "iter.c",
-	"merged.c",
-	"pq.c",
+        "merged.c",
+        "pq.c",
         "reader.c",
         "record.c",
         "slice.c",
-	"stack.c",
+        "stack.c",
         "tree.c",
         "writer.c",
     ],
@@ -41,27 +40,31 @@ cc_library(
         "basics.h",
         "block.h",
         "blocksource.h",
+        "config.h",
         "constants.h",
         "iter.h",
         "merged.h",
-	"pq.h",
+        "pq.h",
         "reader.h",
         "record.h",
         "reftable.h",
         "slice.h",
-	"stack.h",
+        "stack.h",
+        "system.h",
         "tree.h",
         "writer.h",
     ],
-    deps = [ "@zlib//:zlib" ],
-    copts = [ "-fvisibility=protected" ] + GIT_COPTS,
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
+    deps = ["@zlib"],
 )
 
 cc_library(
     name = "testlib",
-    deps = [ ":reftable", ],
-    srcs = ["test_framework.c", ],
-    hdrs = ["test_framework.h", ],
+    srcs = ["test_framework.c"],
+    hdrs = ["test_framework.h"],
+    deps = [":reftable"],
 )
 
 cc_test(
@@ -100,7 +103,6 @@ cc_test(
     ],
 )
 
-
 cc_test(
     name = "tree_test",
     srcs = ["tree_test.c"],
@@ -130,8 +132,6 @@ cc_test(
 
 cc_binary(
     name = "dump",
-    srcs = [ "dump.c", ],
-    deps = [ ":reftable" ],
+    srcs = ["dump.c"],
+    deps = [":reftable"],
 )
-
-

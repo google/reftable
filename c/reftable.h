@@ -9,7 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef REFTABLE_H
 #define REFTABLE_H
 
-#include <stdint.h>
+#include "system.h"
 
 typedef uint8_t byte;
 typedef byte bool;

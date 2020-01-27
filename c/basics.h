@@ -9,7 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef BASICS_H
 #define BASICS_H
 
-#include <stdint.h>
+#include "system.h"
 
 #include "reftable.h"
 

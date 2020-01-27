@@ -8,8 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "pq.h"
 
-#include <assert.h>
-#include <stdlib.h>
+#include "system.h"
 
 int pq_less(struct pq_entry a, struct pq_entry b) {
   struct slice ak = {};

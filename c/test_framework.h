@@ -9,8 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef TEST_FRAMEWORK_H
 #define TEST_FRAMEWORK_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "system.h"
 
 #include "reftable.h"
 
@@ -18,7 +17,7 @@ https://developers.google.com/open-source/licenses/bsd
 #undef NDEBUG
 #endif
 
-#include <assert.h>
+#include "system.h"
 
 #ifdef assert
 #undef assert

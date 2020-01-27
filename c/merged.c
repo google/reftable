@@ -8,7 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "merged.h"
 
-#include <stdlib.h>
+#include "system.h"
 
 #include "constants.h"
 #include "iter.h"

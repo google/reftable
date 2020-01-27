@@ -8,8 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "stack.h"
 
-#include <string.h>
-#include <unistd.h>
+#include "system.h"
 
 #include "basics.h"
 #include "constants.h"

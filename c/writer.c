@@ -8,12 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "writer.h"
 
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>  // debug
-#include <stdlib.h>
-#include <string.h>
-#include <zlib.h>
+#include "system.h"
 
 #include "block.h"
 #include "constants.h"

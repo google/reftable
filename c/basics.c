@@ -8,9 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "basics.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "system.h"
 
 void put_u24(byte *out, uint32_t i) {
   out[0] = (byte)((i >> 16) & 0xff);

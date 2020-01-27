@@ -8,10 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "record.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "system.h"
 
 #include "constants.h"
 #include "reftable.h"

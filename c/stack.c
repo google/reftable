@@ -8,17 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "stack.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-
+#include "system.h"
 #include "merged.h"
 #include "reader.h"
 #include "reftable.h"
@@ -205,7 +195,7 @@ exit:
 // return negative if a before b.
 static int tv_cmp(struct timeval *a, struct timeval *b) {
   time_t diff = a->tv_sec - b->tv_sec;
-  suseconds_t udiff = a->tv_usec - b->tv_usec;
+  int udiff = a->tv_usec - b->tv_usec;
 
   if (diff != 0) {
     return diff;
