@@ -65,7 +65,7 @@ static void options_set_defaults(struct write_options *opts) {
 }
 
 static int writer_write_header(struct writer *w, byte *dest) {
-  strcpy((char *)dest, "REFT");
+  memcpy((char *)dest, "REFT", 4);
   dest[4] = 1;  // version
   put_u24(dest + 5, w->opts.block_size);
   put_u64(dest + 8, w->min_update_index);
