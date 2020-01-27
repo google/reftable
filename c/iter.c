@@ -96,9 +96,9 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec) {
     }
 
     if ((ref->target_value != NULL &&
-         0 == memcmp(fri->oid.buf, ref->target_value, fri->oid.len)) ||
+         !memcmp(fri->oid.buf, ref->target_value, fri->oid.len)) ||
         (ref->value != NULL &&
-         0 == memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
+         !memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
       return 0;
     }
   }
@@ -169,8 +169,8 @@ static int indexed_table_ref_iter_next(void *p, struct record rec) {
       continue;
     }
 
-    if (0 == memcmp(it->oid.buf, ref->target_value, it->oid.len) ||
-        0 == memcmp(it->oid.buf, ref->value, it->oid.len)) {
+    if (!memcmp(it->oid.buf, ref->target_value, it->oid.len) ||
+        !memcmp(it->oid.buf, ref->value, it->oid.len)) {
       return 0;
     }
   }

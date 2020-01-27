@@ -89,7 +89,7 @@ static int parse_footer(struct reader *r, byte *footer, byte *header) {
   }
   f += 4;
 
-  if (0 != memcmp(footer, header, HEADER_SIZE)) {
+  if (memcmp(footer, header, HEADER_SIZE)) {
     err = FORMAT_ERROR;
     goto exit;
   }

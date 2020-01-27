@@ -149,7 +149,7 @@ void parse_names(char *buf, int size, char ***namesp) {
 
 int names_equal(char **a, char **b) {
   while (*a && *b) {
-    if (0 != strcmp(*a, *b)) {
+    if (strcmp(*a, *b)) {
       return 0;
     }
 

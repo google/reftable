@@ -34,7 +34,7 @@ https://developers.google.com/open-source/licenses/bsd
   }
 
 #define assert_streq(a, b)                                                    \
-  if (0 != strcmp(a, b)) {                                                    \
+  if (strcmp(a, b)) {                                                         \
     fflush(stderr);                                                           \
     fflush(stdout);                                                           \
     fprintf(stderr, "%s:%d: %s (%s) != %s (%s)\n", __FILE__, __LINE__, #a, a, \

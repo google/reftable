@@ -297,7 +297,7 @@ static int stack_uptodate(struct stack *st) {
       goto exit;
     }
 
-    if (0 != strcmp(st->merged->stack[i]->name, names[i])) {
+    if (strcmp(st->merged->stack[i]->name, names[i])) {
       err = 1;
       goto exit;
     }
@@ -769,7 +769,7 @@ static int stack_compact_range(struct stack *st, int first, int last,
   have_lock = false;
 
   for (char **p = delete_on_success; *p; p++) {
-    if (0 != strcmp(*p, slice_as_string(&new_table_path))) {
+    if (strcmp(*p, slice_as_string(&new_table_path))) {
       unlink(*p);
     }
   }
@@ -916,7 +916,7 @@ int stack_read_ref(struct stack *st, const char *refname,
     goto exit;
   }
 
-  if (0 != strcmp(ref->ref_name, refname) || ref_record_is_deletion(ref)) {
+  if (strcmp(ref->ref_name, refname) || ref_record_is_deletion(ref)) {
     err = 1;
     goto exit;
   }
@@ -940,7 +940,7 @@ int stack_read_log(struct stack *st, const char *refname,
     goto exit;
   }
 
-  if (0 != strcmp(log->ref_name, refname) || log_record_is_deletion(log)) {
+  if (strcmp(log->ref_name, refname) || log_record_is_deletion(log)) {
     err = 1;
     goto exit;
   }

@@ -30,12 +30,12 @@ void test_buffer(void) {
   struct block out = {};
   int n = block_source_read_block(source, &out, 0, sizeof(in));
   assert(n == sizeof(in));
-  assert(0 == memcmp(in, out.data, n));
+  assert(!memcmp(in, out.data, n));
   block_source_return_block(source, &out);
 
   n = block_source_read_block(source, &out, 1, 2);
   assert(n == 2);
-  assert(0 == memcmp(out.data, "el", 2));
+  assert(!memcmp(out.data, "el", 2));
 
   block_source_return_block(source, &out);
   block_source_close(&source);
@@ -383,8 +383,8 @@ void test_table_refs_for(bool indexed) {
       int n = writer_add_ref(w, &ref);
       assert(n == 0);
 
-      if (0 == memcmp(hash1, want_hash, SHA1_SIZE) ||
-          0 == memcmp(hash2, want_hash, SHA1_SIZE)) {
+      if (!memcmp(hash1, want_hash, SHA1_SIZE) ||
+          !memcmp(hash2, want_hash, SHA1_SIZE)) {
         want_names[want_names_len++] = strdup(name);
       }
     }

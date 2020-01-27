@@ -802,7 +802,7 @@ static bool zero_hash_eq(byte *a, byte *b, int sz) {
   if (b == NULL) {
     b = zero;
   }
-  return 0 == memcmp(a, b, sz);
+  return !memcmp(a, b, sz);
 }
 
 bool log_record_equal(struct log_record *a, struct log_record *b,
@@ -979,7 +979,7 @@ struct ref_record *record_as_ref(struct record rec) {
 
 static bool hash_equal(byte *a, byte *b, int hash_size) {
   if (a != NULL && b != NULL) {
-    return 0 == memcmp(a, b, hash_size);
+    return !memcmp(a, b, hash_size);
   }
 
   return a == b;

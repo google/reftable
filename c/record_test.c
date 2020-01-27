@@ -264,7 +264,7 @@ void test_obj_record_roundtrip() {
     assert(in.hash_prefix_len == out.hash_prefix_len);
     assert(in.offset_len == out.offset_len);
 
-    assert(0 == memcmp(in.hash_prefix, out.hash_prefix, in.hash_prefix_len));
+    assert(!memcmp(in.hash_prefix, out.hash_prefix, in.hash_prefix_len));
     assert(0 ==
            memcmp(in.offsets, out.offsets, sizeof(uint64_t) * in.offset_len));
     free(slice_yield(&key));
