@@ -37,6 +37,26 @@ header](https://github.com/google/reftable/blob/master/c/reftable.h).
 
 See https://github.com/hanwen/git/tree/reftable.
 
+
+# Background reading
+
+* Spec: https://github.com/eclipse/jgit/blob/master/Documentation/technical/reftable.md
+
+* Original discussion on JGit-dev:  https://www.eclipse.org/lists/jgit-dev/msg03389.html
+
+* First design discussion on git@vger: https://public-inbox.org/git/CAJo=hJtTp2eA3z9wW9cHo-nA7kK40vVThqh6inXpbCcqfdMP9g@mail.gmail.com/
+
+* Last design discussion on git@vger: https://public-inbox.org/git/CAJo=hJsZcAM9sipdVr7TMD-FD2V2W6_pvMQ791EGCDsDkQ033w@mail.gmail.com/
+
+* First attempt at implementation: https://public-inbox.org/git/CAP8UFD0PPZSjBnxCA7ez91vBuatcHKQ+JUWvTD1iHcXzPBjPBg@mail.gmail.com/
+
+* libgit2 support issue: https://github.com/libgit2/libgit2/issues
+
+* GitLab support issue: https://gitlab.com/gitlab-org/git/issues/6
+
+* go-git support issue: https://github.com/src-d/go-git/issues/1059
+
+
 # DISCLAIMER
 
 This is not an official Google product
