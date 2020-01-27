@@ -70,7 +70,7 @@ static void options_set_defaults(struct write_options *opts)
 static int writer_write_header(struct writer *w, byte *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
-	dest[4] = 1; // version
+	dest[4] = 1; /* version */
 	put_u24(dest + 5, w->opts.block_size);
 	put_u64(dest + 8, w->min_update_index);
 	put_u64(dest + 16, w->max_update_index);
@@ -96,7 +96,7 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 	struct writer *wp = calloc(sizeof(struct writer), 1);
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
-		// TODO - error return?
+		/* TODO - error return? */
 		abort();
 	}
 	wp->hash_size = SHA1_SIZE;
@@ -360,7 +360,7 @@ static int writer_finish_section(struct writer *w)
 		bstats->max_index_level = max_level;
 	}
 
-	// Reinit lastKey, as the next section can start with any key.
+	/* Reinit lastKey, as the next section can start with any key. */
 	w->last_key.len = 0;
 
 	return 0;
@@ -423,7 +423,7 @@ static void write_object_record(void *void_arg, void *key)
 	obj_rec.offset_len = 0;
 	arg->err = block_writer_add(arg->w->block_writer, rec);
 
-	// Should be able to write into a fresh block.
+	/* Should be able to write into a fresh block. */
 	assert(arg->err == 0);
 
 exit:;
@@ -524,7 +524,7 @@ int writer_close(struct writer *w)
 		}
 	}
 
-	// free up memory.
+	/* free up memory. */
 	block_writer_clear(&w->block_writer_data);
 	writer_clear_index(w);
 	free(slice_yield(&w->last_key));

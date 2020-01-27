@@ -133,8 +133,8 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 		struct reader *rd = NULL;
 		char *name = *names++;
 
-		// this is linear; we assume compaction keeps the number of
-		// tables under control so this is not quadratic.
+		/* this is linear; we assume compaction keeps the number of
+		   tables under control so this is not quadratic. */
 		int j = 0;
 		for (j = 0; reuse_open && j < cur_len; j++) {
 			if (cur[j] != NULL && 0 == strcmp(cur[j]->name, name)) {
@@ -165,7 +165,7 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 		new_tables[new_tables_len++] = rd;
 	}
 
-	// success!
+	/* success! */
 	err = new_merged_table(&new_merged, new_tables, new_tables_len);
 	if (err < 0) {
 		goto exit;
@@ -201,7 +201,7 @@ exit:
 	return err;
 }
 
-// return negative if a before b.
+/* return negative if a before b. */
 static int tv_cmp(struct timeval *a, struct timeval *b)
 {
 	time_t diff = a->tv_sec - b->tv_sec;
@@ -234,8 +234,8 @@ static int stack_reload_maybe_reuse(struct stack *st, bool reuse_open)
 			return err;
 		}
 
-		// Only look at deadlines after the first few times. This
-		// simplifies debugging in GDB
+		/* Only look at deadlines after the first few times. This
+		   simplifies debugging in GDB */
 		tries++;
 		if (tries > 3 && tv_cmp(&now, &deadline) >= 0) {
 			break;
@@ -282,9 +282,9 @@ int stack_reload(struct stack *st)
 	return stack_reload_maybe_reuse(st, true);
 }
 
-// -1 = error
-// 0 = up to date
-// 1 = changed.
+/* -1 = error
+ 0 = up to date
+ 1 = changed. */
 static int stack_uptodate(struct stack *st)
 {
 	char **names = NULL;
@@ -610,7 +610,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
 			continue;
 		}
 
-		// XXX collect stats?
+		/* XXX collect stats? */
 
 		if (config != NULL && config->time > 0 &&
 		    log.time < config->time) {
@@ -639,7 +639,7 @@ exit:
 	return err;
 }
 
-// <  0: error. 0 == OK, > 0 attempt failed; could retry.
+/* <  0: error. 0 == OK, > 0 attempt failed; could retry. */
 static int stack_compact_range(struct stack *st, int first, int last,
 			       struct log_expiry_config *expiry)
 {
@@ -909,7 +909,7 @@ static uint64_t *stack_table_sizes_for_compaction(struct stack *st)
 	uint64_t *sizes = calloc(sizeof(uint64_t), st->merged->stack_len);
 	int i = 0;
 	for (i = 0; i < st->merged->stack_len; i++) {
-		// overhead is 24 + 68 = 92.
+		/* overhead is 24 + 68 = 92. */
 		sizes[i] = st->merged->stack[i]->size - 91;
 	}
 	return sizes;

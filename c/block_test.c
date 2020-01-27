@@ -54,7 +54,7 @@ void test_binsearch()
 
 void test_block_read_write()
 {
-	const int header_off = 21; // random
+	const int header_off = 21; /* random */
 	const int N = 30;
 	char *names[N];
 	const int block_size = 1024;

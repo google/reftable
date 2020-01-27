@@ -158,8 +158,8 @@ static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	struct ref_record *src = (struct ref_record *)src_rec;
 	assert(hash_size > 0);
 
-	// This is simple and correct, but we could probably reuse the hash
-	// fields.
+	/* This is simple and correct, but we could probably reuse the hash
+           fields. */
 	ref_record_clear(ref);
 	if (src->ref_name != NULL) {
 		ref->ref_name = strdup(src->ref_name);
@@ -1105,6 +1105,6 @@ int log_record_compare_key(const void *a, const void *b)
 
 bool log_record_is_deletion(const struct log_record *log)
 {
-	// XXX
+	/* XXX */
 	return false;
 }

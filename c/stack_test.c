@@ -147,7 +147,7 @@ void test_stack_add(void)
 		log_record_clear(&dest);
 	}
 
-	// cleanup
+	/* cleanup */
 	stack_destroy(st);
 	for (i = 0; i < N; i++) {
 		ref_record_clear(&refs[i]);
@@ -165,7 +165,7 @@ void test_log2(void)
 void test_sizes_to_segments(void)
 {
 	uint64_t sizes[] = { 2, 3, 4, 5, 7, 9 };
-	// .................0  1  2  3  4  5
+	/* .................0  1  2  3  4  5 */
 
 	int seglen = 0;
 	struct segment *segs =
@@ -184,7 +184,7 @@ void test_suggest_compaction_segment(void)
 {
 	{
 		uint64_t sizes[] = { 128, 64, 17, 16, 9, 9, 9, 16, 16 };
-		// .................0    1    2  3   4  5  6
+		/* .................0    1    2  3   4  5  6 */
 		struct segment min =
 			suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
 		assert(min.start == 2);
@@ -259,7 +259,7 @@ void test_reflog_expire(void)
 	err = stack_read_log(st, logs[16].ref_name, &log);
 	assert_err(err);
 
-	// cleanup
+	/* cleanup */
 	stack_destroy(st);
 	for (i = 0; i < N; i++) {
 		log_record_clear(&logs[i]);

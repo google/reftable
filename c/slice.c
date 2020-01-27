@@ -21,7 +21,7 @@ void slice_set_string(struct slice *s, const char *str)
 
 	{
 		int l = strlen(str);
-		l++; // \0
+		l++; /* \0 */
 		slice_resize(s, l);
 		memcpy(s->buf, str, l);
 		s->len = l - 1;

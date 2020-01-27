@@ -41,7 +41,7 @@ struct block_reader {
 	struct block block;
 	int hash_size;
 
-	// size of the data, excluding restart data.
+	/* size of the data, excluding restart data. */
 	uint32_t block_len;
 	byte *restart_bytes;
 	uint32_t full_block_size;

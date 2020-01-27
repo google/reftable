@@ -174,7 +174,7 @@ int init_reader(struct reader *r, struct block_source source, const char *name)
 		goto exit;
 	}
 
-	// Need +1 to read type of first block.
+	/* Need +1 to read type of first block. */
 	err = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
 	if (err != HEADER_SIZE + 1) {
 		err = IO_ERROR;

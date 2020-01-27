@@ -155,7 +155,7 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 			return err;
 		}
 		if (err > 0) {
-			// indexed block does not exist.
+			/* indexed block does not exist. */
 			return FORMAT_ERROR;
 		}
 	}

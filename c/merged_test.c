@@ -210,7 +210,7 @@ void test_merged(void)
 	struct ref_record *out = NULL;
 	int len = 0;
 	int cap = 0;
-	while (len < 100) { // cap loops/recursion.
+	while (len < 100) { /* cap loops/recursion. */
 		struct ref_record ref = {};
 		int err = iterator_next_ref(it, &ref);
 		if (err > 0) {
@@ -247,7 +247,7 @@ void test_merged(void)
 	merged_table_free(mt);
 }
 
-// XXX test refs_for(oid)
+/* XXX test refs_for(oid) */
 
 int main()
 {

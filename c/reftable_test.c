@@ -183,7 +183,7 @@ void test_log_write_read(void)
 		err = iterator_next_ref(it, &ref);
 		assert_err(err);
 
-		// end of iteration.
+		/* end of iteration. */
 		err = iterator_next_ref(it, &ref);
 		assert(0 < err);
 
@@ -214,7 +214,7 @@ void test_log_write_read(void)
 		iterator_destroy(&it);
 	}
 
-	// cleanup.
+	/* cleanup. */
 	free(slice_yield(&buf));
 	free_names(names);
 	reader_close(&rd);
@@ -378,7 +378,7 @@ void test_table_refs_for(bool indexed)
 			char fill[51] = {};
 			memset(fill, 'x', 50);
 			char name[100];
-			// Put the variable part in the start
+			/* Put the variable part in the start */
 			snprintf(name, sizeof(name), "br%02d%s", i, fill);
 			name[40] = 0;
 			ref.ref_name = name;
@@ -391,8 +391,8 @@ void test_table_refs_for(bool indexed)
 			ref.value = hash1;
 			ref.target_value = hash2;
 
-			// 80 bytes / entry, so 3 entries per block. Yields 17
-			// blocks.
+			/* 80 bytes / entry, so 3 entries per block. Yields 17 */
+			/* blocks. */
 			int n = writer_add_ref(w, &ref);
 			assert(n == 0);
 

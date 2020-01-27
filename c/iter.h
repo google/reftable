@@ -36,10 +36,10 @@ struct indexed_table_ref_iter {
 	struct reader *r;
 	struct slice oid;
 
-	// mutable
+	/* mutable */
 	uint64_t *offsets;
 
-	// Points to the next offset to read.
+	/* Points to the next offset to read. */
 	int offset_idx;
 	int offset_len;
 	struct block_reader block_reader;

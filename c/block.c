@@ -188,9 +188,9 @@ int block_reader_init(struct block_reader *br, struct block *block,
 		full_block_size = sz;
 	} else if (sz < full_block_size && sz < block->len &&
 		   block->data[sz] != 0) {
-		// If the block is smaller than the full block size,
-		// it is padded (data followed by '\0') or the next
-		// block is unaligned.
+		/* If the block is smaller than the full block size, it is
+                   padded (data followed by '\0') or the next block is
+                   unaligned. */
 		full_block_size = sz;
 	}
 
@@ -200,7 +200,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 
 		byte *restart_bytes = block->data + restart_start;
 
-		// transfer ownership.
+		/* transfer ownership. */
 		br->block = *block;
 		block->data = NULL;
 		block->len = 0;
@@ -268,7 +268,7 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 	slice_copy(&dest->last_key, src->last_key);
 }
 
-// return < 0 for error, 0 for OK, > 0 for EOF.
+/* return < 0 for error, 0 for OK, > 0 for EOF. */
 int block_iter_next(struct block_iter *it, struct record rec)
 {
 	if (it->next_off >= it->br->block_len) {
@@ -397,5 +397,5 @@ void block_writer_clear(struct block_writer *bw)
 	free(bw->restarts);
 	bw->restarts = NULL;
 	free(slice_yield(&bw->last_key));
-	// the block is not owned.
+	/* the block is not owned. */
 }

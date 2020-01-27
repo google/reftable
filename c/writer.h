@@ -33,7 +33,7 @@ struct writer {
 	int index_len;
 	int index_cap;
 
-	// tree for use with tsearch
+	/* tree for use with tsearch */
 	struct tree_node *obj_index_tree;
 
 	struct stats stats;
