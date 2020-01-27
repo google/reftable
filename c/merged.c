@@ -16,7 +16,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 
 static int merged_iter_init(struct merged_iter *mi) {
-  for (int i = 0; i < mi->stack_len; i++) {
+  int i = 0;
+  for (i = 0; i < mi->stack_len; i++) {
     struct record rec = new_record(mi->typ);
     int err = iterator_next(mi->stack[i], rec);
     if (err < 0) {
@@ -41,8 +42,9 @@ static int merged_iter_init(struct merged_iter *mi) {
 
 static void merged_iter_close(void *p) {
   struct merged_iter *mi = (struct merged_iter *)p;
+  int i = 0;
   merged_iter_pqueue_clear(&mi->pq);
-  for (int i = 0; i < mi->stack_len; i++) {
+  for (i = 0; i < mi->stack_len; i++) {
     iterator_destroy(&mi->stack[i]);
   }
   free(mi->stack);
@@ -138,7 +140,8 @@ static void iterator_from_merged_iter(struct iterator *it,
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
   uint64_t last_max = 0;
   uint64_t first_min = 0;
-  for (int i = 0; i < n; i++) {
+  int i = 0;
+  for (i = 0; i < n; i++) {
     struct reader *r = stack[i];
     if (i > 0 && last_max >= reader_min_update_index(r)) {
       return FORMAT_ERROR;
@@ -166,7 +169,8 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n) {
 }
 
 void merged_table_close(struct merged_table *mt) {
-  for (int i = 0; i < mt->stack_len; i++) {
+  int i = 0;
+  for (i = 0; i < mt->stack_len; i++) {
     reader_free(mt->stack[i]);
   }
   free(mt->stack);
@@ -203,7 +207,8 @@ static int merged_table_seek_record(struct merged_table *mt,
   };
   int n = 0;
   int err = 0;
-  for (int i = 0; i < mt->stack_len && err == 0; i++) {
+  int i = 0;
+  for (i = 0; i < mt->stack_len && err == 0; i++) {
     int e = reader_seek(mt->stack[i], &iters[n], rec);
     if (e < 0) {
       err = e;
@@ -213,7 +218,8 @@ static int merged_table_seek_record(struct merged_table *mt,
     }
   }
   if (err < 0) {
-    for (int i = 0; i < n; i++) {
+    int i = 0;
+    for (i = 0; i < n; i++) {
       iterator_destroy(&iters[i]);
     }
     free(iters);

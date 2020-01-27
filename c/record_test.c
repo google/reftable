@@ -25,7 +25,8 @@ void varint_roundtrip() {
                        4096,
                        ((uint64_t)1 << 63),
                        ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1};
-  for (int i = 0; i < ARRAYSIZE(inputs); i++) {
+  int i = 0;
+  for (i = 0; i < ARRAYSIZE(inputs); i++) {
     byte dest[10];
 
     struct slice out = {.buf = dest, .len = 10, .cap = 10};
@@ -54,7 +55,8 @@ void test_common_prefix() {
       {"abc", "pqr", 0},
   };
 
-  for (int i = 0; i < ARRAYSIZE(cases); i++) {
+  int i = 0;
+  for (i = 0; i < ARRAYSIZE(cases); i++) {
     struct slice a = {};
     struct slice b = {};
     slice_set_string(&a, cases[i].a);
@@ -69,13 +71,15 @@ void test_common_prefix() {
 }
 
 void set_hash(byte *h, int j) {
-  for (int i = 0; i < SHA1_SIZE; i++) {
+  int i = 0;
+  for (i = 0; i < SHA1_SIZE; i++) {
     h[i] = (j >> i) & 0xff;
   }
 }
 
 void test_ref_record_roundtrip() {
-  for (int i = 0; i <= 3; i++) {
+  int i = 0;
+  for (i = 0; i <= 3; i++) {
     printf("subtest %d\n", i);
     struct ref_record in = {};
     switch (i) {
@@ -201,7 +205,8 @@ void test_key_roundtrip() {
 }
 
 void print_bytes(byte *p, int l) {
-  for (int i = 0; i < l; i++) {
+  int i = 0;
+  for (i = 0; i < l; i++) {
     byte c = *p;
     if (c < 32) {
       c = '.';
@@ -234,7 +239,8 @@ void test_obj_record_roundtrip() {
                                }
 
   };
-  for (int i = 0; i < ARRAYSIZE(recs); i++) {
+  int i = 0;
+  for (i = 0; i < ARRAYSIZE(recs); i++) {
     printf("subtest %d\n", i);
     struct obj_record in = recs[i];
     byte buf[1024];

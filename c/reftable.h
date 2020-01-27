@@ -231,7 +231,6 @@ int writer_add_log(struct writer *w, struct log_record *log);
    key before adding. */
 int writer_add_logs(struct writer *w, struct log_record *logs, int n);
 
-
 /* writer_close finalizes the reftable. The writer is retained so statistics can
  * be inspected. */
 int writer_close(struct writer *w);
@@ -369,7 +368,8 @@ struct log_expiry_config {
   uint64_t min_update_index;
 };
 
-/* compacts all reftables into a giant table. Expire reflog entries if config is non-NULL */
+/* compacts all reftables into a giant table. Expire reflog entries if config is
+ * non-NULL */
 int stack_compact_all(struct stack *st, struct log_expiry_config *config);
 
 /* heuristically compact unbalanced table stack. */

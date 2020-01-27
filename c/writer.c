@@ -239,8 +239,9 @@ int writer_add_ref(struct writer *w, struct ref_record *ref) {
 
 int writer_add_refs(struct writer *w, struct ref_record *refs, int n) {
   int err = 0;
+  int i = 0;
   qsort(refs, n, sizeof(struct ref_record), ref_record_compare_name);
-  for (int i = 0; err == 0 && i < n; i++) {
+  for (i = 0; err == 0 && i < n; i++) {
     err = writer_add_ref(w, &refs[i]);
   }
   return err;
@@ -273,13 +274,13 @@ int writer_add_log(struct writer *w, struct log_record *log) {
 
 int writer_add_logs(struct writer *w, struct log_record *logs, int n) {
   int err = 0;
+  int i = 0;
   qsort(logs, n, sizeof(struct log_record), log_record_compare_key);
-  for (int i = 0; err == 0 && i < n; i++) {
+  for (i = 0; err == 0 && i < n; i++) {
     err = writer_add_log(w, &logs[i]);
   }
   return err;
 }
-
 
 static int writer_finish_section(struct writer *w) {
   byte typ = block_writer_type(w->block_writer);
@@ -288,6 +289,7 @@ static int writer_finish_section(struct writer *w) {
   int threshold = w->opts.unpadded ? 1 : 3;
   int before_blocks = w->stats.idx_stats.blocks;
   int err = writer_flush_block(w);
+  int i = 0;
   if (err < 0) {
     return err;
   }
@@ -306,7 +308,7 @@ static int writer_finish_section(struct writer *w) {
     w->index = NULL;
     w->index_len = 0;
     w->index_cap = 0;
-    for (int i = 0; i < idx_len; i++) {
+    for (i = 0; i < idx_len; i++) {
       struct record rec = {};
       record_from_index(&rec, idx + i);
       if (block_writer_add(w->block_writer, rec) == 0) {
@@ -325,7 +327,7 @@ static int writer_finish_section(struct writer *w) {
       err = block_writer_add(w->block_writer, rec);
       assert(err == 0);
     }
-    for (int i = 0; i < idx_len; i++) {
+    for (i = 0; i < idx_len; i++) {
       free(slice_yield(&idx[i].last_key));
     }
     free(idx);
@@ -511,7 +513,8 @@ int writer_close(struct writer *w) {
 }
 
 void writer_clear_index(struct writer *w) {
-  for (int i = 0; i < w->index_len; i++) {
+  int i = 0;
+  for (i = 0; i < w->index_len; i++) {
     free(slice_yield(&w->index[i].last_key));
   }
 

@@ -24,12 +24,13 @@ https://developers.google.com/open-source/licenses/bsd
 #undef assert
 #endif
 
-#define assert_err(c)                                                        \
-  if (c != 0) {                                                              \
-    fflush(stderr);                                                          \
-    fflush(stdout);                                                          \
-    fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", __FILE__, __LINE__, c, error_str(c)); \
-    abort();                                                                 \
+#define assert_err(c)                                                         \
+  if (c != 0) {                                                               \
+    fflush(stderr);                                                           \
+    fflush(stdout);                                                           \
+    fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", __FILE__, __LINE__, \
+            c, error_str(c));                                                 \
+    abort();                                                                  \
   }
 
 #define assert_streq(a, b)                                                    \

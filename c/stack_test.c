@@ -34,7 +34,8 @@ void test_read_file(void) {
   assert_err(err);
 
   char *want[] = {"line1", "line2", "line3"};
-  for (int i = 0; names[i] != NULL; i++) {
+  int i = 0;
+  for (i = 0; names[i] != NULL; i++) {
     assert(0 == strcmp(want[i], names[i]));
   }
   free_names(names);
@@ -81,6 +82,7 @@ int write_test_log(struct writer *wr, void *arg) {
 }
 
 void test_stack_add(void) {
+  int i = 0;
   char dir[256] = "/tmp/stack.test_stack_add.XXXXXX";
   assert(mkdtemp(dir));
   printf("%s\n", dir);
@@ -96,7 +98,7 @@ void test_stack_add(void) {
   struct ref_record refs[2] = {};
   struct log_record logs[2] = {};
   int N = ARRAYSIZE(refs);
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     char buf[256];
     sprintf(buf, "branch%02d", i);
     refs[i].ref_name = strdup(buf);
@@ -105,18 +107,18 @@ void test_stack_add(void) {
     set_test_hash(refs[i].value, i);
 
     logs[i].ref_name = strdup(buf);
-    logs[i].update_index = N + i+1;
+    logs[i].update_index = N + i + 1;
     logs[i].new_hash = malloc(SHA1_SIZE);
     logs[i].email = strdup("identity@invalid");
     set_test_hash(logs[i].new_hash, i);
   }
 
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     int err = stack_add(st, &write_test_ref, &refs[i]);
     assert_err(err);
   }
 
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     int err = stack_add(st, &write_test_log, &logs[i]);
     assert_err(err);
   }
@@ -124,7 +126,7 @@ void test_stack_add(void) {
   err = stack_compact_all(st, NULL);
   assert_err(err);
 
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     struct ref_record dest = {};
     int err = stack_read_ref(st, refs[i].ref_name, &dest);
     assert_err(err);
@@ -132,7 +134,7 @@ void test_stack_add(void) {
     ref_record_clear(&dest);
   }
 
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     struct log_record dest = {};
     int err = stack_read_log(st, refs[i].ref_name, &dest);
     assert_err(err);
@@ -142,7 +144,7 @@ void test_stack_add(void) {
 
   // cleanup
   stack_destroy(st);
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     ref_record_clear(&refs[i]);
     log_record_clear(&logs[i]);
   }
@@ -200,8 +202,9 @@ void test_reflog_expire(void) {
   assert_err(err);
 
   struct log_record logs[20] = {};
-  int N = ARRAYSIZE(logs) -1;
-  for (int i = 1; i <= N; i++) {
+  int N = ARRAYSIZE(logs) - 1;
+  int i = 0;
+  for (i = 1; i <= N; i++) {
     char buf[256];
     sprintf(buf, "branch%02d", i);
 
@@ -213,7 +216,7 @@ void test_reflog_expire(void) {
     set_test_hash(logs[i].new_hash, i);
   }
 
-  for (int i = 1; i <= N; i++) {
+  for (i = 1; i <= N; i++) {
     int err = stack_add(st, &write_test_log, &logs[i]);
     assert_err(err);
   }
@@ -222,7 +225,7 @@ void test_reflog_expire(void) {
   assert_err(err);
 
   struct log_expiry_config expiry = {
-    .time = 10,
+      .time = 10,
   };
   err = stack_compact_all(st, &expiry);
   assert_err(err);
@@ -246,7 +249,7 @@ void test_reflog_expire(void) {
 
   // cleanup
   stack_destroy(st);
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     log_record_clear(&logs[i]);
   }
 }

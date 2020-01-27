@@ -34,7 +34,8 @@ void test_binsearch() {
       .arr = arr,
   };
 
-  for (int i = 1; i < 11; i++) {
+  int i = 0;
+  for (i = 1; i < 11; i++) {
     args.key = i;
     int res = binsearch(sz, &binsearch_func, &args);
 
@@ -65,7 +66,8 @@ void test_block_read_write() {
   struct record rec = {};
   record_from_ref(&rec, &ref);
 
-  for (int i = 0; i < N; i++) {
+  int i = 0;
+  for (i = 0; i < N; i++) {
     char name[100];
     sprintf(name, "branch%02d", i);
 
@@ -107,7 +109,7 @@ void test_block_read_write() {
   block_iter_close(&it);
 
   struct slice want = {};
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     slice_set_string(&want, names[i]);
 
     struct block_iter it = {};
@@ -133,7 +135,7 @@ void test_block_read_write() {
   record_clear(rec);
   free(block.data);
   free(slice_yield(&want));
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     free(names[i]);
   }
 }

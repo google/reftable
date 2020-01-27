@@ -183,7 +183,8 @@ static char hexdigit(int c) {
 static void hex_format(char *dest, byte *src, int hash_size) {
   assert(hash_size > 0);
   if (src != NULL) {
-    for (int i = 0; i < hash_size; i++) {
+    int i = 0;
+    for (i = 0; i < hash_size; i++) {
       dest[2 * i] = hexdigit(src[i] >> 4);
       dest[2 * i + 1] = hexdigit(src[i] & 0xf);
     }
@@ -489,7 +490,8 @@ static int obj_record_encode(const void *rec, struct slice s, int hash_size) {
 
   {
     uint64_t last = r->offsets[0];
-    for (int i = 1; i < r->offset_len; i++) {
+    int i = 0;
+    for (i = 1; i < r->offset_len; i++) {
       int n = put_var_int(s, r->offsets[i] - last);
       if (n < 0) {
         return -1;
@@ -1014,7 +1016,7 @@ int log_record_compare_key(const void *a, const void *b) {
   struct log_record *la = (struct log_record *)a;
   struct log_record *lb = (struct log_record *)b;
 
-  int cmp  = strcmp(la->ref_name, lb->ref_name);
+  int cmp = strcmp(la->ref_name, lb->ref_name);
   if (cmp) {
     return cmp;
   }

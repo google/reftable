@@ -39,7 +39,8 @@ bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq) {
 }
 
 void merged_iter_pqueue_check(struct merged_iter_pqueue pq) {
-  for (int i = 1; i < pq.len; i++) {
+  int i = 0;
+  for (i = 1; i < pq.len; i++) {
     int parent = (i - 1) / 2;
 
     assert(pq_less(pq.heap[parent], pq.heap[i]));
@@ -106,7 +107,8 @@ void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e) {
 }
 
 void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq) {
-  for (int i = 0; i < pq->len; i++) {
+  int i = 0;
+  for (i = 0; i < pq->len; i++) {
     record_clear(pq->heap[i].rec);
     free(record_yield(&pq->heap[i].rec));
   }

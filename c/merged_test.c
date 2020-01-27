@@ -23,7 +23,8 @@ void test_pq(void) {
   char *names[54] = {};
   int N = ARRAYSIZE(names) - 1;
 
-  for (int i = 0; i < N; i++) {
+  int i = 0;
+  for (i = 0; i < N; i++) {
     char name[100];
     sprintf(name, "%02d", i);
     names[i] = strdup(name);
@@ -31,7 +32,7 @@ void test_pq(void) {
 
   struct merged_iter_pqueue pq = {};
 
-  int i = 1;
+  i = 1;
   do {
     struct record rec = new_record(BLOCK_TYPE_REF);
     record_as_ref(rec)->ref_name = names[i];
@@ -58,7 +59,7 @@ void test_pq(void) {
     free(ref);
   }
 
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     free(names[i]);
   }
 
@@ -68,7 +69,8 @@ void test_pq(void) {
 void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
   int min = 0xffffffff;
   int max = 0;
-  for (int i = 0; i < n; i++) {
+  int i = 0;
+  for (i = 0; i < n; i++) {
     uint64_t ui = refs[i].update_index;
     if (ui > max) {
       max = ui;
@@ -85,7 +87,7 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n) {
   struct writer *w = new_writer(&slice_write_void, buf, &opts);
   writer_set_limits(w, min, max);
 
-  for (int i = 0; i < n; i++) {
+  for (i = 0; i < n; i++) {
     uint64_t before = refs[i].update_index;
     int n = writer_add_ref(w, &refs[i]);
     assert(n == 0);
@@ -105,7 +107,8 @@ static struct merged_table *merged_table_from_records(struct ref_record **refs,
                                                       int n) {
   struct block_source *source = calloc(n, sizeof(*source));
   struct reader **rd = calloc(n, sizeof(*rd));
-  for (int i = 0; i < n; i++) {
+  int i = 0;
+  for (i = 0; i < n; i++) {
     write_test_table(&buf[i], refs[i], sizes[i]);
     block_source_from_slice(&source[i], &buf[i]);
 
@@ -222,15 +225,16 @@ void test_merged(void) {
       r3[1],
   };
   assert(ARRAYSIZE(want) == len);
-  for (int i = 0; i < len; i++) {
+  int i = 0;
+  for (i = 0; i < len; i++) {
     assert(ref_record_equal(&want[i], &out[i], SHA1_SIZE));
   }
-  for (int i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
     ref_record_clear(&out[i]);
   }
   free(out);
 
-  for (int i = 0; i < 3; i++) {
+  for (i = 0; i < 3; i++) {
     free(slice_yield(&bufs[i]));
   }
   merged_table_close(mt);

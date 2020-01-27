@@ -113,7 +113,8 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 }
 
 int block_writer_finish(struct block_writer *w) {
-  for (int i = 0; i < w->restart_len; i++) {
+  int i = 0;
+  for (i = 0; i < w->restart_len; i++) {
     put_u24(w->buf + w->next, w->restarts[i]);
     w->next += 3;
   }

@@ -549,7 +549,7 @@ int reader_seek_ref(struct reader *r, struct iterator *it, const char *name) {
 }
 
 int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
-                    uint64_t update_index) {
+                       uint64_t update_index) {
   struct log_record log = {
       .ref_name = (char *)name,
       .update_index = update_index,

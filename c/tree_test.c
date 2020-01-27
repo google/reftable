@@ -38,7 +38,7 @@ void test_tree() {
     i = (i * 7) % 11;
   } while (i != 1);
 
-  for (int i = 1; i < ARRAYSIZE(nodes); i++) {
+  for (i = 1; i < ARRAYSIZE(nodes); i++) {
     assert(values + i == nodes[i]->key);
     assert(nodes[i] == tree_search(values + i, &root, &test_compare, 0));
   }

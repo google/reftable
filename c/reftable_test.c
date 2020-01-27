@@ -54,7 +54,8 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   writer_set_limits(w, update_index, update_index);
   {
     struct ref_record ref = {};
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
       byte hash[SHA1_SIZE];
       set_test_hash(hash, i);
 
@@ -72,7 +73,8 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   }
   {
     struct log_record log = {};
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
       byte hash[SHA1_SIZE];
       set_test_hash(hash, i);
 
@@ -93,7 +95,8 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
   assert(n == 0);
 
   struct stats *stats = writer_stats(w);
-  for (int i = 0; i < stats->ref_stats.blocks; i++) {
+  int i = 0;
+  for (i = 0; i < stats->ref_stats.blocks; i++) {
     int off = i * opts.block_size;
     if (off == 0) {
       off = HEADER_SIZE;
@@ -119,7 +122,8 @@ void test_log_write_read(void) {
   writer_set_limits(w, 0, N);
   {
     struct ref_record ref = {};
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
       char name[256];
       sprintf(name, "b%02d%0*d", i, 130, 7);
       names[i] = strdup(name);
@@ -134,7 +138,8 @@ void test_log_write_read(void) {
 
   {
     struct log_record log = {};
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
       byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
       set_test_hash(hash1, i);
       set_test_hash(hash2, i + 1);
@@ -166,7 +171,7 @@ void test_log_write_read(void) {
 
   {
     struct iterator it = {};
-    err = reader_seek_ref(&rd, &it, names[N-1]);
+    err = reader_seek_ref(&rd, &it, names[N - 1]);
     assert(err == 0);
 
     struct ref_record ref = {};
@@ -281,7 +286,8 @@ void test_table_read_api(void) {
   assert(err == API_ERROR);
 
   free(slice_yield(&buf));
-  for (int i = 0; i < N; i++) {
+  int i = 0;
+  for (i = 0; i < N; i++) {
     free(names[i]);
   }
   free(names);
@@ -305,7 +311,8 @@ void test_table_read_write_seek(bool index) {
     rd.ref_offsets.index_offset = 0;
   }
 
-  for (int i = 1; i < N; i++) {
+  int i = 0;
+  for (i = 1; i < N; i++) {
     struct iterator it = {};
     int err = reader_seek_ref(&rd, &it, names[i]);
     assert(err == 0);
@@ -320,7 +327,7 @@ void test_table_read_write_seek(bool index) {
   }
 
   free(slice_yield(&buf));
-  for (int i = 0; i < N; i++) {
+  for (i = 0; i < N; i++) {
     free(names[i]);
   }
   free(names);
@@ -352,7 +359,8 @@ void test_table_refs_for(bool indexed) {
   struct writer *w = new_writer(&slice_write_void, &buf, &opts);
   {
     struct ref_record ref = {};
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
       byte hash[SHA1_SIZE];
       memset(hash, i, sizeof(hash));
       char fill[51] = {};

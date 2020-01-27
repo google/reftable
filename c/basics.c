@@ -35,7 +35,8 @@ uint32_t get_u32(byte *in) {
 }
 
 void put_u64(byte *out, uint64_t v) {
-  for (int i = sizeof(uint64_t); i--;) {
+  int i = 0;
+  for (i = sizeof(uint64_t); i--;) {
     out[i] = (byte)(v & 0xff);
     v >>= 8;
   }
@@ -43,7 +44,8 @@ void put_u64(byte *out, uint64_t v) {
 
 uint64_t get_u64(byte *out) {
   uint64_t v = 0;
-  for (int i = 0; i < sizeof(uint64_t); i++) {
+  int i = 0;
+  for (i = 0; i < sizeof(uint64_t); i++) {
     v = (v << 8) | (byte)(out[i] & 0xff);
   }
   return v;

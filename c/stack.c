@@ -113,7 +113,8 @@ void stack_destroy(struct stack *st) {
 
 static struct reader **stack_copy_readers(struct stack *st, int cur_len) {
   struct reader **cur = calloc(sizeof(struct reader *), cur_len);
-  for (int i = 0; i < cur_len; i++) {
+  int i = 0;
+  for (i = 0; i < cur_len; i++) {
     cur[i] = st->merged->stack[i];
   }
   return cur;
@@ -136,7 +137,8 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open) {
 
     // this is linear; we assume compaction keeps the number of tables
     // under control so this is not quadratic.
-    for (int j = 0; reuse_open && j < cur_len; j++) {
+    int j = 0;
+    for (j = 0; reuse_open && j < cur_len; j++) {
       if (cur[j] != NULL && 0 == strcmp(cur[j]->name, name)) {
         rd = cur[j];
         cur[j] = NULL;
@@ -178,17 +180,22 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open) {
   }
   st->merged = new_merged;
 
-  for (int i = 0; i < cur_len; i++) {
-    if (cur[i] != NULL) {
-      reader_close(cur[i]);
-      reader_free(cur[i]);
+  {
+    int i = 0;
+    for (i = 0; i < cur_len; i++) {
+      if (cur[i] != NULL) {
+        reader_close(cur[i]);
+        reader_free(cur[i]);
+      }
     }
   }
-
 exit:
   free(slice_yield(&table_path));
-  for (int i = 0; i < new_tables_len; i++) {
-    reader_close(new_tables[i]);
+  {
+    int i = 0;
+    for (i = 0; i < new_tables_len; i++) {
+      reader_close(new_tables[i]);
+    }
   }
   free(new_tables);
   free(cur);
@@ -279,11 +286,12 @@ int stack_reload(struct stack *st) {
 static int stack_uptodate(struct stack *st) {
   char **names = NULL;
   int err = read_lines(st->list_file, &names);
+  int i = 0;
   if (err < 0) {
     return err;
   }
 
-  for (int i = 0; i < st->merged->stack_len; i++) {
+  for (i = 0; i < st->merged->stack_len; i++) {
     if (names[i] == NULL) {
       err = 1;
       goto exit;
@@ -400,9 +408,12 @@ int stack_try_add(struct stack *st,
     goto exit;
   }
 
-  for (int i = 0; i < st->merged->stack_len; i++) {
-    slice_append_string(&table_list, st->merged->stack[i]->name);
-    slice_append_string(&table_list, "\n");
+  {
+    int i = 0;
+    for (i = 0; i < st->merged->stack_len; i++) {
+      slice_append_string(&table_list, st->merged->stack[i]->name);
+      slice_append_string(&table_list, "\n");
+    }
   }
 
   format_name(&next_name, wr->min_update_index, wr->max_update_index);
@@ -475,7 +486,8 @@ uint64_t stack_next_update_index(struct stack *st) {
 }
 
 static int stack_compact_locked(struct stack *st, int first, int last,
-                                struct slice *temp_tab, struct log_expiry_config *config) {
+                                struct slice *temp_tab,
+                                struct log_expiry_config *config) {
   struct slice next_name = {};
   int tab_fd = -1;
   struct writer *wr = NULL;
@@ -528,7 +540,8 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
   struct ref_record ref = {};
   struct log_record log = {};
 
-  for (int i = first, j = 0; i <= last; i++) {
+  int i = 0, j = 0;
+  for (i = first, j = 0; i <= last; i++) {
     struct reader *t = st->merged->stack[i];
     subtabs[j++] = t;
     st->stats.bytes += t->size;
@@ -590,7 +603,8 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
       continue;
     }
 
-    if (config != NULL && config->min_update_index > 0 && log.update_index < config->min_update_index) {
+    if (config != NULL && config->min_update_index > 0 &&
+        log.update_index < config->min_update_index) {
       continue;
     }
 
@@ -599,7 +613,6 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
       break;
     }
   }
-
 
 exit:
   iterator_destroy(&it);
@@ -613,7 +626,8 @@ exit:
 }
 
 // <  0: error. 0 == OK, > 0 attempt failed; could retry.
-static int stack_compact_range(struct stack *st, int first, int last, struct log_expiry_config *expiry) {
+static int stack_compact_range(struct stack *st, int first, int last,
+                               struct log_expiry_config *expiry) {
   struct slice temp_tab_name = {};
   struct slice new_table_name = {};
   struct slice lock_file_name = {};
@@ -625,6 +639,8 @@ static int stack_compact_range(struct stack *st, int first, int last, struct log
   int compact_count = last - first + 1;
   char **delete_on_success = calloc(sizeof(char *), compact_count + 1);
   char **subtable_locks = calloc(sizeof(char *), compact_count + 1);
+  int i = 0;
+  int j = 0;
 
   if (first > last || (expiry == NULL && first == last)) {
     err = 0;
@@ -652,7 +668,7 @@ static int stack_compact_range(struct stack *st, int first, int last, struct log
     goto exit;
   }
 
-  for (int i = first, j = 0; i <= last; i++) {
+  for (i = first, j = 0; i <= last; i++) {
     struct slice subtab_name = {};
     struct slice subtab_lock = {};
     slice_set_string(&subtab_name, st->reftable_dir);
@@ -722,13 +738,13 @@ static int stack_compact_range(struct stack *st, int first, int last, struct log
     goto exit;
   }
 
-  for (int i = 0; i < first; i++) {
+  for (i = 0; i < first; i++) {
     slice_append_string(&ref_list_contents, st->merged->stack[i]->name);
     slice_append_string(&ref_list_contents, "\n");
   }
   slice_append(&ref_list_contents, new_table_name);
   slice_append_string(&ref_list_contents, "\n");
-  for (int i = last + 1; i < st->merged->stack_len; i++) {
+  for (i = last + 1; i < st->merged->stack_len; i++) {
     slice_append_string(&ref_list_contents, st->merged->stack[i]->name);
     slice_append_string(&ref_list_contents, "\n");
   }
@@ -784,7 +800,8 @@ int stack_compact_all(struct stack *st, struct log_expiry_config *config) {
   return stack_compact_range(st, 0, st->merged->stack_len - 1, config);
 }
 
-static int stack_compact_range_stats(struct stack *st, int first, int last, struct log_expiry_config *config) {
+static int stack_compact_range_stats(struct stack *st, int first, int last,
+                                     struct log_expiry_config *config) {
   int err = stack_compact_range(st, first, last, config);
   if (err > 0) {
     st->stats.failures++;
@@ -807,7 +824,8 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n) {
   struct segment *segs = calloc(sizeof(struct segment), n);
   int next = 0;
   struct segment cur = {};
-  for (int i = 0; i < n; i++) {
+  int i = 0;
+  for (i = 0; i < n; i++) {
     int log = fastlog2(sizes[i]);
     if (cur.log != log && cur.bytes > 0) {
       struct segment fresh = {
@@ -834,7 +852,8 @@ struct segment suggest_compaction_segment(uint64_t *sizes, int n) {
   struct segment min_seg = {
       .log = 64,
   };
-  for (int i = 0; i < seglen; i++) {
+  int i = 0;
+  for (i = 0; i < seglen; i++) {
     if (segment_size(&segs[i]) == 1) {
       continue;
     }
@@ -860,7 +879,8 @@ struct segment suggest_compaction_segment(uint64_t *sizes, int n) {
 
 static uint64_t *stack_table_sizes_for_compaction(struct stack *st) {
   uint64_t *sizes = calloc(sizeof(uint64_t), st->merged->stack_len);
-  for (int i = 0; i < st->merged->stack_len; i++) {
+  int i = 0;
+  for (i = 0; i < st->merged->stack_len; i++) {
     // overhead is 24 + 68 = 92.
     sizes[i] = st->merged->stack[i]->size - 91;
   }

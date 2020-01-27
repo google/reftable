@@ -37,7 +37,8 @@ struct test_case *add_test_case(const char *name, void (*testfunc)()) {
 }
 
 void test_main() {
-  for (int i = 0; i < test_case_len; i++) {
+  int i = 0;
+  for (i = 0; i < test_case_len; i++) {
     printf("case %s\n", test_cases[i]->name);
     test_cases[i]->testfunc();
   }
