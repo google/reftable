@@ -317,8 +317,8 @@ int stack_add(struct stack *st, int (*write)(struct writer *wr, void *arg),
 }
 
 static void format_name(struct slice *dest, uint64_t min, uint64_t max) {
-  char buf[1024];
-  sprintf(buf, "%012lx-%012lx", min, max);
+  char buf[100];
+  snprintf(buf, sizeof(buf), "%012lx-%012lx", min, max);
   slice_set_string(dest, buf);
 }
 

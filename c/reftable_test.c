@@ -60,7 +60,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
       set_test_hash(hash, i);
 
       char name[100];
-      sprintf(name, "refs/heads/branch%02d", i);
+      snprintf(name, sizeof(name), "refs/heads/branch%02d", i);
 
       ref.ref_name = name;
       ref.value = hash;
@@ -79,7 +79,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size) {
       set_test_hash(hash, i);
 
       char name[100];
-      sprintf(name, "refs/heads/branch%02d", i);
+      snprintf(name, sizeof(name), "refs/heads/branch%02d", i);
 
       log.ref_name = name;
       log.new_hash = hash;
@@ -125,7 +125,7 @@ void test_log_write_read(void) {
     int i = 0;
     for (i = 0; i < N; i++) {
       char name[256];
-      sprintf(name, "b%02d%0*d", i, 130, 7);
+      snprintf(name, sizeof(name), "b%02d%0*d", i, 130, 7);
       names[i] = strdup(name);
       puts(name);
       ref.ref_name = name;
@@ -367,7 +367,7 @@ void test_table_refs_for(bool indexed) {
       memset(fill, 'x', 50);
       char name[100];
       // Put the variable part in the start
-      sprintf(name, "br%02d%s", i, fill);
+      snprintf(name, sizeof(name), "br%02d%s", i, fill);
       name[40] = 0;
       ref.ref_name = name;
 

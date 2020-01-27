@@ -69,7 +69,7 @@ void test_block_read_write() {
   int i = 0;
   for (i = 0; i < N; i++) {
     char name[100];
-    sprintf(name, "branch%02d", i);
+    snprintf(name, sizeof(name),  "branch%02d", i);
 
     byte hash[SHA1_SIZE];
     memset(hash, i, sizeof(hash));

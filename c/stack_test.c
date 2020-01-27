@@ -99,7 +99,7 @@ void test_stack_add(void) {
   int N = ARRAYSIZE(refs);
   for (i = 0; i < N; i++) {
     char buf[256];
-    sprintf(buf, "branch%02d", i);
+    snprintf(buf, sizeof(buf), "branch%02d", i);
     refs[i].ref_name = strdup(buf);
     refs[i].value = malloc(SHA1_SIZE);
     refs[i].update_index = i + 1;
@@ -205,7 +205,7 @@ void test_reflog_expire(void) {
   int i = 0;
   for (i = 1; i <= N; i++) {
     char buf[256];
-    sprintf(buf, "branch%02d", i);
+    snprintf(buf, sizeof(buf), "branch%02d", i);
 
     logs[i].ref_name = strdup(buf);
     logs[i].update_index = i;

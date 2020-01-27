@@ -26,7 +26,7 @@ void test_pq(void) {
   int i = 0;
   for (i = 0; i < N; i++) {
     char name[100];
-    sprintf(name, "%02d", i);
+    snprintf(name, sizeof(name), "%02d", i);
     names[i] = strdup(name);
   }
 
