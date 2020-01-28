@@ -37,4 +37,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #endif
 
+int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
+			       const Bytef *source, uLong *sourceLen);
+
 #endif

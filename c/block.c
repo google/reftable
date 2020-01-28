@@ -172,9 +172,10 @@ int block_reader_init(struct block_reader *br, struct block *block,
 		slice_resize(&uncompressed, sz);
 		memcpy(uncompressed.buf, block->data, block_header_skip);
 
-		if (Z_OK !=
-		    uncompress2(uncompressed.buf + block_header_skip, &dst_len,
-				block->data + block_header_skip, &src_len)) {
+		if (Z_OK != uncompress_return_consumed(
+				    uncompressed.buf + block_header_skip,
+				    &dst_len, block->data + block_header_skip,
+				    &src_len)) {
 			free(slice_yield(&uncompressed));
 			return ZLIB_ERROR;
 		}
@@ -189,8 +190,8 @@ int block_reader_init(struct block_reader *br, struct block *block,
 	} else if (sz < full_block_size && sz < block->len &&
 		   block->data[sz] != 0) {
 		/* If the block is smaller than the full block size, it is
-                   padded (data followed by '\0') or the next block is
-                   unaligned. */
+		   padded (data followed by '\0') or the next block is
+		   unaligned. */
 		full_block_size = sz;
 	}
 
