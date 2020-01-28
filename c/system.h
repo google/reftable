@@ -12,8 +12,12 @@ https://developers.google.com/open-source/licenses/bsd
 #include "config.h"
 
 #ifndef REFTABLE_STANDALONE
+
 #include "git-compat-util.h"
+#include <zlib.h>
+
 #else
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
