@@ -391,7 +391,8 @@ void test_table_refs_for(bool indexed)
 			ref.value = hash1;
 			ref.target_value = hash2;
 
-			/* 80 bytes / entry, so 3 entries per block. Yields 17 */
+			/* 80 bytes / entry, so 3 entries per block. Yields 17
+			 */
 			/* blocks. */
 			int n = writer_add_ref(w, &ref);
 			assert(n == 0);

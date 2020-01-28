@@ -159,7 +159,7 @@ static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	assert(hash_size > 0);
 
 	/* This is simple and correct, but we could probably reuse the hash
-           fields. */
+	   fields. */
 	ref_record_clear(ref);
 	if (src->ref_name != NULL) {
 		ref->ref_name = strdup(src->ref_name);
