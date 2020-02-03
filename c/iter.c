@@ -52,8 +52,7 @@ void iterator_destroy(struct iterator *it)
 	}
 	it->ops->close(it->iter_arg);
 	it->ops = NULL;
-	free(it->iter_arg);
-	it->iter_arg = NULL;
+	FREE_AND_NULL(it->iter_arg);
 }
 
 int iterator_next_ref(struct iterator it, struct ref_record *ref)

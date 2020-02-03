@@ -433,8 +433,7 @@ static void object_record_free(void *void_arg, void *key)
 {
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 
-	free(entry->offsets);
-	entry->offsets = NULL;
+	FREE_AND_NULL(entry->offsets);
 	free(slice_yield(&entry->hash));
 	free(entry);
 }
@@ -538,8 +537,7 @@ void writer_clear_index(struct writer *w)
 		free(slice_yield(&w->index[i].last_key));
 	}
 
-	free(w->index);
-	w->index = NULL;
+	FREE_AND_NULL(w->index);
 	w->index_len = 0;
 	w->index_cap = 0;
 }

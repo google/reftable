@@ -379,16 +379,13 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
 	}
 
 	if (!seen_target && r->target != NULL) {
-		free(r->target);
-		r->target = NULL;
+		FREE_AND_NULL(r->target);
 	}
 	if (!seen_target_value && r->target_value != NULL) {
-		free(r->target_value);
-		r->target_value = NULL;
+		FREE_AND_NULL(r->target_value);
 	}
 	if (!seen_value && r->value != NULL) {
-		free(r->value);
-		r->value = NULL;
+		FREE_AND_NULL(r->value);
 	}
 
 	return start.len - in.len;
@@ -476,8 +473,8 @@ static void obj_record_copy_from(void *rec, const void *src_rec, int hash_size)
 static void obj_record_clear(void *rec)
 {
 	struct obj_record *ref = (struct obj_record *)rec;
-	free(ref->hash_prefix);
-	free(ref->offsets);
+	FREE_AND_NULL(ref->hash_prefix);
+	FREE_AND_NULL(ref->offsets);
 	memset(ref, 0, sizeof(struct obj_record));
 }
 

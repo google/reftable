@@ -99,10 +99,8 @@ void stack_destroy(struct stack *st)
 	merged_table_free(st->merged);
 	st->merged = NULL;
 
-	free(st->list_file);
-	st->list_file = NULL;
-	free(st->reftable_dir);
-	st->reftable_dir = NULL;
+	FREE_AND_NULL(st->list_file);
+	FREE_AND_NULL(st->reftable_dir);
 	free(st);
 }
 

@@ -395,8 +395,7 @@ void block_writer_reset(struct block_writer *bw)
 
 void block_writer_clear(struct block_writer *bw)
 {
-	free(bw->restarts);
-	bw->restarts = NULL;
+	FREE_AND_NULL(bw->restarts);
 	free(slice_yield(&bw->last_key));
 	/* the block is not owned. */
 }

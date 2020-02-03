@@ -100,7 +100,6 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n)
 	assert(err == 0);
 
 	writer_free(w);
-	w = NULL;
 }
 
 static struct merged_table *merged_table_from_records(struct ref_record **refs,

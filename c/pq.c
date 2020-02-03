@@ -118,7 +118,6 @@ void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
 		record_clear(pq->heap[i].rec);
 		free(record_yield(&pq->heap[i].rec));
 	}
-	free(pq->heap);
-	pq->heap = NULL;
+	FREE_AND_NULL(pq->heap);
 	pq->len = pq->cap = 0;
 }

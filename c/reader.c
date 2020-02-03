@@ -223,8 +223,7 @@ static void table_iter_block_done(struct table_iter *ti)
 		return;
 	}
 	reader_return_block(ti->r, &ti->bi.br->block);
-	free(ti->bi.br);
-	ti->bi.br = NULL;
+	FREE_AND_NULL(ti->bi.br);
 
 	ti->bi.last_key.len = 0;
 	ti->bi.next_off = 0;
@@ -596,8 +595,7 @@ int reader_seek_log(struct reader *r, struct iterator *it, const char *name)
 void reader_close(struct reader *r)
 {
 	block_source_close(&r->source);
-	free(r->name);
-	r->name = NULL;
+	FREE_AND_NULL(r->name);
 }
 
 int new_reader(struct reader **p, struct block_source src, char const *name)

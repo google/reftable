@@ -109,7 +109,6 @@ void write_table(char ***names, struct slice *buf, int N, int block_size)
 	}
 
 	writer_free(w);
-	w = NULL;
 }
 
 void test_log_write_read(void)

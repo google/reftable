@@ -181,16 +181,14 @@ void merged_table_close(struct merged_table *mt)
 	for (i = 0; i < mt->stack_len; i++) {
 		reader_free(mt->stack[i]);
 	}
-	free(mt->stack);
-	mt->stack = NULL;
+	FREE_AND_NULL(mt->stack);
 	mt->stack_len = 0;
 }
 
 /* clears the list of subtable, without affecting the readers themselves. */
 void merged_table_clear(struct merged_table *mt)
 {
-	free(mt->stack);
-	mt->stack = NULL;
+	FREE_AND_NULL(mt->stack);
 	mt->stack_len = 0;
 }
 
