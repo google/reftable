@@ -27,7 +27,7 @@ void varint_roundtrip()
 			      ((uint64_t)1 << 63),
 			      ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1 };
 	int i = 0;
-	for (i = 0; i < ARRAYSIZE(inputs); i++) {
+	for (i = 0; i < ARRAY_SIZE(inputs); i++) {
 		byte dest[10];
 
 		struct slice out = { .buf = dest, .len = 10, .cap = 10 };
@@ -58,7 +58,7 @@ void test_common_prefix()
 	};
 
 	int i = 0;
-	for (i = 0; i < ARRAYSIZE(cases); i++) {
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
 		struct slice a = {};
 		struct slice b = {};
 		slice_set_string(&a, cases[i].a);
@@ -249,7 +249,7 @@ void test_obj_record_roundtrip()
 
 	};
 	int i = 0;
-	for (i = 0; i < ARRAYSIZE(recs); i++) {
+	for (i = 0; i < ARRAY_SIZE(recs); i++) {
 		printf("subtest %d\n", i);
 		struct obj_record in = recs[i];
 		byte buf[1024];

@@ -15,7 +15,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #define true 1
 #define false 0
-#define ARRAYSIZE(a) sizeof(a) / sizeof(a[0])
 
 void put_u24(byte *out, uint32_t i);
 uint32_t get_u24(byte *in);

@@ -31,7 +31,7 @@ static int binsearch_func(int i, void *void_args)
 void test_binsearch()
 {
 	int arr[] = { 2, 4, 6, 8, 10 };
-	int sz = ARRAYSIZE(arr);
+	int sz = ARRAY_SIZE(arr);
 	struct binsearch_args args = {
 		.arr = arr,
 	};

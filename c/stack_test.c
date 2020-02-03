@@ -102,7 +102,7 @@ void test_stack_add(void)
 
 	struct ref_record refs[2] = {};
 	struct log_record logs[2] = {};
-	int N = ARRAYSIZE(refs);
+	int N = ARRAY_SIZE(refs);
 	for (i = 0; i < N; i++) {
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
@@ -169,7 +169,7 @@ void test_sizes_to_segments(void)
 
 	int seglen = 0;
 	struct segment *segs =
-		sizes_to_segments(&seglen, sizes, ARRAYSIZE(sizes));
+		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
 	assert(segs[2].log == 3);
 	assert(segs[2].start == 5);
 	assert(segs[2].end == 6);
@@ -186,7 +186,7 @@ void test_suggest_compaction_segment(void)
 		uint64_t sizes[] = { 128, 64, 17, 16, 9, 9, 9, 16, 16 };
 		/* .................0    1    2  3   4  5  6 */
 		struct segment min =
-			suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
+			suggest_compaction_segment(sizes, ARRAY_SIZE(sizes));
 		assert(min.start == 2);
 		assert(min.end == 7);
 	}
@@ -194,7 +194,7 @@ void test_suggest_compaction_segment(void)
 	{
 		uint64_t sizes[] = { 64, 32, 16, 8, 4, 2 };
 		struct segment result =
-			suggest_compaction_segment(sizes, ARRAYSIZE(sizes));
+			suggest_compaction_segment(sizes, ARRAY_SIZE(sizes));
 		assert(result.start == result.end);
 	}
 }
@@ -214,7 +214,7 @@ void test_reflog_expire(void)
 	assert_err(err);
 
 	struct log_record logs[20] = {};
-	int N = ARRAYSIZE(logs) - 1;
+	int N = ARRAY_SIZE(logs) - 1;
 	int i = 0;
 	for (i = 1; i <= N; i++) {
 		char buf[256];

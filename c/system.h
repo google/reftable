@@ -34,6 +34,7 @@ https://developers.google.com/open-source/licenses/bsd
 #define PRIuMAX "lu"
 #define PRIdMAX "ld"
 #define PRIxMAX "lx"
+#define ARRAY_SIZE(a) sizeof((a)) / sizeof((a)[0])
 
 #endif
 

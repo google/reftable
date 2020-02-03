@@ -601,7 +601,8 @@ void log_record_print(struct log_record *log, int hash_size)
 {
 	char hex[SHA256_SIZE + 1] = {};
 
-	printf("log{%s(%" PRIdMAX ") %s <%s> %lu %04d\n", log->ref_name,
+	printf("log{%s(%" PRIdMAX ") %s <%s> %"
+               PRIuMAX " %04d\n", log->ref_name,
 	       log->update_index, log->name, log->email, log->time,
 	       log->tz_offset);
 	hex_format(hex, log->old_hash, hash_size);

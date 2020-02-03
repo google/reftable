@@ -22,7 +22,7 @@ https://developers.google.com/open-source/licenses/bsd
 void test_pq(void)
 {
 	char *names[54] = {};
-	int N = ARRAYSIZE(names) - 1;
+	int N = ARRAY_SIZE(names) - 1;
 
 	int i = 0;
 	for (i = 0; i < N; i++) {
@@ -230,7 +230,7 @@ void test_merged(void)
 		r3[0],
 		r3[1],
 	};
-	assert(ARRAYSIZE(want) == len);
+	assert(ARRAY_SIZE(want) == len);
 	int i = 0;
 	for (i = 0; i < len; i++) {
 		assert(ref_record_equal(&want[i], &out[i], SHA1_SIZE));
