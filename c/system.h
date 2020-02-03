@@ -35,8 +35,12 @@ https://developers.google.com/open-source/licenses/bsd
 #define PRIdMAX "ld"
 #define PRIxMAX "lx"
 #define ARRAY_SIZE(a) sizeof((a)) / sizeof((a)[0])
-
-#define FREE_AND_NULL(x) do { free(x); (x) = NULL; } while(0)
+#define FREE_AND_NULL(x)    \
+	do {                \
+		free(x);    \
+		(x) = NULL; \
+	} while (0)
+#define QSORT(arr, n, cmp) qsort(arr, n, sizeof(arr[0]), cmp)
 
 #endif
 

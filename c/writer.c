@@ -249,7 +249,7 @@ int writer_add_refs(struct writer *w, struct ref_record *refs, int n)
 {
 	int err = 0;
 	int i = 0;
-	qsort(refs, n, sizeof(struct ref_record), ref_record_compare_name);
+	QSORT(refs, n, ref_record_compare_name);
 	for (i = 0; err == 0 && i < n; i++) {
 		err = writer_add_ref(w, &refs[i]);
 	}
@@ -286,7 +286,7 @@ int writer_add_logs(struct writer *w, struct log_record *logs, int n)
 {
 	int err = 0;
 	int i = 0;
-	qsort(logs, n, sizeof(struct log_record), log_record_compare_key);
+	QSORT(logs, n, log_record_compare_key);
 	for (i = 0; err == 0 && i < n; i++) {
 		err = writer_add_log(w, &logs[i]);
 	}
