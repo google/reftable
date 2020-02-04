@@ -73,12 +73,7 @@ struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq)
 			break;
 		}
 
-		{
-			struct pq_entry tmp = pq->heap[min];
-			pq->heap[min] = pq->heap[i];
-			pq->heap[i] = tmp;
-		}
-
+		SWAP(pq->heap[i], pq->heap[min]);
 		i = min;
 	}
 
@@ -101,11 +96,7 @@ void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e)
 			break;
 		}
 
-		{
-			struct pq_entry tmp = pq->heap[j];
-			pq->heap[j] = pq->heap[i];
-			pq->heap[i] = tmp;
-		}
+		SWAP(pq->heap[j], pq->heap[i]);
 
 		i = j;
 	}
