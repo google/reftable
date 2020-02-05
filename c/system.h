@@ -41,14 +41,14 @@ https://developers.google.com/open-source/licenses/bsd
 		(x) = NULL; \
 	} while (0)
 #define QSORT(arr, n, cmp) qsort(arr, n, sizeof(arr[0]), cmp)
-#define SWAP(a, b) \
-  { \
-     char tmp[sizeof(a)]; \
-     assert(sizeof(a)==sizeof(b)); \
-     memcpy(&tmp[0], &a, sizeof(a)); \
-     memcpy(&a, &b, sizeof(a)); \
-     memcpy(&b, &tmp[0], sizeof(a)); \
-  }
+#define SWAP(a, b)                              \
+	{                                       \
+		char tmp[sizeof(a)];            \
+		assert(sizeof(a) == sizeof(b)); \
+		memcpy(&tmp[0], &a, sizeof(a)); \
+		memcpy(&a, &b, sizeof(a));      \
+		memcpy(&b, &tmp[0], sizeof(a)); \
+	}
 #endif
 
 int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
