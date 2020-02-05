@@ -29,6 +29,7 @@ static struct block_stats *writer_block_stats(struct writer *w, byte typ)
 		return &w->stats.log_stats;
 	}
 	assert(false);
+	return NULL;
 }
 
 /* write data, queuing the padding for the next write. Returns negative for
