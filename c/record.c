@@ -206,7 +206,7 @@ void ref_record_print(struct ref_record *ref, int hash_size)
 {
 	char hex[SHA256_SIZE + 1] = {};
 
-	printf("ref{%s(%" PRIdMAX ") ", ref->ref_name, ref->update_index);
+	printf("ref{%s(%" PRIuMAX ") ", ref->ref_name, ref->update_index);
 	if (ref->value != NULL) {
 		hex_format(hex, ref->value, hash_size);
 		printf("%s", hex);
@@ -598,7 +598,7 @@ void log_record_print(struct log_record *log, int hash_size)
 {
 	char hex[SHA256_SIZE + 1] = {};
 
-	printf("log{%s(%" PRIdMAX ") %s <%s> %" PRIuMAX " %04d\n",
+	printf("log{%s(%" PRIuMAX ") %s <%s> %" PRIuMAX " %04d\n",
 	       log->ref_name, log->update_index, log->name, log->email,
 	       log->time, log->tz_offset);
 	hex_format(hex, log->old_hash, hash_size);
