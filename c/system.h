@@ -21,6 +21,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,9 +32,6 @@ https://developers.google.com/open-source/licenses/bsd
 #include <unistd.h>
 #include <zlib.h>
 
-#define PRIuMAX "lu"
-#define PRIdMAX "ld"
-#define PRIxMAX "lx"
 #define ARRAY_SIZE(a) sizeof((a)) / sizeof((a)[0])
 #define FREE_AND_NULL(x)    \
 	do {                \

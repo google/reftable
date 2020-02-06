@@ -571,7 +571,7 @@ static int writer_flush_nonempty_block(struct writer *w)
 	w->stats.blocks++;
 
 	if (debug) {
-		fprintf(stderr, "block %c off %" PRIuMAX " sz %d (%d)\n", typ,
+		fprintf(stderr, "block %c off %" PRIu64 " sz %d (%d)\n", typ,
 			w->next, raw_bytes,
 			get_u24(w->block + w->block_writer->header_off + 1));
 	}

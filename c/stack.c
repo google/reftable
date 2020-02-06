@@ -331,7 +331,7 @@ int stack_add(struct stack *st, int (*write)(struct writer *wr, void *arg),
 static void format_name(struct slice *dest, uint64_t min, uint64_t max)
 {
 	char buf[100];
-	snprintf(buf, sizeof(buf), "%012" PRIxMAX "-%012" PRIxMAX, min, max);
+	snprintf(buf, sizeof(buf), "%012" PRIx64 "-%012" PRIx64, min, max);
 	slice_set_string(dest, buf);
 }
 
