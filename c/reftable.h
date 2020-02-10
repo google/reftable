@@ -11,9 +11,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-typedef uint8_t byte;
-typedef byte bool;
-
 /* block_source is a generic wrapper for a seekable readable file.
    It is generally passed around by value.
  */
@@ -26,7 +23,7 @@ struct block_source {
    so it can return itself into the pool.
 */
 struct block {
-	byte *data;
+	uint8_t *data;
 	int len;
 	struct block_source source;
 };
@@ -52,14 +49,14 @@ int block_source_from_file(struct block_source *block_src, const char *name);
 
 /* write_options sets options for writing a single reftable. */
 struct write_options {
-	/* do not pad out blocks to block size. */
-	bool unpadded;
+	/* boolean: do not pad out blocks to block size. */
+	int unpadded;
 
 	/* the blocksize. Should be less than 2^24. */
 	uint32_t block_size;
 
-	/* do not generate a SHA1 => ref index. */
-	bool skip_index_objects;
+	/* boolean: do not generate a SHA1 => ref index. */
+	int skip_index_objects;
 
 	/* how often to write complete keys in each block. */
 	int restart_interval;
@@ -70,13 +67,13 @@ struct ref_record {
 	char *ref_name; /* Name of the ref, malloced. */
 	uint64_t update_index; /* Logical timestamp at which this value is
 				  written */
-	byte *value; /* SHA1, or NULL. malloced. */
-	byte *target_value; /* peeled annotated tag, or NULL. malloced. */
+	uint8_t *value; /* SHA1, or NULL. malloced. */
+	uint8_t *target_value; /* peeled annotated tag, or NULL. malloced. */
 	char *target; /* symref, or NULL. malloced. */
 };
 
 /* returns whether 'ref' represents a deletion */
-bool ref_record_is_deletion(const struct ref_record *ref);
+int ref_record_is_deletion(const struct ref_record *ref);
 
 /* prints a ref_record onto stdout */
 void ref_record_print(struct ref_record *ref, int hash_size);
@@ -85,15 +82,14 @@ void ref_record_print(struct ref_record *ref, int hash_size);
 void ref_record_clear(struct ref_record *ref);
 
 /* returns whether two ref_records are the same */
-bool ref_record_equal(struct ref_record *a, struct ref_record *b,
-		      int hash_size);
+int ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size);
 
 /* log_record holds a reflog entry */
 struct log_record {
 	char *ref_name;
 	uint64_t update_index;
-	byte *new_hash;
-	byte *old_hash;
+	uint8_t *new_hash;
+	uint8_t *old_hash;
 	char *name;
 	char *email;
 	uint64_t time;
@@ -102,14 +98,13 @@ struct log_record {
 };
 
 /* returns whether 'ref' represents the deletion of a log record. */
-bool log_record_is_deletion(const struct log_record *log);
+int log_record_is_deletion(const struct log_record *log);
 
 /* frees and nulls all pointer values. */
 void log_record_clear(struct log_record *log);
 
 /* returns whether two records are equal. */
-bool log_record_equal(struct log_record *a, struct log_record *b,
-		      int hash_size);
+int log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
 
 void log_record_print(struct log_record *log, int hash_size);
 
@@ -202,11 +197,11 @@ struct stats {
 const char *error_str(int err);
 
 /* new_writer creates a new writer */
-struct writer *new_writer(int (*writer_func)(void *, byte *, int),
+struct writer *new_writer(int (*writer_func)(void *, uint8_t *, int),
 			  void *writer_arg, struct write_options *opts);
 
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
-int fd_writer(void *fdp, byte *data, int size);
+int fd_writer(void *fdp, uint8_t *data, int size);
 
 /* Set the range of update indices for the records we will add.  When
    writing a table into a stack, the min should be at least
@@ -289,7 +284,7 @@ int reader_seek_log(struct reader *r, struct iterator *it, const char *name);
 void reader_free(struct reader *);
 
 /* return an iterator for the refs pointing to oid */
-int reader_refs_for(struct reader *r, struct iterator *it, byte *oid,
+int reader_refs_for(struct reader *r, struct iterator *it, uint8_t *oid,
 		    int oid_len);
 
 /* return the max_update_index for a table */

@@ -49,6 +49,9 @@ https://developers.google.com/open-source/licenses/bsd
 	}
 #endif
 
+typedef uint8_t byte;
+typedef int bool;
+
 int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
 			       const Bytef *source, uLong *sourceLen);
 
