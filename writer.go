@@ -226,7 +226,10 @@ func (w *Writer) add(rec record) error {
 
 // Close writes the footer and flushes the table to disk.
 func (w *Writer) Close() error {
-	w.finishPublicSection()
+	if err := w.finishPublicSection(); err != nil {
+		return err
+	}
+
 	hb := w.headerBytes()
 
 	buf := bytes.NewBuffer(hb)

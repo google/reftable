@@ -497,7 +497,10 @@ int writer_close(struct writer *w)
 	byte footer[68];
 	byte *p = footer;
 
-	writer_finish_public_section(w);
+	int err = writer_finish_public_section(w);
+	if (err != 0) {
+		return err;
+	}
 
 	writer_write_header(w, footer);
 	p += 24;
