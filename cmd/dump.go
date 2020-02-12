@@ -29,10 +29,12 @@ func main() {
 		if err := dumpTableFile(*tabName); err != nil {
 			log.Fatalf("dumpTableFile(%s): %v", *tabName, err)
 		}
-	}
-
-	if *stackName != "" {
+	} else if *stackName != "" {
 		if err := dumpStack(*stackName, *tabDir); err != nil {
+			log.Fatal(err)
+		}
+	} else if _, err := os.Lstat(".git"); err == nil {
+		if err := dumpStack(".git/reftable/tables.list", ".git/reftable/"); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -76,7 +78,6 @@ func dumpStack(nm, dir string) error {
 	}
 
 	return dumpTable(merged)
-
 }
 
 func dumpTableFile(nm string) error {
