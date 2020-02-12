@@ -14,10 +14,10 @@ format](reftable-v2-proposal.md).
 Reftable was originally implemented in JGit, and can be considered the reference
 implementation.  The code has two parts:
 
-    * The format itself:
+*   The format itself:
     https://eclipse.googlesource.com/jgit/jgit/+/master/org.eclipse.jgit/src/org/eclipse/jgit/internal/storage/reftable
 
-    * The layout within a local disk repository: https://gerrit.googlesource.com/jgit/+/master/org.eclipse.jgit/src/org/eclipse/jgit/internal/storage/file/FileReftableStack.java
+*   The layout within a local disk repository: https://gerrit.googlesource.com/jgit/+/master/org.eclipse.jgit/src/org/eclipse/jgit/internal/storage/file/FileReftableStack.java
 
 # GO
 
