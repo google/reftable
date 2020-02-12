@@ -129,19 +129,31 @@ int block_writer_finish(struct block_writer *w)
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
 		struct slice compressed = {};
-		uLongf dest_len = 0, src_len = 0;
-		slice_resize(&compressed, w->next - block_header_skip);
+		int zresult = 0;
+		uLongf src_len = w->next - block_header_skip;
+		slice_resize(&compressed, src_len);
 
-		dest_len = compressed.len;
-		src_len = w->next - block_header_skip;
+		while (1) {
+			uLongf dest_len = compressed.len;
 
-		if (Z_OK != compress2(compressed.buf, &dest_len,
-				      w->buf + block_header_skip, src_len, 9)) {
-			free(slice_yield(&compressed));
-			return ZLIB_ERROR;
+			zresult = compress2(compressed.buf, &dest_len,
+					    w->buf + block_header_skip, src_len,
+					    9);
+			if (zresult == Z_BUF_ERROR) {
+				slice_resize(&compressed, 2 * compressed.len);
+				continue;
+			}
+
+			if (Z_OK != zresult) {
+				free(slice_yield(&compressed));
+				return ZLIB_ERROR;
+			}
+
+			memcpy(w->buf + block_header_skip, compressed.buf,
+			       dest_len);
+			w->next = dest_len + block_header_skip;
+			break;
 		}
-		memcpy(w->buf + block_header_skip, compressed.buf, dest_len);
-		w->next = dest_len + block_header_skip;
 	}
 	return w->next;
 }

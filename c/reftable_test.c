@@ -108,7 +108,44 @@ void write_table(char ***names, struct slice *buf, int N, int block_size)
 		assert(buf->buf[off] == 'r');
 	}
 
+	assert(stats->log_stats.blocks > 0);
 	writer_free(w);
+}
+
+void test_log_buffer_size(void)
+{
+	struct slice buf = {};
+	struct write_options opts = {
+		.block_size = 4096,
+	};
+
+	struct writer *w = new_writer(&slice_write_void, &buf, &opts);
+
+	writer_set_limits(w, update_index, update_index);
+
+	/* This tests buffer extension for log compression. Must use a random
+	   hash, to ensure that the compressed part is larger than the original.
+	*/
+	byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
+	for (int i = 0; i < SHA1_SIZE; i++) {
+		hash1[i] = (byte)(rand() % 256);
+		hash2[i] = (byte)(rand() % 256);
+	}
+	struct log_record log = {
+		.ref_name = "refs/heads/master",
+		.old_hash = hash1,
+		.new_hash = hash2,
+		.name = "Han-Wen Nienhuys",
+		.email = "hanwen@google.com",
+		.tz_offset = 100,
+		.time = 0x5e430672,
+		.update_index = 0xa,
+		.message = "commit: 9\n",
+	};
+	int err = writer_add_log(w, &log);
+	assert_err(err);
+	err = writer_close(w);
+	assert_err(err);
 }
 
 void test_log_write_read(void)
@@ -463,6 +500,7 @@ void test_table_refs_for_obj_index(void)
 int main()
 {
 	add_test_case("test_log_write_read", test_log_write_read);
+	add_test_case("test_log_buffer_size", test_log_buffer_size);
 	add_test_case("test_table_write_small_table",
 		      &test_table_write_small_table);
 	add_test_case("test_buffer", &test_buffer);
