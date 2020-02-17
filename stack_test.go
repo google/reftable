@@ -87,6 +87,47 @@ func testStackN(t *testing.T, N int) {
 	}
 }
 
+func TestMixedHashSize(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		Unaligned: true,
+		HashSize:  20,
+	}
+
+	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	N := 2
+	for i := 0; i < N; i++ {
+		if err := st.Add(func(w *Writer) error {
+			r := RefRecord{
+				RefName:     "branch",
+				UpdateIndex: uint64(i) + 1,
+			}
+
+			w.SetLimits(uint64(i)+1, uint64(i)+1)
+			return w.AddRef(&r)
+		}); err != nil {
+			t.Fatalf("write %d: %v", i, err)
+		}
+	}
+
+	cfg2 := cfg
+	cfg2.HashSize = 32
+	if _, err := NewStack(dir+"/reftable", dir+"/refs", cfg2); err == nil {
+		t.Fatal("got success; want an error for hash size mismatch")
+	}
+}
+
 func TestTombstones(t *testing.T) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {
