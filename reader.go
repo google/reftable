@@ -10,6 +10,8 @@ package reftable
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
@@ -50,6 +52,7 @@ type Reader struct {
 	footer footer
 
 	objectIDLen int
+	hashSize    int
 
 	name string
 	src  BlockSource
@@ -58,8 +61,12 @@ type Reader struct {
 	offsets map[byte]readerOffsets
 }
 
+func (r *Reader) HashSize() int {
+	return r.hashSize
+}
+
 func (r *Reader) DebugData() string {
-	return fmt.Sprintf("name %s, sz %d: 'r' %#v, 'o' %#v 'g' %#v", r.name, r.size,
+	return fmt.Sprintf("name %s, sz %d hash %d: 'r' %#v, 'o' %#v 'g' %#v", r.name, r.size, r.hashSize,
 		r.offsets['r'],
 		r.offsets['o'],
 		r.offsets['g'],
@@ -127,6 +134,12 @@ func NewReader(src BlockSource, name string) (*Reader, error) {
 	}
 
 	readVersion := r.header.BlockSize >> 24
+	r.hashSize = sha1.Size
+	if readVersion == 2 {
+		r.hashSize = sha256.Size
+		readVersion = 1
+	}
+
 	if readVersion != version {
 		return nil, fmt.Errorf("reftable: no support for format version %d", readVersion)
 	}
@@ -275,7 +288,7 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 		headerOff = headerSize
 	}
 
-	return newBlockReader(block, headerOff, r.header.BlockSize)
+	return newBlockReader(block, headerOff, r.header.BlockSize, r.hashSize)
 }
 
 // nextBlock moves to the next block, or returns false fi there is none.

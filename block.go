@@ -11,7 +11,6 @@ package reftable
 import (
 	"bytes"
 	"compress/zlib"
-	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -43,12 +42,12 @@ type blockWriter struct {
 }
 
 // newBlockWriter creates a writer for the given block type.
-func newBlockWriter(typ byte, buf []byte, headerOff uint32) *blockWriter {
+func newBlockWriter(typ byte, buf []byte, headerOff uint32, hashSize int) *blockWriter {
 	bw := &blockWriter{
 		buf:       buf,
 		headerOff: headerOff,
 		blockSize: uint32(len(buf)),
-		hashSize:  sha1.Size,
+		hashSize:  hashSize,
 	}
 
 	bw.buf[headerOff] = typ
@@ -177,7 +176,8 @@ func (br *blockReader) getType() byte {
 }
 
 // newBlockWriter prepares for reading a block.
-func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blockReader, error) {
+func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32, hashSize int) (*blockReader, error) {
+
 	fullBlockSize := tableBlockSize
 	typ := block[headerOff]
 	if !isBlockType(typ) {
@@ -233,7 +233,7 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32) (*blo
 		headerOff:     headerOff,
 		restartCount:  restartCount,
 		restartBytes:  restartBytes,
-		hashSize:      sha1.Size,
+		hashSize:      hashSize,
 	}
 
 	return br, nil

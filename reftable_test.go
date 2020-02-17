@@ -11,6 +11,7 @@ package reftable
 import (
 	"bytes"
 	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"math"
 	"reflect"
@@ -136,7 +137,19 @@ func TestTableSeekEmpty(t *testing.T) {
 	}
 }
 
-func TestTableRoundTrip(t *testing.T) {
+func TestTableRoundTripSHA256(t *testing.T) {
+	testTableRoundTrip(t, sha256.Size)
+}
+
+func TestTableRoundTripSHA1(t *testing.T) {
+	testTableRoundTrip(t, sha1.Size)
+}
+
+func testTableRoundTrip(t *testing.T, hashSize int) {
+	genHash := testHash
+	if hashSize == sha256.Size {
+		genHash = testHash256
+	}
 	refs := []RefRecord{{
 		RefName:     "HEAD",
 		Target:      "refs/heads/master",
@@ -144,39 +157,40 @@ func TestTableRoundTrip(t *testing.T) {
 	}, {
 		RefName:     "refs/heads/master",
 		UpdateIndex: 1,
-		Value:       testHash(1),
+		Value:       genHash(1),
 	}, {
 		RefName:     "refs/heads/next",
 		UpdateIndex: 1,
-		Value:       testHash(2),
+		Value:       genHash(2),
 	}, {
 		RefName:     "refs/tags/release",
 		UpdateIndex: 1,
-		Value:       testHash(1),
-		TargetValue: testHash(2),
+		Value:       genHash(1),
+		TargetValue: genHash(2),
 	}}
 	logs := []LogRecord{{
 		RefName:     "refs/heads/master",
 		UpdateIndex: 2,
-		Old:         testHash(1),
-		New:         testHash(2),
+		Old:         genHash(1),
+		New:         genHash(2),
 		Message:     "m2",
 	}, {
 		RefName:     "refs/heads/master",
 		UpdateIndex: 1,
-		Old:         testHash(2),
-		New:         testHash(1),
+		Old:         genHash(2),
+		New:         genHash(1),
 		Message:     "m1",
 	}, {
 		RefName:     "refs/heads/next",
 		UpdateIndex: 2,
-		Old:         testHash(1),
-		New:         testHash(2),
+		Old:         genHash(1),
+		New:         genHash(2),
 		Message:     "n2",
 	}}
 
 	_, reader := constructTestTable(t, refs, logs, Config{
 		BlockSize: 512,
+		HashSize:  hashSize,
 	})
 
 	iter, err := reader.SeekRef("")

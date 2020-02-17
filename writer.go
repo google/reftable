@@ -10,6 +10,8 @@ package reftable
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -70,6 +72,8 @@ type Writer struct {
 
 	header header
 	footer footer
+
+	hashSize int
 }
 
 func (cfg *Config) setDefaults() {
@@ -100,6 +104,15 @@ func NewWriter(out io.Writer, cfg *Config) (*Writer, error) {
 	}
 
 	w.blockWriter = w.newBlockWriter(blockTypeRef)
+	switch cfg.HashSize {
+	case sha1.Size, sha256.Size:
+		w.hashSize = cfg.HashSize
+	case 0:
+		w.hashSize = sha1.Size
+	default:
+		return nil, fmt.Errorf("reftable: unsupported hash size.")
+	}
+
 	return w, nil
 }
 
@@ -112,7 +125,7 @@ func (w *Writer) newBlockWriter(typ byte) *blockWriter {
 		blockStart = headerSize
 	}
 
-	bw := newBlockWriter(typ, block, blockStart)
+	bw := newBlockWriter(typ, block, blockStart, w.hashSize)
 	bw.restartInterval = w.cfg.RestartInterval
 	return bw
 }
@@ -124,7 +137,12 @@ func (w *Writer) headerBytes() []byte {
 		MinUpdateIndex: w.minUpdateIndex,
 		MaxUpdateIndex: w.maxUpdateIndex,
 	}
-	h.BlockSize = h.BlockSize | (version << 24)
+	v := uint32(version)
+	if w.hashSize == sha256.Size {
+		v = 2
+	}
+
+	h.BlockSize = h.BlockSize | (v << 24)
 	buf := bytes.NewBuffer(make([]byte, 0, 24))
 	binary.Write(buf, binary.BigEndian, h)
 	return buf.Bytes()

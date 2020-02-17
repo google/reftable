@@ -10,6 +10,8 @@ package reftable
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -45,6 +47,13 @@ type Stack struct {
 
 // NewStack returns a new stack.
 func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
+	if cfg.HashSize == 0 {
+		cfg.HashSize = sha1.Size
+	}
+	if cfg.HashSize != sha1.Size && cfg.HashSize != sha256.Size {
+		return nil, fmt.Errorf("reftable: invalid hash size %d", cfg.HashSize)
+	}
+
 	st := &Stack{
 		listFile:    listFile,
 		reftableDir: dir,
@@ -174,7 +183,7 @@ func (st *Stack) reload(reuseOpen bool) error {
 		tabs = append(tabs, r)
 	}
 
-	m, err := NewMerged(tabs)
+	m, err := NewMerged(tabs, st.cfg.HashSize)
 	if err != nil {
 		return err
 	}
@@ -360,7 +369,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 		subtabs = append(subtabs, st.stack[i])
 	}
 
-	merged, err := NewMerged(subtabs)
+	merged, err := NewMerged(subtabs, st.cfg.HashSize)
 	if err != nil {
 		return err
 	}

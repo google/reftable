@@ -32,6 +32,7 @@ type record interface {
 type Table interface {
 	MaxUpdateIndex() uint64
 	MinUpdateIndex() uint64
+	HashSize() int
 	SeekRef(refName string) (*Iterator, error)
 	SeekLog(refName string, updateIndex uint64) (*Iterator, error)
 	RefsFor(oid []byte) (*Iterator, error)
@@ -57,6 +58,10 @@ type Config struct {
 	BlockSize        uint32
 	SkipIndexObjects bool
 	RestartInterval  int
+
+	// Width of the hashes, must either be 20 for SHA1, or 32 for
+	// SHA256.  If unset, defaults to 20 for SHA1.
+	HashSize int
 }
 
 // RefRecord is a Record from the ref database.

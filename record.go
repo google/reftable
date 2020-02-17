@@ -12,6 +12,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 )
 
@@ -489,7 +490,8 @@ func (l *LogRecord) encode(buf []byte, hashSize int) (n int, fits bool) {
 	}
 
 	if len(l.Old) != hashSize || len(l.New) != hashSize {
-		panic("invalid log entry")
+		log.Panicf("invalid log entry %d!=%d || %d!=%d",
+			len(l.Old), hashSize, len(l.New), hashSize)
 	}
 
 	start := buf

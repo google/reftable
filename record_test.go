@@ -18,6 +18,12 @@ import (
 	"testing/quick"
 )
 
+func testHash256(j int) []byte {
+	h := bytes.Repeat([]byte("~~~~"), 8)
+	binary.BigEndian.PutUint64(h, uint64(j))
+	return h
+}
+
 func testHash(j int) []byte {
 	h := bytes.Repeat([]byte("~~~~"), 5)
 	binary.BigEndian.PutUint64(h, uint64(j))

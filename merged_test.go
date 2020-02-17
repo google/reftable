@@ -9,6 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 package reftable
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -19,9 +20,10 @@ func TestPQ(t *testing.T) {
 	pq := mergedIterPQueue{}
 
 	rec := func(k string) pqEntry {
-		return pqEntry{rec: &RefRecord{
-			RefName: k,
-		},
+		return pqEntry{
+			rec: &RefRecord{
+				RefName: k,
+			},
 			index: 0,
 		}
 	}
@@ -57,7 +59,7 @@ func constructMergedRefTestTable(t *testing.T, recs ...[]RefRecord) *Merged {
 		tabs = append(tabs, reader)
 	}
 
-	m, err := NewMerged(tabs)
+	m, err := NewMerged(tabs, sha1.Size)
 	if err != nil {
 		t.Fatalf("NewMerged: %v", err)
 	}

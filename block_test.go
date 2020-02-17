@@ -9,6 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 package reftable
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"testing"
 )
@@ -25,7 +26,7 @@ func createSeekReader(t *testing.T, typ byte, bs uint32) ([]string, *blockReader
 	block := make([]byte, bs)
 
 	const headerOff = 17
-	bw := newBlockWriter(typ, block, headerOff)
+	bw := newBlockWriter(typ, block, headerOff, sha1.Size)
 
 	var names []string
 	N := 30
@@ -53,7 +54,7 @@ func createSeekReader(t *testing.T, typ byte, bs uint32) ([]string, *blockReader
 
 	block = bw.finish()
 
-	br, err := newBlockReader(block, headerOff, bs)
+	br, err := newBlockReader(block, headerOff, bs, sha1.Size)
 	if err != nil {
 		t.Fatalf("newBlockReader: %v", err)
 	}
@@ -202,7 +203,7 @@ func readIter(typ byte, bi iterator) ([]record, error) {
 func TestBlockRestart(t *testing.T) {
 	block := make([]byte, 512)
 	const headerOff = 17
-	bw := newBlockWriter(blockTypeRef, block, headerOff)
+	bw := newBlockWriter(blockTypeRef, block, headerOff, sha1.Size)
 	rec := &RefRecord{
 		RefName: "refs/heads/master",
 	}
@@ -210,7 +211,7 @@ func TestBlockRestart(t *testing.T) {
 
 	finished := bw.finish()
 
-	br, err := newBlockReader(finished, headerOff, 512)
+	br, err := newBlockReader(finished, headerOff, 512, sha1.Size)
 	if err != nil {
 		t.Fatalf("newBlockReader: %v", err)
 	}
@@ -231,7 +232,7 @@ func TestBlockPadding(t *testing.T) {
 	block := make([]byte, 512)
 	const headerOff = 17
 
-	bw := newBlockWriter(blockTypeRef, block, headerOff)
+	bw := newBlockWriter(blockTypeRef, block, headerOff, sha1.Size)
 	rec := &RefRecord{
 		RefName: "refs/heads/master",
 	}
@@ -239,7 +240,7 @@ func TestBlockPadding(t *testing.T) {
 
 	finished := bw.finish()
 
-	br, err := newBlockReader(finished, headerOff, 512)
+	br, err := newBlockReader(finished, headerOff, 512, sha1.Size)
 	if err != nil {
 		t.Fatalf("newBlockReader: %v", err)
 	}
@@ -260,7 +261,7 @@ func TestBlockHeader(t *testing.T) {
 	block := make([]byte, blockSize)
 	header := "hello"
 	copy(block, header)
-	bw := newBlockWriter(blockTypeRef, block, uint32(len(header)))
+	bw := newBlockWriter(blockTypeRef, block, uint32(len(header)), sha1.Size)
 
 	name := "refs/heads/master"
 	rec := &RefRecord{
@@ -273,7 +274,7 @@ func TestBlockHeader(t *testing.T) {
 	if got := string(block[:len(header)]); got != header {
 		t.Fatalf("got header %q want %q", got, header)
 	}
-	_, err := newBlockReader(block, uint32(len(header)), uint32(blockSize))
+	_, err := newBlockReader(block, uint32(len(header)), uint32(blockSize), sha1.Size)
 	if err != nil {
 		t.Fatalf("newBlockReader: %v", err)
 	}

@@ -102,20 +102,28 @@ func (pq *mergedIterPQueue) add(e pqEntry) {
 
 // Merged is a stack of reftables.
 type Merged struct {
-	stack []*Reader
+	stack    []*Reader
+	hashSize int
+}
+
+func (m *Merged) HashSize() int {
+	return m.hashSize
 }
 
 // NewMerged creates a reader for a merged reftable.
-func NewMerged(tabs []*Reader) (*Merged, error) {
+func NewMerged(tabs []*Reader, hashSize int) (*Merged, error) {
 	var last Table
 	for i, t := range tabs {
 		if last != nil && last.MaxUpdateIndex() >= t.MinUpdateIndex() {
 			return nil, fmt.Errorf("reftable: table %d has min %d, table %d has max %d; indices must be increasing.", i, t.MinUpdateIndex(), i-1, last.MaxUpdateIndex())
 		}
+		if t.HashSize() != hashSize {
+			return nil, fmt.Errorf("reftable: table %d has hash size %d want hash size %d", i, t.HashSize(), hashSize)
+		}
 		last = t
 	}
 
-	return &Merged{tabs}, nil
+	return &Merged{tabs, hashSize}, nil
 }
 
 // MaxUpdateIndex implements the Table interface.
