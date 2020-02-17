@@ -41,7 +41,6 @@ cc_library(
         "basics.h",
         "block.h",
         "blocksource.h",
-        "config.h",
         "constants.h",
         "iter.h",
         "merged.h",

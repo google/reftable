@@ -9,9 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "config.h"
-
-#ifndef REFTABLE_STANDALONE
+#if REFTABLE_IN_GITCORE
 
 #include "git-compat-util.h"
 #include <zlib.h>
@@ -47,7 +45,7 @@ https://developers.google.com/open-source/licenses/bsd
 		memcpy(&a, &b, sizeof(a));      \
 		memcpy(&b, &tmp[0], sizeof(a)); \
 	}
-#endif
+#endif /* REFTABLE_IN_GITCORE */
 
 typedef uint8_t byte;
 typedef int bool;

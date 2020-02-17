@@ -9,7 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef REFTABLE_H
 #define REFTABLE_H
 
-#include "system.h"
+#include <stdint.h>
 
 /* block_source is a generic wrapper for a seekable readable file.
    It is generally passed around by value.
