@@ -60,6 +60,10 @@ struct write_options {
 
 	/* how often to write complete keys in each block. */
 	int restart_interval;
+
+	/* width of the hash. Should be 20 for SHA1 or 32 for SHA256. Defaults
+	 * to SHA1 if unset */
+	int hash_size;
 };
 
 /* ref_record holds a ref database entry target_value */
@@ -273,6 +277,9 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
  */
 int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 
+/* returns the hash size used in this table. */
+int reader_hash_size(struct reader *r);
+
 /* seek to logs for the given name, older than update_index. */
 int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
 		       uint64_t update_index);
@@ -299,7 +306,11 @@ struct merged_table;
 /* new_merged_table creates a new merged table. It takes ownership of the stack
    array.
 */
-int new_merged_table(struct merged_table **dest, struct reader **stack, int n);
+int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
+		     int hash_size);
+
+/* returns the hash size used in this merged table. */
+int merged_hash_size(struct merged_table *mt);
 
 /* returns an iterator positioned just before 'name' */
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,

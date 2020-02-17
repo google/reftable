@@ -9,8 +9,6 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define SHA1_SIZE 20
-#define SHA256_SIZE 32
 #define VERSION 1
 #define HEADER_SIZE 24
 #define FOOTER_SIZE 68

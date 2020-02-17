@@ -143,13 +143,17 @@ static void iterator_from_merged_iter(struct iterator *it,
 	it->ops = &merged_iter_vtable;
 }
 
-int new_merged_table(struct merged_table **dest, struct reader **stack, int n)
+int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
+		     int hash_size)
 {
 	uint64_t last_max = 0;
 	uint64_t first_min = 0;
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		struct reader *r = stack[i];
+		if (reader_hash_size(r) != hash_size) {
+			return FORMAT_ERROR;
+		}
 		if (i > 0 && last_max >= reader_min_update_index(r)) {
 			return FORMAT_ERROR;
 		}
@@ -166,7 +170,7 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n)
 			.stack_len = n,
 			.min = first_min,
 			.max = last_max,
-			.hash_size = SHA1_SIZE,
+			.hash_size = hash_size,
 		};
 
 		*dest = calloc(sizeof(struct merged_table), 1);

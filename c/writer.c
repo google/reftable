@@ -63,6 +63,9 @@ static void options_set_defaults(struct write_options *opts)
 		opts->restart_interval = 16;
 	}
 
+	if (opts->hash_size == 0) {
+		opts->hash_size = SHA1_SIZE;
+	}
 	if (opts->block_size == 0) {
 		opts->block_size = DEFAULT_BLOCK_SIZE;
 	}
@@ -71,7 +74,8 @@ static void options_set_defaults(struct write_options *opts)
 static int writer_write_header(struct writer *w, byte *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
-	dest[4] = 1; /* version */
+	dest[4] = (w->hash_size == SHA1_SIZE) ? 1 : 2; /* version */
+
 	put_u24(dest + 5, w->opts.block_size);
 	put_u64(dest + 8, w->min_update_index);
 	put_u64(dest + 16, w->max_update_index);
@@ -100,7 +104,7 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 		/* TODO - error return? */
 		abort();
 	}
-	wp->hash_size = SHA1_SIZE;
+	wp->hash_size = opts->hash_size;
 	wp->block = calloc(opts->block_size, 1);
 	wp->write = writer_func;
 	wp->write_arg = writer_arg;

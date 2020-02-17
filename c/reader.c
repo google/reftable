@@ -81,6 +81,11 @@ void reader_return_block(struct reader *r, struct block *p)
 	block_source_return_block(r->source, p);
 }
 
+int reader_hash_size(struct reader *r)
+{
+	return r->hash_size;
+}
+
 const char *reader_name(struct reader *r)
 {
 	return r->name;
@@ -101,8 +106,13 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 		goto exit;
 	}
 
+	r->hash_size = SHA1_SIZE;
 	{
 		byte version = *f++;
+		if (version == 2) {
+			r->hash_size = SHA256_SIZE;
+			version = 1;
+		}
 		if (version != 1) {
 			err = FORMAT_ERROR;
 			goto exit;
@@ -166,7 +176,7 @@ int init_reader(struct reader *r, struct block_source source, const char *name)
 	r->size = block_source_size(source) - FOOTER_SIZE;
 	r->source = source;
 	r->name = strdup(name);
-	r->hash_size = SHA1_SIZE;
+	r->hash_size = 0;
 
 	err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
 	if (err != FOOTER_SIZE) {
