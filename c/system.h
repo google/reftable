@@ -52,7 +52,6 @@ typedef int bool;
 
 int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
 			       const Bytef *source, uLong *sourceLen);
-
 #define SHA1_SIZE 20
 #define SHA256_SIZE 32
 

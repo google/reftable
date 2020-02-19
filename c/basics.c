@@ -117,7 +117,9 @@ void free_names(char **a)
 int names_length(char **names)
 {
 	int len = 0;
-	for (char **p = names; *p; p++) {
+	char **p = names;
+	while (*p) {
+		p++;
 		len++;
 	}
 	return len;

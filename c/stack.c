@@ -786,18 +786,26 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	}
 	have_lock = false;
 
-	for (char **p = delete_on_success; *p; p++) {
-		if (strcmp(*p, slice_as_string(&new_table_path))) {
-			unlink(*p);
+	{
+		char **p = delete_on_success;
+		while (*p) {
+			if (strcmp(*p, slice_as_string(&new_table_path))) {
+				unlink(*p);
+			}
+			p++;
 		}
 	}
 
 	err = stack_reload_maybe_reuse(st, first < last);
 exit:
-	for (char **p = subtable_locks; *p; p++) {
-		unlink(*p);
-	}
 	free_names(delete_on_success);
+	{
+		char **p = subtable_locks;
+		while (*p) {
+			unlink(*p);
+			p++;
+		}
+	}
 	free_names(subtable_locks);
 	if (lock_file_fd > 0) {
 		close(lock_file_fd);
