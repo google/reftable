@@ -198,6 +198,9 @@ struct stats {
 /* Decompression error */
 #define ZLIB_ERROR -7
 
+/* Wrote a table without blocks. */
+#define EMPTY_TABLE_ERROR -8
+
 const char *error_str(int err);
 
 /* new_writer creates a new writer */

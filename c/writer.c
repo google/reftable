@@ -503,7 +503,7 @@ int writer_close(struct writer *w)
 
 	int err = writer_finish_public_section(w);
 	if (err != 0) {
-		return err;
+		goto exit;
 	}
 
 	writer_write_header(w, footer);
@@ -524,18 +524,22 @@ int writer_close(struct writer *w)
 	p += 4;
 	w->pending_padding = 0;
 
-	{
-		int n = padded_write(w, footer, sizeof(footer), 0);
-		if (n < 0) {
-			return n;
-		}
+	err = padded_write(w, footer, sizeof(footer), 0);
+	if (err < 0) {
+		goto exit;
 	}
 
+	if (w->stats.log_stats.entries + w->stats.ref_stats.entries == 0) {
+		err = EMPTY_TABLE_ERROR;
+		goto exit;
+	}
+
+exit:
 	/* free up memory. */
 	block_writer_clear(&w->block_writer_data);
 	writer_clear_index(w);
 	free(slice_yield(&w->last_key));
-	return 0;
+	return err;
 }
 
 void writer_clear_index(struct writer *w)

@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -112,6 +113,7 @@ func TestMixedHashSize(t *testing.T) {
 			r := RefRecord{
 				RefName:     "branch",
 				UpdateIndex: uint64(i) + 1,
+				Value:       testHash(i),
 			}
 
 			w.SetLimits(uint64(i)+1, uint64(i)+1)
@@ -282,5 +284,42 @@ func TestCompactionReflogExpiry(t *testing.T) {
 
 	if !have(16) {
 		t.Fatalf("misses log entry @16")
+	}
+}
+
+func TestIgnoreEmptyTables(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		Unaligned: true,
+	}
+
+	st, err := NewStack(dir+"/reftable", dir+"/reftable/tables.list", cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.Add(func(w *Writer) error {
+		w.SetLimits(1, 1)
+		return nil
+	}); err != nil {
+		t.Fatal("Add", err)
+	}
+
+	entries, err := ioutil.ReadDir(dir + "/reftable")
+	if err != nil {
+		t.Fatal("ReadDir", err)
+	} else if len(entries) != 0 {
+		var ss []string
+		for _, e := range entries {
+			ss = append(ss, e.Name())
+		}
+		t.Fatalf("got: %v", strings.Join(ss, " "))
 	}
 }

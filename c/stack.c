@@ -397,6 +397,10 @@ int stack_try_add(struct stack *st,
 	}
 
 	err = writer_close(wr);
+	if (err == EMPTY_TABLE_ERROR) {
+		err = 0;
+		goto exit;
+	}
 	if (err < 0) {
 		goto exit;
 	}
@@ -655,6 +659,7 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	char **subtable_locks = calloc(sizeof(char *), compact_count + 1);
 	int i = 0;
 	int j = 0;
+	bool is_empty_table = false;
 
 	if (first > last || (expiry == NULL && first == last)) {
 		err = 0;
@@ -723,6 +728,11 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	have_lock = false;
 
 	err = stack_compact_locked(st, first, last, &temp_tab_name, expiry);
+	/* Compaction + tombstones can create an empty table out of non-empty tables. */
+	is_empty_table = (err == EMPTY_TABLE_ERROR);
+	if (is_empty_table) {
+		err = 0;
+	}
 	if (err < 0) {
 		goto exit;
 	}
@@ -748,10 +758,12 @@ static int stack_compact_range(struct stack *st, int first, int last,
 
 	slice_append(&new_table_path, new_table_name);
 
-	err = rename(slice_as_string(&temp_tab_name),
-		     slice_as_string(&new_table_path));
-	if (err < 0) {
-		goto exit;
+	if (!is_empty_table) {
+		err = rename(slice_as_string(&temp_tab_name),
+			     slice_as_string(&new_table_path));
+		if (err < 0) {
+			goto exit;
+		}
 	}
 
 	for (i = 0; i < first; i++) {
@@ -759,8 +771,10 @@ static int stack_compact_range(struct stack *st, int first, int last,
 				    st->merged->stack[i]->name);
 		slice_append_string(&ref_list_contents, "\n");
 	}
-	slice_append(&ref_list_contents, new_table_name);
-	slice_append_string(&ref_list_contents, "\n");
+	if (!is_empty_table) {
+		slice_append(&ref_list_contents, new_table_name);
+		slice_append_string(&ref_list_contents, "\n");
+	}
 	for (i = last + 1; i < st->merged->stack_len; i++) {
 		slice_append_string(&ref_list_contents,
 				    st->merged->stack[i]->name);

@@ -255,11 +255,12 @@ func (st *Stack) add(write func(w *Writer) error) error {
 
 	next := st.NextUpdateIndex()
 	fn := formatName(next, next)
-	tab, err := ioutil.TempFile(st.reftableDir, fn+"*.ref")
+	tab, err := ioutil.TempFile(st.reftableDir, fn+"-tmp-*.ref")
 	if err != nil {
 		return err
 	}
-	defer os.Remove(f.Name())
+	defer tab.Close()
+	defer os.Remove(tab.Name())
 
 	wr, err := NewWriter(tab, &st.cfg)
 	if err != nil {
@@ -271,6 +272,9 @@ func (st *Stack) add(write func(w *Writer) error) error {
 	}
 
 	if err := wr.Close(); err != nil {
+		if err == ErrEmptyTable {
+			return nil
+		}
 		return err
 	}
 
@@ -491,6 +495,11 @@ func (st *Stack) compactRange(first, last int, expiration *LogExpirationConfig) 
 	lockFileName = ""
 
 	tmpTable, err := st.compactLocked(first, last, expiration)
+	// Compaction + tombstones can create an empty table out of non-empty tables.
+	emptyTable := (err == ErrEmptyTable)
+	if emptyTable {
+		err = nil
+	}
 	if err != nil {
 		return false, err
 	}
@@ -510,15 +519,21 @@ func (st *Stack) compactRange(first, last int, expiration *LogExpirationConfig) 
 	fn += ".ref"
 	destTable := filepath.Join(st.reftableDir, fn)
 
-	if err := os.Rename(tmpTable, destTable); err != nil {
-		return false, err
+	if !emptyTable {
+		if err := os.Rename(tmpTable, destTable); err != nil {
+			return false, err
+		}
 	}
 
 	var names []string
 	for i := 0; i < first; i++ {
 		names = append(names, st.stack[i].name)
 	}
-	names = append(names, fn)
+
+	if !emptyTable {
+		names = append(names, fn)
+	}
+
 	for i := last + 1; i < len(st.stack); i++ {
 		names = append(names, st.stack[i].name)
 	}

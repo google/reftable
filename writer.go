@@ -276,6 +276,11 @@ func (w *Writer) Close() error {
 	if n != footerSize {
 		log.Panicf("footer size %d", n)
 	}
+
+	if w.Stats.RefStats.Entries+w.Stats.LogStats.Entries == 0 {
+		return ErrEmptyTable
+	}
+
 	return err
 }
 

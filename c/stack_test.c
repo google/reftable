@@ -271,8 +271,36 @@ void test_reflog_expire(void)
 	}
 }
 
+int write_nothing(struct writer *wr, void *arg)
+{
+	writer_set_limits(wr, 1, 1);
+	return 0;
+}
+
+void test_empty_add(void)
+{
+	char dir[256] = "/tmp/stack.test_stack_add.XXXXXX";
+	assert(mkdtemp(dir));
+	char fn[256] = "";
+	strcat(fn, dir);
+	strcat(fn, "/refs");
+
+	struct write_options cfg = {};
+	struct stack *st = NULL;
+	int err = new_stack(&st, dir, fn, cfg);
+	assert_err(err);
+
+	err = stack_add(st, &write_nothing, NULL);
+	assert_err(err);
+
+	struct stack *st2 = NULL;
+	err = new_stack(&st2, dir, fn, cfg);
+	assert_err(err);
+}
+
 int main()
 {
+	add_test_case("test_empty_add", test_empty_add);
 	add_test_case("test_reflog_expire", test_reflog_expire);
 	add_test_case("test_suggest_compaction_segment",
 		      &test_suggest_compaction_segment);

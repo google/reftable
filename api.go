@@ -8,6 +8,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 package reftable
 
+import "errors"
+
 // BlockSource is an interface for reading reftable bytes.
 type BlockSource interface {
 	Size() uint64
@@ -110,3 +112,7 @@ type Stats struct {
 
 	ObjectIDLen int
 }
+
+// ErrEmptyTable indicates that a writer tried to create a table
+// without blocks.
+var ErrEmptyTable = errors.New("reftable: table is empty")
