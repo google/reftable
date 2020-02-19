@@ -20,8 +20,8 @@ int new_stack(struct stack **dest, const char *dir, const char *list_file,
 	struct stack *p = calloc(sizeof(struct stack), 1);
 	int err = 0;
 	*dest = NULL;
-	p->list_file = strdup(list_file);
-	p->reftable_dir = strdup(dir);
+	p->list_file = xstrdup(list_file);
+	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 
 	err = stack_reload(p);

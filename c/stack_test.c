@@ -106,15 +106,15 @@ void test_stack_add(void)
 	for (i = 0; i < N; i++) {
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
-		refs[i].ref_name = strdup(buf);
+		refs[i].ref_name = xstrdup(buf);
 		refs[i].value = malloc(SHA1_SIZE);
 		refs[i].update_index = i + 1;
 		set_test_hash(refs[i].value, i);
 
-		logs[i].ref_name = strdup(buf);
+		logs[i].ref_name = xstrdup(buf);
 		logs[i].update_index = N + i + 1;
 		logs[i].new_hash = malloc(SHA1_SIZE);
-		logs[i].email = strdup("identity@invalid");
+		logs[i].email = xstrdup("identity@invalid");
 		set_test_hash(logs[i].new_hash, i);
 	}
 
@@ -225,11 +225,11 @@ void test_reflog_expire(void)
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
 
-		logs[i].ref_name = strdup(buf);
+		logs[i].ref_name = xstrdup(buf);
 		logs[i].update_index = i;
 		logs[i].time = i;
 		logs[i].new_hash = malloc(SHA1_SIZE);
-		logs[i].email = strdup("identity@invalid");
+		logs[i].email = xstrdup("identity@invalid");
 		set_test_hash(logs[i].new_hash, i);
 	}
 

@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, "t:")) != -1) {
 		switch (opt) {
 		case 't':
-			table = strdup(optarg);
+			table = xstrdup(optarg);
 			break;
 		case '?':
 			printf("usage: %s [-table tablefile]\n", argv[0]);

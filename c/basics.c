@@ -10,61 +10,23 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-void put_u24(byte *out, uint32_t i)
+void put_be24(byte *out, uint32_t i)
 {
 	out[0] = (byte)((i >> 16) & 0xff);
 	out[1] = (byte)((i >> 8) & 0xff);
 	out[2] = (byte)((i)&0xff);
 }
 
-uint32_t get_u24(byte *in)
+uint32_t get_be24(byte *in)
 {
 	return (uint32_t)(in[0]) << 16 | (uint32_t)(in[1]) << 8 |
 	       (uint32_t)(in[2]);
 }
 
-void put_u32(byte *out, uint32_t i)
+void put_be16(uint8_t *out, uint16_t i)
 {
-	out[0] = (byte)((i >> 24) & 0xff);
-	out[1] = (byte)((i >> 16) & 0xff);
-	out[2] = (byte)((i >> 8) & 0xff);
-	out[3] = (byte)((i)&0xff);
-}
-
-uint32_t get_u32(byte *in)
-{
-	return (uint32_t)(in[0]) << 24 | (uint32_t)(in[1]) << 16 |
-	       (uint32_t)(in[2]) << 8 | (uint32_t)(in[3]);
-}
-
-void put_u64(byte *out, uint64_t v)
-{
-	int i = 0;
-	for (i = sizeof(uint64_t); i--;) {
-		out[i] = (byte)(v & 0xff);
-		v >>= 8;
-	}
-}
-
-uint64_t get_u64(byte *out)
-{
-	uint64_t v = 0;
-	int i = 0;
-	for (i = 0; i < sizeof(uint64_t); i++) {
-		v = (v << 8) | (byte)(out[i] & 0xff);
-	}
-	return v;
-}
-
-void put_u16(byte *out, uint16_t i)
-{
-	out[0] = (byte)((i >> 8) & 0xff);
-	out[1] = (byte)((i)&0xff);
-}
-
-uint16_t get_u16(byte *in)
-{
-	return (uint32_t)(in[0]) << 8 | (uint32_t)(in[1]);
+	out[0] = (uint8_t)((i >> 8) & 0xff);
+	out[1] = (uint8_t)((i)&0xff);
 }
 
 /*
@@ -147,7 +109,7 @@ void parse_names(char *buf, int size, char ***namesp)
 				names = realloc(names,
 						names_cap * sizeof(char *));
 			}
-			names[names_len++] = strdup(p);
+			names[names_len++] = xstrdup(p);
 		}
 		p = next + 1;
 	}

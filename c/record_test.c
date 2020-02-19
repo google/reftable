@@ -100,10 +100,10 @@ void test_ref_record_roundtrip()
 			set_hash(in.target_value, 2);
 			break;
 		case 3:
-			in.target = strdup("target");
+			in.target = xstrdup("target");
 			break;
 		}
-		in.ref_name = strdup("refs/heads/master");
+		in.ref_name = xstrdup("refs/heads/master");
 
 		struct record rec = {};
 		record_from_ref(&rec, &in);
@@ -136,12 +136,12 @@ void test_ref_record_roundtrip()
 void test_log_record_roundtrip()
 {
 	struct log_record in = {
-		.ref_name = strdup("refs/heads/master"),
+		.ref_name = xstrdup("refs/heads/master"),
 		.old_hash = malloc(SHA1_SIZE),
 		.new_hash = malloc(SHA1_SIZE),
-		.name = strdup("han-wen"),
-		.email = strdup("hanwen@google.com"),
-		.message = strdup("test"),
+		.name = xstrdup("han-wen"),
+		.email = xstrdup("hanwen@google.com"),
+		.message = xstrdup("test"),
 		.update_index = 42,
 		.time = 1577123507,
 		.tz_offset = 100,
@@ -180,8 +180,8 @@ void test_u24_roundtrip()
 	uint32_t in = 0x112233;
 	byte dest[3];
 
-	put_u24(dest, in);
-	uint32_t out = get_u24(dest);
+	put_be24(dest, in);
+	uint32_t out = get_be24(dest);
 	assert(in == out);
 }
 

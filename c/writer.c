@@ -76,9 +76,9 @@ static int writer_write_header(struct writer *w, byte *dest)
 	memcpy((char *)dest, "REFT", 4);
 	dest[4] = (w->hash_size == SHA1_SIZE) ? 1 : 2; /* version */
 
-	put_u24(dest + 5, w->opts.block_size);
-	put_u64(dest + 8, w->min_update_index);
-	put_u64(dest + 16, w->max_update_index);
+	put_be24(dest + 5, w->opts.block_size);
+	put_be64(dest + 8, w->min_update_index);
+	put_be64(dest + 16, w->max_update_index);
 	return 24;
 }
 
@@ -508,19 +508,19 @@ int writer_close(struct writer *w)
 
 	writer_write_header(w, footer);
 	p += 24;
-	put_u64(p, w->stats.ref_stats.index_offset);
+	put_be64(p, w->stats.ref_stats.index_offset);
 	p += 8;
-	put_u64(p, (w->stats.obj_stats.offset) << 5 | w->stats.object_id_len);
+	put_be64(p, (w->stats.obj_stats.offset) << 5 | w->stats.object_id_len);
 	p += 8;
-	put_u64(p, w->stats.obj_stats.index_offset);
-	p += 8;
-
-	put_u64(p, w->stats.log_stats.offset);
-	p += 8;
-	put_u64(p, w->stats.log_stats.index_offset);
+	put_be64(p, w->stats.obj_stats.index_offset);
 	p += 8;
 
-	put_u32(p, crc32(0, footer, p - footer));
+	put_be64(p, w->stats.log_stats.offset);
+	p += 8;
+	put_be64(p, w->stats.log_stats.index_offset);
+	p += 8;
+
+	put_be32(p, crc32(0, footer, p - footer));
 	p += 4;
 	w->pending_padding = 0;
 
@@ -580,7 +580,7 @@ static int writer_flush_nonempty_block(struct writer *w)
 	if (debug) {
 		fprintf(stderr, "block %c off %" PRIu64 " sz %d (%d)\n", typ,
 			w->next, raw_bytes,
-			get_u24(w->block + w->block_writer->header_off + 1));
+			get_be24(w->block + w->block_writer->header_off + 1));
 	}
 
 	if (w->next == 0) {

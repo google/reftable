@@ -70,7 +70,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 			ref.ref_name = name;
 			ref.value = hash;
 			ref.update_index = update_index;
-			(*names)[i] = strdup(name);
+			(*names)[i] = xstrdup(name);
 
 			int n = writer_add_ref(w, &ref);
 			assert(n == 0);
@@ -169,7 +169,7 @@ void test_log_write_read(void)
 		for (i = 0; i < N; i++) {
 			char name[256];
 			snprintf(name, sizeof(name), "b%02d%0*d", i, 130, 7);
-			names[i] = strdup(name);
+			names[i] = xstrdup(name);
 			puts(name);
 			ref.ref_name = name;
 			ref.update_index = i;
@@ -443,7 +443,7 @@ void test_table_refs_for(bool indexed)
 
 			if (!memcmp(hash1, want_hash, SHA1_SIZE) ||
 			    !memcmp(hash2, want_hash, SHA1_SIZE)) {
-				want_names[want_names_len++] = strdup(name);
+				want_names[want_names_len++] = xstrdup(name);
 			}
 		}
 	}

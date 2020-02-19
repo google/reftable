@@ -28,7 +28,7 @@ void test_pq(void)
 	for (i = 0; i < N; i++) {
 		char name[100];
 		snprintf(name, sizeof(name), "%02d", i);
-		names[i] = strdup(name);
+		names[i] = xstrdup(name);
 	}
 
 	struct merged_iter_pqueue pq = {};

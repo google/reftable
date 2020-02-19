@@ -25,6 +25,7 @@ cc_library(
     srcs = [
         "basics.c",
         "block.c",
+        "compat.c",
         "file.c",
         "iter.c",
         "merged.c",
@@ -41,6 +42,7 @@ cc_library(
         "basics.h",
         "block.h",
         "blocksource.h",
+        "compat.h",
         "constants.h",
         "iter.h",
         "merged.h",

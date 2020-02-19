@@ -162,11 +162,11 @@ static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	   fields. */
 	ref_record_clear(ref);
 	if (src->ref_name != NULL) {
-		ref->ref_name = strdup(src->ref_name);
+		ref->ref_name = xstrdup(src->ref_name);
 	}
 
 	if (src->target != NULL) {
-		ref->target = strdup(src->target);
+		ref->target = xstrdup(src->target);
 	}
 
 	if (src->target_value != NULL) {
@@ -620,7 +620,7 @@ static void log_record_key(const void *r, struct slice *dest)
 	slice_resize(dest, len + 9);
 	memcpy(dest->buf, rec->ref_name, len + 1);
 	ts = (~ts) - rec->update_index;
-	put_u64(dest->buf + 1 + len, ts);
+	put_be64(dest->buf + 1 + len, ts);
 }
 
 static void log_record_copy_from(void *rec, const void *src_rec, int hash_size)
@@ -629,10 +629,10 @@ static void log_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	const struct log_record *src = (const struct log_record *)src_rec;
 
 	*dst = *src;
-	dst->ref_name = strdup(dst->ref_name);
-	dst->email = strdup(dst->email);
-	dst->name = strdup(dst->name);
-	dst->message = strdup(dst->message);
+	dst->ref_name = xstrdup(dst->ref_name);
+	dst->email = xstrdup(dst->email);
+	dst->name = xstrdup(dst->name);
+	dst->message = xstrdup(dst->message);
 	if (dst->new_hash != NULL) {
 		dst->new_hash = malloc(hash_size);
 		memcpy(dst->new_hash, src->new_hash, hash_size);
@@ -715,7 +715,7 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size)
 		return -1;
 	}
 
-	put_u16(s.buf, r->tz_offset);
+	put_be16(s.buf, r->tz_offset);
 	s.buf += 2;
 	s.len -= 2;
 
@@ -745,7 +745,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 
 	r->ref_name = realloc(r->ref_name, key.len - 8);
 	memcpy(r->ref_name, key.buf, key.len - 8);
-	ts = get_u64(key.buf + key.len - 8);
+	ts = get_be64(key.buf + key.len - 8);
 
 	r->update_index = (~max) - ts;
 
@@ -797,7 +797,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 		goto error;
 	}
 
-	r->tz_offset = get_u16(in.buf);
+	r->tz_offset = get_be16(in.buf);
 	in.buf += 2;
 	in.len -= 2;
 

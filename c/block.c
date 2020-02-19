@@ -118,13 +118,13 @@ int block_writer_finish(struct block_writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->restart_len; i++) {
-		put_u24(w->buf + w->next, w->restarts[i]);
+		put_be24(w->buf + w->next, w->restarts[i]);
 		w->next += 3;
 	}
 
-	put_u16(w->buf + w->next, w->restart_len);
+	put_be16(w->buf + w->next, w->restart_len);
 	w->next += 2;
-	put_u24(w->buf + 1 + w->header_off, w->next);
+	put_be24(w->buf + 1 + w->header_off, w->next);
 
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
@@ -169,7 +169,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 {
 	uint32_t full_block_size = table_block_size;
 	byte typ = block->data[header_off];
-	uint32_t sz = get_u24(block->data + header_off + 1);
+	uint32_t sz = get_be24(block->data + header_off + 1);
 
 	if (!is_block_type(typ)) {
 		return FORMAT_ERROR;
@@ -208,7 +208,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 	}
 
 	{
-		uint16_t restart_count = get_u16(block->data + sz - 2);
+		uint16_t restart_count = get_be16(block->data + sz - 2);
 		uint32_t restart_start = sz - 2 - 3 * restart_count;
 
 		byte *restart_bytes = block->data + restart_start;
@@ -231,7 +231,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 
 static uint32_t block_reader_restart_offset(struct block_reader *br, int i)
 {
-	return get_u24(br->restart_bytes + 3 * i);
+	return get_be24(br->restart_bytes + 3 * i);
 }
 
 void block_reader_start(struct block_reader *br, struct block_iter *it)

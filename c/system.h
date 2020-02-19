@@ -30,21 +30,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include <unistd.h>
 #include <zlib.h>
 
-#define ARRAY_SIZE(a) sizeof((a)) / sizeof((a)[0])
-#define FREE_AND_NULL(x)    \
-	do {                \
-		free(x);    \
-		(x) = NULL; \
-	} while (0)
-#define QSORT(arr, n, cmp) qsort(arr, n, sizeof(arr[0]), cmp)
-#define SWAP(a, b)                              \
-	{                                       \
-		char tmp[sizeof(a)];            \
-		assert(sizeof(a) == sizeof(b)); \
-		memcpy(&tmp[0], &a, sizeof(a)); \
-		memcpy(&a, &b, sizeof(a));      \
-		memcpy(&b, &tmp[0], sizeof(a)); \
-	}
+#include "compat.h"
+
 #endif /* REFTABLE_IN_GITCORE */
 
 typedef uint8_t byte;

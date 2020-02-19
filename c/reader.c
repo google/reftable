@@ -119,33 +119,33 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 		}
 	}
 
-	r->block_size = get_u24(f);
+	r->block_size = get_be24(f);
 
 	f += 3;
-	r->min_update_index = get_u64(f);
+	r->min_update_index = get_be64(f);
 	f += 8;
-	r->max_update_index = get_u64(f);
-	f += 8;
-
-	r->ref_offsets.index_offset = get_u64(f);
+	r->max_update_index = get_be64(f);
 	f += 8;
 
-	r->obj_offsets.offset = get_u64(f);
+	r->ref_offsets.index_offset = get_be64(f);
+	f += 8;
+
+	r->obj_offsets.offset = get_be64(f);
 	f += 8;
 
 	r->object_id_len = r->obj_offsets.offset & ((1 << 5) - 1);
 	r->obj_offsets.offset >>= 5;
 
-	r->obj_offsets.index_offset = get_u64(f);
+	r->obj_offsets.index_offset = get_be64(f);
 	f += 8;
-	r->log_offsets.offset = get_u64(f);
+	r->log_offsets.offset = get_be64(f);
 	f += 8;
-	r->log_offsets.index_offset = get_u64(f);
+	r->log_offsets.index_offset = get_be64(f);
 	f += 8;
 
 	{
 		uint32_t computed_crc = crc32(0, footer, f - footer);
-		uint32_t file_crc = get_u32(f);
+		uint32_t file_crc = get_be32(f);
 		f += 4;
 		if (computed_crc != file_crc) {
 			err = FORMAT_ERROR;
@@ -175,7 +175,7 @@ int init_reader(struct reader *r, struct block_source source, const char *name)
 	memset(r, 0, sizeof(struct reader));
 	r->size = block_source_size(source) - FOOTER_SIZE;
 	r->source = source;
-	r->name = strdup(name);
+	r->name = xstrdup(name);
 	r->hash_size = 0;
 
 	err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
@@ -249,7 +249,7 @@ static int32_t extract_block_size(byte *data, byte *typ, uint64_t off)
 
 	*typ = data[0];
 	if (is_block_type(*typ)) {
-		result = get_u24(data + 1);
+		result = get_be24(data + 1);
 	}
 	return result;
 }

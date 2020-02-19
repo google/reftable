@@ -79,7 +79,7 @@ void test_block_read_write()
 
 		ref.ref_name = name;
 		ref.value = hash;
-		names[i] = strdup(name);
+		names[i] = xstrdup(name);
 		int n = block_writer_add(&bw, rec);
 		ref.ref_name = NULL;
 		ref.value = NULL;
