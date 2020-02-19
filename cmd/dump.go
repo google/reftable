@@ -72,7 +72,7 @@ func dumpStack(nm, dir string) error {
 		tabs = append(tabs, r)
 	}
 
-	merged, err := reftable.NewMerged(tabs)
+	merged, err := reftable.NewMerged(tabs, 20)
 	if err != nil {
 		return err
 	}
