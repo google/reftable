@@ -25,7 +25,7 @@ uint32_t get_be32(uint8_t *in)
 void put_be64(uint8_t *out, uint64_t v)
 {
 	int i = sizeof(uint64_t);
-        while (i--) {
+	while (i--) {
 		out[i] = (uint8_t)(v & 0xff);
 		v >>= 8;
 	}
@@ -46,9 +46,10 @@ uint16_t get_be16(uint8_t *in)
 	return (uint32_t)(in[0]) << 8 | (uint32_t)(in[1]);
 }
 
-char *xstrdup(const char *s) {
-        int l = strlen(s);
-        char *dest =  (char*)malloc(l + 1);
-        strncpy(dest, s, l+1);
-        return dest;
+char *xstrdup(const char *s)
+{
+	int l = strlen(s);
+	char *dest = (char *)malloc(l + 1);
+	strncpy(dest, s, l + 1);
+	return dest;
 }
