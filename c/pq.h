@@ -12,8 +12,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 
 struct pq_entry {
-	struct record rec;
 	int index;
+	struct record rec;
 };
 
 int pq_less(struct pq_entry a, struct pq_entry b);

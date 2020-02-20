@@ -49,9 +49,9 @@ struct block_reader {
 };
 
 struct block_iter {
+	uint32_t next_off;
 	struct block_reader *br;
 	struct slice last_key;
-	uint32_t next_off;
 };
 
 int block_reader_init(struct block_reader *br, struct block *bl,

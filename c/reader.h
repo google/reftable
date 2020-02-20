@@ -27,8 +27,8 @@ struct reader_offsets {
 };
 
 struct reader {
-	struct block_source source;
 	char *name;
+	struct block_source source;
 	int hash_size;
 	uint64_t size;
 	uint32_t block_size;

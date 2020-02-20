@@ -23,7 +23,7 @@ struct record_vtable {
 	void (*clear)(void *rec);
 };
 
-/* record is a generic wrapper for differnt types of records. */
+/* record is a generic wrapper for different types of records. */
 struct record {
 	void *data;
 	struct record_vtable *ops;
@@ -44,8 +44,8 @@ int decode_key(struct slice *key, byte *extra, struct slice last_key,
 	       struct slice in);
 
 struct index_record {
-	struct slice last_key;
 	uint64_t offset;
+	struct slice last_key;
 };
 
 struct obj_record {

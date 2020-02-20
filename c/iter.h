@@ -23,9 +23,9 @@ int iterator_next(struct iterator it, struct record rec);
 bool iterator_is_null(struct iterator it);
 
 struct filtering_ref_iterator {
+	bool double_check;
 	struct reader *r;
 	struct slice oid;
-	bool double_check;
 	struct iterator it;
 };
 

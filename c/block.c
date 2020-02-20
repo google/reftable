@@ -242,9 +242,9 @@ void block_reader_start(struct block_reader *br, struct block_iter *it)
 }
 
 struct restart_find_args {
+	int error;
 	struct slice key;
 	struct block_reader *r;
-	int error;
 };
 
 static int restart_key_less(int idx, void *args)
