@@ -49,7 +49,7 @@ int get_var_int(uint64_t *dest, struct slice in)
 
 int put_var_int(struct slice dest, uint64_t val)
 {
-	byte buf[10] = {};
+	byte buf[10] = { 0 };
 	int i = 9;
 	buf[i] = (byte)(val & 0x7f);
 	i--;
@@ -204,7 +204,7 @@ static void hex_format(char *dest, byte *src, int hash_size)
 
 void ref_record_print(struct ref_record *ref, int hash_size)
 {
-	char hex[SHA256_SIZE + 1] = {};
+	char hex[SHA256_SIZE + 1] = { 0 };
 
 	printf("ref{%s(%" PRIu64 ") ", ref->ref_name, ref->update_index);
 	if (ref->value != NULL) {
@@ -360,7 +360,7 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
 		in.len -= hash_size;
 		break;
 	case 3: {
-		struct slice dest = {};
+		struct slice dest = { 0 };
 		int n = decode_string(&dest, in);
 		if (n < 0) {
 			return -1;
@@ -596,7 +596,7 @@ struct record_vtable obj_record_vtable = {
 
 void log_record_print(struct log_record *log, int hash_size)
 {
-	char hex[SHA256_SIZE + 1] = {};
+	char hex[SHA256_SIZE + 1] = { 0 };
 
 	printf("log{%s(%" PRIu64 ") %s <%s> %" PRIu64 " %04d\n", log->ref_name,
 	       log->update_index, log->name, log->email, log->time,
@@ -665,7 +665,7 @@ static byte log_record_val_type(const void *rec)
 	return 1;
 }
 
-static byte zero[SHA256_SIZE] = {};
+static byte zero[SHA256_SIZE] = { 0 };
 
 static int log_record_encode(const void *rec, struct slice s, int hash_size)
 {
@@ -736,7 +736,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 	struct log_record *r = (struct log_record *)rec;
 	uint64_t max = 0;
 	uint64_t ts = 0;
-	struct slice dest = {};
+	struct slice dest = { 0 };
 	int n;
 
 	if (key.len <= 9 || key.buf[key.len - 9] != 0) {

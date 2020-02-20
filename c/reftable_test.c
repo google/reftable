@@ -21,14 +21,14 @@ static const int update_index = 5;
 
 void test_buffer(void)
 {
-	struct slice buf = {};
+	struct slice buf = { 0 };
 
 	byte in[] = "hello";
 	slice_write(&buf, in, sizeof(in));
 	struct block_source source;
 	block_source_from_slice(&source, &buf);
 	assert(block_source_size(source) == 6);
-	struct block out = {};
+	struct block out = { 0 };
 	int n = block_source_read_block(source, &out, 0, sizeof(in));
 	assert(n == sizeof(in));
 	assert(!memcmp(in, out.data, n));
@@ -57,10 +57,10 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 
 	writer_set_limits(w, update_index, update_index);
 	{
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		int i = 0;
 		for (i = 0; i < N; i++) {
-			byte hash[SHA256_SIZE] = {};
+			byte hash[SHA256_SIZE] = { 0 };
 			set_test_hash(hash, i);
 
 			char name[100];
@@ -77,10 +77,10 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 		}
 	}
 	{
-		struct log_record log = {};
+		struct log_record log = { 0 };
 		int i = 0;
 		for (i = 0; i < N; i++) {
-			byte hash[SHA256_SIZE] = {};
+			byte hash[SHA256_SIZE] = { 0 };
 			set_test_hash(hash, i);
 
 			char name[100];
@@ -116,7 +116,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 
 void test_log_buffer_size(void)
 {
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	struct write_options opts = {
 		.block_size = 4096,
 	};
@@ -159,12 +159,12 @@ void test_log_write_read(void)
 		.block_size = 256,
 	};
 
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	struct writer *w = new_writer(&slice_write_void, &buf, &opts);
 
 	writer_set_limits(w, 0, N);
 	{
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		int i = 0;
 		for (i = 0; i < N; i++) {
 			char name[256];
@@ -180,7 +180,7 @@ void test_log_write_read(void)
 	}
 
 	{
-		struct log_record log = {};
+		struct log_record log = { 0 };
 		int i = 0;
 		for (i = 0; i < N; i++) {
 			byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
@@ -205,19 +205,19 @@ void test_log_write_read(void)
 	writer_free(w);
 	w = NULL;
 
-	struct block_source source = {};
+	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
-	struct reader rd = {};
+	struct reader rd = { 0 };
 	int err = init_reader(&rd, source, "file.log");
 	assert(err == 0);
 
 	{
-		struct iterator it = {};
+		struct iterator it = { 0 };
 		err = reader_seek_ref(&rd, &it, names[N - 1]);
 		assert(err == 0);
 
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		err = iterator_next_ref(it, &ref);
 		assert_err(err);
 
@@ -230,11 +230,11 @@ void test_log_write_read(void)
 	}
 
 	{
-		struct iterator it = {};
+		struct iterator it = { 0 };
 		err = reader_seek_log(&rd, &it, "");
 		assert(err == 0);
 
-		struct log_record log = {};
+		struct log_record log = { 0 };
 		int i = 0;
 		while (true) {
 			int err = iterator_next_log(it, &log);
@@ -261,24 +261,24 @@ void test_log_write_read(void)
 void test_table_read_write_sequential(void)
 {
 	char **names;
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	int N = 50;
 	write_table(&names, &buf, N, 256, SHA1_SIZE);
 
-	struct block_source source = {};
+	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
-	struct reader rd = {};
+	struct reader rd = { 0 };
 	int err = init_reader(&rd, source, "file.ref");
 	assert(err == 0);
 
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	err = reader_seek_ref(&rd, &it, "");
 	assert(err == 0);
 
 	int j = 0;
 	while (true) {
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		int r = iterator_next_ref(it, &ref);
 		assert(r >= 0);
 		if (r > 0) {
@@ -301,7 +301,7 @@ void test_table_read_write_sequential(void)
 void test_table_write_small_table(void)
 {
 	char **names;
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_SIZE);
 	assert(buf.len < 200);
@@ -312,22 +312,22 @@ void test_table_write_small_table(void)
 void test_table_read_api(void)
 {
 	char **names;
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	int N = 50;
 	write_table(&names, &buf, N, 256, SHA1_SIZE);
 
-	struct reader rd = {};
-	struct block_source source = {};
+	struct reader rd = { 0 };
+	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
 	assert(err == 0);
 
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	err = reader_seek_ref(&rd, &it, names[0]);
 	assert(err == 0);
 
-	struct log_record log = {};
+	struct log_record log = { 0 };
 	err = iterator_next_log(it, &log);
 	assert(err == API_ERROR);
 
@@ -343,12 +343,12 @@ void test_table_read_api(void)
 void test_table_read_write_seek(bool index, int hash_size)
 {
 	char **names;
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	int N = 50;
 	write_table(&names, &buf, N, 256, hash_size);
 
-	struct reader rd = {};
-	struct block_source source = {};
+	struct reader rd = { 0 };
+	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
@@ -361,10 +361,10 @@ void test_table_read_write_seek(bool index, int hash_size)
 
 	int i = 0;
 	for (i = 1; i < N; i++) {
-		struct iterator it = {};
+		struct iterator it = { 0 };
 		int err = reader_seek_ref(&rd, &it, names[i]);
 		assert(err == 0);
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		err = iterator_next_ref(it, &ref);
 		assert(err == 0);
 		assert(0 == strcmp(names[i], ref.ref_name));
@@ -411,15 +411,15 @@ void test_table_refs_for(bool indexed)
 		.block_size = 256,
 	};
 
-	struct slice buf = {};
+	struct slice buf = { 0 };
 	struct writer *w = new_writer(&slice_write_void, &buf, &opts);
 	{
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		int i = 0;
 		for (i = 0; i < N; i++) {
 			byte hash[SHA1_SIZE];
 			memset(hash, i, sizeof(hash));
-			char fill[51] = {};
+			char fill[51] = { 0 };
 			memset(fill, 'x', 50);
 			char name[100];
 			/* Put the variable part in the start */
@@ -455,7 +455,7 @@ void test_table_refs_for(bool indexed)
 	w = NULL;
 
 	struct reader rd;
-	struct block_source source = {};
+	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
@@ -464,7 +464,7 @@ void test_table_refs_for(bool indexed)
 		rd.obj_offsets.present = 0;
 	}
 
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	err = reader_seek_ref(&rd, &it, "");
 	assert(err == 0);
 	iterator_destroy(&it);
@@ -472,7 +472,7 @@ void test_table_refs_for(bool indexed)
 	err = reader_refs_for(&rd, &it, want_hash, SHA1_SIZE);
 	assert(err == 0);
 
-	struct ref_record ref = {};
+	struct ref_record ref = { 0 };
 
 	int j = 0;
 	while (true) {

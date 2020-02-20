@@ -83,7 +83,7 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
 
 static int merged_iter_next(struct merged_iter *mi, struct record rec)
 {
-	struct slice entry_key = {};
+	struct slice entry_key = { 0 };
 	struct pq_entry entry = merged_iter_pqueue_remove(&mi->pq);
 	int err = merged_iter_advance_subiter(mi, entry.index);
 	if (err < 0) {
@@ -93,7 +93,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 	record_key(entry.rec, &entry_key);
 	while (!merged_iter_pqueue_is_empty(mi->pq)) {
 		struct pq_entry top = merged_iter_pqueue_top(mi->pq);
-		struct slice k = {};
+		struct slice k = { 0 };
 		int err = 0, cmp = 0;
 
 		record_key(top.rec, &k);
@@ -265,7 +265,7 @@ int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,
 	struct ref_record ref = {
 		.ref_name = (char *)name,
 	};
-	struct record rec = {};
+	struct record rec = { 0 };
 	record_from_ref(&rec, &ref);
 	return merged_table_seek_record(mt, it, rec);
 }
@@ -277,7 +277,7 @@ int merged_table_seek_log_at(struct merged_table *mt, struct iterator *it,
 		.ref_name = (char *)name,
 		.update_index = update_index,
 	};
-	struct record rec = {};
+	struct record rec = { 0 };
 	record_from_log(&rec, &log);
 	return merged_table_seek_record(mt, it, rec);
 }

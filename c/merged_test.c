@@ -21,7 +21,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 void test_pq(void)
 {
-	char *names[54] = {};
+	char *names[54] = { 0 };
 	int N = ARRAY_SIZE(names) - 1;
 
 	int i = 0;
@@ -31,7 +31,7 @@ void test_pq(void)
 		names[i] = xstrdup(name);
 	}
 
-	struct merged_iter_pqueue pq = {};
+	struct merged_iter_pqueue pq = { 0 };
 
 	i = 1;
 	do {
@@ -142,15 +142,15 @@ void test_merged_between(void)
 
 	struct ref_record *refs[] = { r1, r2 };
 	int sizes[] = { 1, 1 };
-	struct slice bufs[2] = {};
+	struct slice bufs[2] = { 0 };
 	struct merged_table *mt =
 		merged_table_from_records(refs, sizes, bufs, 2);
 
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	int err = merged_table_seek_ref(mt, &it, "a");
 	assert(err == 0);
 
-	struct ref_record ref = {};
+	struct ref_record ref = { 0 };
 	err = iterator_next_ref(it, &ref);
 	assert_err(err);
 	assert(ref.update_index == 2);
@@ -197,12 +197,12 @@ void test_merged(void)
 
 	struct ref_record *refs[] = { r1, r2, r3 };
 	int sizes[3] = { 3, 1, 2 };
-	struct slice bufs[3] = {};
+	struct slice bufs[3] = { 0 };
 
 	struct merged_table *mt =
 		merged_table_from_records(refs, sizes, bufs, 3);
 
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	int err = merged_table_seek_ref(mt, &it, "a");
 	assert(err == 0);
 
@@ -210,7 +210,7 @@ void test_merged(void)
 	int len = 0;
 	int cap = 0;
 	while (len < 100) { /* cap loops/recursion. */
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		int err = iterator_next_ref(it, &ref);
 		if (err > 0) {
 			break;

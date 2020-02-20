@@ -95,13 +95,13 @@ void test_stack_add(void)
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = {};
+	struct write_options cfg = { 0 };
 	struct stack *st = NULL;
 	int err = new_stack(&st, dir, fn, cfg);
 	assert_err(err);
 
-	struct ref_record refs[2] = {};
-	struct log_record logs[2] = {};
+	struct ref_record refs[2] = { 0 };
+	struct log_record logs[2] = { 0 };
 	int N = ARRAY_SIZE(refs);
 	for (i = 0; i < N; i++) {
 		char buf[256];
@@ -132,7 +132,7 @@ void test_stack_add(void)
 	assert_err(err);
 
 	for (i = 0; i < N; i++) {
-		struct ref_record dest = {};
+		struct ref_record dest = { 0 };
 		int err = stack_read_ref(st, refs[i].ref_name, &dest);
 		assert_err(err);
 		assert(ref_record_equal(&dest, refs + i, SHA1_SIZE));
@@ -140,7 +140,7 @@ void test_stack_add(void)
 	}
 
 	for (i = 0; i < N; i++) {
-		struct log_record dest = {};
+		struct log_record dest = { 0 };
 		int err = stack_read_log(st, refs[i].ref_name, &dest);
 		assert_err(err);
 		assert(log_record_equal(&dest, logs + i, SHA1_SIZE));
@@ -213,12 +213,12 @@ void test_reflog_expire(void)
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = {};
+	struct write_options cfg = { 0 };
 	struct stack *st = NULL;
 	int err = new_stack(&st, dir, fn, cfg);
 	assert_err(err);
 
-	struct log_record logs[20] = {};
+	struct log_record logs[20] = { 0 };
 	int N = ARRAY_SIZE(logs) - 1;
 	int i = 0;
 	for (i = 1; i <= N; i++) {
@@ -247,7 +247,7 @@ void test_reflog_expire(void)
 	err = stack_compact_all(st, &expiry);
 	assert_err(err);
 
-	struct log_record log = {};
+	struct log_record log = { 0 };
 	err = stack_read_log(st, logs[9].ref_name, &log);
 	assert(err == 1);
 
@@ -285,7 +285,7 @@ void test_empty_add(void)
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = {};
+	struct write_options cfg = { 0 };
 	struct stack *st = NULL;
 	int err = new_stack(&st, dir, fn, cfg);
 	assert_err(err);

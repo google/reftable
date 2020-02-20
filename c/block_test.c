@@ -58,15 +58,15 @@ void test_block_read_write()
 	const int N = 30;
 	char *names[N];
 	const int block_size = 1024;
-	struct block block = {};
+	struct block block = { 0 };
 	block.data = calloc(block_size, 1);
 	block.len = block_size;
 
-	struct block_writer bw = {};
+	struct block_writer bw = { 0 };
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
 			  header_off, SHA1_SIZE);
-	struct ref_record ref = {};
-	struct record rec = {};
+	struct ref_record ref = { 0 };
+	struct record rec = { 0 };
 	record_from_ref(&rec, &ref);
 
 	int i = 0;
@@ -91,10 +91,10 @@ void test_block_read_write()
 
 	block_writer_clear(&bw);
 
-	struct block_reader br = {};
+	struct block_reader br = { 0 };
 	block_reader_init(&br, &block, header_off, block_size, SHA1_SIZE);
 
-	struct block_iter it = {};
+	struct block_iter it = { 0 };
 	block_reader_start(&br, &it);
 
 	int j = 0;
@@ -111,11 +111,11 @@ void test_block_read_write()
 	record_clear(rec);
 	block_iter_close(&it);
 
-	struct slice want = {};
+	struct slice want = { 0 };
 	for (i = 0; i < N; i++) {
 		slice_set_string(&want, names[i]);
 
-		struct block_iter it = {};
+		struct block_iter it = { 0 };
 		int n = block_reader_seek(&br, &it, want);
 		assert(n == 0);
 

@@ -12,8 +12,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 int pq_less(struct pq_entry a, struct pq_entry b)
 {
-	struct slice ak = {};
-	struct slice bk = {};
+	struct slice ak = { 0 };
+	struct slice bk = { 0 };
 	int cmp = 0;
 	record_key(a.rec, &ak);
 	record_key(b.rec, &bk);

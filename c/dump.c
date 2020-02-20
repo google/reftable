@@ -12,7 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 static int dump_table(const char *tablename)
 {
-	struct block_source src = {};
+	struct block_source src = { 0 };
 	int err = block_source_from_file(&src, tablename);
 	if (err < 0) {
 		return err;
@@ -25,13 +25,13 @@ static int dump_table(const char *tablename)
 	}
 
 	{
-		struct iterator it = {};
+		struct iterator it = { 0 };
 		err = reader_seek_ref(r, &it, "");
 		if (err < 0) {
 			return err;
 		}
 
-		struct ref_record ref = {};
+		struct ref_record ref = { 0 };
 		while (1) {
 			err = iterator_next_ref(it, &ref);
 			if (err > 0) {
@@ -47,12 +47,12 @@ static int dump_table(const char *tablename)
 	}
 
 	{
-		struct iterator it = {};
+		struct iterator it = { 0 };
 		err = reader_seek_log(r, &it, "");
 		if (err < 0) {
 			return err;
 		}
-		struct log_record log = {};
+		struct log_record log = { 0 };
 		while (1) {
 			err = iterator_next_log(it, &log);
 			if (err > 0) {

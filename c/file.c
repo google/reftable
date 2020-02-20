@@ -63,7 +63,7 @@ struct block_source_vtable file_vtable = {
 
 int block_source_from_file(struct block_source *bs, const char *name)
 {
-	struct stat st = {};
+	struct stat st = { 0 };
 	int err = 0;
 	int fd = open(name, O_RDONLY);
 	if (fd < 0) {

@@ -125,7 +125,7 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 	int new_tables_len = 0;
 	struct merged_table *new_merged = NULL;
 
-	struct slice table_path = {};
+	struct slice table_path = { 0 };
 
 	while (*names) {
 		struct reader *rd = NULL;
@@ -143,7 +143,7 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 		}
 
 		if (rd == NULL) {
-			struct block_source src = {};
+			struct block_source src = { 0 };
 			slice_set_string(&table_path, st->reftable_dir);
 			slice_append_string(&table_path, "/");
 			slice_append_string(&table_path, name);
@@ -215,7 +215,7 @@ static int tv_cmp(struct timeval *a, struct timeval *b)
 
 static int stack_reload_maybe_reuse(struct stack *st, bool reuse_open)
 {
-	struct timeval deadline = {};
+	struct timeval deadline = { 0 };
 	int err = gettimeofday(&deadline, NULL);
 	int64_t delay = 0;
 	int tries = 0;
@@ -227,7 +227,7 @@ static int stack_reload_maybe_reuse(struct stack *st, bool reuse_open)
 	while (true) {
 		char **names = NULL;
 		char **names_after = NULL;
-		struct timeval now = {};
+		struct timeval now = { 0 };
 		int err = gettimeofday(&now, NULL);
 		if (err < 0) {
 			return err;
@@ -339,11 +339,11 @@ static void format_name(struct slice *dest, uint64_t min, uint64_t max)
 int stack_try_add(struct stack *st,
 		  int (*write_table)(struct writer *wr, void *arg), void *arg)
 {
-	struct slice lock_name = {};
-	struct slice temp_tab_name = {};
-	struct slice tab_name = {};
-	struct slice next_name = {};
-	struct slice table_list = {};
+	struct slice lock_name = { 0 };
+	struct slice temp_tab_name = { 0 };
+	struct slice tab_name = { 0 };
+	struct slice next_name = { 0 };
+	struct slice table_list = { 0 };
 	struct writer *wr = NULL;
 	int err = 0;
 	int tab_fd = 0;
@@ -501,7 +501,7 @@ static int stack_compact_locked(struct stack *st, int first, int last,
 				struct slice *temp_tab,
 				struct log_expiry_config *config)
 {
-	struct slice next_name = {};
+	struct slice next_name = { 0 };
 	int tab_fd = -1;
 	struct writer *wr = NULL;
 	int err = 0;
@@ -552,9 +552,9 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
 		calloc(sizeof(struct reader *), last - first + 1);
 	struct merged_table *mt = NULL;
 	int err = 0;
-	struct iterator it = {};
-	struct ref_record ref = {};
-	struct log_record log = {};
+	struct iterator it = { 0 };
+	struct ref_record ref = { 0 };
+	struct log_record log = { 0 };
 
 	int i = 0, j = 0;
 	for (i = first, j = 0; i <= last; i++) {
@@ -646,11 +646,11 @@ exit:
 static int stack_compact_range(struct stack *st, int first, int last,
 			       struct log_expiry_config *expiry)
 {
-	struct slice temp_tab_name = {};
-	struct slice new_table_name = {};
-	struct slice lock_file_name = {};
-	struct slice ref_list_contents = {};
-	struct slice new_table_path = {};
+	struct slice temp_tab_name = { 0 };
+	struct slice new_table_name = { 0 };
+	struct slice lock_file_name = { 0 };
+	struct slice ref_list_contents = { 0 };
+	struct slice new_table_path = { 0 };
 	int err = 0;
 	bool have_lock = false;
 	int lock_file_fd = 0;
@@ -688,8 +688,8 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	}
 
 	for (i = first, j = 0; i <= last; i++) {
-		struct slice subtab_name = {};
-		struct slice subtab_lock = {};
+		struct slice subtab_name = { 0 };
+		struct slice subtab_lock = { 0 };
 		slice_set_string(&subtab_name, st->reftable_dir);
 		slice_append_string(&subtab_name, "/");
 		slice_append_string(&subtab_name,
@@ -728,7 +728,8 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	have_lock = false;
 
 	err = stack_compact_locked(st, first, last, &temp_tab_name, expiry);
-	/* Compaction + tombstones can create an empty table out of non-empty tables. */
+	/* Compaction + tombstones can create an empty table out of non-empty
+	 * tables. */
 	is_empty_table = (err == EMPTY_TABLE_ERROR);
 	if (is_empty_table) {
 		err = 0;
@@ -870,7 +871,7 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n)
 {
 	struct segment *segs = calloc(sizeof(struct segment), n);
 	int next = 0;
-	struct segment cur = {};
+	struct segment cur = { 0 };
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		int log = fastlog2(sizes[i]);
@@ -958,7 +959,7 @@ struct compaction_stats *stack_compaction_stats(struct stack *st)
 int stack_read_ref(struct stack *st, const char *refname,
 		   struct ref_record *ref)
 {
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	struct merged_table *mt = stack_merged_table(st);
 	int err = merged_table_seek_ref(mt, &it, refname);
 	if (err) {
@@ -983,7 +984,7 @@ exit:
 int stack_read_log(struct stack *st, const char *refname,
 		   struct log_record *log)
 {
-	struct iterator it = {};
+	struct iterator it = { 0 };
 	struct merged_table *mt = stack_merged_table(st);
 	int err = merged_table_seek_log(mt, &it, refname);
 	if (err) {

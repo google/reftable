@@ -88,7 +88,7 @@ const char *slice_as_string(struct slice *s)
 /* return a newly malloced string for this slice */
 char *slice_to_string(struct slice in)
 {
-	struct slice s = {};
+	struct slice s = { 0 };
 	slice_resize(&s, in.len + 1);
 	s.buf[in.len] = 0;
 	memcpy(s.buf, in.buf, in.len);

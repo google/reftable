@@ -37,6 +37,10 @@ https://developers.google.com/open-source/licenses/bsd
 typedef uint8_t byte;
 typedef int bool;
 
+/* This is uncompress2, which is only available in zlib as of 2017.
+ *
+ * TODO: in git-core, this should fallback to uncompress2 if it is available.
+ */
 int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
 			       const Bytef *source, uLong *sourceLen);
 #define SHA1_SIZE 20

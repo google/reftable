@@ -17,11 +17,11 @@ https://developers.google.com/open-source/licenses/bsd
 
 void test_slice(void)
 {
-	struct slice s = {};
+	struct slice s = { 0 };
 	slice_set_string(&s, "abc");
 	assert(0 == strcmp("abc", slice_as_string(&s)));
 
-	struct slice t = {};
+	struct slice t = { 0 };
 	slice_set_string(&t, "pqr");
 
 	slice_append(&s, t);

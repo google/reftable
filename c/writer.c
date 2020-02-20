@@ -173,7 +173,7 @@ static void writer_index_hash(struct writer *w, struct slice hash)
 static int writer_add_record(struct writer *w, struct record rec)
 {
 	int result = -1;
-	struct slice key = {};
+	struct slice key = { 0 };
 	int err = 0;
 	record_key(rec, &key);
 	if (slice_compare(w->last_key, key) >= 0) {
@@ -213,7 +213,7 @@ exit:
 
 int writer_add_ref(struct writer *w, struct ref_record *ref)
 {
-	struct record rec = {};
+	struct record rec = { 0 };
 	struct ref_record copy = *ref;
 	int err = 0;
 
@@ -279,7 +279,7 @@ int writer_add_log(struct writer *w, struct log_record *log)
 	w->pending_padding = 0;
 
 	{
-		struct record rec = {};
+		struct record rec = { 0 };
 		int err;
 		record_from_log(&rec, log);
 		err = writer_add_record(w, rec);
@@ -326,7 +326,7 @@ static int writer_finish_section(struct writer *w)
 		w->index_len = 0;
 		w->index_cap = 0;
 		for (i = 0; i < idx_len; i++) {
-			struct record rec = {};
+			struct record rec = { 0 };
 			record_from_index(&rec, idx + i);
 			if (block_writer_add(w->block_writer, rec) == 0) {
 				continue;
@@ -404,7 +404,7 @@ static void write_object_record(void *void_arg, void *key)
 		.offsets = entry->offsets,
 		.offset_len = entry->offset_len,
 	};
-	struct record rec = {};
+	struct record rec = { 0 };
 	if (arg->err < 0) {
 		goto exit;
 	}
@@ -446,7 +446,7 @@ static void object_record_free(void *void_arg, void *key)
 static int writer_dump_object_index(struct writer *w)
 {
 	struct write_record_arg closure = { .w = w };
-	struct common_prefix_arg common = {};
+	struct common_prefix_arg common = { 0 };
 	if (w->obj_index_tree != NULL) {
 		infix_walk(w->obj_index_tree, &update_common, &common);
 	}

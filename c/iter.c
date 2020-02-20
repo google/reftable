@@ -57,14 +57,14 @@ void iterator_destroy(struct iterator *it)
 
 int iterator_next_ref(struct iterator it, struct ref_record *ref)
 {
-	struct record rec = {};
+	struct record rec = { 0 };
 	record_from_ref(&rec, ref);
 	return iterator_next(it, rec);
 }
 
 int iterator_next_log(struct iterator it, struct log_record *log)
 {
-	struct record rec = {};
+	struct record rec = { 0 };
 	record_from_log(&rec, log);
 	return iterator_next(it, rec);
 }
@@ -90,7 +90,7 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 		}
 
 		if (fri->double_check) {
-			struct iterator it = {};
+			struct iterator it = { 0 };
 
 			int err = reader_seek_ref(fri->r, &it, ref->ref_name);
 			if (err == 0) {

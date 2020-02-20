@@ -35,8 +35,8 @@ void test_tree()
 {
 	struct tree_node *root = NULL;
 
-	void *values[11] = {};
-	struct tree_node *nodes[11] = {};
+	void *values[11] = { 0 };
+	struct tree_node *nodes[11] = { 0 };
 	int i = 1;
 	do {
 		nodes[i] = tree_search(values + i, &root, &test_compare, 1);
@@ -49,7 +49,7 @@ void test_tree()
 		       tree_search(values + i, &root, &test_compare, 0));
 	}
 
-	struct curry c = {};
+	struct curry c = { 0 };
 	infix_walk(root, check_increasing, &c);
 	tree_free(root);
 }

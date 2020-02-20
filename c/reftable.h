@@ -261,10 +261,10 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
    struct reader *r = NULL;
    int err = new_reader(&r, src, "filename");
    if (err < 0) { ... }
-   struct iterator it = {};
+   struct iterator it  = {0};
    err = reader_seek_ref(r, &it, "refs/heads/master");
    if (err < 0) { ... }
-   struct ref_record ref = {};
+   struct ref_record ref  = {0};
    while (1) {
      err = iterator_next_ref(it, &ref);
      if (err > 0) {

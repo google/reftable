@@ -41,7 +41,7 @@ byte block_writer_type(struct block_writer *bw)
    success */
 int block_writer_add(struct block_writer *w, struct record rec)
 {
-	struct slice empty = {};
+	struct slice empty = { 0 };
 	struct slice last = w->entries % w->restart_interval == 0 ? empty :
 								    w->last_key;
 	struct slice out = {
@@ -52,7 +52,7 @@ int block_writer_add(struct block_writer *w, struct record rec)
 	struct slice start = out;
 
 	bool restart = false;
-	struct slice key = {};
+	struct slice key = { 0 };
 	int n = 0;
 
 	record_key(rec, &key);
@@ -128,7 +128,7 @@ int block_writer_finish(struct block_writer *w)
 
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
-		struct slice compressed = {};
+		struct slice compressed = { 0 };
 		int zresult = 0;
 		uLongf src_len = w->next - block_header_skip;
 		slice_resize(&compressed, src_len);
@@ -176,7 +176,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 	}
 
 	if (typ == BLOCK_TYPE_LOG) {
-		struct slice uncompressed = {};
+		struct slice uncompressed = { 0 };
 		int block_header_skip = 4 + header_off;
 		uLongf dst_len = sz - block_header_skip;
 		uLongf src_len = block->len - block_header_skip;
@@ -258,8 +258,8 @@ static int restart_key_less(int idx, void *args)
 
 	/* the restart key is verbatim in the block, so this could avoid the
 	   alloc for decoding the key */
-	struct slice rkey = {};
-	struct slice last_key = {};
+	struct slice rkey = { 0 };
+	struct slice last_key = { 0 };
 	byte unused_extra;
 	int n = decode_key(&rkey, &unused_extra, last_key, in);
 	if (n < 0) {
@@ -294,7 +294,7 @@ int block_iter_next(struct block_iter *it, struct record rec)
 			.len = it->br->block_len - it->next_off,
 		};
 		struct slice start = in;
-		struct slice key = {};
+		struct slice key = { 0 };
 		byte extra;
 		int n = decode_key(&key, &extra, it->last_key, in);
 		if (n < 0) {
@@ -319,7 +319,7 @@ int block_iter_next(struct block_iter *it, struct record rec)
 
 int block_reader_first_key(struct block_reader *br, struct slice *key)
 {
-	struct slice empty = {};
+	struct slice empty = { 0 };
 	int off = br->header_off + 4;
 	struct slice in = {
 		.buf = br->block.data + off,
@@ -367,10 +367,10 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 
 	{
 		struct record rec = new_record(block_reader_type(br));
-		struct slice key = {};
+		struct slice key = { 0 };
 		int result = 0;
 		int err = 0;
-		struct block_iter next = {};
+		struct block_iter next = { 0 };
 		while (true) {
 			block_iter_copy_from(&next, it);
 
