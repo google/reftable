@@ -32,12 +32,12 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "compat.h"
 
+#endif /* REFTABLE_IN_GITCORE */
+
 #define SHA1_ID   0x73686131
 #define SHA256_ID 0x73323536
 #define SHA1_SIZE 20
 #define SHA256_SIZE 32
-
-#endif /* REFTABLE_IN_GITCORE */
 
 typedef uint8_t byte;
 typedef int bool;
