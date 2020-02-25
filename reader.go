@@ -61,8 +61,8 @@ type Reader struct {
 	offsets map[byte]readerOffsets
 }
 
-func (r *Reader) HashSize() int {
-	return r.hashSize
+func (r *Reader) HashID() HashID {
+	return SHA1ID
 }
 
 func (r *Reader) DebugData() string {

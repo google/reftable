@@ -10,8 +10,6 @@ package reftable
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -47,11 +45,13 @@ type Stack struct {
 
 // NewStack returns a new stack.
 func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
-	if cfg.HashSize == 0 {
-		cfg.HashSize = sha1.Size
+	if cfg.HashID == NullHashID {
+		cfg.HashID = SHA1ID
 	}
-	if cfg.HashSize != sha1.Size && cfg.HashSize != sha256.Size {
-		return nil, fmt.Errorf("reftable: invalid hash size %d", cfg.HashSize)
+	switch cfg.HashID {
+	case SHA1ID, SHA256ID:
+	default:
+		return nil, fmt.Errorf("reftable: unknown hash ID %q", cfg.HashID)
 	}
 
 	st := &Stack{
@@ -183,7 +183,7 @@ func (st *Stack) reload(reuseOpen bool) error {
 		tabs = append(tabs, r)
 	}
 
-	m, err := NewMerged(tabs, st.cfg.HashSize)
+	m, err := NewMerged(tabs, st.cfg.HashID)
 	if err != nil {
 		return err
 	}
@@ -373,7 +373,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 		subtabs = append(subtabs, st.stack[i])
 	}
 
-	merged, err := NewMerged(subtabs, st.cfg.HashSize)
+	merged, err := NewMerged(subtabs, st.cfg.HashID)
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,6 @@ https://developers.google.com/open-source/licenses/bsd
 package reftable
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -59,7 +58,7 @@ func constructMergedRefTestTable(t *testing.T, recs ...[]RefRecord) *Merged {
 		tabs = append(tabs, reader)
 	}
 
-	m, err := NewMerged(tabs, sha1.Size)
+	m, err := NewMerged(tabs, SHA1ID)
 	if err != nil {
 		t.Fatalf("NewMerged: %v", err)
 	}

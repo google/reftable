@@ -11,7 +11,6 @@ package reftable
 import (
 	"bytes"
 	"crypto/sha1"
-	"crypto/sha256"
 	"fmt"
 	"math"
 	"reflect"
@@ -138,16 +137,16 @@ func TestTableSeekEmpty(t *testing.T) {
 }
 
 func TestTableRoundTripSHA256(t *testing.T) {
-	testTableRoundTrip(t, sha256.Size)
+	testTableRoundTrip(t, SHA256ID)
 }
 
 func TestTableRoundTripSHA1(t *testing.T) {
-	testTableRoundTrip(t, sha1.Size)
+	testTableRoundTrip(t, SHA1ID)
 }
 
-func testTableRoundTrip(t *testing.T, hashSize int) {
+func testTableRoundTrip(t *testing.T, hashID HashID) {
 	genHash := testHash
-	if hashSize == sha256.Size {
+	if hashID == SHA256ID {
 		genHash = testHash256
 	}
 	refs := []RefRecord{{
@@ -190,7 +189,7 @@ func testTableRoundTrip(t *testing.T, hashSize int) {
 
 	_, reader := constructTestTable(t, refs, logs, Config{
 		BlockSize: 512,
-		HashSize:  hashSize,
+		HashID:    hashID,
 	})
 
 	iter, err := reader.SeekRef("")

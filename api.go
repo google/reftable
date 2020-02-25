@@ -30,11 +30,27 @@ type record interface {
 	decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool)
 }
 
+type HashID [4]byte
+
+var SHA1ID = HashID([4]byte{'s', 'h', 'a', '1'})
+var SHA256ID = HashID([4]byte{'s', '2', '5', '6'})
+var NullHashID = HashID([4]byte{0, 0, 0, 0})
+
+func (i HashID) Size() int {
+	switch i {
+	case NullHashID, SHA1ID:
+		return 20
+	case SHA256ID:
+		return 32
+	}
+	panic("unknown hash")
+}
+
 // Table is a read interface for reftables, either file reftables or merged reftables.
 type Table interface {
 	MaxUpdateIndex() uint64
 	MinUpdateIndex() uint64
-	HashSize() int
+	HashID() HashID
 	SeekRef(refName string) (*Iterator, error)
 	SeekLog(refName string, updateIndex uint64) (*Iterator, error)
 	RefsFor(oid []byte) (*Iterator, error)
@@ -61,9 +77,8 @@ type Config struct {
 	SkipIndexObjects bool
 	RestartInterval  int
 
-	// Width of the hashes, must either be 20 for SHA1, or 32 for
-	// SHA256.  If unset, defaults to 20 for SHA1.
-	HashSize int
+	// Hash identifier. Unset means sha1.
+	HashID HashID
 }
 
 // RefRecord is a Record from the ref database.

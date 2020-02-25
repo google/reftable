@@ -104,11 +104,11 @@ func NewWriter(out io.Writer, cfg *Config) (*Writer, error) {
 	}
 
 	w.blockWriter = w.newBlockWriter(blockTypeRef)
-	switch cfg.HashSize {
-	case sha1.Size, sha256.Size:
-		w.hashSize = cfg.HashSize
-	case 0:
+	switch cfg.HashID {
+	case SHA1ID, NullHashID:
 		w.hashSize = sha1.Size
+	case SHA256ID:
+		w.hashSize = sha256.Size
 	default:
 		return nil, fmt.Errorf("reftable: unsupported hash size.")
 	}

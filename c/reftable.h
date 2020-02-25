@@ -61,9 +61,10 @@ struct write_options {
 	/* how often to write complete keys in each block. */
 	int restart_interval;
 
-	/* width of the hash. Should be 20 for SHA1 or 32 for SHA256. Defaults
-	 * to SHA1 if unset */
-	int hash_size;
+	/* 4-byte identifier ("sha1", "s256") of the hash.
+         * Defaults to SHA1 if unset
+         */
+	uint32_t hash_id;
 };
 
 /* ref_record holds a ref database entry target_value */

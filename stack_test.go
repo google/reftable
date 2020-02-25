@@ -99,7 +99,7 @@ func TestMixedHashSize(t *testing.T) {
 
 	cfg := Config{
 		Unaligned: true,
-		HashSize:  20,
+		HashID:    SHA1ID,
 	}
 
 	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
@@ -124,7 +124,7 @@ func TestMixedHashSize(t *testing.T) {
 	}
 
 	cfg2 := cfg
-	cfg2.HashSize = 32
+	cfg2.HashID = SHA256ID
 	if _, err := NewStack(dir+"/reftable", dir+"/refs", cfg2); err == nil {
 		t.Fatal("got success; want an error for hash size mismatch")
 	}
