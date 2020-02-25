@@ -165,7 +165,7 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 
 	/* success! */
 	err = new_merged_table(&new_merged, new_tables, new_tables_len,
-			       st->config.hash_size);
+			       st->config.hash_id);
 	if (err < 0) {
 		goto exit;
 	}
@@ -565,7 +565,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
 	writer_set_limits(wr, st->merged->stack[first]->min_update_index,
 			  st->merged->stack[last]->max_update_index);
 
-	err = new_merged_table(&mt, subtabs, subtabs_len, st->config.hash_size);
+	err = new_merged_table(&mt, subtabs, subtabs_len, st->config.hash_id);
 	if (err < 0) {
 		free(subtabs);
 		goto exit;

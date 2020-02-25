@@ -75,7 +75,7 @@ void test_common_prefix()
 void set_hash(byte *h, int j)
 {
 	int i = 0;
-	for (i = 0; i < SHA1_SIZE; i++) {
+	for (i = 0; i < hash_size(SHA1_ID); i++) {
 		h[i] = (j >> i) & 0xff;
 	}
 }

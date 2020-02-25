@@ -147,7 +147,7 @@ void test_stack_add(void)
 		log_record_clear(&dest);
 	}
 
-	struct write_options cfg32 = { .hash_size = 32 };
+	struct write_options cfg32 = { .hash_id = SHA256_ID };
 	struct stack *st32 = NULL;
 	err = new_stack(&st32, dir, fn, cfg32);
 	assert(err == FORMAT_ERROR);

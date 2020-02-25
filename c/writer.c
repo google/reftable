@@ -63,8 +63,8 @@ static void options_set_defaults(struct write_options *opts)
 		opts->restart_interval = 16;
 	}
 
-	if (opts->hash_size == 0) {
-		opts->hash_size = SHA1_SIZE;
+	if (opts->hash_id == 0) {
+		opts->hash_id = SHA1_ID;
 	}
 	if (opts->block_size == 0) {
 		opts->block_size = DEFAULT_BLOCK_SIZE;
@@ -74,7 +74,9 @@ static void options_set_defaults(struct write_options *opts)
 static int writer_write_header(struct writer *w, byte *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
-	dest[4] = (w->hash_size == SHA1_SIZE) ? 1 : 2; /* version */
+
+        /* DO NOT SUBMIT.  This has not been encoded in the standard yet. */
+	dest[4] = (hash_size(w->opts.hash_id) == SHA1_SIZE) ? 1 : 2; /* version */
 
 	put_be24(dest + 5, w->opts.block_size);
 	put_be64(dest + 8, w->min_update_index);
@@ -90,7 +92,7 @@ static void writer_reinit_block_writer(struct writer *w, byte typ)
 	}
 
 	block_writer_init(&w->block_writer_data, typ, w->block,
-			  w->opts.block_size, block_start, w->hash_size);
+			  w->opts.block_size, block_start, hash_size(w->opts.hash_id));
 	w->block_writer = &w->block_writer_data;
 	w->block_writer->restart_interval = w->opts.restart_interval;
 }
@@ -104,7 +106,6 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 		/* TODO - error return? */
 		abort();
 	}
-	wp->hash_size = opts->hash_size;
 	wp->block = calloc(opts->block_size, 1);
 	wp->write = writer_func;
 	wp->write_arg = writer_arg;
@@ -235,7 +236,7 @@ int writer_add_ref(struct writer *w, struct ref_record *ref)
 	if (!w->opts.skip_index_objects && ref->value != NULL) {
 		struct slice h = {
 			.buf = ref->value,
-			.len = w->hash_size,
+			.len = hash_size(w->opts.hash_id),
 		};
 
 		writer_index_hash(w, h);
@@ -243,7 +244,7 @@ int writer_add_ref(struct writer *w, struct ref_record *ref)
 	if (!w->opts.skip_index_objects && ref->target_value != NULL) {
 		struct slice h = {
 			.buf = ref->target_value,
-			.len = w->hash_size,
+			.len = hash_size(w->opts.hash_id),
 		};
 		writer_index_hash(w, h);
 	}

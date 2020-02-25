@@ -281,8 +281,8 @@ int new_reader(struct reader **pp, struct block_source, const char *name);
  */
 int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 
-/* returns the hash size used in this table. */
-int reader_hash_size(struct reader *r);
+/* returns the hash ID used in this table. */
+uint32_t reader_hash_id(struct reader *r);
 
 /* seek to logs for the given name, older than update_index. */
 int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
@@ -311,10 +311,10 @@ struct merged_table;
    array.
 */
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
-		     int hash_size);
+		     uint32_t hash_id);
 
-/* returns the hash size used in this merged table. */
-int merged_hash_size(struct merged_table *mt);
+/* returns the hash id used in this merged table. */
+uint32_t merged_hash_id(struct merged_table *mt);
 
 /* returns an iterator positioned just before 'name' */
 int merged_table_seek_ref(struct merged_table *mt, struct iterator *it,

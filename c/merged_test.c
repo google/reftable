@@ -118,7 +118,7 @@ static struct merged_table *merged_table_from_records(struct ref_record **refs,
 	}
 
 	struct merged_table *mt = NULL;
-	int err = new_merged_table(&mt, rd, n, SHA1_SIZE);
+	int err = new_merged_table(&mt, rd, n, SHA1_ID);
 	assert(err == 0);
 	return mt;
 }

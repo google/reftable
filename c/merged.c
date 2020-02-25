@@ -114,7 +114,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 		free(record_yield(&top.rec));
 	}
 
-	record_copy_from(rec, entry.rec, mi->hash_size);
+	record_copy_from(rec, entry.rec, hash_size(mi->hash_id));
 	record_clear(entry.rec);
 	free(record_yield(&entry.rec));
 	free(slice_yield(&entry_key));
@@ -144,14 +144,14 @@ static void iterator_from_merged_iter(struct iterator *it,
 }
 
 int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
-		     int hash_size)
+		     uint32_t hash_id)
 {
 	uint64_t last_max = 0;
 	uint64_t first_min = 0;
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		struct reader *r = stack[i];
-		if (reader_hash_size(r) != hash_size) {
+		if (r->hash_id != hash_id) {
 			return FORMAT_ERROR;
 		}
 		if (i > 0 && last_max >= reader_min_update_index(r)) {
@@ -170,7 +170,7 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
 			.stack_len = n,
 			.min = first_min,
 			.max = last_max,
-			.hash_size = hash_size,
+			.hash_id = hash_id,
 		};
 
 		*dest = calloc(sizeof(struct merged_table), 1);
@@ -222,7 +222,7 @@ static int merged_table_seek_record(struct merged_table *mt,
 	struct merged_iter merged = {
 		.stack = iters,
 		.typ = record_type(rec),
-		.hash_size = mt->hash_size,
+		.hash_id = mt->hash_id,
 	};
 	int n = 0;
 	int err = 0;

@@ -81,9 +81,9 @@ void reader_return_block(struct reader *r, struct block *p)
 	block_source_return_block(r->source, p);
 }
 
-int reader_hash_size(struct reader *r)
+uint32_t reader_hash_id(struct reader *r)
 {
-	return r->hash_size;
+	return r->hash_id;
 }
 
 const char *reader_name(struct reader *r)
@@ -106,11 +106,12 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 		goto exit;
 	}
 
-	r->hash_size = SHA1_SIZE;
+	r->hash_id = SHA1_ID;
 	{
 		byte version = *f++;
 		if (version == 2) {
-			r->hash_size = SHA256_SIZE;
+                        /* DO NOT SUBMIT.  Not yet in the standard. */
+			r->hash_id = SHA256_ID;
 			version = 1;
 		}
 		if (version != 1) {
@@ -176,7 +177,7 @@ int init_reader(struct reader *r, struct block_source source, const char *name)
 	r->size = block_source_size(source) - FOOTER_SIZE;
 	r->source = source;
 	r->name = xstrdup(name);
-	r->hash_size = 0;
+	r->hash_id = 0;
 
 	err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
 	if (err != FOOTER_SIZE) {
@@ -293,7 +294,7 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
 	}
 
 	return block_reader_init(br, &block, header_off, r->block_size,
-				 r->hash_size);
+				 hash_size(r->hash_id));
 }
 
 static int table_iter_next_block(struct table_iter *dest,
@@ -661,7 +662,7 @@ static int reader_refs_for_indexed(struct reader *r, struct iterator *it,
 
 	{
 		struct indexed_table_ref_iter *itr = NULL;
-		err = new_indexed_table_ref_iter(&itr, r, oid, r->hash_size,
+		err = new_indexed_table_ref_iter(&itr, r, oid, hash_size(r->hash_id),
 						 got.offsets, got.offset_len);
 		if (err < 0) {
 			record_clear(got_rec);

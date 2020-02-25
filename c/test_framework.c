@@ -48,7 +48,7 @@ void test_main()
 
 void set_test_hash(byte *p, int i)
 {
-	memset(p, (byte)i, SHA1_SIZE);
+	memset(p, (byte)i, hash_size(SHA1_ID));
 }
 
 void print_names(char **a)

@@ -15,7 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 struct merged_table {
 	struct reader **stack;
 	int stack_len;
-	int hash_size;
+	uint32_t hash_id;
 
 	uint64_t min;
 	uint64_t max;
@@ -23,7 +23,7 @@ struct merged_table {
 
 struct merged_iter {
 	struct iterator *stack;
-	int hash_size;
+	uint32_t hash_id;
 	int stack_len;
 	byte typ;
 	struct merged_iter_pqueue pq;

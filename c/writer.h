@@ -19,7 +19,6 @@ struct writer {
 	int (*write)(void *, byte *, int);
 	void *write_arg;
 	int pending_padding;
-	int hash_size;
 	struct slice last_key;
 
 	uint64_t next;

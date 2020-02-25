@@ -44,13 +44,13 @@ void test_buffer(void)
 }
 
 void write_table(char ***names, struct slice *buf, int N, int block_size,
-		 int hash_size)
+		 uint32_t hash_id)
 {
 	*names = calloc(sizeof(char *), N + 1);
 
 	struct write_options opts = {
 		.block_size = block_size,
-		.hash_size = hash_size,
+		.hash_id = hash_id,
 	};
 
 	struct writer *w = new_writer(&slice_write_void, buf, &opts);
@@ -263,7 +263,7 @@ void test_table_read_write_sequential(void)
 	char **names;
 	struct slice buf = { 0 };
 	int N = 50;
-	write_table(&names, &buf, N, 256, SHA1_SIZE);
+	write_table(&names, &buf, N, 256, SHA1_ID);
 
 	struct block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
@@ -303,7 +303,7 @@ void test_table_write_small_table(void)
 	char **names;
 	struct slice buf = { 0 };
 	int N = 1;
-	write_table(&names, &buf, N, 4096, SHA1_SIZE);
+	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
 	free(slice_yield(&buf));
 	free_names(names);
@@ -314,7 +314,7 @@ void test_table_read_api(void)
 	char **names;
 	struct slice buf = { 0 };
 	int N = 50;
-	write_table(&names, &buf, N, 256, SHA1_SIZE);
+	write_table(&names, &buf, N, 256, SHA1_ID);
 
 	struct reader rd = { 0 };
 	struct block_source source = { 0 };
@@ -340,12 +340,12 @@ void test_table_read_api(void)
 	reader_close(&rd);
 }
 
-void test_table_read_write_seek(bool index, int hash_size)
+void test_table_read_write_seek(bool index, int hash_id)
 {
 	char **names;
 	struct slice buf = { 0 };
 	int N = 50;
-	write_table(&names, &buf, N, 256, hash_size);
+	write_table(&names, &buf, N, 256, hash_id);
 
 	struct reader rd = { 0 };
 	struct block_source source = { 0 };
@@ -353,7 +353,7 @@ void test_table_read_write_seek(bool index, int hash_size)
 
 	int err = init_reader(&rd, source, "file.ref");
 	assert(err == 0);
-	assert(hash_size == reader_hash_size(&rd));
+	assert(hash_id == reader_hash_id(&rd));
 
 	if (!index) {
 		rd.ref_offsets.index_offset = 0;
@@ -384,17 +384,17 @@ void test_table_read_write_seek(bool index, int hash_size)
 
 void test_table_read_write_seek_linear(void)
 {
-	test_table_read_write_seek(false, SHA1_SIZE);
+	test_table_read_write_seek(false, SHA1_ID);
 }
 
 void test_table_read_write_seek_linear_sha256(void)
 {
-	test_table_read_write_seek(false, SHA256_SIZE);
+	test_table_read_write_seek(false, SHA256_ID);
 }
 
 void test_table_read_write_seek_index(void)
 {
-	test_table_read_write_seek(true, SHA1_SIZE);
+	test_table_read_write_seek(true, SHA1_ID);
 }
 
 void test_table_refs_for(bool indexed)

@@ -64,7 +64,7 @@ void test_block_read_write()
 
 	struct block_writer bw = { 0 };
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
-			  header_off, SHA1_SIZE);
+			  header_off, hash_size(SHA1_ID));
 	struct ref_record ref = { 0 };
 	struct record rec = { 0 };
 	record_from_ref(&rec, &ref);
