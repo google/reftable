@@ -10,8 +10,6 @@ package reftable
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -72,8 +70,6 @@ type Writer struct {
 
 	header header
 	footer footer
-
-	hashSize int
 }
 
 func (cfg *Config) setDefaults() {
@@ -104,16 +100,30 @@ func NewWriter(out io.Writer, cfg *Config) (*Writer, error) {
 	}
 
 	w.blockWriter = w.newBlockWriter(blockTypeRef)
-	switch cfg.HashID {
-	case SHA1ID, NullHashID:
-		w.hashSize = sha1.Size
-	case SHA256ID:
-		w.hashSize = sha256.Size
-	default:
-		return nil, fmt.Errorf("reftable: unsupported hash size.")
-	}
 
 	return w, nil
+}
+
+func (w *Writer) headerSize() int {
+	switch w.cfg.HashID {
+	case NullHashID, SHA1ID:
+		return headerSize(1)
+	case SHA256ID:
+		return headerSize(2)
+	default:
+		panic("hash")
+	}
+}
+
+func (w *Writer) footerSize() int {
+	switch w.cfg.HashID {
+	case NullHashID, SHA1ID:
+		return 68
+	case SHA256ID:
+		return 72
+	default:
+		panic("hash")
+	}
 }
 
 // newBlockWriter creates a new blockWriter
@@ -122,10 +132,10 @@ func (w *Writer) newBlockWriter(typ byte) *blockWriter {
 
 	var blockStart uint32
 	if w.next == 0 {
-		blockStart = headerSize
+		blockStart = uint32(w.headerSize())
 	}
 
-	bw := newBlockWriter(typ, block, blockStart, w.hashSize)
+	bw := newBlockWriter(typ, block, blockStart, w.cfg.HashID.Size())
 	bw.restartInterval = w.cfg.RestartInterval
 	return bw
 }
@@ -136,16 +146,17 @@ func (w *Writer) headerBytes() []byte {
 		BlockSize:      w.cfg.BlockSize,
 		MinUpdateIndex: w.minUpdateIndex,
 		MaxUpdateIndex: w.maxUpdateIndex,
-	}
-	v := uint32(version)
-	if w.hashSize == sha256.Size {
-		v = 2
+		HashID:         w.cfg.HashID,
 	}
 
+	v := uint32(1)
+	if w.cfg.HashID == SHA256ID {
+		v = 2
+	}
 	h.BlockSize = h.BlockSize | (v << 24)
-	buf := bytes.NewBuffer(make([]byte, 0, 24))
+	buf := &bytes.Buffer{}
 	binary.Write(buf, binary.BigEndian, h)
-	return buf.Bytes()
+	return buf.Bytes()[:headerSize(int(v))]
 }
 
 func (w *Writer) indexHash(hash []byte) {
@@ -185,7 +196,6 @@ func (w *Writer) AddRef(r *RefRecord) error {
 
 	cpy := *r
 	cpy.UpdateIndex -= w.minUpdateIndex
-
 	if err := w.add(&cpy); err != nil {
 		return err
 	}
@@ -273,7 +283,7 @@ func (w *Writer) Close() error {
 
 	w.paddedWriter.pendingPadding = 0
 	n, err := w.paddedWriter.Write(buf.Bytes(), 0)
-	if n != footerSize {
+	if n != w.footerSize() {
 		log.Panicf("footer size %d", n)
 	}
 

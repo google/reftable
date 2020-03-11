@@ -14,11 +14,12 @@ type header struct {
 	BlockSize      uint32
 	MinUpdateIndex uint64
 	MaxUpdateIndex uint64
+	HashID         HashID
 }
 
 // footer is the file footer present only at the end of file.
 type footer struct {
-	// Footer lacks RefOffset, because it is always 24 (if present)
+	// Footer lacks RefOffset, because it is always headerSize (if present)
 	RefIndexOffset uint64
 
 	// On serialization, offset is <<5, lower bits hold id size

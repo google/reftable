@@ -151,7 +151,7 @@ func (w *blockWriter) finish() (data []byte) {
 // blockReader holds data for reading a block. It is immutable, so it
 // is safe for concurrent access.
 type blockReader struct {
-	// The offset of the block header, 24 for the first block
+	// The offset of the block header, 24 (28 for v2) for the first block
 	headerOff uint32
 
 	// block is the data, including header, file header, but

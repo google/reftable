@@ -10,11 +10,10 @@ package reftable
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"log"
 )
 
@@ -50,6 +49,9 @@ type readerOffsets struct {
 type Reader struct {
 	header header
 	footer footer
+
+	// Version format for the table
+	version int
 
 	objectIDLen int
 	hashSize    int
@@ -93,33 +95,57 @@ func (r *Reader) getBlock(off uint64, sz uint32) ([]byte, error) {
 	return r.src.ReadBlock(off, int(sz))
 }
 
+// readHeader reads the header from the given input source.
+func readHeader(r io.Reader, h *header, version int) error {
+	buf := make([]byte, headerSize(version))
+	_, err := r.Read(buf)
+	if err != nil {
+		return err
+	}
+	if version == 1 {
+		buf = append(buf, "sha1"...)
+	}
+
+	return binary.Read(bytes.NewBuffer(buf), binary.BigEndian, h)
+}
+
 // NewReader creates a reader for a reftable file.
 func NewReader(src BlockSource, name string) (*Reader, error) {
+	headBlock, err := src.ReadBlock(0, headerSize(2)+1)
+
+	if err != nil {
+		return nil, err
+	}
+	if bytes.Compare(headBlock[:4], magic[:]) != 0 {
+		return nil, fmt.Errorf("reftable: got magic %q, want %q", headBlock[:4], magic)
+	}
+
+	version := int(headBlock[4])
+	if version != 1 && version != 2 {
+		return nil, fmt.Errorf("reftable: unsupported version %d", version)
+	}
+
 	r := &Reader{
-		size: src.Size() - footerSize,
-		src:  src,
-		name: name,
+		version: version,
+		size:    src.Size() - uint64(footerSize(version)),
+		src:     src,
+		name:    name,
 	}
-	headblock, err := src.ReadBlock(0, headerSize)
+
+	footBlock, err := src.ReadBlock(r.size, footerSize(version))
 	if err != nil {
 		return nil, err
 	}
 
-	footblock, err := src.ReadBlock(r.size, footerSize)
-	if err != nil {
-		return nil, err
-	}
-
-	if 0 != bytes.Compare(headblock, footblock[:headerSize]) {
+	if 0 != bytes.Compare(headBlock[:headerSize(version)], footBlock[:headerSize(version)]) {
 		return nil, fmt.Errorf("reftable: start header %q != tail header %q",
-			headblock, footblock[:headerSize])
+			headBlock[:headerSize(version)], footBlock[:headerSize(version)])
 	}
 
-	footBuf := bytes.NewBuffer(footblock)
-	if err := binary.Read(footBuf, binary.BigEndian, &r.header); err != nil {
+	footBuf := bytes.NewBuffer(footBlock)
+	if err := readHeader(footBuf, &r.header, version); err != nil {
 		return nil, err
 	}
-
 	if err := binary.Read(footBuf, binary.BigEndian, &r.footer); err != nil {
 		return nil, err
 	}
@@ -129,42 +155,22 @@ func NewReader(src BlockSource, name string) (*Reader, error) {
 		return nil, err
 	}
 
-	if r.header.Magic != magic {
-		return nil, fmt.Errorf("reftable: got magic %q, want %q", r.header.Magic, magic)
-	}
-
-	readVersion := r.header.BlockSize >> 24
-	r.hashSize = sha1.Size
-	if readVersion == 2 {
-		r.hashSize = sha256.Size
-		readVersion = 1
-	}
-
-	if readVersion != version {
-		return nil, fmt.Errorf("reftable: no support for format version %d", readVersion)
-	}
+	r.hashSize = r.header.HashID.Size()
 	r.header.BlockSize &= (1 << 24) - 1
 
 	if footBuf.Len() > 0 {
 		log.Panicf("footer size %d", footBuf.Len())
 	}
 
-	// This is a deficiency of the format: we should be able
-	// to tell from the footer if where the refs start
-	headBlock, err := src.ReadBlock(0, headerSize+1)
-	if err != nil {
-		return nil, err
-	}
-
 	r.objectIDLen = int(r.footer.ObjOffset & ((1 << 5) - 1))
 	r.footer.ObjOffset >>= 5
 
-	wantCRC32 := crc32.ChecksumIEEE(footblock[:footerSize-4])
+	wantCRC32 := crc32.ChecksumIEEE(footBlock[:footerSize(version)-4])
 	if gotCRC32 != wantCRC32 {
 		return nil, fmt.Errorf("reftable: got CRC %x, want CRC %x", gotCRC32, wantCRC32)
 	}
 
-	firstBlockTyp := headBlock[headerSize]
+	firstBlockTyp := headBlock[headerSize(version)]
 	r.offsets = map[byte]readerOffsets{
 		blockTypeRef: {
 			Present:     firstBlockTyp == blockTypeRef,
@@ -237,9 +243,9 @@ func (i *tableIter) Next(rec record) (bool, error) {
 }
 
 // extractBlockSize returns the block size from the block header
-func extractBlockSize(block []byte, off uint64) (typ byte, size uint32, err error) {
+func extractBlockSize(block []byte, off uint64, version int) (typ byte, size uint32, err error) {
 	if off == 0 {
-		block = block[24:]
+		block = block[headerSize(version):]
 	}
 
 	if !isBlockType(block[0]) {
@@ -267,7 +273,7 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 		return nil, err
 	}
 
-	blockTyp, blockSize, err := extractBlockSize(block, nextOff)
+	blockTyp, blockSize, err := extractBlockSize(block, nextOff, r.version)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +291,7 @@ func (r *Reader) newBlockReader(nextOff uint64, wantTyp byte) (br *blockReader, 
 
 	var headerOff uint32
 	if nextOff == 0 {
-		headerOff = headerSize
+		headerOff = uint32(headerSize(r.version))
 	}
 
 	return newBlockReader(block, headerOff, r.header.BlockSize, r.hashSize)
