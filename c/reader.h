@@ -30,11 +30,14 @@ struct reader {
 	char *name;
 	struct block_source source;
 	uint32_t hash_id;
+
+	// Size of the file, excluding the footer.
 	uint64_t size;
 	uint32_t block_size;
 	uint64_t min_update_index;
 	uint64_t max_update_index;
 	int object_id_len;
+	int version;
 
 	struct reader_offsets ref_offsets;
 	struct reader_offsets obj_offsets;

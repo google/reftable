@@ -105,7 +105,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 	for (i = 0; i < stats->ref_stats.blocks; i++) {
 		int off = i * opts.block_size;
 		if (off == 0) {
-			off = HEADER_SIZE;
+			off = header_size((hash_id == SHA256_ID) ? 2 : 1);
 		}
 		assert(buf->buf[off] == 'r');
 	}
@@ -210,7 +210,7 @@ void test_log_write_read(void)
 
 	struct reader rd = { 0 };
 	int err = init_reader(&rd, source, "file.log");
-	assert(err == 0);
+	assert_err(err);
 
 	{
 		struct iterator it = { 0 };
@@ -507,9 +507,9 @@ void test_table_refs_for_obj_index(void)
 
 int main()
 {
+	add_test_case("test_log_write_read", test_log_write_read);
 	add_test_case("test_table_read_write_seek_linear_sha256",
 		      &test_table_read_write_seek_linear_sha256);
-	add_test_case("test_log_write_read", test_log_write_read);
 	add_test_case("test_log_buffer_size", test_log_buffer_size);
 	add_test_case("test_table_write_small_table",
 		      &test_table_write_small_table);

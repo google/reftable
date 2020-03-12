@@ -16,6 +16,28 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "zlib.h"
 
+int header_size(int version)
+{
+	switch (version) {
+	case 1:
+		return 24;
+	case 2:
+		return 28;
+	}
+	abort();
+}
+
+int footer_size(int version)
+{
+	switch (version) {
+	case 1:
+		return 68;
+	case 2:
+		return 72;
+	}
+	abort();
+}
+
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 				  struct slice key);
 

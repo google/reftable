@@ -101,25 +101,12 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 	}
 	f += 4;
 
-	if (memcmp(footer, header, HEADER_SIZE)) {
+	if (memcmp(footer, header, header_size(r->version))) {
 		err = FORMAT_ERROR;
 		goto exit;
 	}
 
-	r->hash_id = SHA1_ID;
-	{
-		byte version = *f++;
-		if (version == 2) {
-                        /* DO NOT SUBMIT.  Not yet in the standard. */
-			r->hash_id = SHA256_ID;
-			version = 1;
-		}
-		if (version != 1) {
-			err = FORMAT_ERROR;
-			goto exit;
-		}
-	}
-
+	f++;
 	r->block_size = get_be24(f);
 
 	f += 3;
@@ -127,6 +114,22 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 	f += 8;
 	r->max_update_index = get_be64(f);
 	f += 8;
+
+	if (r->version == 1) {
+		r->hash_id = SHA1_ID;
+	} else {
+		r->hash_id = get_be32(f);
+		switch (r->hash_id) {
+		case SHA1_ID:
+			break;
+		case SHA256_ID:
+			break;
+		default:
+			err = FORMAT_ERROR;
+			goto exit;
+		}
+		f += 4;
+	}
 
 	r->ref_offsets.index_offset = get_be64(f);
 	f += 8;
@@ -155,7 +158,7 @@ static int parse_footer(struct reader *r, byte *footer, byte *header)
 	}
 
 	{
-		byte first_block_typ = header[HEADER_SIZE];
+		byte first_block_typ = header[header_size(r->version)];
 		r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
 		r->ref_offsets.offset = 0;
 		r->log_offsets.present = (first_block_typ == BLOCK_TYPE_LOG ||
@@ -174,20 +177,32 @@ int init_reader(struct reader *r, struct block_source source, const char *name)
 	int err = 0;
 
 	memset(r, 0, sizeof(struct reader));
-	r->size = block_source_size(source) - FOOTER_SIZE;
-	r->source = source;
-	r->name = xstrdup(name);
-	r->hash_id = 0;
 
-	err = block_source_read_block(source, &footer, r->size, FOOTER_SIZE);
-	if (err != FOOTER_SIZE) {
+	/* Need +1 to read type of first block. */
+	err = block_source_read_block(source, &header, 0, header_size(2) + 1);
+	if (err != header_size(2) + 1) {
 		err = IO_ERROR;
 		goto exit;
 	}
 
-	/* Need +1 to read type of first block. */
-	err = reader_get_block(r, &header, 0, HEADER_SIZE + 1);
-	if (err != HEADER_SIZE + 1) {
+	if (memcmp(header.data, "REFT", 4)) {
+		err = FORMAT_ERROR;
+		goto exit;
+	}
+	r->version = header.data[4];
+	if (r->version != 1 && r->version != 2) {
+		err = FORMAT_ERROR;
+		goto exit;
+	}
+
+	r->size = block_source_size(source) - footer_size(r->version);
+	r->source = source;
+	r->name = xstrdup(name);
+	r->hash_id = 0;
+
+	err = block_source_read_block(source, &footer, r->size,
+				      footer_size(r->version));
+	if (err != footer_size(r->version)) {
 		err = IO_ERROR;
 		goto exit;
 	}
@@ -240,12 +255,13 @@ static void table_iter_block_done(struct table_iter *ti)
 	ti->bi.next_off = 0;
 }
 
-static int32_t extract_block_size(byte *data, byte *typ, uint64_t off)
+static int32_t extract_block_size(byte *data, byte *typ, uint64_t off,
+				  int version)
 {
 	int32_t result = 0;
 
 	if (off == 0) {
-		data += 24;
+		data += header_size(version);
 	}
 
 	*typ = data[0];
@@ -263,7 +279,7 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
 	struct block block = { 0 };
 	byte block_typ = 0;
 	int err = 0;
-	uint32_t header_off = next_off ? 0 : HEADER_SIZE;
+	uint32_t header_off = next_off ? 0 : header_size(r->version);
 	int32_t block_size = 0;
 
 	if (next_off >= r->size) {
@@ -275,7 +291,8 @@ int reader_init_block_reader(struct reader *r, struct block_reader *br,
 		return err;
 	}
 
-	block_size = extract_block_size(block.data, &block_typ, next_off);
+	block_size = extract_block_size(block.data, &block_typ, next_off,
+					r->version);
 	if (block_size < 0) {
 		return block_size;
 	}
@@ -662,7 +679,8 @@ static int reader_refs_for_indexed(struct reader *r, struct iterator *it,
 
 	{
 		struct indexed_table_ref_iter *itr = NULL;
-		err = new_indexed_table_ref_iter(&itr, r, oid, hash_size(r->hash_id),
+		err = new_indexed_table_ref_iter(&itr, r, oid,
+						 hash_size(r->hash_id),
 						 got.offsets, got.offset_len);
 		if (err < 0) {
 			record_clear(got_rec);

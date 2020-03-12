@@ -71,28 +71,36 @@ static void options_set_defaults(struct write_options *opts)
 	}
 }
 
+static int writer_version(struct writer *w)
+{
+	return (w->opts.hash_id == 0 || w->opts.hash_id == SHA1_ID) ? 1 : 2;
+}
+
 static int writer_write_header(struct writer *w, byte *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
 
-        /* DO NOT SUBMIT.  This has not been encoded in the standard yet. */
-	dest[4] = (hash_size(w->opts.hash_id) == SHA1_SIZE) ? 1 : 2; /* version */
+	dest[4] = writer_version(w);
 
 	put_be24(dest + 5, w->opts.block_size);
 	put_be64(dest + 8, w->min_update_index);
 	put_be64(dest + 16, w->max_update_index);
-	return 24;
+	if (writer_version(w) == 2) {
+		put_be32(dest + 24, w->opts.hash_id);
+	}
+	return header_size(writer_version(w));
 }
 
 static void writer_reinit_block_writer(struct writer *w, byte typ)
 {
 	int block_start = 0;
 	if (w->next == 0) {
-		block_start = HEADER_SIZE;
+		block_start = header_size(writer_version(w));
 	}
 
 	block_writer_init(&w->block_writer_data, typ, w->block,
-			  w->opts.block_size, block_start, hash_size(w->opts.hash_id));
+			  w->opts.block_size, block_start,
+			  hash_size(w->opts.hash_id));
 	w->block_writer = &w->block_writer_data;
 	w->block_writer->restart_interval = w->opts.restart_interval;
 }
@@ -499,7 +507,7 @@ int writer_finish_public_section(struct writer *w)
 
 int writer_close(struct writer *w)
 {
-	byte footer[68];
+	byte footer[72];
 	byte *p = footer;
 
 	int err = writer_finish_public_section(w);
@@ -507,8 +515,7 @@ int writer_close(struct writer *w)
 		goto exit;
 	}
 
-	writer_write_header(w, footer);
-	p += 24;
+	p += writer_write_header(w, footer);
 	put_be64(p, w->stats.ref_stats.index_offset);
 	p += 8;
 	put_be64(p, (w->stats.obj_stats.offset) << 5 | w->stats.object_id_len);
@@ -525,7 +532,7 @@ int writer_close(struct writer *w)
 	p += 4;
 	w->pending_padding = 0;
 
-	err = padded_write(w, footer, sizeof(footer), 0);
+	err = padded_write(w, footer, footer_size(writer_version(w)), 0);
 	if (err < 0) {
 		goto exit;
 	}

@@ -68,4 +68,7 @@ int block_iter_next(struct block_iter *it, struct record rec);
 int block_iter_seek(struct block_iter *it, struct slice want);
 void block_iter_close(struct block_iter *it);
 
+int header_size(int version);
+int footer_size(int version);
+
 #endif
