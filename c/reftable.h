@@ -62,8 +62,8 @@ struct write_options {
 	int restart_interval;
 
 	/* 4-byte identifier ("sha1", "s256") of the hash.
-         * Defaults to SHA1 if unset
-         */
+	 * Defaults to SHA1 if unset
+	 */
 	uint32_t hash_id;
 };
 
@@ -173,34 +173,36 @@ struct stats {
 
 /* different types of errors */
 
-/* Unexpected file system behavior */
-#define IO_ERROR -2
+enum reftable_error {
+	/* Unexpected file system behavior */
+	IO_ERROR = -2,
 
-/* Format inconsistency on reading data
- */
-#define FORMAT_ERROR -3
+	/* Format inconsistency on reading data
+	 */
+	FORMAT_ERROR = -3,
 
-/* File does not exist. Returned from block_source_from_file(),  because it
-   needs special handling in stack.
-*/
-#define NOT_EXIST_ERROR -4
+	/* File does not exist. Returned from block_source_from_file(),  because
+	   it needs special handling in stack.
+	*/
+	NOT_EXIST_ERROR = -4,
 
-/* Trying to write out-of-date data. */
-#define LOCK_ERROR -5
+	/* Trying to write out-of-date data. */
+	LOCK_ERROR = -5,
 
-/* Misuse of the API:
-   - on writing a record with NULL ref_name.
-   - on writing a ref_record outside the table limits
-   - on writing a ref or log record before the stack's next_update_index
-   - on reading a ref_record from log iterator, or vice versa.
- */
-#define API_ERROR -6
+	/* Misuse of the API:
+	   - on writing a record with NULL ref_name.
+	   - on writing a ref_record outside the table limits
+	   - on writing a ref or log record before the stack's next_update_index
+	   - on reading a ref_record from log iterator, or vice versa.
+	*/
+	API_ERROR = -6,
 
-/* Decompression error */
-#define ZLIB_ERROR -7
+	/* Decompression error */
+	ZLIB_ERROR = -7,
 
-/* Wrote a table without blocks. */
-#define EMPTY_TABLE_ERROR -8
+	/* Wrote a table without blocks. */
+	EMPTY_TABLE_ERROR = -8,
+};
 
 const char *error_str(int err);
 
