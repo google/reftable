@@ -313,7 +313,7 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 		}
 
 		if len(recs) != recCount {
-			t.Fatalf("gotr %d, want %d records: %v", len(recs), recCount, recs)
+			t.Fatalf("got %d, want %d records: %v", len(recs), recCount, recs)
 		}
 
 		for i, r := range recs {

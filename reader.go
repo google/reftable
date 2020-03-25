@@ -379,7 +379,7 @@ func (r *Reader) SeekLog(name string, updateIndex uint64) (*Iterator, error) {
 	return &Iterator{impl}, nil
 }
 
-// seek seekes to the key specified by the record
+// seek seeks to the key specified by the record
 func (r *Reader) seek(rec record) (*tableIter, error) {
 	typ := rec.typ()
 	if rec.key() == newRecord(rec.typ(), "").key() {
