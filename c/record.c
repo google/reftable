@@ -662,7 +662,9 @@ void log_record_clear(struct log_record *r)
 
 static byte log_record_val_type(const void *rec)
 {
-	return 1;
+        const struct log_record *log = (const struct log_record *) rec;
+        
+	return log_record_is_deletion(log) ? 0 : 1;
 }
 
 static byte zero[SHA256_SIZE] = { 0 };
@@ -674,6 +676,10 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size)
 	int n = 0;
 	byte *oldh = r->old_hash;
 	byte *newh = r->new_hash;
+        if (log_record_is_deletion(r)) {
+                return 0;
+        }
+        
 	if (oldh == NULL) {
 		oldh = zero;
 	}
@@ -748,7 +754,11 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 	ts = get_be64(key.buf + key.len - 8);
 
 	r->update_index = (~max) - ts;
-
+        
+        if (val_type == 0) {
+                return 0;
+        }
+        
 	if (in.len < 2 * hash_size) {
 		return FORMAT_ERROR;
 	}
@@ -1102,8 +1112,10 @@ int log_record_compare_key(const void *a, const void *b)
 
 bool log_record_is_deletion(const struct log_record *log)
 {
-	/* XXX */
-	return false;
+        return (log->new_hash == NULL && log->old_hash == NULL &&
+                log->name == NULL && log->email == NULL &&
+                log->message == NULL && log->time == 0 && log->tz_offset == 0 &&
+                log->message == NULL);
 }
 
 int hash_size(uint32_t id)

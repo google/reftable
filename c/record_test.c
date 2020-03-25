@@ -135,7 +135,7 @@ void test_ref_record_roundtrip()
 
 void test_log_record_roundtrip()
 {
-	struct log_record in = {
+	struct log_record in[2] = {{
 		.ref_name = xstrdup("refs/heads/master"),
 		.old_hash = malloc(SHA1_SIZE),
 		.new_hash = malloc(SHA1_SIZE),
@@ -145,36 +145,40 @@ void test_log_record_roundtrip()
 		.update_index = 42,
 		.time = 1577123507,
 		.tz_offset = 100,
-	};
+                }, {
+		.ref_name = xstrdup("refs/heads/master"),
+                .update_index = 22,
+                }};
 
-	struct record rec = { 0 };
-	record_from_log(&rec, &in);
+        for (int  i = 0; i < ARRAY_SIZE(in); i++) {
+                struct record rec = { 0 };
+                record_from_log(&rec, &in[i]);
 
-	struct slice key = { 0 };
-	record_key(rec, &key);
+                struct slice key = { 0 };
+                record_key(rec, &key);
 
-	byte buf[1024];
-	struct slice dest = {
-		.buf = buf,
-		.len = sizeof(buf),
-	};
+                byte buf[1024];
+                struct slice dest = {
+                        .buf = buf,
+                        .len = sizeof(buf),
+                };
 
-	int n = record_encode(rec, dest, SHA1_SIZE);
-	assert(n > 0);
+                int n = record_encode(rec, dest, SHA1_SIZE);
+                assert(n >= 0);
 
-	struct log_record out = { 0 };
-	struct record rec_out = { 0 };
-	record_from_log(&rec_out, &out);
-	int valtype = record_val_type(rec);
-	int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
-	assert(n == m);
+                struct log_record out = { 0 };
+                struct record rec_out = { 0 };
+                record_from_log(&rec_out, &out);
+                int valtype = record_val_type(rec);
+                int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
+                assert(n == m);
 
-	assert(log_record_equal(&in, &out, SHA1_SIZE));
-	log_record_clear(&in);
-	free(slice_yield(&key));
-	record_clear(rec_out);
+                assert(log_record_equal(&in[i], &out, SHA1_SIZE));
+                log_record_clear(&in[i]);
+                free(slice_yield(&key));
+                record_clear(rec_out);
+        }
 }
-
 void test_u24_roundtrip()
 {
 	uint32_t in = 0x112233;
