@@ -92,7 +92,7 @@ int ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size);
 /* log_record holds a reflog entry */
 struct log_record {
 	char *ref_name;
-	uint64_t update_index;
+	uint64_t update_index;         /* logical timestamp of a transactional update. */
 	uint8_t *new_hash;
 	uint8_t *old_hash;
 	char *name;
@@ -111,6 +111,7 @@ void log_record_clear(struct log_record *log);
 /* returns whether two records are equal. */
 int log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
 
+/* dumps a log_record on stdout, for debugging/testing. */
 void log_record_print(struct log_record *log, int hash_size);
 
 /* iterator is the generic interface for walking over data stored in a
@@ -204,6 +205,8 @@ enum reftable_error {
 	EMPTY_TABLE_ERROR = -8,
 };
 
+/* convert the numeric error code to a string. The string should not be
+ * deallocated. */
 const char *error_str(int err);
 
 /* new_writer creates a new writer */
@@ -216,6 +219,10 @@ int fd_writer(void *fdp, uint8_t *data, int size);
 /* Set the range of update indices for the records we will add.  When
    writing a table into a stack, the min should be at least
    stack_next_update_index(), or API_ERROR is returned.
+
+   For transactional updates, typically min==max. When converting an existing
+   ref database into a single reftable, this would be a range of update-index
+   timestamps.
  */
 void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
 
@@ -257,7 +264,7 @@ struct reader;
 int new_reader(struct reader **pp, struct block_source, const char *name);
 
 /* reader_seek_ref returns an iterator where 'name' would be inserted in the
-   table.
+   table.  To seek to the start of the table, use name = "".
 
    example:
 
@@ -286,7 +293,9 @@ int reader_seek_ref(struct reader *r, struct iterator *it, const char *name);
 /* returns the hash ID used in this table. */
 uint32_t reader_hash_id(struct reader *r);
 
-/* seek to logs for the given name, older than update_index. */
+/* seek to logs for the given name, older than update_index. To seek to the
+   start of the table, use name = "".
+ */
 int reader_seek_log_at(struct reader *r, struct iterator *it, const char *name,
 		       uint64_t update_index);
 
@@ -406,6 +415,7 @@ struct compaction_stats {
 	int failures;
 };
 
+/* return statistics for compaction up till now. */
 struct compaction_stats *stack_compaction_stats(struct stack *st);
 
 #endif
