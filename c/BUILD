@@ -37,8 +37,6 @@ cc_library(
         "tree.c",
         "writer.c",
         "zlib-compat.c",
-    ],
-    hdrs = [
         "basics.h",
         "block.h",
         "blocksource.h",
@@ -49,12 +47,17 @@ cc_library(
         "pq.h",
         "reader.h",
         "record.h",
-        "reftable.h",
         "slice.h",
         "stack.h",
         "system.h",
         "tree.h",
         "writer.h",
+    ],
+    hdrs = [
+        "include/reftable.h",
+    ],
+    includes = [
+        "include",
     ],
     copts = [
         "-fvisibility=protected",
