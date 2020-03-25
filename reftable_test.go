@@ -327,14 +327,14 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 
 	for i := 1; i < len(names); i *= 3 {
 		nm := names[i]
-		rec := newRecord(typ, names[i])
+		rec := newRecord(typ, nm)
 		it, err := reader.seek(rec)
 		if err != nil {
 			t.Errorf("Seek %q: %v", nm, err)
 			continue
 		}
-		var ref RefRecord
-		ok, err := it.Next(&ref)
+
+		ok, err := it.Next(rec)
 		if err != nil {
 			t.Errorf("Next %q: %v", nm, err)
 			continue
@@ -344,8 +344,8 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 			continue
 		}
 
-		if ref.RefName != nm {
-			t.Errorf("got %q want %q", ref.RefName, nm)
+		if rec.key() != nm {
+			t.Errorf("got %q want %q", rec.key(), nm)
 		}
 	}
 }

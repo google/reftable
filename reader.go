@@ -223,6 +223,10 @@ func (i *tableIter) nextInBlock(rec record) (bool, error) {
 
 // Next implements the Iterator interface
 func (i *tableIter) Next(rec record) (bool, error) {
+	if rec.typ() != i.typ {
+		log.Panicf("got %T want %c", rec, i.typ)
+	}
+
 	for {
 		if i.finished {
 			return false, nil
