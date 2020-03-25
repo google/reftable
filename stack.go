@@ -392,7 +392,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 			break
 		}
 
-		if first == 0 && rec.isDeletion() {
+		if first == 0 && rec.IsDeletion() {
 			continue
 		}
 

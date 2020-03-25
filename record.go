@@ -126,7 +126,7 @@ func (r *RefRecord) copyFrom(in record) {
 	*r = *in.(*RefRecord)
 }
 
-func (r *RefRecord) isDeletion() bool {
+func (r *RefRecord) IsDeletion() bool {
 	return r.Value == nil && r.TargetValue == nil && r.Target == ""
 }
 
@@ -463,6 +463,10 @@ func (l *LogRecord) typ() byte {
 	return blockTypeLog
 }
 
+func (l *LogRecord) IsDeletion() bool {
+	return l.New == nil && l.Old == nil && l.Name == "" && l.Email == "" && l.Time == 0 && l.TZOffset == 0 && l.Message == ""
+}
+
 func (l *LogRecord) key() string {
 	var suffix [9]byte
 	binary.BigEndian.PutUint64(suffix[1:], revInt64(l.UpdateIndex))
@@ -478,10 +482,16 @@ func (l *LogRecord) String() string {
 }
 
 func (l *LogRecord) valType() uint8 {
+	if l.IsDeletion() {
+		return 0
+	}
 	return 0x1
 }
 
 func (l *LogRecord) encode(buf []byte, hashSize int) (n int, fits bool) {
+	if l.IsDeletion() {
+		return 0, true
+	}
 	if l.Old == nil {
 		l.Old = make([]byte, hashSize)
 	}
@@ -590,6 +600,7 @@ func (l *LogRecord) decode(buf []byte, key string, valType uint8, hashSize int) 
 
 	n, l.Name, ok = decodeString(buf)
 	if !ok {
+
 		return
 	}
 	buf = buf[n:]

@@ -149,6 +149,9 @@ func TestRecordRoundTripLogRecord(t *testing.T) {
 		Time:        43,
 		TZOffset:    330,
 		Message:     "message",
+	}, &LogRecord{
+		RefName:     "prefix/next",
+		UpdateIndex: 22,
 	}}
 
 	testRecordRoundTrip(t, inputs)
