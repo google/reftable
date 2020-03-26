@@ -70,10 +70,10 @@ void free_names(char **a)
 		return;
 	}
 	while (*p) {
-		free(*p);
+		reftable_free(*p);
 		p++;
 	}
-	free(a);
+	reftable_free(a);
 }
 
 int names_length(char **names)
@@ -106,7 +106,7 @@ void parse_names(char *buf, int size, char ***namesp)
 		if (p < next) {
 			if (names_len == names_cap) {
 				names_cap = 2 * names_cap + 1;
-				names = realloc(names,
+				names = reftable_realloc(names,
 						names_cap * sizeof(char *));
 			}
 			names[names_len++] = xstrdup(p);
@@ -116,7 +116,7 @@ void parse_names(char *buf, int size, char ***namesp)
 
 	if (names_len == names_cap) {
 		names_cap = 2 * names_cap + 1;
-		names = realloc(names, names_cap * sizeof(char *));
+		names = reftable_realloc(names, names_cap * sizeof(char *));
 	}
 
 	names[names_len] = NULL;
@@ -158,3 +158,33 @@ const char *error_str(int err)
 		return "unknown error code";
 	}
 }
+
+void* (*reftable_malloc_ptr)(size_t sz) = &malloc;
+void* (*reftable_realloc_ptr)(void*, size_t) = &realloc;
+void (*reftable_free_ptr)(void*) = &free;
+
+void* reftable_malloc(size_t sz) {
+        return (*reftable_malloc_ptr)(sz);
+}
+
+void* reftable_realloc(void *p, size_t sz) {
+        return (*reftable_realloc_ptr)(p, sz);
+}
+
+void reftable_free(void*p) {
+        reftable_free_ptr(p);
+}
+
+void* reftable_calloc(size_t sz) {
+        void * p = reftable_malloc(sz);
+        memset(p, 0, sz);
+        return p;
+}
+
+void set_alloc(void* (*malloc)(size_t),
+               void* (*realloc)(void*, size_t),
+               void (*free)(void*)) {
+        reftable_malloc_ptr = malloc;
+        reftable_realloc_ptr = realloc;
+        reftable_free_ptr = free;
+}                

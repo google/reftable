@@ -40,13 +40,13 @@ void test_buffer(void)
 
 	block_source_return_block(source, &out);
 	block_source_close(&source);
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 }
 
 void write_table(char ***names, struct slice *buf, int N, int block_size,
 		 uint32_t hash_id)
 {
-	*names = calloc(sizeof(char *), N + 1);
+	*names = reftable_calloc(sizeof(char *) * (N + 1));
 
 	struct write_options opts = {
 		.block_size = block_size,
@@ -153,7 +153,7 @@ void test_log_buffer_size(void)
 void test_log_write_read(void)
 {
 	int N = 2;
-	char **names = calloc(sizeof(char *), N + 1);
+	char **names = reftable_calloc(sizeof(char *) * (N + 1));
 
 	struct write_options opts = {
 		.block_size = 256,
@@ -253,7 +253,7 @@ void test_log_write_read(void)
 	}
 
 	/* cleanup. */
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	free_names(names);
 	reader_close(&rd);
 }
@@ -292,7 +292,7 @@ void test_table_read_write_sequential(void)
 	}
 	assert(j == N);
 	iterator_destroy(&it);
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	free_names(names);
 
 	reader_close(&rd);
@@ -305,7 +305,7 @@ void test_table_write_small_table(void)
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	free_names(names);
 }
 
@@ -331,12 +331,12 @@ void test_table_read_api(void)
 	err = iterator_next_log(it, &log);
 	assert(err == API_ERROR);
 
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	int i = 0;
 	for (i = 0; i < N; i++) {
-		free(names[i]);
+		reftable_free(names[i]);
 	}
-	free(names);
+	reftable_free(names);
 	reader_close(&rd);
 }
 
@@ -374,11 +374,11 @@ void test_table_read_write_seek(bool index, int hash_id)
 		iterator_destroy(&it);
 	}
 
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	for (i = 0; i < N; i++) {
-		free(names[i]);
+		reftable_free(names[i]);
 	}
-	free(names);
+	reftable_free(names);
 	reader_close(&rd);
 }
 
@@ -400,9 +400,7 @@ void test_table_read_write_seek_index(void)
 void test_table_refs_for(bool indexed)
 {
 	int N = 50;
-
-	char **want_names = calloc(sizeof(char *), N + 1);
-
+	char **want_names = reftable_calloc(sizeof(char *) * (N + 1));
 	int want_names_len = 0;
 	byte want_hash[SHA1_SIZE];
 	set_test_hash(want_hash, 4);
@@ -489,7 +487,7 @@ void test_table_refs_for(bool indexed)
 	}
 	assert(j == want_names_len);
 
-	free(slice_yield(&buf));
+	reftable_free(slice_yield(&buf));
 	free_names(want_names);
 	iterator_destroy(&it);
 	reader_close(&rd);

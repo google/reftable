@@ -8,6 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "tree.h"
 
+#include "basics.h"
 #include "system.h"
 
 struct tree_node *tree_search(void *key, struct tree_node **rootp,
@@ -19,7 +20,7 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
 			return NULL;
 		} else {
 			struct tree_node *n =
-				calloc(sizeof(struct tree_node), 1);
+				reftable_calloc(sizeof(struct tree_node));
 			n->key = key;
 			*rootp = n;
 			return *rootp;
@@ -62,5 +63,5 @@ void tree_free(struct tree_node *t)
 	if (t->right != NULL) {
 		tree_free(t->right);
 	}
-	free(t);
+	reftable_free(t);
 }

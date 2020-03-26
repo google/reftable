@@ -36,7 +36,7 @@ void slice_resize(struct slice *s, int l)
 			c = l;
 		}
 		s->cap = c;
-		s->buf = realloc(s->buf, s->cap);
+		s->buf = reftable_realloc(s->buf, s->cap);
 	}
 	s->len = l;
 }
@@ -126,7 +126,7 @@ int slice_write(struct slice *b, byte *data, int sz)
 		if (newcap < b->len + sz) {
 			newcap = (b->len + sz);
 		}
-		b->buf = realloc(b->buf, newcap);
+		b->buf = reftable_realloc(b->buf, newcap);
 		b->cap = newcap;
 	}
 
@@ -148,7 +148,7 @@ static uint64_t slice_size(void *b)
 static void slice_return_block(void *b, struct block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
-	free(dest->data);
+	reftable_free(dest->data);
 }
 
 static void slice_close(void *b)
@@ -160,7 +160,7 @@ static int slice_read_block(void *v, struct block *dest, uint64_t off,
 {
 	struct slice *b = (struct slice *)v;
 	assert(off + size <= b->len);
-	dest->data = calloc(size, 1);
+	dest->data = reftable_calloc(size);
 	memcpy(dest->data, b->buf + off, size);
 	dest->len = size;
 	return size;
@@ -182,7 +182,7 @@ void block_source_from_slice(struct block_source *bs, struct slice *buf)
 static void malloc_return_block(void *b, struct block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
-	free(dest->data);
+	reftable_free(dest->data);
 }
 
 struct block_source_vtable malloc_vtable = {

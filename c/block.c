@@ -98,11 +98,11 @@ int block_writer_add(struct block_writer *w, struct record rec)
 		goto err;
 	}
 
-	free(slice_yield(&key));
+	reftable_free(slice_yield(&key));
 	return 0;
 
 err:
-	free(slice_yield(&key));
+	reftable_free(slice_yield(&key));
 	return -1;
 }
 
@@ -123,7 +123,7 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 	if (restart) {
 		if (w->restart_len == w->restart_cap) {
 			w->restart_cap = w->restart_cap * 2 + 1;
-			w->restarts = realloc(
+			w->restarts = reftable_realloc(
 				w->restarts, sizeof(uint32_t) * w->restart_cap);
 		}
 
@@ -167,7 +167,7 @@ int block_writer_finish(struct block_writer *w)
 			}
 
 			if (Z_OK != zresult) {
-				free(slice_yield(&compressed));
+				reftable_free(slice_yield(&compressed));
 				return ZLIB_ERROR;
 			}
 
@@ -210,7 +210,7 @@ int block_reader_init(struct block_reader *br, struct block *block,
 				    uncompressed.buf + block_header_skip,
 				    &dst_len, block->data + block_header_skip,
 				    &src_len)) {
-			free(slice_yield(&uncompressed));
+			reftable_free(slice_yield(&uncompressed));
 			return ZLIB_ERROR;
 		}
 
@@ -291,7 +291,7 @@ static int restart_key_less(int idx, void *args)
 
 	{
 		int result = slice_compare(a->key, rkey);
-		free(slice_yield(&rkey));
+		reftable_free(slice_yield(&rkey));
 		return result;
 	}
 }
@@ -334,7 +334,7 @@ int block_iter_next(struct block_iter *it, struct record rec)
 
 		slice_copy(&it->last_key, key);
 		it->next_off += start.len - in.len;
-		free(slice_yield(&key));
+		reftable_free(slice_yield(&key));
 		return 0;
 	}
 }
@@ -363,7 +363,7 @@ int block_iter_seek(struct block_iter *it, struct slice want)
 
 void block_iter_close(struct block_iter *it)
 {
-	free(slice_yield(&it->last_key));
+	reftable_free(slice_yield(&it->last_key));
 }
 
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
@@ -412,10 +412,10 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		}
 
 	exit:
-		free(slice_yield(&key));
-		free(slice_yield(&next.last_key));
+		reftable_free(slice_yield(&key));
+		reftable_free(slice_yield(&next.last_key));
 		record_clear(rec);
-		free(record_yield(&rec));
+		reftable_free(record_yield(&rec));
 
 		return result;
 	}
@@ -430,6 +430,6 @@ void block_writer_reset(struct block_writer *bw)
 void block_writer_clear(struct block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
-	free(slice_yield(&bw->last_key));
+	reftable_free(slice_yield(&bw->last_key));
 	/* the block is not owned. */
 }

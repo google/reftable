@@ -22,7 +22,7 @@ uint16_t get_be16(uint8_t *in);
 #define ARRAY_SIZE(a) sizeof((a)) / sizeof((a)[0])
 #define FREE_AND_NULL(x)    \
 	do {                \
-		free(x);    \
+		reftable_free(x);    \
 		(x) = NULL; \
 	} while (0)
 #define QSORT(arr, n, cmp) qsort(arr, n, sizeof(arr[0]), cmp)

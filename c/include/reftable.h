@@ -10,6 +10,11 @@ https://developers.google.com/open-source/licenses/bsd
 #define REFTABLE_H
 
 #include <stdint.h>
+#include <stddef.h>
+
+void set_alloc(void* (*malloc)(size_t),
+               void* (*realloc)(void*, size_t),
+               void (*free)(void*));
 
 /****************************************************************
  Basic data types

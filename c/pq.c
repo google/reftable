@@ -20,8 +20,8 @@ int pq_less(struct pq_entry a, struct pq_entry b)
 
 	cmp = slice_compare(ak, bk);
 
-	free(slice_yield(&ak));
-	free(slice_yield(&bk));
+	reftable_free(slice_yield(&ak));
+	reftable_free(slice_yield(&bk));
 
 	if (cmp == 0) {
 		return a.index > b.index;
@@ -85,7 +85,7 @@ void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e)
 	int i = 0;
 	if (pq->len == pq->cap) {
 		pq->cap = 2 * pq->cap + 1;
-		pq->heap = realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
+		pq->heap = reftable_realloc(pq->heap, pq->cap * sizeof(struct pq_entry));
 	}
 
 	pq->heap[pq->len++] = e;
@@ -107,7 +107,7 @@ void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
 	int i = 0;
 	for (i = 0; i < pq->len; i++) {
 		record_clear(pq->heap[i].rec);
-		free(record_yield(&pq->heap[i].rec));
+		reftable_free(record_yield(&pq->heap[i].rec));
 	}
 	FREE_AND_NULL(pq->heap);
 	pq->len = pq->cap = 0;

@@ -27,8 +27,8 @@ void test_slice(void)
 	slice_append(&s, t);
 	assert(0 == strcmp("abcpqr", slice_as_string(&s)));
 
-	free(slice_yield(&s));
-	free(slice_yield(&t));
+	reftable_free(slice_yield(&s));
+	reftable_free(slice_yield(&t));
 }
 
 int main()

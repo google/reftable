@@ -27,7 +27,7 @@ static uint64_t file_size(void *b)
 static void file_return_block(void *b, struct block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
-	free(dest->data);
+	reftable_free(dest->data);
 }
 
 static void file_close(void *b)
@@ -38,7 +38,7 @@ static void file_close(void *b)
 		((struct file_block_source *)b)->fd = 0;
 	}
 
-	free(b);
+	reftable_free(b);
 }
 
 static int file_read_block(void *v, struct block *dest, uint64_t off,
@@ -46,7 +46,7 @@ static int file_read_block(void *v, struct block *dest, uint64_t off,
 {
 	struct file_block_source *b = (struct file_block_source *)v;
 	assert(off + size <= b->size);
-	dest->data = malloc(size);
+	dest->data = reftable_malloc(size);
 	if (pread(b->fd, dest->data, size, off) != size) {
 		return -1;
 	}
@@ -80,7 +80,7 @@ int block_source_from_file(struct block_source *bs, const char *name)
 
 	{
 		struct file_block_source *p =
-			calloc(sizeof(struct file_block_source), 1);
+			reftable_calloc(sizeof(struct file_block_source));
 		p->size = st.st_size;
 		p->fd = fd;
 

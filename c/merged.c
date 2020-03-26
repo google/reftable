@@ -28,7 +28,7 @@ static int merged_iter_init(struct merged_iter *mi)
 		if (err > 0) {
 			iterator_destroy(&mi->stack[i]);
 			record_clear(rec);
-			free(record_yield(&rec));
+			reftable_free(record_yield(&rec));
 		} else {
 			struct pq_entry e = {
 				.rec = rec,
@@ -49,7 +49,7 @@ static void merged_iter_close(void *p)
 	for (i = 0; i < mi->stack_len; i++) {
 		iterator_destroy(&mi->stack[i]);
 	}
-	free(mi->stack);
+	reftable_free(mi->stack);
 }
 
 static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
@@ -72,7 +72,7 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
 		if (err > 0) {
 			iterator_destroy(&mi->stack[idx]);
 			record_clear(rec);
-			free(record_yield(&rec));
+			reftable_free(record_yield(&rec));
 			return 0;
 		}
 
@@ -99,7 +99,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 		record_key(top.rec, &k);
 
 		cmp = slice_compare(k, entry_key);
-		free(slice_yield(&k));
+		reftable_free(slice_yield(&k));
 
 		if (cmp > 0) {
 			break;
@@ -111,13 +111,13 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 			return err;
 		}
 		record_clear(top.rec);
-		free(record_yield(&top.rec));
+		reftable_free(record_yield(&top.rec));
 	}
 
 	record_copy_from(rec, entry.rec, hash_size(mi->hash_id));
 	record_clear(entry.rec);
-	free(record_yield(&entry.rec));
-	free(slice_yield(&entry_key));
+	reftable_free(record_yield(&entry.rec));
+	reftable_free(slice_yield(&entry_key));
 	return 0;
 }
 
@@ -173,7 +173,7 @@ int new_merged_table(struct merged_table **dest, struct reader **stack, int n,
 			.hash_id = hash_id,
 		};
 
-		*dest = calloc(sizeof(struct merged_table), 1);
+		*dest = reftable_calloc(sizeof(struct merged_table));
 		**dest = m;
 	}
 	return 0;
@@ -202,7 +202,7 @@ void merged_table_free(struct merged_table *mt)
 		return;
 	}
 	merged_table_clear(mt);
-	free(mt);
+	reftable_free(mt);
 }
 
 uint64_t merged_max_update_index(struct merged_table *mt)
@@ -218,7 +218,7 @@ uint64_t merged_min_update_index(struct merged_table *mt)
 static int merged_table_seek_record(struct merged_table *mt,
 				    struct iterator *it, struct record rec)
 {
-	struct iterator *iters = calloc(sizeof(struct iterator), mt->stack_len);
+	struct iterator *iters = reftable_calloc(sizeof(struct iterator) * mt->stack_len);
 	struct merged_iter merged = {
 		.stack = iters,
 		.typ = record_type(rec),
@@ -241,7 +241,7 @@ static int merged_table_seek_record(struct merged_table *mt,
 		for (i = 0; i < n; i++) {
 			iterator_destroy(&iters[i]);
 		}
-		free(iters);
+		reftable_free(iters);
 		return err;
 	}
 
@@ -252,7 +252,7 @@ static int merged_table_seek_record(struct merged_table *mt,
 	}
 
 	{
-		struct merged_iter *p = malloc(sizeof(struct merged_iter));
+		struct merged_iter *p = reftable_malloc(sizeof(struct merged_iter));
 		*p = merged;
 		iterator_from_merged_iter(it, p);
 	}

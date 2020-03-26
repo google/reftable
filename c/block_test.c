@@ -59,7 +59,7 @@ void test_block_read_write()
 	char *names[N];
 	const int block_size = 1024;
 	struct block block = { 0 };
-	block.data = calloc(block_size, 1);
+	block.data = reftable_calloc(block_size);
 	block.len = block_size;
 
 	struct block_writer bw = { 0 };
@@ -136,10 +136,10 @@ void test_block_read_write()
 	}
 
 	record_clear(rec);
-	free(block.data);
-	free(slice_yield(&want));
+	reftable_free(block.data);
+	reftable_free(slice_yield(&want));
 	for (i = 0; i < N; i++) {
-		free(names[i]);
+		reftable_free(names[i]);
 	}
 }
 

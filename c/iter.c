@@ -73,7 +73,7 @@ static void filtering_ref_iterator_close(void *iter_arg)
 {
 	struct filtering_ref_iterator *fri =
 		(struct filtering_ref_iterator *)iter_arg;
-	free(slice_yield(&fri->oid));
+	reftable_free(slice_yield(&fri->oid));
 	iterator_destroy(&fri->it);
 }
 
@@ -134,7 +134,7 @@ static void indexed_table_ref_iter_close(void *p)
 	struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
 	block_iter_close(&it->cur);
 	reader_return_block(it->r, &it->block_reader.block);
-	free(slice_yield(&it->oid));
+	reftable_free(slice_yield(&it->oid));
 }
 
 static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
@@ -197,7 +197,7 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 			       uint64_t *offsets, int offset_len)
 {
 	struct indexed_table_ref_iter *itr =
-		calloc(sizeof(struct indexed_table_ref_iter), 1);
+		reftable_calloc(sizeof(struct indexed_table_ref_iter));
 	int err = 0;
 
 	itr->r = r;
@@ -209,7 +209,7 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 
 	err = indexed_table_ref_iter_next_block(itr);
 	if (err < 0) {
-		free(itr);
+		reftable_free(itr);
 	} else {
 		*dest = itr;
 	}

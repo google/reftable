@@ -335,7 +335,7 @@ static int table_iter_next_block(struct table_iter *dest,
 	}
 
 	{
-		struct block_reader *brp = malloc(sizeof(struct block_reader));
+		struct block_reader *brp = reftable_malloc(sizeof(struct block_reader));
 		*brp = br;
 
 		dest->finished = false;
@@ -409,7 +409,7 @@ static int reader_table_iter_at(struct reader *r, struct table_iter *ti,
 		return err;
 	}
 
-	brp = malloc(sizeof(struct block_reader));
+	brp = reftable_malloc(sizeof(struct block_reader));
 	*brp = br;
 	ti->r = r;
 	ti->typ = block_reader_type(brp);
@@ -479,9 +479,9 @@ static int reader_seek_linear(struct reader *r, struct table_iter *ti,
 exit:
 	block_iter_close(&next.bi);
 	record_clear(rec);
-	free(record_yield(&rec));
-	free(slice_yield(&want_key));
-	free(slice_yield(&got_key));
+	reftable_free(record_yield(&rec));
+	reftable_free(slice_yield(&want_key));
+	reftable_free(slice_yield(&got_key));
 	return err;
 }
 
@@ -538,7 +538,7 @@ static int reader_seek_indexed(struct reader *r, struct iterator *it,
 
 	if (err == 0) {
 		struct table_iter *malloced =
-			calloc(sizeof(struct table_iter), 1);
+			reftable_calloc(sizeof(struct table_iter));
 		table_iter_copy_from(malloced, &next);
 		iterator_from_table_iter(it, malloced);
 	}
@@ -571,7 +571,7 @@ static int reader_seek_internal(struct reader *r, struct iterator *it,
 	}
 
 	{
-		struct table_iter *p = malloc(sizeof(struct table_iter));
+		struct table_iter *p = reftable_malloc(sizeof(struct table_iter));
 		*p = ti;
 		iterator_from_table_iter(it, p);
 	}
@@ -628,12 +628,12 @@ void reader_close(struct reader *r)
 
 int new_reader(struct reader **p, struct block_source src, char const *name)
 {
-	struct reader *rd = calloc(sizeof(struct reader), 1);
+	struct reader *rd = reftable_calloc(sizeof(struct reader));
 	int err = init_reader(rd, src, name);
 	if (err == 0) {
 		*p = rd;
 	} else {
-		free(rd);
+		reftable_free(rd);
 	}
 	return err;
 }
@@ -641,7 +641,7 @@ int new_reader(struct reader **p, struct block_source src, char const *name)
 void reader_free(struct reader *r)
 {
 	reader_close(r);
-	free(r);
+	reftable_free(r);
 }
 
 static int reader_refs_for_indexed(struct reader *r, struct iterator *it,
@@ -698,15 +698,15 @@ static int reader_refs_for_indexed(struct reader *r, struct iterator *it,
 static int reader_refs_for_unindexed(struct reader *r, struct iterator *it,
 				     byte *oid, int oid_len)
 {
-	struct table_iter *ti = calloc(sizeof(struct table_iter), 1);
+	struct table_iter *ti = reftable_calloc(sizeof(struct table_iter));
 	struct filtering_ref_iterator *filter = NULL;
 	int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
 	if (err < 0) {
-		free(ti);
+		reftable_free(ti);
 		return err;
 	}
 
-	filter = calloc(sizeof(struct filtering_ref_iterator), 1);
+	filter = reftable_calloc(sizeof(struct filtering_ref_iterator));
 	slice_resize(&filter->oid, oid_len);
 	memcpy(filter->oid.buf, oid, oid_len);
 	filter->r = r;

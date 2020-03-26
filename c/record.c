@@ -170,12 +170,12 @@ static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	}
 
 	if (src->target_value != NULL) {
-		ref->target_value = malloc(hash_size);
+		ref->target_value = reftable_malloc(hash_size);
 		memcpy(ref->target_value, src->target_value, hash_size);
 	}
 
 	if (src->value != NULL) {
-		ref->value = malloc(hash_size);
+		ref->value = reftable_malloc(hash_size);
 		memcpy(ref->value, src->value, hash_size);
 	}
 	ref->update_index = src->update_index;
@@ -228,10 +228,10 @@ static void ref_record_clear_void(void *rec)
 
 void ref_record_clear(struct ref_record *ref)
 {
-	free(ref->ref_name);
-	free(ref->target);
-	free(ref->target_value);
-	free(ref->value);
+	reftable_free(ref->ref_name);
+	reftable_free(ref->target);
+	reftable_free(ref->target_value);
+	reftable_free(ref->value);
 	memset(ref, 0, sizeof(struct ref_record));
 }
 
@@ -330,7 +330,7 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
 	in.buf += n;
 	in.len -= n;
 
-	r->ref_name = realloc(r->ref_name, key.len + 1);
+	r->ref_name = reftable_realloc(r->ref_name, key.len + 1);
 	memcpy(r->ref_name, key.buf, key.len);
 	r->ref_name[key.len] = 0;
 
@@ -342,7 +342,7 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
 		}
 
 		if (r->value == NULL) {
-			r->value = malloc(hash_size);
+			r->value = reftable_malloc(hash_size);
 		}
 		seen_value = true;
 		memcpy(r->value, in.buf, hash_size);
@@ -352,7 +352,7 @@ static int ref_record_decode(void *rec, struct slice key, byte val_type,
 			break;
 		}
 		if (r->target_value == NULL) {
-			r->target_value = malloc(hash_size);
+			r->target_value = reftable_malloc(hash_size);
 		}
 		seen_target_value = true;
 		memcpy(r->target_value, in.buf, hash_size);
@@ -460,12 +460,12 @@ static void obj_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	const struct obj_record *src = (const struct obj_record *)src_rec;
 
 	*ref = *src;
-	ref->hash_prefix = malloc(ref->hash_prefix_len);
+	ref->hash_prefix = reftable_malloc(ref->hash_prefix_len);
 	memcpy(ref->hash_prefix, src->hash_prefix, ref->hash_prefix_len);
 
 	{
 		int olen = ref->offset_len * sizeof(uint64_t);
-		ref->offsets = malloc(olen);
+		ref->offsets = reftable_malloc(olen);
 		memcpy(ref->offsets, src->offsets, olen);
 	}
 }
@@ -533,7 +533,7 @@ static int obj_record_decode(void *rec, struct slice key, byte val_type,
 	struct obj_record *r = (struct obj_record *)rec;
 	uint64_t count = val_type;
 	int n = 0;
-	r->hash_prefix = malloc(key.len);
+	r->hash_prefix = reftable_malloc(key.len);
 	memcpy(r->hash_prefix, key.buf, key.len);
 	r->hash_prefix_len = key.len;
 
@@ -553,7 +553,7 @@ static int obj_record_decode(void *rec, struct slice key, byte val_type,
 		return start.len - in.len;
 	}
 
-	r->offsets = malloc(count * sizeof(uint64_t));
+	r->offsets = reftable_malloc(count * sizeof(uint64_t));
 	r->offset_len = count;
 
 	n = get_var_int(&r->offsets[0], in);
@@ -634,11 +634,11 @@ static void log_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	dst->name = xstrdup(dst->name);
 	dst->message = xstrdup(dst->message);
 	if (dst->new_hash != NULL) {
-		dst->new_hash = malloc(hash_size);
+		dst->new_hash = reftable_malloc(hash_size);
 		memcpy(dst->new_hash, src->new_hash, hash_size);
 	}
 	if (dst->old_hash != NULL) {
-		dst->old_hash = malloc(hash_size);
+		dst->old_hash = reftable_malloc(hash_size);
 		memcpy(dst->old_hash, src->old_hash, hash_size);
 	}
 }
@@ -651,12 +651,12 @@ static void log_record_clear_void(void *rec)
 
 void log_record_clear(struct log_record *r)
 {
-	free(r->ref_name);
-	free(r->new_hash);
-	free(r->old_hash);
-	free(r->name);
-	free(r->email);
-	free(r->message);
+	reftable_free(r->ref_name);
+	reftable_free(r->new_hash);
+	reftable_free(r->old_hash);
+	reftable_free(r->name);
+	reftable_free(r->email);
+	reftable_free(r->message);
 	memset(r, 0, sizeof(struct log_record));
 }
 
@@ -749,7 +749,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 		return FORMAT_ERROR;
 	}
 
-	r->ref_name = realloc(r->ref_name, key.len - 8);
+	r->ref_name = reftable_realloc(r->ref_name, key.len - 8);
 	memcpy(r->ref_name, key.buf, key.len - 8);
 	ts = get_be64(key.buf + key.len - 8);
 
@@ -763,8 +763,8 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 		return FORMAT_ERROR;
 	}
 
-	r->old_hash = realloc(r->old_hash, hash_size);
-	r->new_hash = realloc(r->new_hash, hash_size);
+	r->old_hash = reftable_realloc(r->old_hash, hash_size);
+	r->new_hash = reftable_realloc(r->new_hash, hash_size);
 
 	memcpy(r->old_hash, in.buf, hash_size);
 	memcpy(r->new_hash, in.buf + hash_size, hash_size);
@@ -779,7 +779,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 	in.len -= n;
 	in.buf += n;
 
-	r->name = realloc(r->name, dest.len + 1);
+	r->name = reftable_realloc(r->name, dest.len + 1);
 	memcpy(r->name, dest.buf, dest.len);
 	r->name[dest.len] = 0;
 
@@ -791,7 +791,7 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 	in.len -= n;
 	in.buf += n;
 
-	r->email = realloc(r->email, dest.len + 1);
+	r->email = reftable_realloc(r->email, dest.len + 1);
 	memcpy(r->email, dest.buf, dest.len);
 	r->email[dest.len] = 0;
 
@@ -819,14 +819,14 @@ static int log_record_decode(void *rec, struct slice key, byte val_type,
 	in.len -= n;
 	in.buf += n;
 
-	r->message = realloc(r->message, dest.len + 1);
+	r->message = reftable_realloc(r->message, dest.len + 1);
 	memcpy(r->message, dest.buf, dest.len);
 	r->message[dest.len] = 0;
 
 	return start.len - in.len;
 
 error:
-	free(slice_yield(&dest));
+	reftable_free(slice_yield(&dest));
 	return FORMAT_ERROR;
 }
 
@@ -878,23 +878,23 @@ struct record new_record(byte typ)
 	struct record rec;
 	switch (typ) {
 	case BLOCK_TYPE_REF: {
-		struct ref_record *r = calloc(1, sizeof(struct ref_record));
+		struct ref_record *r = reftable_calloc(sizeof(struct ref_record));
 		record_from_ref(&rec, r);
 		return rec;
 	}
 
 	case BLOCK_TYPE_OBJ: {
-		struct obj_record *r = calloc(1, sizeof(struct obj_record));
+		struct obj_record *r = reftable_calloc(sizeof(struct obj_record));
 		record_from_obj(&rec, r);
 		return rec;
 	}
 	case BLOCK_TYPE_LOG: {
-		struct log_record *r = calloc(1, sizeof(struct log_record));
+		struct log_record *r = reftable_calloc(sizeof(struct log_record));
 		record_from_log(&rec, r);
 		return rec;
 	}
 	case BLOCK_TYPE_INDEX: {
-		struct index_record *r = calloc(1, sizeof(struct index_record));
+		struct index_record *r = reftable_calloc(sizeof(struct index_record));
 		record_from_index(&rec, r);
 		return rec;
 	}
@@ -927,7 +927,7 @@ static void index_record_copy_from(void *rec, const void *src_rec,
 static void index_record_clear(void *rec)
 {
 	struct index_record *idx = (struct index_record *)rec;
-	free(slice_yield(&idx->last_key));
+	reftable_free(slice_yield(&idx->last_key));
 }
 
 static byte index_record_val_type(const void *rec)

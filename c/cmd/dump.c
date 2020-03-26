@@ -10,7 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <string.h>
 
 #include "reftable.h"
 

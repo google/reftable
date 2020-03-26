@@ -57,11 +57,11 @@ void test_pq(void)
 		}
 		last = ref->ref_name;
 		ref->ref_name = NULL;
-		free(ref);
+		reftable_free(ref);
 	}
 
 	for (i = 0; i < N; i++) {
-		free(names[i]);
+		reftable_free(names[i]);
 	}
 
 	merged_iter_pqueue_clear(&pq);
@@ -106,8 +106,8 @@ static struct merged_table *merged_table_from_records(struct ref_record **refs,
 						      int *sizes,
 						      struct slice *buf, int n)
 {
-	struct block_source *source = calloc(n, sizeof(*source));
-	struct reader **rd = calloc(n, sizeof(*rd));
+	struct block_source *source = reftable_calloc(n * sizeof(*source));
+	struct reader **rd = reftable_calloc(n * sizeof(*rd));
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		write_test_table(&buf[i], refs[i], sizes[i]);
@@ -217,7 +217,7 @@ void test_merged(void)
 		}
 		if (len == cap) {
 			cap = 2 * cap + 1;
-			out = realloc(out, sizeof(struct ref_record) * cap);
+			out = reftable_realloc(out, sizeof(struct ref_record) * cap);
 		}
 		out[len++] = ref;
 	}
@@ -237,10 +237,10 @@ void test_merged(void)
 	for (i = 0; i < len; i++) {
 		ref_record_clear(&out[i]);
 	}
-	free(out);
+	reftable_free(out);
 
 	for (i = 0; i < 3; i++) {
-		free(slice_yield(&bufs[i]));
+		reftable_free(slice_yield(&bufs[i]));
 	}
 	merged_table_close(mt);
 	merged_table_free(mt);

@@ -38,14 +38,14 @@ static int padded_write(struct writer *w, byte *data, size_t len, int padding)
 {
 	int n = 0;
 	if (w->pending_padding > 0) {
-		byte *zeroed = calloc(w->pending_padding, 1);
+		byte *zeroed = reftable_calloc(w->pending_padding);
 		int n = w->write(w->write_arg, zeroed, w->pending_padding);
 		if (n < 0) {
 			return n;
 		}
 
 		w->pending_padding = 0;
-		free(zeroed);
+		reftable_free(zeroed);
 	}
 
 	w->pending_padding = padding;
@@ -108,13 +108,13 @@ static void writer_reinit_block_writer(struct writer *w, byte typ)
 struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 			  void *writer_arg, struct write_options *opts)
 {
-	struct writer *wp = calloc(sizeof(struct writer), 1);
+	struct writer *wp = reftable_calloc(sizeof(struct writer));
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
 		/* TODO - error return? */
 		abort();
 	}
-	wp->block = calloc(opts->block_size, 1);
+	wp->block = reftable_calloc(opts->block_size);
 	wp->write = writer_func;
 	wp->write_arg = writer_arg;
 	wp->opts = *opts;
@@ -131,8 +131,8 @@ void writer_set_limits(struct writer *w, uint64_t min, uint64_t max)
 
 void writer_free(struct writer *w)
 {
-	free(w->block);
-	free(w);
+	reftable_free(w->block);
+	reftable_free(w);
 }
 
 struct obj_index_tree_node {
@@ -158,7 +158,7 @@ static void writer_index_hash(struct writer *w, struct slice hash)
 					     &obj_index_tree_node_compare, 0);
 	struct obj_index_tree_node *key = NULL;
 	if (node == NULL) {
-		key = calloc(sizeof(struct obj_index_tree_node), 1);
+		key = reftable_calloc(sizeof(struct obj_index_tree_node));
 		slice_copy(&key->hash, hash);
 		tree_search((void *)key, &w->obj_index_tree,
 			    &obj_index_tree_node_compare, 1);
@@ -172,7 +172,7 @@ static void writer_index_hash(struct writer *w, struct slice hash)
 
 	if (key->offset_len == key->offset_cap) {
 		key->offset_cap = 2 * key->offset_cap + 1;
-		key->offsets = realloc(key->offsets,
+		key->offsets = reftable_realloc(key->offsets,
 				       sizeof(uint64_t) * key->offset_cap);
 	}
 
@@ -216,7 +216,7 @@ static int writer_add_record(struct writer *w, struct record rec)
 
 	result = 0;
 exit:
-	free(slice_yield(&key));
+	reftable_free(slice_yield(&key));
 	return result;
 }
 
@@ -354,9 +354,9 @@ static int writer_finish_section(struct writer *w)
 			assert(err == 0);
 		}
 		for (i = 0; i < idx_len; i++) {
-			free(slice_yield(&idx[i].last_key));
+			reftable_free(slice_yield(&idx[i].last_key));
 		}
-		free(idx);
+		reftable_free(idx);
 	}
 
 	writer_clear_index(w);
@@ -448,8 +448,8 @@ static void object_record_free(void *void_arg, void *key)
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 
 	FREE_AND_NULL(entry->offsets);
-	free(slice_yield(&entry->hash));
-	free(entry);
+	reftable_free(slice_yield(&entry->hash));
+	reftable_free(entry);
 }
 
 static int writer_dump_object_index(struct writer *w)
@@ -546,7 +546,7 @@ exit:
 	/* free up memory. */
 	block_writer_clear(&w->block_writer_data);
 	writer_clear_index(w);
-	free(slice_yield(&w->last_key));
+	reftable_free(slice_yield(&w->last_key));
 	return err;
 }
 
@@ -554,7 +554,7 @@ void writer_clear_index(struct writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->index_len; i++) {
-		free(slice_yield(&w->index[i].last_key));
+		reftable_free(slice_yield(&w->index[i].last_key));
 	}
 
 	FREE_AND_NULL(w->index);
@@ -606,7 +606,7 @@ static int writer_flush_nonempty_block(struct writer *w)
 
 	if (w->index_cap == w->index_len) {
 		w->index_cap = 2 * w->index_cap + 1;
-		w->index = realloc(w->index,
+		w->index = reftable_realloc(w->index,
 				   sizeof(struct index_record) * w->index_cap);
 	}
 

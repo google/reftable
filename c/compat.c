@@ -7,6 +7,7 @@ https://developers.google.com/open-source/licenses/bsd
 */
 
 #include "system.h"
+#include "basics.h"
 
 void put_be32(uint8_t *out, uint32_t i)
 {
@@ -49,7 +50,7 @@ uint16_t get_be16(uint8_t *in)
 char *xstrdup(const char *s)
 {
 	int l = strlen(s);
-	char *dest = (char *)malloc(l + 1);
+	char *dest = (char *)reftable_malloc(l + 1);
 	strncpy(dest, s, l + 1);
 	return dest;
 }

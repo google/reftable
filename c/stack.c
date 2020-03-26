@@ -17,7 +17,7 @@ https://developers.google.com/open-source/licenses/bsd
 int new_stack(struct stack **dest, const char *dir, const char *list_file,
 	      struct write_options config)
 {
-	struct stack *p = calloc(sizeof(struct stack), 1);
+	struct stack *p = reftable_calloc(sizeof(struct stack));
 	int err = 0;
 	*dest = NULL;
 	p->list_file = xstrdup(list_file);
@@ -53,7 +53,7 @@ static int fread_lines(FILE *f, char ***namesp)
 		goto exit;
 	}
 
-	buf = malloc(size + 1);
+	buf = reftable_malloc(size + 1);
 	if (fread(buf, 1, size, f) != size) {
 		err = IO_ERROR;
 		goto exit;
@@ -62,7 +62,7 @@ static int fread_lines(FILE *f, char ***namesp)
 
 	parse_names(buf, size, namesp);
 exit:
-	free(buf);
+	reftable_free(buf);
 	return err;
 }
 
@@ -72,7 +72,7 @@ int read_lines(const char *filename, char ***namesp)
 	int err = 0;
 	if (f == NULL) {
 		if (errno == ENOENT) {
-			*namesp = calloc(sizeof(char *), 1);
+			*namesp = reftable_calloc(sizeof(char *));
 			return 0;
 		}
 
@@ -101,12 +101,12 @@ void stack_destroy(struct stack *st)
 
 	FREE_AND_NULL(st->list_file);
 	FREE_AND_NULL(st->reftable_dir);
-	free(st);
+	reftable_free(st);
 }
 
 static struct reader **stack_copy_readers(struct stack *st, int cur_len)
 {
-	struct reader **cur = calloc(sizeof(struct reader *), cur_len);
+	struct reader **cur = reftable_calloc(sizeof(struct reader *) * cur_len);
 	int i = 0;
 	for (i = 0; i < cur_len; i++) {
 		cur[i] = st->merged->stack[i];
@@ -121,7 +121,7 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 	int err = 0;
 	int names_len = names_length(names);
 	struct reader **new_tables =
-		malloc(sizeof(struct reader *) * names_len);
+		reftable_malloc(sizeof(struct reader *) * names_len);
 	int new_tables_len = 0;
 	struct merged_table *new_merged = NULL;
 
@@ -188,15 +188,15 @@ static int stack_reload_once(struct stack *st, char **names, bool reuse_open)
 		}
 	}
 exit:
-	free(slice_yield(&table_path));
+	reftable_free(slice_yield(&table_path));
 	{
 		int i = 0;
 		for (i = 0; i < new_tables_len; i++) {
 			reader_close(new_tables[i]);
 		}
 	}
-	free(new_tables);
-	free(cur);
+	reftable_free(new_tables);
+	reftable_free(cur);
 	return err;
 }
 
@@ -441,7 +441,7 @@ int stack_try_add(struct stack *st,
 		err = IO_ERROR;
 		goto exit;
 	}
-	free(slice_yield(&temp_tab_name));
+	reftable_free(slice_yield(&temp_tab_name));
 
 	err = write(lock_fd, table_list.buf, table_list.len);
 	if (err < 0) {
@@ -479,11 +479,11 @@ exit:
 		lock_fd = 0;
 	}
 
-	free(slice_yield(&lock_name));
-	free(slice_yield(&temp_tab_name));
-	free(slice_yield(&tab_name));
-	free(slice_yield(&next_name));
-	free(slice_yield(&table_list));
+	reftable_free(slice_yield(&lock_name));
+	reftable_free(slice_yield(&temp_tab_name));
+	reftable_free(slice_yield(&tab_name));
+	reftable_free(slice_yield(&next_name));
+	reftable_free(slice_yield(&table_list));
 	writer_free(wr);
 	return err;
 }
@@ -538,9 +538,9 @@ exit:
 	}
 	if (err != 0 && temp_tab->len > 0) {
 		unlink(slice_as_string(temp_tab));
-		free(slice_yield(temp_tab));
+		reftable_free(slice_yield(temp_tab));
 	}
-	free(slice_yield(&next_name));
+	reftable_free(slice_yield(&next_name));
 	return err;
 }
 
@@ -549,7 +549,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
 {
 	int subtabs_len = last - first + 1;
 	struct reader **subtabs =
-		calloc(sizeof(struct reader *), last - first + 1);
+		reftable_calloc(sizeof(struct reader *) * (last - first + 1));
 	struct merged_table *mt = NULL;
 	int err = 0;
 	struct iterator it = { 0 };
@@ -567,7 +567,7 @@ int stack_write_compact(struct stack *st, struct writer *wr, int first,
 
 	err = new_merged_table(&mt, subtabs, subtabs_len, st->config.hash_id);
 	if (err < 0) {
-		free(subtabs);
+		reftable_free(subtabs);
 		goto exit;
 	}
 
@@ -655,8 +655,8 @@ static int stack_compact_range(struct stack *st, int first, int last,
 	bool have_lock = false;
 	int lock_file_fd = 0;
 	int compact_count = last - first + 1;
-	char **delete_on_success = calloc(sizeof(char *), compact_count + 1);
-	char **subtable_locks = calloc(sizeof(char *), compact_count + 1);
+	char **delete_on_success = reftable_calloc(sizeof(char *) * (compact_count + 1));
+	char **subtable_locks = reftable_calloc(sizeof(char *) * (compact_count + 1));
 	int i = 0;
 	int j = 0;
 	bool is_empty_table = false;
@@ -829,11 +829,11 @@ exit:
 	if (have_lock) {
 		unlink(slice_as_string(&lock_file_name));
 	}
-	free(slice_yield(&new_table_name));
-	free(slice_yield(&new_table_path));
-	free(slice_yield(&ref_list_contents));
-	free(slice_yield(&temp_tab_name));
-	free(slice_yield(&lock_file_name));
+	reftable_free(slice_yield(&new_table_name));
+	reftable_free(slice_yield(&new_table_path));
+	reftable_free(slice_yield(&ref_list_contents));
+	reftable_free(slice_yield(&temp_tab_name));
+	reftable_free(slice_yield(&lock_file_name));
 	return err;
 }
 
@@ -869,7 +869,7 @@ int fastlog2(uint64_t sz)
 
 struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n)
 {
-	struct segment *segs = calloc(sizeof(struct segment), n);
+	struct segment *segs = reftable_calloc(sizeof(struct segment) * n);
 	int next = 0;
 	struct segment cur = { 0 };
 	int i = 0;
@@ -922,13 +922,13 @@ struct segment suggest_compaction_segment(uint64_t *sizes, int n)
 		min_seg.bytes += sizes[prev];
 	}
 
-	free(segs);
+	reftable_free(segs);
 	return min_seg;
 }
 
 static uint64_t *stack_table_sizes_for_compaction(struct stack *st)
 {
-	uint64_t *sizes = calloc(sizeof(uint64_t), st->merged->stack_len);
+	uint64_t *sizes = reftable_calloc(sizeof(uint64_t) * st->merged->stack_len);
 	int i = 0;
 	for (i = 0; i < st->merged->stack_len; i++) {
 		/* overhead is 24 + 68 = 92. */
@@ -942,7 +942,7 @@ int stack_auto_compact(struct stack *st)
 	uint64_t *sizes = stack_table_sizes_for_compaction(st);
 	struct segment seg =
 		suggest_compaction_segment(sizes, st->merged->stack_len);
-	free(sizes);
+	reftable_free(sizes);
 	if (segment_size(&seg) > 0) {
 		return stack_compact_range_stats(st, seg.start, seg.end - 1,
 						 NULL);

@@ -107,13 +107,13 @@ void test_stack_add(void)
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
 		refs[i].ref_name = xstrdup(buf);
-		refs[i].value = malloc(SHA1_SIZE);
+		refs[i].value = reftable_malloc(SHA1_SIZE);
 		refs[i].update_index = i + 1;
 		set_test_hash(refs[i].value, i);
 
 		logs[i].ref_name = xstrdup(buf);
 		logs[i].update_index = N + i + 1;
-		logs[i].new_hash = malloc(SHA1_SIZE);
+		logs[i].new_hash = reftable_malloc(SHA1_SIZE);
 		logs[i].email = xstrdup("identity@invalid");
 		set_test_hash(logs[i].new_hash, i);
 	}
@@ -182,7 +182,7 @@ void test_sizes_to_segments(void)
 	assert(segs[1].log == 2);
 	assert(segs[1].start == 2);
 	assert(segs[1].end == 5);
-	free(segs);
+	reftable_free(segs);
 }
 
 void test_suggest_compaction_segment(void)
@@ -228,7 +228,7 @@ void test_reflog_expire(void)
 		logs[i].ref_name = xstrdup(buf);
 		logs[i].update_index = i;
 		logs[i].time = i;
-		logs[i].new_hash = malloc(SHA1_SIZE);
+		logs[i].new_hash = reftable_malloc(SHA1_SIZE);
 		logs[i].email = xstrdup("identity@invalid");
 		set_test_hash(logs[i].new_hash, i);
 	}
