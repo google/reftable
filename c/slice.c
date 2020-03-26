@@ -57,6 +57,12 @@ void slice_append(struct slice *s, struct slice a)
 	memcpy(s->buf + end, a.buf, a.len);
 }
 
+void slice_consume(struct slice *s, int n)
+{
+        s->buf += n;
+        s->len -= n;
+}
+
 byte *slice_yield(struct slice *s)
 {
 	byte *p = s->buf;

@@ -25,6 +25,7 @@ const char *slice_as_string(struct slice *src);
 bool slice_equal(struct slice a, struct slice b);
 byte *slice_yield(struct slice *s);
 void slice_copy(struct slice *dest, struct slice src);
+void slice_consume(struct slice *s, int n);
 void slice_resize(struct slice *s, int l);
 int slice_compare(struct slice a, struct slice b);
 int slice_write(struct slice *b, byte *data, int sz);
