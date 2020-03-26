@@ -141,26 +141,26 @@ int encode_key(bool *restart, struct slice dest, struct slice prev_key,
 	return start.len - dest.len;
 }
 
-static byte ref_record_type(void)
+static byte reftable_ref_record_type(void)
 {
 	return BLOCK_TYPE_REF;
 }
 
-static void ref_record_key(const void *r, struct slice *dest)
+static void reftable_ref_record_key(const void *r, struct slice *dest)
 {
-	const struct ref_record *rec = (const struct ref_record *)r;
+	const struct reftable_ref_record *rec = (const struct reftable_ref_record *)r;
 	slice_set_string(dest, rec->ref_name);
 }
 
-static void ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
+static void reftable_ref_record_copy_from(void *rec, const void *src_rec, int hash_size)
 {
-	struct ref_record *ref = (struct ref_record *)rec;
-	struct ref_record *src = (struct ref_record *)src_rec;
+	struct reftable_ref_record *ref = (struct reftable_ref_record *)rec;
+	struct reftable_ref_record *src = (struct reftable_ref_record *)src_rec;
 	assert(hash_size > 0);
 
 	/* This is simple and correct, but we could probably reuse the hash
 	   fields. */
-	ref_record_clear(ref);
+	reftable_ref_record_clear(ref);
 	if (src->ref_name != NULL) {
 		ref->ref_name = xstrdup(src->ref_name);
 	}
@@ -202,7 +202,7 @@ static void hex_format(char *dest, byte *src, int hash_size)
 	}
 }
 
-void ref_record_print(struct ref_record *ref, int hash_size)
+void reftable_ref_record_print(struct reftable_ref_record *ref, int hash_size)
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
 
@@ -221,23 +221,23 @@ void ref_record_print(struct ref_record *ref, int hash_size)
 	printf("}\n");
 }
 
-static void ref_record_clear_void(void *rec)
+static void reftable_ref_record_clear_void(void *rec)
 {
-	ref_record_clear((struct ref_record *)rec);
+	reftable_ref_record_clear((struct reftable_ref_record *)rec);
 }
 
-void ref_record_clear(struct ref_record *ref)
+void reftable_ref_record_clear(struct reftable_ref_record *ref)
 {
 	reftable_free(ref->ref_name);
 	reftable_free(ref->target);
 	reftable_free(ref->target_value);
 	reftable_free(ref->value);
-	memset(ref, 0, sizeof(struct ref_record));
+	memset(ref, 0, sizeof(struct reftable_ref_record));
 }
 
-static byte ref_record_val_type(const void *rec)
+static byte reftable_ref_record_val_type(const void *rec)
 {
-	const struct ref_record *r = (const struct ref_record *)rec;
+	const struct reftable_ref_record *r = (const struct reftable_ref_record *)rec;
 	if (r->value != NULL) {
 		if (r->target_value != NULL) {
 			return 2;
@@ -270,9 +270,9 @@ static int encode_string(char *str, struct slice s)
 	return start.len - s.len;
 }
 
-static int ref_record_encode(const void *rec, struct slice s, int hash_size)
+static int reftable_ref_record_encode(const void *rec, struct slice s, int hash_size)
 {
-	const struct ref_record *r = (const struct ref_record *)rec;
+	const struct reftable_ref_record *r = (const struct reftable_ref_record *)rec;
 	struct slice start = s;
 	int n = put_var_int(s, r->update_index);
 	assert(hash_size > 0);
@@ -312,10 +312,10 @@ static int ref_record_encode(const void *rec, struct slice s, int hash_size)
 	return start.len - s.len;
 }
 
-static int ref_record_decode(void *rec, struct slice key, byte val_type,
+static int reftable_ref_record_decode(void *rec, struct slice key, byte val_type,
 			     struct slice in, int hash_size)
 {
-	struct ref_record *r = (struct ref_record *)rec;
+	struct reftable_ref_record *r = (struct reftable_ref_record *)rec;
 	struct slice start = in;
 	bool seen_value = false;
 	bool seen_target_value = false;
@@ -432,14 +432,14 @@ int decode_key(struct slice *key, byte *extra, struct slice last_key,
 	return start_len - in.len;
 }
 
-struct record_vtable ref_record_vtable = {
-	.key = &ref_record_key,
-	.type = &ref_record_type,
-	.copy_from = &ref_record_copy_from,
-	.val_type = &ref_record_val_type,
-	.encode = &ref_record_encode,
-	.decode = &ref_record_decode,
-	.clear = &ref_record_clear_void,
+struct record_vtable reftable_ref_record_vtable = {
+	.key = &reftable_ref_record_key,
+	.type = &reftable_ref_record_type,
+	.copy_from = &reftable_ref_record_copy_from,
+	.val_type = &reftable_ref_record_val_type,
+	.encode = &reftable_ref_record_encode,
+	.decode = &reftable_ref_record_decode,
+	.clear = &reftable_ref_record_clear_void,
 };
 
 static byte obj_record_type(void)
@@ -594,7 +594,7 @@ struct record_vtable obj_record_vtable = {
 	.clear = &obj_record_clear,
 };
 
-void log_record_print(struct log_record *log, int hash_size)
+void reftable_log_record_print(struct reftable_log_record *log, int hash_size)
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
 
@@ -607,14 +607,14 @@ void log_record_print(struct log_record *log, int hash_size)
 	printf("%s\n\n%s\n}\n", hex, log->message);
 }
 
-static byte log_record_type(void)
+static byte reftable_log_record_type(void)
 {
 	return BLOCK_TYPE_LOG;
 }
 
-static void log_record_key(const void *r, struct slice *dest)
+static void reftable_log_record_key(const void *r, struct slice *dest)
 {
-	const struct log_record *rec = (const struct log_record *)r;
+	const struct reftable_log_record *rec = (const struct reftable_log_record *)r;
 	int len = strlen(rec->ref_name);
 	uint64_t ts = 0;
 	slice_resize(dest, len + 9);
@@ -623,10 +623,10 @@ static void log_record_key(const void *r, struct slice *dest)
 	put_be64(dest->buf + 1 + len, ts);
 }
 
-static void log_record_copy_from(void *rec, const void *src_rec, int hash_size)
+static void reftable_log_record_copy_from(void *rec, const void *src_rec, int hash_size)
 {
-	struct log_record *dst = (struct log_record *)rec;
-	const struct log_record *src = (const struct log_record *)src_rec;
+	struct reftable_log_record *dst = (struct reftable_log_record *)rec;
+	const struct reftable_log_record *src = (const struct reftable_log_record *)src_rec;
 
 	*dst = *src;
 	dst->ref_name = xstrdup(dst->ref_name);
@@ -643,13 +643,13 @@ static void log_record_copy_from(void *rec, const void *src_rec, int hash_size)
 	}
 }
 
-static void log_record_clear_void(void *rec)
+static void reftable_log_record_clear_void(void *rec)
 {
-	struct log_record *r = (struct log_record *)rec;
-	log_record_clear(r);
+	struct reftable_log_record *r = (struct reftable_log_record *)rec;
+	reftable_log_record_clear(r);
 }
 
-void log_record_clear(struct log_record *r)
+void reftable_log_record_clear(struct reftable_log_record *r)
 {
 	reftable_free(r->ref_name);
 	reftable_free(r->new_hash);
@@ -657,26 +657,26 @@ void log_record_clear(struct log_record *r)
 	reftable_free(r->name);
 	reftable_free(r->email);
 	reftable_free(r->message);
-	memset(r, 0, sizeof(struct log_record));
+	memset(r, 0, sizeof(struct reftable_log_record));
 }
 
-static byte log_record_val_type(const void *rec)
+static byte reftable_log_record_val_type(const void *rec)
 {
-        const struct log_record *log = (const struct log_record *) rec;
+        const struct reftable_log_record *log = (const struct reftable_log_record *) rec;
         
-	return log_record_is_deletion(log) ? 0 : 1;
+	return reftable_log_record_is_deletion(log) ? 0 : 1;
 }
 
 static byte zero[SHA256_SIZE] = { 0 };
 
-static int log_record_encode(const void *rec, struct slice s, int hash_size)
+static int reftable_log_record_encode(const void *rec, struct slice s, int hash_size)
 {
-	struct log_record *r = (struct log_record *)rec;
+	struct reftable_log_record *r = (struct reftable_log_record *)rec;
 	struct slice start = s;
 	int n = 0;
 	byte *oldh = r->old_hash;
 	byte *newh = r->new_hash;
-        if (log_record_is_deletion(r)) {
+        if (reftable_log_record_is_deletion(r)) {
                 return 0;
         }
         
@@ -735,11 +735,11 @@ static int log_record_encode(const void *rec, struct slice s, int hash_size)
 	return start.len - s.len;
 }
 
-static int log_record_decode(void *rec, struct slice key, byte val_type,
+static int reftable_log_record_decode(void *rec, struct slice key, byte val_type,
 			     struct slice in, int hash_size)
 {
 	struct slice start = in;
-	struct log_record *r = (struct log_record *)rec;
+	struct reftable_log_record *r = (struct reftable_log_record *)rec;
 	uint64_t max = 0;
 	uint64_t ts = 0;
 	struct slice dest = { 0 };
@@ -853,7 +853,7 @@ static bool zero_hash_eq(byte *a, byte *b, int sz)
 	return !memcmp(a, b, sz);
 }
 
-bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size)
+bool reftable_log_record_equal(struct reftable_log_record *a, struct reftable_log_record *b, int hash_size)
 {
 	return null_streq(a->name, b->name) && null_streq(a->email, b->email) &&
 	       null_streq(a->message, b->message) &&
@@ -863,14 +863,14 @@ bool log_record_equal(struct log_record *a, struct log_record *b, int hash_size)
 	       a->update_index == b->update_index;
 }
 
-struct record_vtable log_record_vtable = {
-	.key = &log_record_key,
-	.type = &log_record_type,
-	.copy_from = &log_record_copy_from,
-	.val_type = &log_record_val_type,
-	.encode = &log_record_encode,
-	.decode = &log_record_decode,
-	.clear = &log_record_clear_void,
+struct record_vtable reftable_log_record_vtable = {
+	.key = &reftable_log_record_key,
+	.type = &reftable_log_record_type,
+	.copy_from = &reftable_log_record_copy_from,
+	.val_type = &reftable_log_record_val_type,
+	.encode = &reftable_log_record_encode,
+	.decode = &reftable_log_record_decode,
+	.clear = &reftable_log_record_clear_void,
 };
 
 struct record new_record(byte typ)
@@ -878,7 +878,7 @@ struct record new_record(byte typ)
 	struct record rec;
 	switch (typ) {
 	case BLOCK_TYPE_REF: {
-		struct ref_record *r = reftable_calloc(sizeof(struct ref_record));
+		struct reftable_ref_record *r = reftable_calloc(sizeof(struct reftable_ref_record));
 		record_from_ref(&rec, r);
 		return rec;
 	}
@@ -889,7 +889,7 @@ struct record new_record(byte typ)
 		return rec;
 	}
 	case BLOCK_TYPE_LOG: {
-		struct log_record *r = reftable_calloc(sizeof(struct log_record));
+		struct reftable_log_record *r = reftable_calloc(sizeof(struct reftable_log_record));
 		record_from_log(&rec, r);
 		return rec;
 	}
@@ -1018,10 +1018,10 @@ void record_clear(struct record rec)
 	return rec.ops->clear(rec.data);
 }
 
-void record_from_ref(struct record *rec, struct ref_record *ref_rec)
+void record_from_ref(struct record *rec, struct reftable_ref_record *ref_rec)
 {
 	rec->data = ref_rec;
-	rec->ops = &ref_record_vtable;
+	rec->ops = &reftable_ref_record_vtable;
 }
 
 void record_from_obj(struct record *rec, struct obj_record *obj_rec)
@@ -1036,10 +1036,10 @@ void record_from_index(struct record *rec, struct index_record *index_rec)
 	rec->ops = &index_record_vtable;
 }
 
-void record_from_log(struct record *rec, struct log_record *log_rec)
+void record_from_log(struct record *rec, struct reftable_log_record *log_rec)
 {
 	rec->data = log_rec;
-	rec->ops = &log_record_vtable;
+	rec->ops = &reftable_log_record_vtable;
 }
 
 void *record_yield(struct record *rec)
@@ -1049,10 +1049,10 @@ void *record_yield(struct record *rec)
 	return p;
 }
 
-struct ref_record *record_as_ref(struct record rec)
+struct reftable_ref_record *record_as_ref(struct record rec)
 {
 	assert(record_type(rec) == BLOCK_TYPE_REF);
-	return (struct ref_record *)rec.data;
+	return (struct reftable_ref_record *)rec.data;
 }
 
 static bool hash_equal(byte *a, byte *b, int hash_size)
@@ -1073,7 +1073,7 @@ static bool str_equal(char *a, char *b)
 	return a == b;
 }
 
-bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size)
+bool reftable_ref_record_equal(struct reftable_ref_record *a, struct reftable_ref_record *b, int hash_size)
 {
 	assert(hash_size > 0);
 	return 0 == strcmp(a->ref_name, b->ref_name) &&
@@ -1083,22 +1083,22 @@ bool ref_record_equal(struct ref_record *a, struct ref_record *b, int hash_size)
 	       str_equal(a->target, b->target);
 }
 
-int ref_record_compare_name(const void *a, const void *b)
+int reftable_ref_record_compare_name(const void *a, const void *b)
 {
-	return strcmp(((struct ref_record *)a)->ref_name,
-		      ((struct ref_record *)b)->ref_name);
+	return strcmp(((struct reftable_ref_record *)a)->ref_name,
+		      ((struct reftable_ref_record *)b)->ref_name);
 }
 
-bool ref_record_is_deletion(const struct ref_record *ref)
+bool reftable_ref_record_is_deletion(const struct reftable_ref_record *ref)
 {
 	return ref->value == NULL && ref->target == NULL &&
 	       ref->target_value == NULL;
 }
 
-int log_record_compare_key(const void *a, const void *b)
+int reftable_log_record_compare_key(const void *a, const void *b)
 {
-	struct log_record *la = (struct log_record *)a;
-	struct log_record *lb = (struct log_record *)b;
+	struct reftable_log_record *la = (struct reftable_log_record *)a;
+	struct reftable_log_record *lb = (struct reftable_log_record *)b;
 
 	int cmp = strcmp(la->ref_name, lb->ref_name);
 	if (cmp) {
@@ -1110,7 +1110,7 @@ int log_record_compare_key(const void *a, const void *b)
 	return (la->update_index < lb->update_index) ? 1 : 0;
 }
 
-bool log_record_is_deletion(const struct log_record *log)
+bool reftable_log_record_is_deletion(const struct reftable_log_record *log)
 {
         return (log->new_hash == NULL && log->old_hash == NULL &&
                 log->name == NULL && log->email == NULL &&

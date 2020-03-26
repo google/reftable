@@ -12,8 +12,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "pq.h"
 #include "reftable.h"
 
-struct merged_table {
-	struct reader **stack;
+struct reftable_merged_table {
+	struct reftable_reader **stack;
 	int stack_len;
 	uint32_t hash_id;
 
@@ -22,13 +22,13 @@ struct merged_table {
 };
 
 struct merged_iter {
-	struct iterator *stack;
+	struct reftable_iterator *stack;
 	uint32_t hash_id;
 	int stack_len;
 	byte typ;
 	struct merged_iter_pqueue pq;
 } merged_iter;
 
-void merged_table_clear(struct merged_table *mt);
+void merged_table_clear(struct reftable_merged_table *mt);
 
 #endif

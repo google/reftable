@@ -15,7 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "slice.h"
 #include "tree.h"
 
-struct writer {
+struct reftable_writer {
 	int (*write)(void *, byte *, int);
 	void *write_arg;
 	int pending_padding;
@@ -23,11 +23,11 @@ struct writer {
 
 	uint64_t next;
 	uint64_t min_update_index, max_update_index;
-	struct write_options opts;
+	struct reftable_write_options opts;
 
 	byte *block;
-	struct block_writer *block_writer;
-	struct block_writer block_writer_data;
+	struct reftable_block_writer *block_writer;
+	struct reftable_block_writer block_writer_data;
 	struct index_record *index;
 	int index_len;
 	int index_cap;
@@ -35,11 +35,11 @@ struct writer {
 	/* tree for use with tsearch */
 	struct tree_node *obj_index_tree;
 
-	struct stats stats;
+	struct reftable_stats stats;
 };
 
-int writer_flush_block(struct writer *w);
-void writer_clear_index(struct writer *w);
-int writer_finish_public_section(struct writer *w);
+int writer_flush_block(struct reftable_writer *w);
+void writer_clear_index(struct reftable_writer *w);
+int writer_finish_public_section(struct reftable_writer *w);
 
 #endif

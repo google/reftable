@@ -145,7 +145,7 @@ static uint64_t slice_size(void *b)
 	return ((struct slice *)b)->len;
 }
 
-static void slice_return_block(void *b, struct block *dest)
+static void slice_return_block(void *b, struct reftable_block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
 	reftable_free(dest->data);
@@ -155,7 +155,7 @@ static void slice_close(void *b)
 {
 }
 
-static int slice_read_block(void *v, struct block *dest, uint64_t off,
+static int slice_read_block(void *v, struct reftable_block *dest, uint64_t off,
 			    uint32_t size)
 {
 	struct slice *b = (struct slice *)v;
@@ -166,34 +166,34 @@ static int slice_read_block(void *v, struct block *dest, uint64_t off,
 	return size;
 }
 
-struct block_source_vtable slice_vtable = {
+struct reftable_block_source_vtable slice_vtable = {
 	.size = &slice_size,
 	.read_block = &slice_read_block,
 	.return_block = &slice_return_block,
 	.close = &slice_close,
 };
 
-void block_source_from_slice(struct block_source *bs, struct slice *buf)
+void block_source_from_slice(struct reftable_block_source *bs, struct slice *buf)
 {
 	bs->ops = &slice_vtable;
 	bs->arg = buf;
 }
 
-static void malloc_return_block(void *b, struct block *dest)
+static void malloc_return_block(void *b, struct reftable_block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
 	reftable_free(dest->data);
 }
 
-struct block_source_vtable malloc_vtable = {
+struct reftable_block_source_vtable malloc_vtable = {
 	.return_block = &malloc_return_block,
 };
 
-struct block_source malloc_block_source_instance = {
+struct reftable_block_source malloc_block_source_instance = {
 	.ops = &malloc_vtable,
 };
 
-struct block_source malloc_block_source(void)
+struct reftable_block_source malloc_block_source(void)
 {
 	return malloc_block_source_instance;
 }

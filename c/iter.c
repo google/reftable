@@ -15,7 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 #include "reftable.h"
 
-bool iterator_is_null(struct iterator it)
+bool iterator_is_null(struct reftable_iterator it)
 {
 	return it.ops == NULL;
 }
@@ -29,23 +29,23 @@ static void empty_iterator_close(void *arg)
 {
 }
 
-struct iterator_vtable empty_vtable = {
+struct reftable_iterator_vtable empty_vtable = {
 	.next = &empty_iterator_next,
 	.close = &empty_iterator_close,
 };
 
-void iterator_set_empty(struct iterator *it)
+void iterator_set_empty(struct reftable_iterator *it)
 {
 	it->iter_arg = NULL;
 	it->ops = &empty_vtable;
 }
 
-int iterator_next(struct iterator it, struct record rec)
+int iterator_next(struct reftable_iterator it, struct record rec)
 {
 	return it.ops->next(it.iter_arg, rec);
 }
 
-void iterator_destroy(struct iterator *it)
+void reftable_iterator_destroy(struct reftable_iterator *it)
 {
 	if (it->ops == NULL) {
 		return;
@@ -55,14 +55,14 @@ void iterator_destroy(struct iterator *it)
 	FREE_AND_NULL(it->iter_arg);
 }
 
-int iterator_next_ref(struct iterator it, struct ref_record *ref)
+int reftable_iterator_next_ref(struct reftable_iterator it, struct reftable_ref_record *ref)
 {
 	struct record rec = { 0 };
 	record_from_ref(&rec, ref);
 	return iterator_next(it, rec);
 }
 
-int iterator_next_log(struct iterator it, struct log_record *log)
+int reftable_iterator_next_log(struct reftable_iterator it, struct reftable_log_record *log)
 {
 	struct record rec = { 0 };
 	record_from_log(&rec, log);
@@ -74,30 +74,30 @@ static void filtering_ref_iterator_close(void *iter_arg)
 	struct filtering_ref_iterator *fri =
 		(struct filtering_ref_iterator *)iter_arg;
 	reftable_free(slice_yield(&fri->oid));
-	iterator_destroy(&fri->it);
+	reftable_iterator_destroy(&fri->it);
 }
 
 static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 {
 	struct filtering_ref_iterator *fri =
 		(struct filtering_ref_iterator *)iter_arg;
-	struct ref_record *ref = (struct ref_record *)rec.data;
+	struct reftable_ref_record *ref = (struct reftable_ref_record *)rec.data;
 
 	while (true) {
-		int err = iterator_next_ref(fri->it, ref);
+		int err = reftable_iterator_next_ref(fri->it, ref);
 		if (err != 0) {
 			return err;
 		}
 
 		if (fri->double_check) {
-			struct iterator it = { 0 };
+			struct reftable_iterator it = { 0 };
 
-			int err = reader_seek_ref(fri->r, &it, ref->ref_name);
+			int err = reftable_reader_seek_ref(fri->r, &it, ref->ref_name);
 			if (err == 0) {
-				err = iterator_next_ref(it, ref);
+				err = reftable_iterator_next_ref(it, ref);
 			}
 
-			iterator_destroy(&it);
+			reftable_iterator_destroy(&it);
 
 			if (err < 0) {
 				return err;
@@ -117,12 +117,12 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 	}
 }
 
-struct iterator_vtable filtering_ref_iterator_vtable = {
+struct reftable_iterator_vtable filtering_ref_iterator_vtable = {
 	.next = &filtering_ref_iterator_next,
 	.close = &filtering_ref_iterator_close,
 };
 
-void iterator_from_filtering_ref_iterator(struct iterator *it,
+void iterator_from_filtering_ref_iterator(struct reftable_iterator *it,
 					  struct filtering_ref_iterator *fri)
 {
 	it->iter_arg = fri;
@@ -165,7 +165,7 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 static int indexed_table_ref_iter_next(void *p, struct record rec)
 {
 	struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
-	struct ref_record *ref = (struct ref_record *)rec.data;
+	struct reftable_ref_record *ref = (struct reftable_ref_record *)rec.data;
 
 	while (true) {
 		int err = block_iter_next(&it->cur, rec);
@@ -193,7 +193,7 @@ static int indexed_table_ref_iter_next(void *p, struct record rec)
 }
 
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-			       struct reader *r, byte *oid, int oid_len,
+			       struct reftable_reader *r, byte *oid, int oid_len,
 			       uint64_t *offsets, int offset_len)
 {
 	struct indexed_table_ref_iter *itr =
@@ -216,12 +216,12 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 	return err;
 }
 
-struct iterator_vtable indexed_table_ref_iter_vtable = {
+struct reftable_iterator_vtable indexed_table_ref_iter_vtable = {
 	.next = &indexed_table_ref_iter_next,
 	.close = &indexed_table_ref_iter_close,
 };
 
-void iterator_from_indexed_table_ref_iter(struct iterator *it,
+void iterator_from_indexed_table_ref_iter(struct reftable_iterator *it,
 					  struct indexed_table_ref_iter *itr)
 {
 	it->iter_arg = itr;

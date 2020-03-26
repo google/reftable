@@ -28,7 +28,7 @@ https://developers.google.com/open-source/licenses/bsd
 		fflush(stderr);                                       \
 		fflush(stdout);                                       \
 		fprintf(stderr, "%s: %d: error == %d (%s), want 0\n", \
-			__FILE__, __LINE__, c, error_str(c));         \
+			__FILE__, __LINE__, c, reftable_error_str(c));         \
 		abort();                                              \
 	}
 

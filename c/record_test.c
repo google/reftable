@@ -80,12 +80,12 @@ void set_hash(byte *h, int j)
 	}
 }
 
-void test_ref_record_roundtrip()
+void test_reftable_ref_record_roundtrip()
 {
 	int i = 0;
 	for (i = 0; i <= 3; i++) {
 		printf("subtest %d\n", i);
-		struct ref_record in = { 0 };
+		struct reftable_ref_record in = { 0 };
 		switch (i) {
 		case 0:
 			break;
@@ -118,7 +118,7 @@ void test_ref_record_roundtrip()
 		int n = record_encode(rec, dest, SHA1_SIZE);
 		assert(n > 0);
 
-		struct ref_record out = { 0 };
+		struct reftable_ref_record out = { 0 };
 		struct record rec_out = { 0 };
 		record_from_ref(&rec_out, &out);
 		int m = record_decode(rec_out, key, i, dest, SHA1_SIZE);
@@ -129,13 +129,13 @@ void test_ref_record_roundtrip()
 		assert((out.target != NULL) == (in.target != NULL));
 		reftable_free(slice_yield(&key));
 		record_clear(rec_out);
-		ref_record_clear(&in);
+		reftable_ref_record_clear(&in);
 	}
 }
 
-void test_log_record_roundtrip()
+void test_reftable_log_record_roundtrip()
 {
-	struct log_record in[2] = {{
+	struct reftable_log_record in[2] = {{
 		.ref_name = xstrdup("refs/heads/master"),
 		.old_hash = reftable_malloc(SHA1_SIZE),
 		.new_hash = reftable_malloc(SHA1_SIZE),
@@ -166,15 +166,15 @@ void test_log_record_roundtrip()
                 int n = record_encode(rec, dest, SHA1_SIZE);
                 assert(n >= 0);
 
-                struct log_record out = { 0 };
+                struct reftable_log_record out = { 0 };
                 struct record rec_out = { 0 };
                 record_from_log(&rec_out, &out);
                 int valtype = record_val_type(rec);
                 int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
                 assert(n == m);
 
-                assert(log_record_equal(&in[i], &out, SHA1_SIZE));
-                log_record_clear(&in[i]);
+                assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
+                reftable_log_record_clear(&in[i]);
                 reftable_free(slice_yield(&key));
                 record_clear(rec_out);
         }
@@ -324,8 +324,8 @@ void test_index_record_roundtrip()
 
 int main()
 {
-	add_test_case("test_log_record_roundtrip", &test_log_record_roundtrip);
-	add_test_case("test_ref_record_roundtrip", &test_ref_record_roundtrip);
+	add_test_case("test_reftable_log_record_roundtrip", &test_reftable_log_record_roundtrip);
+	add_test_case("test_reftable_ref_record_roundtrip", &test_reftable_ref_record_roundtrip);
 	add_test_case("varint_roundtrip", &varint_roundtrip);
 	add_test_case("test_key_roundtrip", &test_key_roundtrip);
 	add_test_case("test_common_prefix", &test_common_prefix);

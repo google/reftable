@@ -13,22 +13,22 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 
-uint64_t block_source_size(struct block_source source);
+uint64_t block_source_size(struct reftable_block_source source);
 
-int block_source_read_block(struct block_source source, struct block *dest,
+int block_source_read_block(struct reftable_block_source source, struct reftable_block *dest,
 			    uint64_t off, uint32_t size);
-void block_source_return_block(struct block_source source, struct block *ret);
-void block_source_close(struct block_source *source);
+void block_source_return_block(struct reftable_block_source source, struct reftable_block *ret);
+void block_source_close(struct reftable_block_source *source);
 
-struct reader_offsets {
+struct reftable_reader_offsets {
 	bool present;
 	uint64_t offset;
 	uint64_t index_offset;
 };
 
-struct reader {
+struct reftable_reader {
 	char *name;
-	struct block_source source;
+	struct reftable_block_source source;
 	uint32_t hash_id;
 
 	// Size of the file, excluding the footer.
@@ -39,17 +39,17 @@ struct reader {
 	int object_id_len;
 	int version;
 
-	struct reader_offsets ref_offsets;
-	struct reader_offsets obj_offsets;
-	struct reader_offsets log_offsets;
+	struct reftable_reader_offsets ref_offsets;
+	struct reftable_reader_offsets obj_offsets;
+	struct reftable_reader_offsets log_offsets;
 };
 
-int init_reader(struct reader *r, struct block_source source, const char *name);
-int reader_seek(struct reader *r, struct iterator *it, struct record rec);
-void reader_close(struct reader *r);
-const char *reader_name(struct reader *r);
-void reader_return_block(struct reader *r, struct block *p);
-int reader_init_block_reader(struct reader *r, struct block_reader *br,
+int init_reader(struct reftable_reader *r, struct reftable_block_source source, const char *name);
+int reader_seek(struct reftable_reader *r, struct reftable_iterator *it, struct record rec);
+void reader_close(struct reftable_reader *r);
+const char *reader_name(struct reftable_reader *r);
+void reader_return_block(struct reftable_reader *r, struct reftable_block *p);
+int reader_init_block_reader(struct reftable_reader *r, struct reftable_block_reader *br,
 			     uint64_t next_off, byte want_typ);
 
 #endif

@@ -24,7 +24,7 @@ static uint64_t file_size(void *b)
 	return ((struct file_block_source *)b)->size;
 }
 
-static void file_return_block(void *b, struct block *dest)
+static void file_return_block(void *b, struct reftable_block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
 	reftable_free(dest->data);
@@ -41,7 +41,7 @@ static void file_close(void *b)
 	reftable_free(b);
 }
 
-static int file_read_block(void *v, struct block *dest, uint64_t off,
+static int file_read_block(void *v, struct reftable_block *dest, uint64_t off,
 			   uint32_t size)
 {
 	struct file_block_source *b = (struct file_block_source *)v;
@@ -54,14 +54,14 @@ static int file_read_block(void *v, struct block *dest, uint64_t off,
 	return size;
 }
 
-struct block_source_vtable file_vtable = {
+struct reftable_block_source_vtable file_vtable = {
 	.size = &file_size,
 	.read_block = &file_read_block,
 	.return_block = &file_return_block,
 	.close = &file_close,
 };
 
-int block_source_from_file(struct block_source *bs, const char *name)
+int reftable_block_source_from_file(struct reftable_block_source *bs, const char *name)
 {
 	struct stat st = { 0 };
 	int err = 0;
@@ -90,7 +90,7 @@ int block_source_from_file(struct block_source *bs, const char *name)
 	return 0;
 }
 
-int fd_writer(void *arg, byte *data, int sz)
+int reftable_fd_write(void *arg, byte *data, int sz)
 {
 	int *fdp = (int *)arg;
 	return write(*fdp, data, sz);

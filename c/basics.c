@@ -137,7 +137,7 @@ int names_equal(char **a, char **b)
 	return *a == *b;
 }
 
-const char *error_str(int err)
+const char *reftable_error_str(int err)
 {
 	switch (err) {
 	case IO_ERROR:
@@ -181,7 +181,7 @@ void* reftable_calloc(size_t sz) {
         return p;
 }
 
-void set_alloc(void* (*malloc)(size_t),
+void reftable_set_alloc(void* (*malloc)(size_t),
                void* (*realloc)(void*, size_t),
                void (*free)(void*)) {
         reftable_malloc_ptr = malloc;

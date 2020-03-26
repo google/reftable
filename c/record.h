@@ -36,7 +36,7 @@ int common_prefix_size(struct slice a, struct slice b);
 int is_block_type(byte typ);
 struct record new_record(byte typ);
 
-extern struct record_vtable ref_record_vtable;
+extern struct record_vtable reftable_ref_record_vtable;
 
 int encode_key(bool *restart, struct slice dest, struct slice prev_key,
 	       struct slice key, byte extra);
@@ -66,14 +66,14 @@ void record_clear(struct record rec);
 void *record_yield(struct record *rec);
 void record_from_obj(struct record *rec, struct obj_record *objrec);
 void record_from_index(struct record *rec, struct index_record *idxrec);
-void record_from_ref(struct record *rec, struct ref_record *refrec);
-void record_from_log(struct record *rec, struct log_record *logrec);
-struct ref_record *record_as_ref(struct record ref);
+void record_from_ref(struct record *rec, struct reftable_ref_record *refrec);
+void record_from_log(struct record *rec, struct reftable_log_record *logrec);
+struct reftable_ref_record *record_as_ref(struct record ref);
 
 /* for qsort. */
-int ref_record_compare_name(const void *a, const void *b);
+int reftable_ref_record_compare_name(const void *a, const void *b);
 
 /* for qsort. */
-int log_record_compare_key(const void *a, const void *b);
+int reftable_log_record_compare_key(const void *a, const void *b);
 
 #endif

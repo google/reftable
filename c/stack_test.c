@@ -65,43 +65,43 @@ void test_names_equal(void)
 	assert(!names_equal(a, c));
 }
 
-int write_test_ref(struct writer *wr, void *arg)
+int write_test_ref(struct reftable_writer *wr, void *arg)
 {
-	struct ref_record *ref = arg;
+	struct reftable_ref_record *ref = arg;
 
-	writer_set_limits(wr, ref->update_index, ref->update_index);
-	int err = writer_add_ref(wr, ref);
+	reftable_writer_set_limits(wr, ref->update_index, ref->update_index);
+	int err = reftable_writer_add_ref(wr, ref);
 
 	return err;
 }
 
-int write_test_log(struct writer *wr, void *arg)
+int write_test_log(struct reftable_writer *wr, void *arg)
 {
-	struct log_record *log = arg;
+	struct reftable_log_record *log = arg;
 
-	writer_set_limits(wr, log->update_index, log->update_index);
-	int err = writer_add_log(wr, log);
+	reftable_writer_set_limits(wr, log->update_index, log->update_index);
+	int err = reftable_writer_add_log(wr, log);
 
 	return err;
 }
 
-void test_stack_add(void)
+void test_reftable_stack_add(void)
 {
 	int i = 0;
-	char dir[256] = "/tmp/stack.test_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
 	printf("%s\n", dir);
 	char fn[256] = "";
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = { 0 };
-	struct stack *st = NULL;
-	int err = new_stack(&st, dir, fn, cfg);
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, fn, cfg);
 	assert_err(err);
 
-	struct ref_record refs[2] = { 0 };
-	struct log_record logs[2] = { 0 };
+	struct reftable_ref_record refs[2] = { 0 };
+	struct reftable_log_record logs[2] = { 0 };
 	int N = ARRAY_SIZE(refs);
 	for (i = 0; i < N; i++) {
 		char buf[256];
@@ -119,44 +119,44 @@ void test_stack_add(void)
 	}
 
 	for (i = 0; i < N; i++) {
-		int err = stack_add(st, &write_test_ref, &refs[i]);
+		int err = reftable_stack_add(st, &write_test_ref, &refs[i]);
 		assert_err(err);
 	}
 
 	for (i = 0; i < N; i++) {
-		int err = stack_add(st, &write_test_log, &logs[i]);
+		int err = reftable_stack_add(st, &write_test_log, &logs[i]);
 		assert_err(err);
 	}
 
-	err = stack_compact_all(st, NULL);
+	err = reftable_stack_compact_all(st, NULL);
 	assert_err(err);
 
 	for (i = 0; i < N; i++) {
-		struct ref_record dest = { 0 };
-		int err = stack_read_ref(st, refs[i].ref_name, &dest);
+		struct reftable_ref_record dest = { 0 };
+		int err = reftable_stack_read_ref(st, refs[i].ref_name, &dest);
 		assert_err(err);
-		assert(ref_record_equal(&dest, refs + i, SHA1_SIZE));
-		ref_record_clear(&dest);
+		assert(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
+		reftable_ref_record_clear(&dest);
 	}
 
 	for (i = 0; i < N; i++) {
-		struct log_record dest = { 0 };
-		int err = stack_read_log(st, refs[i].ref_name, &dest);
+		struct reftable_log_record dest = { 0 };
+		int err = reftable_stack_read_log(st, refs[i].ref_name, &dest);
 		assert_err(err);
-		assert(log_record_equal(&dest, logs + i, SHA1_SIZE));
-		log_record_clear(&dest);
+		assert(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
+		reftable_log_record_clear(&dest);
 	}
 
-	struct write_options cfg32 = { .hash_id = SHA256_ID };
-	struct stack *st32 = NULL;
-	err = new_stack(&st32, dir, fn, cfg32);
+	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
+	struct reftable_stack *st32 = NULL;
+	err = reftable_new_stack(&st32, dir, fn, cfg32);
 	assert(err == FORMAT_ERROR);
 
 	/* cleanup */
-	stack_destroy(st);
+	reftable_stack_destroy(st);
 	for (i = 0; i < N; i++) {
-		ref_record_clear(&refs[i]);
-		log_record_clear(&logs[i]);
+		reftable_ref_record_clear(&refs[i]);
+		reftable_log_record_clear(&logs[i]);
 	}
 }
 
@@ -213,12 +213,12 @@ void test_reflog_expire(void)
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = { 0 };
-	struct stack *st = NULL;
-	int err = new_stack(&st, dir, fn, cfg);
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, fn, cfg);
 	assert_err(err);
 
-	struct log_record logs[20] = { 0 };
+	struct reftable_log_record logs[20] = { 0 };
 	int N = ARRAY_SIZE(logs) - 1;
 	int i = 0;
 	for (i = 1; i <= N; i++) {
@@ -234,67 +234,67 @@ void test_reflog_expire(void)
 	}
 
 	for (i = 1; i <= N; i++) {
-		int err = stack_add(st, &write_test_log, &logs[i]);
+		int err = reftable_stack_add(st, &write_test_log, &logs[i]);
 		assert_err(err);
 	}
 
-	err = stack_compact_all(st, NULL);
+	err = reftable_stack_compact_all(st, NULL);
 	assert_err(err);
 
-	struct log_expiry_config expiry = {
+	struct reftable_log_expiry_config expiry = {
 		.time = 10,
 	};
-	err = stack_compact_all(st, &expiry);
+	err = reftable_stack_compact_all(st, &expiry);
 	assert_err(err);
 
-	struct log_record log = { 0 };
-	err = stack_read_log(st, logs[9].ref_name, &log);
+	struct reftable_log_record log = { 0 };
+	err = reftable_stack_read_log(st, logs[9].ref_name, &log);
 	assert(err == 1);
 
-	err = stack_read_log(st, logs[11].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[11].ref_name, &log);
 	assert_err(err);
 
 	expiry.min_update_index = 15;
-	err = stack_compact_all(st, &expiry);
+	err = reftable_stack_compact_all(st, &expiry);
 	assert_err(err);
 
-	err = stack_read_log(st, logs[14].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[14].ref_name, &log);
 	assert(err == 1);
 
-	err = stack_read_log(st, logs[16].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[16].ref_name, &log);
 	assert_err(err);
 
 	/* cleanup */
-	stack_destroy(st);
+	reftable_stack_destroy(st);
 	for (i = 0; i < N; i++) {
-		log_record_clear(&logs[i]);
+		reftable_log_record_clear(&logs[i]);
 	}
 }
 
-int write_nothing(struct writer *wr, void *arg)
+int write_nothing(struct reftable_writer *wr, void *arg)
 {
-	writer_set_limits(wr, 1, 1);
+	reftable_writer_set_limits(wr, 1, 1);
 	return 0;
 }
 
 void test_empty_add(void)
 {
-	char dir[256] = "/tmp/stack.test_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
 	char fn[256] = "";
 	strcat(fn, dir);
 	strcat(fn, "/refs");
 
-	struct write_options cfg = { 0 };
-	struct stack *st = NULL;
-	int err = new_stack(&st, dir, fn, cfg);
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, fn, cfg);
 	assert_err(err);
 
-	err = stack_add(st, &write_nothing, NULL);
+	err = reftable_stack_add(st, &write_nothing, NULL);
 	assert_err(err);
 
-	struct stack *st2 = NULL;
-	err = new_stack(&st2, dir, fn, cfg);
+	struct reftable_stack *st2 = NULL;
+	err = reftable_new_stack(&st2, dir, fn, cfg);
 	assert_err(err);
 }
 
@@ -309,6 +309,6 @@ int main()
 	add_test_case("test_parse_names", &test_parse_names);
 	add_test_case("test_read_file", &test_read_file);
 	add_test_case("test_names_equal", &test_names_equal);
-	add_test_case("test_stack_add", &test_stack_add);
+	add_test_case("test_reftable_stack_add", &test_reftable_stack_add);
 	test_main();
 }

@@ -50,7 +50,7 @@ void test_pq(void)
 	while (!merged_iter_pqueue_is_empty(pq)) {
 		struct pq_entry e = merged_iter_pqueue_remove(&pq);
 		merged_iter_pqueue_check(pq);
-		struct ref_record *ref = record_as_ref(e.rec);
+		struct reftable_ref_record *ref = record_as_ref(e.rec);
 
 		if (last != NULL) {
 			assert(strcmp(last, ref->ref_name) < 0);
@@ -67,7 +67,7 @@ void test_pq(void)
 	merged_iter_pqueue_clear(&pq);
 }
 
-void write_test_table(struct slice *buf, struct ref_record refs[], int n)
+void write_test_table(struct slice *buf, struct reftable_ref_record refs[], int n)
 {
 	int min = 0xffffffff;
 	int max = 0;
@@ -82,43 +82,43 @@ void write_test_table(struct slice *buf, struct ref_record refs[], int n)
 		}
 	}
 
-	struct write_options opts = {
+	struct reftable_write_options opts = {
 		.block_size = 256,
 	};
 
-	struct writer *w = new_writer(&slice_write_void, buf, &opts);
-	writer_set_limits(w, min, max);
+	struct reftable_writer *w = reftable_new_writer(&slice_write_void, buf, &opts);
+	reftable_writer_set_limits(w, min, max);
 
 	for (i = 0; i < n; i++) {
 		uint64_t before = refs[i].update_index;
-		int n = writer_add_ref(w, &refs[i]);
+		int n = reftable_writer_add_ref(w, &refs[i]);
 		assert(n == 0);
 		assert(before == refs[i].update_index);
 	}
 
-	int err = writer_close(w);
+	int err = reftable_writer_close(w);
 	assert(err == 0);
 
-	writer_free(w);
+	reftable_writer_free(w);
 }
 
-static struct merged_table *merged_table_from_records(struct ref_record **refs,
+static struct reftable_merged_table *merged_table_from_records(struct reftable_ref_record **refs,
 						      int *sizes,
 						      struct slice *buf, int n)
 {
-	struct block_source *source = reftable_calloc(n * sizeof(*source));
-	struct reader **rd = reftable_calloc(n * sizeof(*rd));
+	struct reftable_block_source *source = reftable_calloc(n * sizeof(*source));
+	struct reftable_reader **rd = reftable_calloc(n * sizeof(*rd));
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		write_test_table(&buf[i], refs[i], sizes[i]);
 		block_source_from_slice(&source[i], &buf[i]);
 
-		int err = new_reader(&rd[i], source[i], "name");
+		int err = reftable_new_reader(&rd[i], source[i], "name");
 		assert(err == 0);
 	}
 
-	struct merged_table *mt = NULL;
-	int err = new_merged_table(&mt, rd, n, SHA1_ID);
+	struct reftable_merged_table *mt = NULL;
+	int err = reftable_new_merged_table(&mt, rd, n, SHA1_ID);
 	assert(err == 0);
 	return mt;
 }
@@ -130,28 +130,28 @@ void test_merged_between(void)
 
 	set_test_hash(hash1, 1);
 	set_test_hash(hash2, 2);
-	struct ref_record r1[] = { {
+	struct reftable_ref_record r1[] = { {
 		.ref_name = "b",
 		.update_index = 1,
 		.value = hash1,
 	} };
-	struct ref_record r2[] = { {
+	struct reftable_ref_record r2[] = { {
 		.ref_name = "a",
 		.update_index = 2,
 	} };
 
-	struct ref_record *refs[] = { r1, r2 };
+	struct reftable_ref_record *refs[] = { r1, r2 };
 	int sizes[] = { 1, 1 };
 	struct slice bufs[2] = { 0 };
-	struct merged_table *mt =
+	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, sizes, bufs, 2);
 
-	struct iterator it = { 0 };
-	int err = merged_table_seek_ref(mt, &it, "a");
+	struct reftable_iterator it = { 0 };
+	int err = reftable_merged_table_seek_ref(mt, &it, "a");
 	assert(err == 0);
 
-	struct ref_record ref = { 0 };
-	err = iterator_next_ref(it, &ref);
+	struct reftable_ref_record ref = { 0 };
+	err = reftable_iterator_next_ref(it, &ref);
 	assert_err(err);
 	assert(ref.update_index == 2);
 }
@@ -163,7 +163,7 @@ void test_merged(void)
 
 	set_test_hash(hash1, 1);
 	set_test_hash(hash2, 2);
-	struct ref_record r1[] = { {
+	struct reftable_ref_record r1[] = { {
 					   .ref_name = "a",
 					   .update_index = 1,
 					   .value = hash1,
@@ -178,11 +178,11 @@ void test_merged(void)
 					   .update_index = 1,
 					   .value = hash1,
 				   } };
-	struct ref_record r2[] = { {
+	struct reftable_ref_record r2[] = { {
 		.ref_name = "a",
 		.update_index = 2,
 	} };
-	struct ref_record r3[] = {
+	struct reftable_ref_record r3[] = {
 		{
 			.ref_name = "c",
 			.update_index = 3,
@@ -195,35 +195,35 @@ void test_merged(void)
 		},
 	};
 
-	struct ref_record *refs[] = { r1, r2, r3 };
+	struct reftable_ref_record *refs[] = { r1, r2, r3 };
 	int sizes[3] = { 3, 1, 2 };
 	struct slice bufs[3] = { 0 };
 
-	struct merged_table *mt =
+	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, sizes, bufs, 3);
 
-	struct iterator it = { 0 };
-	int err = merged_table_seek_ref(mt, &it, "a");
+	struct reftable_iterator it = { 0 };
+	int err = reftable_merged_table_seek_ref(mt, &it, "a");
 	assert(err == 0);
 
-	struct ref_record *out = NULL;
+	struct reftable_ref_record *out = NULL;
 	int len = 0;
 	int cap = 0;
 	while (len < 100) { /* cap loops/recursion. */
-		struct ref_record ref = { 0 };
-		int err = iterator_next_ref(it, &ref);
+		struct reftable_ref_record ref = { 0 };
+		int err = reftable_iterator_next_ref(it, &ref);
 		if (err > 0) {
 			break;
 		}
 		if (len == cap) {
 			cap = 2 * cap + 1;
-			out = reftable_realloc(out, sizeof(struct ref_record) * cap);
+			out = reftable_realloc(out, sizeof(struct reftable_ref_record) * cap);
 		}
 		out[len++] = ref;
 	}
-	iterator_destroy(&it);
+	reftable_iterator_destroy(&it);
 
-	struct ref_record want[] = {
+	struct reftable_ref_record want[] = {
 		r2[0],
 		r1[1],
 		r3[0],
@@ -232,18 +232,18 @@ void test_merged(void)
 	assert(ARRAY_SIZE(want) == len);
 	int i = 0;
 	for (i = 0; i < len; i++) {
-		assert(ref_record_equal(&want[i], &out[i], SHA1_SIZE));
+		assert(reftable_ref_record_equal(&want[i], &out[i], SHA1_SIZE));
 	}
 	for (i = 0; i < len; i++) {
-		ref_record_clear(&out[i]);
+		reftable_ref_record_clear(&out[i]);
 	}
 	reftable_free(out);
 
 	for (i = 0; i < 3; i++) {
 		reftable_free(slice_yield(&bufs[i]));
 	}
-	merged_table_close(mt);
-	merged_table_free(mt);
+	reftable_merged_table_close(mt);
+	reftable_merged_table_free(mt);
 }
 
 /* XXX test refs_for(oid) */

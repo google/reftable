@@ -16,7 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "tree.h"
 
-static struct block_stats *writer_block_stats(struct writer *w, byte typ)
+static struct reftable_block_stats *writer_reftable_block_stats(struct reftable_writer *w, byte typ)
 {
 	switch (typ) {
 	case 'r':
@@ -34,7 +34,7 @@ static struct block_stats *writer_block_stats(struct writer *w, byte typ)
 
 /* write data, queuing the padding for the next write. Returns negative for
  * error. */
-static int padded_write(struct writer *w, byte *data, size_t len, int padding)
+static int padded_write(struct reftable_writer *w, byte *data, size_t len, int padding)
 {
 	int n = 0;
 	if (w->pending_padding > 0) {
@@ -57,7 +57,7 @@ static int padded_write(struct writer *w, byte *data, size_t len, int padding)
 	return 0;
 }
 
-static void options_set_defaults(struct write_options *opts)
+static void options_set_defaults(struct reftable_write_options *opts)
 {
 	if (opts->restart_interval == 0) {
 		opts->restart_interval = 16;
@@ -71,12 +71,12 @@ static void options_set_defaults(struct write_options *opts)
 	}
 }
 
-static int writer_version(struct writer *w)
+static int writer_version(struct reftable_writer *w)
 {
 	return (w->opts.hash_id == 0 || w->opts.hash_id == SHA1_ID) ? 1 : 2;
 }
 
-static int writer_write_header(struct writer *w, byte *dest)
+static int writer_write_header(struct reftable_writer *w, byte *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
 
@@ -91,7 +91,7 @@ static int writer_write_header(struct writer *w, byte *dest)
 	return header_size(writer_version(w));
 }
 
-static void writer_reinit_block_writer(struct writer *w, byte typ)
+static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
 {
 	int block_start = 0;
 	if (w->next == 0) {
@@ -105,10 +105,10 @@ static void writer_reinit_block_writer(struct writer *w, byte typ)
 	w->block_writer->restart_interval = w->opts.restart_interval;
 }
 
-struct writer *new_writer(int (*writer_func)(void *, byte *, int),
-			  void *writer_arg, struct write_options *opts)
+struct reftable_writer *reftable_new_writer(int (*writer_func)(void *, byte *, int),
+			  void *writer_arg, struct reftable_write_options *opts)
 {
-	struct writer *wp = reftable_calloc(sizeof(struct writer));
+	struct reftable_writer *wp = reftable_calloc(sizeof(struct reftable_writer));
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
 		/* TODO - error return? */
@@ -123,13 +123,13 @@ struct writer *new_writer(int (*writer_func)(void *, byte *, int),
 	return wp;
 }
 
-void writer_set_limits(struct writer *w, uint64_t min, uint64_t max)
+void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min, uint64_t max)
 {
 	w->min_update_index = min;
 	w->max_update_index = max;
 }
 
-void writer_free(struct writer *w)
+void reftable_writer_free(struct reftable_writer *w)
 {
 	reftable_free(w->block);
 	reftable_free(w);
@@ -148,7 +148,7 @@ static int obj_index_tree_node_compare(const void *a, const void *b)
 			     ((const struct obj_index_tree_node *)b)->hash);
 }
 
-static void writer_index_hash(struct writer *w, struct slice hash)
+static void writer_index_hash(struct reftable_writer *w, struct slice hash)
 {
 	uint64_t off = w->next;
 
@@ -179,7 +179,7 @@ static void writer_index_hash(struct writer *w, struct slice hash)
 	key->offsets[key->offset_len++] = off;
 }
 
-static int writer_add_record(struct writer *w, struct record rec)
+static int writer_add_record(struct reftable_writer *w, struct record rec)
 {
 	int result = -1;
 	struct slice key = { 0 };
@@ -220,10 +220,10 @@ exit:
 	return result;
 }
 
-int writer_add_ref(struct writer *w, struct ref_record *ref)
+int reftable_writer_add_ref(struct reftable_writer *w, struct reftable_ref_record *ref)
 {
 	struct record rec = { 0 };
-	struct ref_record copy = *ref;
+	struct reftable_ref_record copy = *ref;
 	int err = 0;
 
 	if (ref->ref_name == NULL) {
@@ -259,18 +259,18 @@ int writer_add_ref(struct writer *w, struct ref_record *ref)
 	return 0;
 }
 
-int writer_add_refs(struct writer *w, struct ref_record *refs, int n)
+int reftable_writer_add_refs(struct reftable_writer *w, struct reftable_ref_record *refs, int n)
 {
 	int err = 0;
 	int i = 0;
-	QSORT(refs, n, ref_record_compare_name);
+	QSORT(refs, n, reftable_ref_record_compare_name);
 	for (i = 0; err == 0 && i < n; i++) {
-		err = writer_add_ref(w, &refs[i]);
+		err = reftable_writer_add_ref(w, &refs[i]);
 	}
 	return err;
 }
 
-int writer_add_log(struct writer *w, struct log_record *log)
+int reftable_writer_add_log(struct reftable_writer *w, struct reftable_log_record *log)
 {
 	if (log->ref_name == NULL) {
 		return API_ERROR;
@@ -296,18 +296,18 @@ int writer_add_log(struct writer *w, struct log_record *log)
 	}
 }
 
-int writer_add_logs(struct writer *w, struct log_record *logs, int n)
+int reftable_writer_add_logs(struct reftable_writer *w, struct reftable_log_record *logs, int n)
 {
 	int err = 0;
 	int i = 0;
-	QSORT(logs, n, log_record_compare_key);
+	QSORT(logs, n, reftable_log_record_compare_key);
 	for (i = 0; err == 0 && i < n; i++) {
-		err = writer_add_log(w, &logs[i]);
+		err = reftable_writer_add_log(w, &logs[i]);
 	}
 	return err;
 }
 
-static int writer_finish_section(struct writer *w)
+static int writer_finish_section(struct reftable_writer *w)
 {
 	byte typ = block_writer_type(w->block_writer);
 	uint64_t index_start = 0;
@@ -367,7 +367,7 @@ static int writer_finish_section(struct writer *w)
 	}
 
 	{
-		struct block_stats *bstats = writer_block_stats(w, typ);
+		struct reftable_block_stats *bstats = writer_reftable_block_stats(w, typ);
 		bstats->index_blocks =
 			w->stats.idx_stats.blocks - before_blocks;
 		bstats->index_offset = index_start;
@@ -399,7 +399,7 @@ static void update_common(void *void_arg, void *key)
 }
 
 struct write_record_arg {
-	struct writer *w;
+	struct reftable_writer *w;
 	int err;
 };
 
@@ -452,7 +452,7 @@ static void object_record_free(void *void_arg, void *key)
 	reftable_free(entry);
 }
 
-static int writer_dump_object_index(struct writer *w)
+static int writer_dump_object_index(struct reftable_writer *w)
 {
 	struct write_record_arg closure = { .w = w };
 	struct common_prefix_arg common = { 0 };
@@ -473,7 +473,7 @@ static int writer_dump_object_index(struct writer *w)
 	return writer_finish_section(w);
 }
 
-int writer_finish_public_section(struct writer *w)
+int writer_finish_public_section(struct reftable_writer *w)
 {
 	byte typ = 0;
 	int err = 0;
@@ -505,7 +505,7 @@ int writer_finish_public_section(struct writer *w)
 	return 0;
 }
 
-int writer_close(struct writer *w)
+int reftable_writer_close(struct reftable_writer *w)
 {
 	byte footer[72];
 	byte *p = footer;
@@ -550,7 +550,7 @@ exit:
 	return err;
 }
 
-void writer_clear_index(struct writer *w)
+void writer_clear_index(struct reftable_writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->index_len; i++) {
@@ -564,10 +564,10 @@ void writer_clear_index(struct writer *w)
 
 const int debug = 0;
 
-static int writer_flush_nonempty_block(struct writer *w)
+static int writer_flush_nonempty_block(struct reftable_writer *w)
 {
 	byte typ = block_writer_type(w->block_writer);
-	struct block_stats *bstats = writer_block_stats(w, typ);
+	struct reftable_block_stats *bstats = writer_reftable_block_stats(w, typ);
 	uint64_t block_typ_off = (bstats->blocks == 0) ? w->next : 0;
 	int raw_bytes = block_writer_finish(w->block_writer);
 	int padding = 0;
@@ -625,7 +625,7 @@ static int writer_flush_nonempty_block(struct writer *w)
 	return 0;
 }
 
-int writer_flush_block(struct writer *w)
+int writer_flush_block(struct reftable_writer *w)
 {
 	if (w->block_writer == NULL) {
 		return 0;
@@ -636,7 +636,7 @@ int writer_flush_block(struct writer *w)
 	return writer_flush_nonempty_block(w);
 }
 
-const struct stats *writer_stats(struct writer *w)
+const struct reftable_stats *writer_stats(struct reftable_writer *w)
 {
 	return &w->stats;
 }

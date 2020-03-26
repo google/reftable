@@ -11,21 +11,21 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable.h"
 
-struct stack {
+struct reftable_stack {
 	char *list_file;
 	char *reftable_dir;
 
-	struct write_options config;
+	struct reftable_write_options config;
 
-	struct merged_table *merged;
-	struct compaction_stats stats;
+	struct reftable_merged_table *merged;
+	struct reftable_compaction_stats stats;
 };
 
 int read_lines(const char *filename, char ***lines);
-int stack_try_add(struct stack *st,
-		  int (*write_table)(struct writer *wr, void *arg), void *arg);
-int stack_write_compact(struct stack *st, struct writer *wr, int first,
-			int last, struct log_expiry_config *config);
+int stack_try_add(struct reftable_stack *st,
+		  int (*write_table)(struct reftable_writer *wr, void *arg), void *arg);
+int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr, int first,
+			int last, struct reftable_log_expiry_config *config);
 int fastlog2(uint64_t sz);
 
 struct segment {
