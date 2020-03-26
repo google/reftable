@@ -38,8 +38,8 @@ int footer_size(int version)
 	abort();
 }
 
-int block_writer_register_restart(struct reftable_block_writer *w, int n, bool restart,
-				  struct slice key);
+int block_writer_register_restart(struct reftable_block_writer *w, int n,
+				  bool restart, struct slice key);
 
 void block_writer_init(struct reftable_block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
@@ -82,13 +82,13 @@ int block_writer_add(struct reftable_block_writer *w, struct record rec)
 	if (n < 0) {
 		goto err;
 	}
-        slice_consume(&out, n);
+	slice_consume(&out, n);
 
 	n = record_encode(rec, out, w->hash_size);
 	if (n < 0) {
 		goto err;
 	}
-        slice_consume(&out, n);
+	slice_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
 					  key) < 0) {
@@ -103,8 +103,8 @@ err:
 	return -1;
 }
 
-int block_writer_register_restart(struct reftable_block_writer *w, int n, bool restart,
-				  struct slice key)
+int block_writer_register_restart(struct reftable_block_writer *w, int n,
+				  bool restart, struct slice key)
 {
 	int rlen = w->restart_len;
 	if (rlen >= MAX_RESTARTS) {
@@ -182,9 +182,9 @@ byte block_reader_type(struct reftable_block_reader *r)
 	return r->block.data[r->header_off];
 }
 
-int block_reader_init(struct reftable_block_reader *br, struct reftable_block *block,
-		      uint32_t header_off, uint32_t table_block_size,
-		      int hash_size)
+int block_reader_init(struct reftable_block_reader *br,
+		      struct reftable_block *block, uint32_t header_off,
+		      uint32_t table_block_size, int hash_size)
 {
 	uint32_t full_block_size = table_block_size;
 	byte typ = block->data[header_off];
@@ -248,12 +248,14 @@ int block_reader_init(struct reftable_block_reader *br, struct reftable_block *b
 	return 0;
 }
 
-static uint32_t block_reader_restart_offset(struct reftable_block_reader *br, int i)
+static uint32_t block_reader_restart_offset(struct reftable_block_reader *br,
+					    int i)
 {
 	return get_be24(br->restart_bytes + 3 * i);
 }
 
-void block_reader_start(struct reftable_block_reader *br, struct reftable_block_iter *it)
+void block_reader_start(struct reftable_block_reader *br,
+			struct reftable_block_iter *it)
 {
 	it->br = br;
 	slice_resize(&it->last_key, 0);
@@ -293,7 +295,8 @@ static int restart_key_less(int idx, void *args)
 	}
 }
 
-void block_iter_copy_from(struct reftable_block_iter *dest, struct reftable_block_iter *src)
+void block_iter_copy_from(struct reftable_block_iter *dest,
+			  struct reftable_block_iter *src)
 {
 	dest->br = src->br;
 	dest->next_off = src->next_off;
@@ -320,12 +323,12 @@ int block_iter_next(struct reftable_block_iter *it, struct record rec)
 			return -1;
 		}
 
-                slice_consume(&in, n);
+		slice_consume(&in, n);
 		n = record_decode(rec, key, extra, in, it->br->hash_size);
 		if (n < 0) {
 			return -1;
 		}
-                slice_consume(&in, n);
+		slice_consume(&in, n);
 
 		slice_copy(&it->last_key, key);
 		it->next_off += start.len - in.len;
@@ -361,8 +364,8 @@ void block_iter_close(struct reftable_block_iter *it)
 	reftable_free(slice_yield(&it->last_key));
 }
 
-int block_reader_seek(struct reftable_block_reader *br, struct reftable_block_iter *it,
-		      struct slice want)
+int block_reader_seek(struct reftable_block_reader *br,
+		      struct reftable_block_iter *it, struct slice want)
 {
 	struct restart_find_args args = {
 		.key = want,

@@ -17,7 +17,7 @@ https://developers.google.com/open-source/licenses/bsd
 static int dump_table(const char *tablename)
 {
 	struct reftable_block_source src = { 0 };
-	int err = reftable_-block_source_from_file(&src, tablename);
+	int err = reftable_ - block_source_from_file(&src, tablename);
 	if (err < 0) {
 		return err;
 	}

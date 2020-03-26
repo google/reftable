@@ -27,9 +27,9 @@ void parse_names(char *buf, int size, char ***namesp);
 int names_equal(char **a, char **b);
 int names_length(char **names);
 
-void* reftable_malloc(size_t sz);
-void* reftable_realloc(void *p, size_t sz);
-void reftable_free(void*p);
-void* reftable_calloc(size_t sz);
+void *reftable_malloc(size_t sz);
+void *reftable_realloc(void *p, size_t sz);
+void reftable_free(void *p);
+void *reftable_calloc(size_t sz);
 
 #endif

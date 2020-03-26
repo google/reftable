@@ -59,8 +59,8 @@ void slice_append(struct slice *s, struct slice a)
 
 void slice_consume(struct slice *s, int n)
 {
-        s->buf += n;
-        s->len -= n;
+	s->buf += n;
+	s->len -= n;
 }
 
 byte *slice_yield(struct slice *s)
@@ -179,7 +179,8 @@ struct reftable_block_source_vtable slice_vtable = {
 	.close = &slice_close,
 };
 
-void block_source_from_slice(struct reftable_block_source *bs, struct slice *buf)
+void block_source_from_slice(struct reftable_block_source *bs,
+			     struct slice *buf)
 {
 	bs->ops = &slice_vtable;
 	bs->arg = buf;
@@ -216,4 +217,3 @@ int common_prefix_size(struct slice a, struct slice b)
 
 	return p;
 }
-

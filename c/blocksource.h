@@ -12,9 +12,11 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 
 uint64_t block_source_size(struct reftable_block_source source);
-int block_source_read_block(struct reftable_block_source source, struct reftable_block *dest,
-			    uint64_t off, uint32_t size);
-void block_source_return_block(struct reftable_block_source source, struct reftable_block *ret);
+int block_source_read_block(struct reftable_block_source source,
+			    struct reftable_block *dest, uint64_t off,
+			    uint32_t size);
+void block_source_return_block(struct reftable_block_source source,
+			       struct reftable_block *ret);
 void block_source_close(struct reftable_block_source source);
 
 #endif

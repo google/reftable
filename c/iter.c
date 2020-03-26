@@ -55,14 +55,16 @@ void reftable_iterator_destroy(struct reftable_iterator *it)
 	FREE_AND_NULL(it->iter_arg);
 }
 
-int reftable_iterator_next_ref(struct reftable_iterator it, struct reftable_ref_record *ref)
+int reftable_iterator_next_ref(struct reftable_iterator it,
+			       struct reftable_ref_record *ref)
 {
 	struct record rec = { 0 };
 	record_from_ref(&rec, ref);
 	return iterator_next(it, rec);
 }
 
-int reftable_iterator_next_log(struct reftable_iterator it, struct reftable_log_record *log)
+int reftable_iterator_next_log(struct reftable_iterator it,
+			       struct reftable_log_record *log)
 {
 	struct record rec = { 0 };
 	record_from_log(&rec, log);
@@ -81,7 +83,8 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 {
 	struct filtering_ref_iterator *fri =
 		(struct filtering_ref_iterator *)iter_arg;
-	struct reftable_ref_record *ref = (struct reftable_ref_record *)rec.data;
+	struct reftable_ref_record *ref =
+		(struct reftable_ref_record *)rec.data;
 
 	while (true) {
 		int err = reftable_iterator_next_ref(fri->it, ref);
@@ -92,7 +95,8 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 		if (fri->double_check) {
 			struct reftable_iterator it = { 0 };
 
-			int err = reftable_reader_seek_ref(fri->r, &it, ref->ref_name);
+			int err = reftable_reader_seek_ref(fri->r, &it,
+							   ref->ref_name);
 			if (err == 0) {
 				err = reftable_iterator_next_ref(it, ref);
 			}
@@ -165,7 +169,8 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 static int indexed_table_ref_iter_next(void *p, struct record rec)
 {
 	struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
-	struct reftable_ref_record *ref = (struct reftable_ref_record *)rec.data;
+	struct reftable_ref_record *ref =
+		(struct reftable_ref_record *)rec.data;
 
 	while (true) {
 		int err = block_iter_next(&it->cur, rec);
@@ -193,8 +198,8 @@ static int indexed_table_ref_iter_next(void *p, struct record rec)
 }
 
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-			       struct reftable_reader *r, byte *oid, int oid_len,
-			       uint64_t *offsets, int offset_len)
+			       struct reftable_reader *r, byte *oid,
+			       int oid_len, uint64_t *offsets, int offset_len)
 {
 	struct indexed_table_ref_iter *itr =
 		reftable_calloc(sizeof(struct indexed_table_ref_iter));

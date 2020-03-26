@@ -67,7 +67,8 @@ void test_pq(void)
 	merged_iter_pqueue_clear(&pq);
 }
 
-void write_test_table(struct slice *buf, struct reftable_ref_record refs[], int n)
+void write_test_table(struct slice *buf, struct reftable_ref_record refs[],
+		      int n)
 {
 	int min = 0xffffffff;
 	int max = 0;
@@ -86,7 +87,8 @@ void write_test_table(struct slice *buf, struct reftable_ref_record refs[], int 
 		.block_size = 256,
 	};
 
-	struct reftable_writer *w = reftable_new_writer(&slice_write_void, buf, &opts);
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, buf, &opts);
 	reftable_writer_set_limits(w, min, max);
 
 	for (i = 0; i < n; i++) {
@@ -102,11 +104,12 @@ void write_test_table(struct slice *buf, struct reftable_ref_record refs[], int 
 	reftable_writer_free(w);
 }
 
-static struct reftable_merged_table *merged_table_from_records(struct reftable_ref_record **refs,
-						      int *sizes,
-						      struct slice *buf, int n)
+static struct reftable_merged_table *
+merged_table_from_records(struct reftable_ref_record **refs, int *sizes,
+			  struct slice *buf, int n)
 {
-	struct reftable_block_source *source = reftable_calloc(n * sizeof(*source));
+	struct reftable_block_source *source =
+		reftable_calloc(n * sizeof(*source));
 	struct reftable_reader **rd = reftable_calloc(n * sizeof(*rd));
 	int i = 0;
 	for (i = 0; i < n; i++) {
@@ -164,20 +167,20 @@ void test_merged(void)
 	set_test_hash(hash1, 1);
 	set_test_hash(hash2, 2);
 	struct reftable_ref_record r1[] = { {
-					   .ref_name = "a",
-					   .update_index = 1,
-					   .value = hash1,
-				   },
-				   {
-					   .ref_name = "b",
-					   .update_index = 1,
-					   .value = hash1,
-				   },
-				   {
-					   .ref_name = "c",
-					   .update_index = 1,
-					   .value = hash1,
-				   } };
+						    .ref_name = "a",
+						    .update_index = 1,
+						    .value = hash1,
+					    },
+					    {
+						    .ref_name = "b",
+						    .update_index = 1,
+						    .value = hash1,
+					    },
+					    {
+						    .ref_name = "c",
+						    .update_index = 1,
+						    .value = hash1,
+					    } };
 	struct reftable_ref_record r2[] = { {
 		.ref_name = "a",
 		.update_index = 2,
@@ -217,7 +220,8 @@ void test_merged(void)
 		}
 		if (len == cap) {
 			cap = 2 * cap + 1;
-			out = reftable_realloc(out, sizeof(struct reftable_ref_record) * cap);
+			out = reftable_realloc(
+				out, sizeof(struct reftable_ref_record) * cap);
 		}
 		out[len++] = ref;
 	}

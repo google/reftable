@@ -22,15 +22,17 @@ uint64_t block_source_size(struct reftable_block_source source)
 	return source.ops->size(source.arg);
 }
 
-int block_source_read_block(struct reftable_block_source source, struct reftable_block *dest,
-			    uint64_t off, uint32_t size)
+int block_source_read_block(struct reftable_block_source source,
+			    struct reftable_block *dest, uint64_t off,
+			    uint32_t size)
 {
 	int result = source.ops->read_block(source.arg, dest, off, size);
 	dest->source = source;
 	return result;
 }
 
-void block_source_return_block(struct reftable_block_source source, struct reftable_block *blockp)
+void block_source_return_block(struct reftable_block_source source,
+			       struct reftable_block *blockp)
 {
 	source.ops->return_block(source.arg, blockp);
 	blockp->data = NULL;
@@ -49,7 +51,8 @@ void block_source_close(struct reftable_block_source *source)
 	source->ops = NULL;
 }
 
-static struct reftable_reader_offsets *reader_offsets_for(struct reftable_reader *r, byte typ)
+static struct reftable_reader_offsets *
+reader_offsets_for(struct reftable_reader *r, byte typ)
 {
 	switch (typ) {
 	case BLOCK_TYPE_REF:
@@ -62,7 +65,8 @@ static struct reftable_reader_offsets *reader_offsets_for(struct reftable_reader
 	abort();
 }
 
-static int reader_get_block(struct reftable_reader *r, struct reftable_block *dest, uint64_t off,
+static int reader_get_block(struct reftable_reader *r,
+			    struct reftable_block *dest, uint64_t off,
 			    uint32_t sz)
 {
 	if (off >= r->size) {
@@ -170,7 +174,8 @@ exit:
 	return err;
 }
 
-int init_reader(struct reftable_reader *r, struct reftable_block_source source, const char *name)
+int init_reader(struct reftable_reader *r, struct reftable_block_source source,
+		const char *name)
 {
 	struct reftable_block footer = { 0 };
 	struct reftable_block header = { 0 };
@@ -271,7 +276,8 @@ static int32_t extract_block_size(byte *data, byte *typ, uint64_t off,
 	return result;
 }
 
-int reader_init_block_reader(struct reftable_reader *r, struct reftable_block_reader *br,
+int reader_init_block_reader(struct reftable_reader *r,
+			     struct reftable_block_reader *br,
 			     uint64_t next_off, byte want_typ)
 {
 	int32_t guess_block_size = r->block_size ? r->block_size :
@@ -335,7 +341,8 @@ static int table_iter_next_block(struct table_iter *dest,
 	}
 
 	{
-		struct reftable_block_reader *brp = reftable_malloc(sizeof(struct reftable_block_reader));
+		struct reftable_block_reader *brp =
+			reftable_malloc(sizeof(struct reftable_block_reader));
 		*brp = br;
 
 		dest->finished = false;
@@ -392,14 +399,15 @@ struct reftable_iterator_vtable table_iter_vtable = {
 	.close = &table_iter_close,
 };
 
-static void iterator_from_table_iter(struct reftable_iterator *it, struct table_iter *ti)
+static void iterator_from_table_iter(struct reftable_iterator *it,
+				     struct table_iter *ti)
 {
 	it->iter_arg = ti;
 	it->ops = &table_iter_vtable;
 }
 
-static int reader_table_iter_at(struct reftable_reader *r, struct table_iter *ti,
-				uint64_t off, byte typ)
+static int reader_table_iter_at(struct reftable_reader *r,
+				struct table_iter *ti, uint64_t off, byte typ)
 {
 	struct reftable_block_reader br = { 0 };
 	struct reftable_block_reader *brp = NULL;
@@ -418,8 +426,8 @@ static int reader_table_iter_at(struct reftable_reader *r, struct table_iter *ti
 	return 0;
 }
 
-static int reader_start(struct reftable_reader *r, struct table_iter *ti, byte typ,
-			bool index)
+static int reader_start(struct reftable_reader *r, struct table_iter *ti,
+			byte typ, bool index)
 {
 	struct reftable_reader_offsets *offs = reader_offsets_for(r, typ);
 	uint64_t off = offs->offset;
@@ -485,8 +493,8 @@ exit:
 	return err;
 }
 
-static int reader_seek_indexed(struct reftable_reader *r, struct reftable_iterator *it,
-			       struct record rec)
+static int reader_seek_indexed(struct reftable_reader *r,
+			       struct reftable_iterator *it, struct record rec)
 {
 	struct index_record want_index = { 0 };
 	struct record want_index_rec = { 0 };
@@ -550,10 +558,11 @@ exit:
 	return err;
 }
 
-static int reader_seek_internal(struct reftable_reader *r, struct reftable_iterator *it,
-				struct record rec)
+static int reader_seek_internal(struct reftable_reader *r,
+				struct reftable_iterator *it, struct record rec)
 {
-	struct reftable_reader_offsets *offs = reader_offsets_for(r, record_type(rec));
+	struct reftable_reader_offsets *offs =
+		reader_offsets_for(r, record_type(rec));
 	uint64_t idx = offs->index_offset;
 	struct table_iter ti = { 0 };
 	int err = 0;
@@ -571,7 +580,8 @@ static int reader_seek_internal(struct reftable_reader *r, struct reftable_itera
 	}
 
 	{
-		struct table_iter *p = reftable_malloc(sizeof(struct table_iter));
+		struct table_iter *p =
+			reftable_malloc(sizeof(struct table_iter));
 		*p = ti;
 		iterator_from_table_iter(it, p);
 	}
@@ -579,7 +589,8 @@ static int reader_seek_internal(struct reftable_reader *r, struct reftable_itera
 	return 0;
 }
 
-int reader_seek(struct reftable_reader *r, struct reftable_iterator *it, struct record rec)
+int reader_seek(struct reftable_reader *r, struct reftable_iterator *it,
+		struct record rec)
 {
 	byte typ = record_type(rec);
 
@@ -592,7 +603,8 @@ int reader_seek(struct reftable_reader *r, struct reftable_iterator *it, struct 
 	return reader_seek_internal(r, it, rec);
 }
 
-int reftable_reader_seek_ref(struct reftable_reader *r, struct reftable_iterator *it, const char *name)
+int reftable_reader_seek_ref(struct reftable_reader *r,
+			     struct reftable_iterator *it, const char *name)
 {
 	struct reftable_ref_record ref = {
 		.ref_name = (char *)name,
@@ -602,8 +614,9 @@ int reftable_reader_seek_ref(struct reftable_reader *r, struct reftable_iterator
 	return reader_seek(r, it, rec);
 }
 
-int reftable_reader_seek_log_at(struct reftable_reader *r, struct reftable_iterator *it, const char *name,
-		       uint64_t update_index)
+int reftable_reader_seek_log_at(struct reftable_reader *r,
+				struct reftable_iterator *it, const char *name,
+				uint64_t update_index)
 {
 	struct reftable_log_record log = {
 		.ref_name = (char *)name,
@@ -614,7 +627,8 @@ int reftable_reader_seek_log_at(struct reftable_reader *r, struct reftable_itera
 	return reader_seek(r, it, rec);
 }
 
-int reftable_reader_seek_log(struct reftable_reader *r, struct reftable_iterator *it, const char *name)
+int reftable_reader_seek_log(struct reftable_reader *r,
+			     struct reftable_iterator *it, const char *name)
 {
 	uint64_t max = ~((uint64_t)0);
 	return reftable_reader_seek_log_at(r, it, name, max);
@@ -626,9 +640,11 @@ void reader_close(struct reftable_reader *r)
 	FREE_AND_NULL(r->name);
 }
 
-int reftable_new_reader(struct reftable_reader **p, struct reftable_block_source src, char const *name)
+int reftable_new_reader(struct reftable_reader **p,
+			struct reftable_block_source src, char const *name)
 {
-	struct reftable_reader *rd = reftable_calloc(sizeof(struct reftable_reader));
+	struct reftable_reader *rd =
+		reftable_calloc(sizeof(struct reftable_reader));
 	int err = init_reader(rd, src, name);
 	if (err == 0) {
 		*p = rd;
@@ -644,8 +660,9 @@ void reftable_reader_free(struct reftable_reader *r)
 	reftable_free(r);
 }
 
-static int reftable_reader_refs_for_indexed(struct reftable_reader *r, struct reftable_iterator *it,
-				   byte *oid)
+static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
+					    struct reftable_iterator *it,
+					    byte *oid)
 {
 	struct obj_record want = {
 		.hash_prefix = oid,
@@ -695,8 +712,9 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r, struct re
 	return 0;
 }
 
-static int reftable_reader_refs_for_unindexed(struct reftable_reader *r, struct reftable_iterator *it,
-				     byte *oid, int oid_len)
+static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
+					      struct reftable_iterator *it,
+					      byte *oid, int oid_len)
 {
 	struct table_iter *ti = reftable_calloc(sizeof(struct table_iter));
 	struct filtering_ref_iterator *filter = NULL;
@@ -717,8 +735,9 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r, struct 
 	return 0;
 }
 
-int reftable_reader_refs_for(struct reftable_reader *r, struct reftable_iterator *it, byte *oid,
-		    int oid_len)
+int reftable_reader_refs_for(struct reftable_reader *r,
+			     struct reftable_iterator *it, byte *oid,
+			     int oid_len)
 {
 	if (r->obj_offsets.present) {
 		return reftable_reader_refs_for_indexed(r, it, oid);

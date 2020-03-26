@@ -54,16 +54,18 @@ struct reftable_block_iter {
 	struct slice last_key;
 };
 
-int block_reader_init(struct reftable_block_reader *br, struct reftable_block *bl,
-		      uint32_t header_off, uint32_t table_block_size,
-		      int hash_size);
-void block_reader_start(struct reftable_block_reader *br, struct reftable_block_iter *it);
-int block_reader_seek(struct reftable_block_reader *br, struct reftable_block_iter *it,
-		      struct slice want);
+int block_reader_init(struct reftable_block_reader *br,
+		      struct reftable_block *bl, uint32_t header_off,
+		      uint32_t table_block_size, int hash_size);
+void block_reader_start(struct reftable_block_reader *br,
+			struct reftable_block_iter *it);
+int block_reader_seek(struct reftable_block_reader *br,
+		      struct reftable_block_iter *it, struct slice want);
 byte block_reader_type(struct reftable_block_reader *r);
 int block_reader_first_key(struct reftable_block_reader *br, struct slice *key);
 
-void block_iter_copy_from(struct reftable_block_iter *dest, struct reftable_block_iter *src);
+void block_iter_copy_from(struct reftable_block_iter *dest,
+			  struct reftable_block_iter *src);
 int block_iter_next(struct reftable_block_iter *it, struct record rec);
 int block_iter_seek(struct reftable_block_iter *it, struct slice want);
 void block_iter_close(struct reftable_block_iter *it);

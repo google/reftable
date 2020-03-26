@@ -23,9 +23,11 @@ struct reftable_stack {
 
 int read_lines(const char *filename, char ***lines);
 int stack_try_add(struct reftable_stack *st,
-		  int (*write_table)(struct reftable_writer *wr, void *arg), void *arg);
-int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr, int first,
-			int last, struct reftable_log_expiry_config *config);
+		  int (*write_table)(struct reftable_writer *wr, void *arg),
+		  void *arg);
+int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
+			int first, int last,
+			struct reftable_log_expiry_config *config);
 int fastlog2(uint64_t sz);
 
 struct segment {

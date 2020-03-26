@@ -135,49 +135,52 @@ void test_reftable_ref_record_roundtrip()
 
 void test_reftable_log_record_roundtrip()
 {
-	struct reftable_log_record in[2] = {{
-		.ref_name = xstrdup("refs/heads/master"),
-		.old_hash = reftable_malloc(SHA1_SIZE),
-		.new_hash = reftable_malloc(SHA1_SIZE),
-		.name = xstrdup("han-wen"),
-		.email = xstrdup("hanwen@google.com"),
-		.message = xstrdup("test"),
-		.update_index = 42,
-		.time = 1577123507,
-		.tz_offset = 100,
-                }, {
-		.ref_name = xstrdup("refs/heads/master"),
-                .update_index = 22,
-                }};
+	struct reftable_log_record in[2] = {
+		{
+			.ref_name = xstrdup("refs/heads/master"),
+			.old_hash = reftable_malloc(SHA1_SIZE),
+			.new_hash = reftable_malloc(SHA1_SIZE),
+			.name = xstrdup("han-wen"),
+			.email = xstrdup("hanwen@google.com"),
+			.message = xstrdup("test"),
+			.update_index = 42,
+			.time = 1577123507,
+			.tz_offset = 100,
+		},
+		{
+			.ref_name = xstrdup("refs/heads/master"),
+			.update_index = 22,
+		}
+	};
 
-        for (int  i = 0; i < ARRAY_SIZE(in); i++) {
-                struct record rec = { 0 };
-                record_from_log(&rec, &in[i]);
+	for (int i = 0; i < ARRAY_SIZE(in); i++) {
+		struct record rec = { 0 };
+		record_from_log(&rec, &in[i]);
 
-                struct slice key = { 0 };
-                record_key(rec, &key);
+		struct slice key = { 0 };
+		record_key(rec, &key);
 
-                byte buf[1024];
-                struct slice dest = {
-                        .buf = buf,
-                        .len = sizeof(buf),
-                };
+		byte buf[1024];
+		struct slice dest = {
+			.buf = buf,
+			.len = sizeof(buf),
+		};
 
-                int n = record_encode(rec, dest, SHA1_SIZE);
-                assert(n >= 0);
+		int n = record_encode(rec, dest, SHA1_SIZE);
+		assert(n >= 0);
 
-                struct reftable_log_record out = { 0 };
-                struct record rec_out = { 0 };
-                record_from_log(&rec_out, &out);
-                int valtype = record_val_type(rec);
-                int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
-                assert(n == m);
+		struct reftable_log_record out = { 0 };
+		struct record rec_out = { 0 };
+		record_from_log(&rec_out, &out);
+		int valtype = record_val_type(rec);
+		int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
+		assert(n == m);
 
-                assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
-                reftable_log_record_clear(&in[i]);
-                reftable_free(slice_yield(&key));
-                record_clear(rec_out);
-        }
+		assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
+		reftable_log_record_clear(&in[i]);
+		reftable_free(slice_yield(&key));
+		record_clear(rec_out);
+	}
 }
 void test_u24_roundtrip()
 {
@@ -324,8 +327,10 @@ void test_index_record_roundtrip()
 
 int main()
 {
-	add_test_case("test_reftable_log_record_roundtrip", &test_reftable_log_record_roundtrip);
-	add_test_case("test_reftable_ref_record_roundtrip", &test_reftable_ref_record_roundtrip);
+	add_test_case("test_reftable_log_record_roundtrip",
+		      &test_reftable_log_record_roundtrip);
+	add_test_case("test_reftable_ref_record_roundtrip",
+		      &test_reftable_ref_record_roundtrip);
 	add_test_case("varint_roundtrip", &varint_roundtrip);
 	add_test_case("test_key_roundtrip", &test_key_roundtrip);
 	add_test_case("test_common_prefix", &test_common_prefix);

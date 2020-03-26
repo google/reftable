@@ -15,9 +15,11 @@ https://developers.google.com/open-source/licenses/bsd
 
 uint64_t block_source_size(struct reftable_block_source source);
 
-int block_source_read_block(struct reftable_block_source source, struct reftable_block *dest,
-			    uint64_t off, uint32_t size);
-void block_source_return_block(struct reftable_block_source source, struct reftable_block *ret);
+int block_source_read_block(struct reftable_block_source source,
+			    struct reftable_block *dest, uint64_t off,
+			    uint32_t size);
+void block_source_return_block(struct reftable_block_source source,
+			       struct reftable_block *ret);
 void block_source_close(struct reftable_block_source *source);
 
 struct reftable_reader_offsets {
@@ -44,12 +46,15 @@ struct reftable_reader {
 	struct reftable_reader_offsets log_offsets;
 };
 
-int init_reader(struct reftable_reader *r, struct reftable_block_source source, const char *name);
-int reader_seek(struct reftable_reader *r, struct reftable_iterator *it, struct record rec);
+int init_reader(struct reftable_reader *r, struct reftable_block_source source,
+		const char *name);
+int reader_seek(struct reftable_reader *r, struct reftable_iterator *it,
+		struct record rec);
 void reader_close(struct reftable_reader *r);
 const char *reader_name(struct reftable_reader *r);
 void reader_return_block(struct reftable_reader *r, struct reftable_block *p);
-int reader_init_block_reader(struct reftable_reader *r, struct reftable_block_reader *br,
+int reader_init_block_reader(struct reftable_reader *r,
+			     struct reftable_block_reader *br,
 			     uint64_t next_off, byte want_typ);
 
 #endif

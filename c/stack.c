@@ -14,10 +14,12 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "writer.h"
 
-int reftable_new_stack(struct reftable_stack **dest, const char *dir, const char *list_file,
-	      struct reftable_write_options config)
+int reftable_new_stack(struct reftable_stack **dest, const char *dir,
+		       const char *list_file,
+		       struct reftable_write_options config)
 {
-	struct reftable_stack *p = reftable_calloc(sizeof(struct reftable_stack));
+	struct reftable_stack *p =
+		reftable_calloc(sizeof(struct reftable_stack));
 	int err = 0;
 	*dest = NULL;
 	p->list_file = xstrdup(list_file);
@@ -83,7 +85,8 @@ int read_lines(const char *filename, char ***namesp)
 	return err;
 }
 
-struct reftable_merged_table *reftable_stack_merged_table(struct reftable_stack *st)
+struct reftable_merged_table *
+reftable_stack_merged_table(struct reftable_stack *st)
 {
 	return st->merged;
 }
@@ -104,9 +107,11 @@ void reftable_stack_destroy(struct reftable_stack *st)
 	reftable_free(st);
 }
 
-static struct reftable_reader **stack_copy_readers(struct reftable_stack *st, int cur_len)
+static struct reftable_reader **stack_copy_readers(struct reftable_stack *st,
+						   int cur_len)
 {
-	struct reftable_reader **cur = reftable_calloc(sizeof(struct reftable_reader *) * cur_len);
+	struct reftable_reader **cur =
+		reftable_calloc(sizeof(struct reftable_reader *) * cur_len);
 	int i = 0;
 	for (i = 0; i < cur_len; i++) {
 		cur[i] = st->merged->stack[i];
@@ -114,7 +119,8 @@ static struct reftable_reader **stack_copy_readers(struct reftable_stack *st, in
 	return cur;
 }
 
-static int reftable_stack_reload_once(struct reftable_stack *st, char **names, bool reuse_open)
+static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
+				      bool reuse_open)
 {
 	int cur_len = st->merged == NULL ? 0 : st->merged->stack_len;
 	struct reftable_reader **cur = stack_copy_readers(st, cur_len);
@@ -165,7 +171,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names, b
 
 	/* success! */
 	err = reftable_new_merged_table(&new_merged, new_tables, new_tables_len,
-			       st->config.hash_id);
+					st->config.hash_id);
 	if (err < 0) {
 		goto exit;
 	}
@@ -213,7 +219,8 @@ static int tv_cmp(struct timeval *a, struct timeval *b)
 	return udiff;
 }
 
-static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st, bool reuse_open)
+static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
+					     bool reuse_open)
 {
 	struct timeval deadline = { 0 };
 	int err = gettimeofday(&deadline, NULL);
@@ -315,8 +322,9 @@ exit:
 	return err;
 }
 
-int reftable_stack_add(struct reftable_stack *st, int (*write)(struct reftable_writer *wr, void *arg),
-	      void *arg)
+int reftable_stack_add(struct reftable_stack *st,
+		       int (*write)(struct reftable_writer *wr, void *arg),
+		       void *arg)
 {
 	int err = stack_try_add(st, write, arg);
 	if (err < 0) {
@@ -337,7 +345,8 @@ static void format_name(struct slice *dest, uint64_t min, uint64_t max)
 }
 
 int stack_try_add(struct reftable_stack *st,
-		  int (*write_table)(struct reftable_writer *wr, void *arg), void *arg)
+		  int (*write_table)(struct reftable_writer *wr, void *arg),
+		  void *arg)
 {
 	struct slice lock_name = { 0 };
 	struct slice temp_tab_name = { 0 };
@@ -492,7 +501,9 @@ uint64_t reftable_stack_next_update_index(struct reftable_stack *st)
 {
 	int sz = st->merged->stack_len;
 	if (sz > 0) {
-		return reftable_reader_max_update_index(st->merged->stack[sz - 1]) + 1;
+		return reftable_reader_max_update_index(
+			       st->merged->stack[sz - 1]) +
+		       1;
 	}
 	return 1;
 }
@@ -544,12 +555,13 @@ exit:
 	return err;
 }
 
-int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr, int first,
-			int last, struct reftable_log_expiry_config *config)
+int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
+			int first, int last,
+			struct reftable_log_expiry_config *config)
 {
 	int subtabs_len = last - first + 1;
-	struct reftable_reader **subtabs =
-		reftable_calloc(sizeof(struct reftable_reader *) * (last - first + 1));
+	struct reftable_reader **subtabs = reftable_calloc(
+		sizeof(struct reftable_reader *) * (last - first + 1));
 	struct reftable_merged_table *mt = NULL;
 	int err = 0;
 	struct reftable_iterator it = { 0 };
@@ -562,10 +574,12 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr, i
 		subtabs[j++] = t;
 		st->stats.bytes += t->size;
 	}
-	reftable_writer_set_limits(wr, st->merged->stack[first]->min_update_index,
-			  st->merged->stack[last]->max_update_index);
+	reftable_writer_set_limits(wr,
+				   st->merged->stack[first]->min_update_index,
+				   st->merged->stack[last]->max_update_index);
 
-	err = reftable_new_merged_table(&mt, subtabs, subtabs_len, st->config.hash_id);
+	err = reftable_new_merged_table(&mt, subtabs, subtabs_len,
+					st->config.hash_id);
 	if (err < 0) {
 		reftable_free(subtabs);
 		goto exit;
@@ -655,8 +669,10 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	bool have_lock = false;
 	int lock_file_fd = 0;
 	int compact_count = last - first + 1;
-	char **delete_on_success = reftable_calloc(sizeof(char *) * (compact_count + 1));
-	char **subtable_locks = reftable_calloc(sizeof(char *) * (compact_count + 1));
+	char **delete_on_success =
+		reftable_calloc(sizeof(char *) * (compact_count + 1));
+	char **subtable_locks =
+		reftable_calloc(sizeof(char *) * (compact_count + 1));
 	int i = 0;
 	int j = 0;
 	bool is_empty_table = false;
@@ -837,12 +853,14 @@ exit:
 	return err;
 }
 
-int reftable_stack_compact_all(struct reftable_stack *st, struct reftable_log_expiry_config *config)
+int reftable_stack_compact_all(struct reftable_stack *st,
+			       struct reftable_log_expiry_config *config)
 {
 	return stack_compact_range(st, 0, st->merged->stack_len - 1, config);
 }
 
-static int stack_compact_range_stats(struct reftable_stack *st, int first, int last,
+static int stack_compact_range_stats(struct reftable_stack *st, int first,
+				     int last,
 				     struct reftable_log_expiry_config *config)
 {
 	int err = stack_compact_range(st, first, last, config);
@@ -928,7 +946,8 @@ struct segment suggest_compaction_segment(uint64_t *sizes, int n)
 
 static uint64_t *stack_table_sizes_for_compaction(struct reftable_stack *st)
 {
-	uint64_t *sizes = reftable_calloc(sizeof(uint64_t) * st->merged->stack_len);
+	uint64_t *sizes =
+		reftable_calloc(sizeof(uint64_t) * st->merged->stack_len);
 	int i = 0;
 	for (i = 0; i < st->merged->stack_len; i++) {
 		/* overhead is 24 + 68 = 92. */
@@ -951,13 +970,14 @@ int reftable_stack_auto_compact(struct reftable_stack *st)
 	return 0;
 }
 
-struct reftable_compaction_stats *reftable_stack_compaction_stats(struct reftable_stack *st)
+struct reftable_compaction_stats *
+reftable_stack_compaction_stats(struct reftable_stack *st)
 {
 	return &st->stats;
 }
 
 int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
-		   struct reftable_ref_record *ref)
+			    struct reftable_ref_record *ref)
 {
 	struct reftable_iterator it = { 0 };
 	struct reftable_merged_table *mt = reftable_stack_merged_table(st);
@@ -971,7 +991,8 @@ int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
 		goto exit;
 	}
 
-	if (strcmp(ref->ref_name, refname) || reftable_ref_record_is_deletion(ref)) {
+	if (strcmp(ref->ref_name, refname) ||
+	    reftable_ref_record_is_deletion(ref)) {
 		err = 1;
 		goto exit;
 	}
@@ -982,7 +1003,7 @@ exit:
 }
 
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
-		   struct reftable_log_record *log)
+			    struct reftable_log_record *log)
 {
 	struct reftable_iterator it = { 0 };
 	struct reftable_merged_table *mt = reftable_stack_merged_table(st);
@@ -996,7 +1017,8 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 		goto exit;
 	}
 
-	if (strcmp(log->ref_name, refname) || reftable_log_record_is_deletion(log)) {
+	if (strcmp(log->ref_name, refname) ||
+	    reftable_log_record_is_deletion(log)) {
 		err = 1;
 		goto exit;
 	}

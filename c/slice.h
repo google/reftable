@@ -34,7 +34,8 @@ void slice_append(struct slice *dest, struct slice add);
 int common_prefix_size(struct slice a, struct slice b);
 
 struct reftable_block_source;
-void block_source_from_slice(struct reftable_block_source *bs, struct slice *buf);
+void block_source_from_slice(struct reftable_block_source *bs,
+			     struct slice *buf);
 
 struct reftable_block_source malloc_block_source(void);
 

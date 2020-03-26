@@ -61,7 +61,8 @@ struct reftable_block_source_vtable file_vtable = {
 	.close = &file_close,
 };
 
-int reftable_block_source_from_file(struct reftable_block_source *bs, const char *name)
+int reftable_block_source_from_file(struct reftable_block_source *bs,
+				    const char *name)
 {
 	struct stat st = { 0 };
 	int err = 0;

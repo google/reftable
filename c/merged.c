@@ -143,8 +143,9 @@ static void iterator_from_merged_iter(struct reftable_iterator *it,
 	it->ops = &merged_iter_vtable;
 }
 
-int reftable_new_merged_table(struct reftable_merged_table **dest, struct reftable_reader **stack, int n,
-		     uint32_t hash_id)
+int reftable_new_merged_table(struct reftable_merged_table **dest,
+			      struct reftable_reader **stack, int n,
+			      uint32_t hash_id)
 {
 	uint64_t last_max = 0;
 	uint64_t first_min = 0;
@@ -205,20 +206,24 @@ void reftable_merged_table_free(struct reftable_merged_table *mt)
 	reftable_free(mt);
 }
 
-uint64_t reftable_merged_table_max_update_index(struct reftable_merged_table *mt)
+uint64_t
+reftable_merged_table_max_update_index(struct reftable_merged_table *mt)
 {
 	return mt->max;
 }
 
-uint64_t reftable_merged_table_min_update_index(struct reftable_merged_table *mt)
+uint64_t
+reftable_merged_table_min_update_index(struct reftable_merged_table *mt)
 {
 	return mt->min;
 }
 
 static int merged_table_seek_record(struct reftable_merged_table *mt,
-				    struct reftable_iterator *it, struct record rec)
+				    struct reftable_iterator *it,
+				    struct record rec)
 {
-	struct reftable_iterator *iters = reftable_calloc(sizeof(struct reftable_iterator) * mt->stack_len);
+	struct reftable_iterator *iters = reftable_calloc(
+		sizeof(struct reftable_iterator) * mt->stack_len);
 	struct merged_iter merged = {
 		.stack = iters,
 		.typ = record_type(rec),
@@ -252,15 +257,17 @@ static int merged_table_seek_record(struct reftable_merged_table *mt,
 	}
 
 	{
-		struct merged_iter *p = reftable_malloc(sizeof(struct merged_iter));
+		struct merged_iter *p =
+			reftable_malloc(sizeof(struct merged_iter));
 		*p = merged;
 		iterator_from_merged_iter(it, p);
 	}
 	return 0;
 }
 
-int reftable_merged_table_seek_ref(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			  const char *name)
+int reftable_merged_table_seek_ref(struct reftable_merged_table *mt,
+				   struct reftable_iterator *it,
+				   const char *name)
 {
 	struct reftable_ref_record ref = {
 		.ref_name = (char *)name,
@@ -270,8 +277,9 @@ int reftable_merged_table_seek_ref(struct reftable_merged_table *mt, struct reft
 	return merged_table_seek_record(mt, it, rec);
 }
 
-int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			     const char *name, uint64_t update_index)
+int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt,
+				      struct reftable_iterator *it,
+				      const char *name, uint64_t update_index)
 {
 	struct reftable_log_record log = {
 		.ref_name = (char *)name,
@@ -282,8 +290,9 @@ int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt, struct r
 	return merged_table_seek_record(mt, it, rec);
 }
 
-int reftable_merged_table_seek_log(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			  const char *name)
+int reftable_merged_table_seek_log(struct reftable_merged_table *mt,
+				   struct reftable_iterator *it,
+				   const char *name)
 {
 	uint64_t max = ~((uint64_t)0);
 	return reftable_merged_table_seek_log_at(mt, it, name, max);

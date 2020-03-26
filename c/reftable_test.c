@@ -53,7 +53,8 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 		.hash_id = hash_id,
 	};
 
-	struct reftable_writer *w = reftable_new_writer(&slice_write_void, buf, &opts);
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, buf, &opts);
 
 	reftable_writer_set_limits(w, update_index, update_index);
 	{
@@ -121,7 +122,8 @@ void test_log_buffer_size(void)
 		.block_size = 4096,
 	};
 
-	struct reftable_writer *w = reftable_new_writer(&slice_write_void, &buf, &opts);
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, &buf, &opts);
 
 	reftable_writer_set_limits(w, update_index, update_index);
 
@@ -160,7 +162,8 @@ void test_log_write_read(void)
 	};
 
 	struct slice buf = { 0 };
-	struct reftable_writer *w = reftable_new_writer(&slice_write_void, &buf, &opts);
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, &buf, &opts);
 
 	reftable_writer_set_limits(w, 0, N);
 	{
@@ -410,7 +413,8 @@ void test_table_refs_for(bool indexed)
 	};
 
 	struct slice buf = { 0 };
-	struct reftable_writer *w = reftable_new_writer(&slice_write_void, &buf, &opts);
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, &buf, &opts);
 	{
 		struct reftable_ref_record ref = { 0 };
 		int i = 0;

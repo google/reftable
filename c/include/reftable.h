@@ -12,15 +12,14 @@ https://developers.google.com/open-source/licenses/bsd
 #include <stdint.h>
 #include <stddef.h>
 
-void reftable_set_alloc(void* (*malloc)(size_t),
-               void* (*realloc)(void*, size_t),
-               void (*free)(void*));
+void reftable_set_alloc(void *(*malloc)(size_t),
+			void *(*realloc)(void *, size_t), void (*free)(void *));
 
 /****************************************************************
  Basic data types
 
- Reftables store the state of each ref in struct reftable_ref_record, and they store
- a sequence of reflog updates in struct reftable_log_record.
+ Reftables store the state of each ref in struct reftable_ref_record, and they
+ store a sequence of reflog updates in struct reftable_log_record.
  ****************************************************************/
 
 /* reftable_ref_record holds a ref database entry target_value */
@@ -43,12 +42,14 @@ void reftable_ref_record_print(struct reftable_ref_record *ref, int hash_size);
 void reftable_ref_record_clear(struct reftable_ref_record *ref);
 
 /* returns whether two reftable_ref_records are the same */
-int reftable_ref_record_equal(struct reftable_ref_record *a, struct reftable_ref_record *b, int hash_size);
+int reftable_ref_record_equal(struct reftable_ref_record *a,
+			      struct reftable_ref_record *b, int hash_size);
 
 /* reftable_log_record holds a reflog entry */
 struct reftable_log_record {
 	char *ref_name;
-	uint64_t update_index;         /* logical timestamp of a transactional update. */
+	uint64_t update_index; /* logical timestamp of a transactional update.
+				*/
 	uint8_t *new_hash;
 	uint8_t *old_hash;
 	char *name;
@@ -65,7 +66,8 @@ int reftable_log_record_is_deletion(const struct reftable_log_record *log);
 void reftable_log_record_clear(struct reftable_log_record *log);
 
 /* returns whether two records are equal. */
-int reftable_log_record_equal(struct reftable_log_record *a, struct reftable_log_record *b, int hash_size);
+int reftable_log_record_equal(struct reftable_log_record *a,
+			      struct reftable_log_record *b, int hash_size);
 
 /* dumps a reftable_log_record on stdout, for debugging/testing. */
 void reftable_log_record_print(struct reftable_log_record *log, int hash_size);
@@ -115,7 +117,7 @@ const char *reftable_error_str(int err);
 /****************************************************************
  Writing
 
- Writing single reftables 
+ Writing single reftables
  ****************************************************************/
 
 /* reftable_write_options sets options for writing a single reftable. */
@@ -176,8 +178,9 @@ struct reftable_stats {
 };
 
 /* reftable_new_writer creates a new writer */
-struct reftable_writer *reftable_new_writer(int (*writer_func)(void *, uint8_t *, int),
-			  void *writer_arg, struct reftable_write_options *opts);
+struct reftable_writer *
+reftable_new_writer(int (*writer_func)(void *, uint8_t *, int),
+		    void *writer_arg, struct reftable_write_options *opts);
 
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
 int reftable_fd_write(void *fdp, uint8_t *data, int size);
@@ -190,7 +193,8 @@ int reftable_fd_write(void *fdp, uint8_t *data, int size);
    ref database into a single reftable, this would be a range of update-index
    timestamps.
  */
-void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min, uint64_t max);
+void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min,
+				uint64_t max);
 
 /* adds a reftable_ref_record. Must be called in ascending
    order. The update_index must be within the limits set by
@@ -198,28 +202,32 @@ void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min, uint64_
 
    It is an error to write a ref record after a log record.
  */
-int reftable_writer_add_ref(struct reftable_writer *w, struct reftable_ref_record *ref);
+int reftable_writer_add_ref(struct reftable_writer *w,
+			    struct reftable_ref_record *ref);
 
 /* Convenience function to add multiple refs. Will sort the refs by
    name before adding. */
-int reftable_writer_add_refs(struct reftable_writer *w, struct reftable_ref_record *refs, int n);
+int reftable_writer_add_refs(struct reftable_writer *w,
+			     struct reftable_ref_record *refs, int n);
 
 /* adds a reftable_log_record. Must be called in ascending order (with more
    recent log entries first.)
  */
-int reftable_writer_add_log(struct reftable_writer *w, struct reftable_log_record *log);
+int reftable_writer_add_log(struct reftable_writer *w,
+			    struct reftable_log_record *log);
 
 /* Convenience function to add multiple logs. Will sort the records by
    key before adding. */
-int reftable_writer_add_logs(struct reftable_writer *w, struct reftable_log_record *logs, int n);
+int reftable_writer_add_logs(struct reftable_writer *w,
+			     struct reftable_log_record *logs, int n);
 
-/* reftable_writer_close finalizes the reftable. The writer is retained so statistics can
- * be inspected. */
+/* reftable_writer_close finalizes the reftable. The writer is retained so
+ * statistics can be inspected. */
 int reftable_writer_close(struct reftable_writer *w);
 
 /* writer_stats returns the statistics on the reftable being written.
 
-   This struct becomes invalid when the writer is freed. 
+   This struct becomes invalid when the writer is freed.
  */
 const struct reftable_stats *writer_stats(struct reftable_writer *w);
 
@@ -227,8 +235,8 @@ const struct reftable_stats *writer_stats(struct reftable_writer *w);
 void reftable_writer_free(struct reftable_writer *w);
 
 /****************************************************************
- * ITERATING 
- ****************************************************************/ 
+ * ITERATING
+ ****************************************************************/
 
 /* iterator is the generic interface for walking over data stored in a
    reftable. It is generally passed around by value.
@@ -241,12 +249,14 @@ struct reftable_iterator {
 /* reads the next reftable_ref_record. Returns < 0 for error, 0 for OK and > 0:
    end of iteration.
 */
-int reftable_iterator_next_ref(struct reftable_iterator it, struct reftable_ref_record *ref);
+int reftable_iterator_next_ref(struct reftable_iterator it,
+			       struct reftable_ref_record *ref);
 
 /* reads the next reftable_log_record. Returns < 0 for error, 0 for OK and > 0:
    end of iteration.
 */
-int reftable_iterator_next_log(struct reftable_iterator it, struct reftable_log_record *log);
+int reftable_iterator_next_log(struct reftable_iterator it,
+			       struct reftable_log_record *log);
 
 /* releases resources associated with an iterator. */
 void reftable_iterator_destroy(struct reftable_iterator *it);
@@ -255,7 +265,8 @@ void reftable_iterator_destroy(struct reftable_iterator *it);
  Reading single tables
 
  The follow routines are for reading single files. For an application-level
- interface, skip ahead to struct reftable_merged_table and struct reftable_stack.
+ interface, skip ahead to struct reftable_merged_table and struct
+ reftable_stack.
  ****************************************************************/
 
 /* block_source is a generic wrapper for a seekable readable file.
@@ -282,8 +293,8 @@ struct reftable_block_source_vtable {
 
 	/* reads a segment from the block source. It is an error to read
 	   beyond the end of the block */
-	int (*read_block)(void *source, struct reftable_block *dest, uint64_t off,
-			  uint32_t size);
+	int (*read_block)(void *source, struct reftable_block *dest,
+			  uint64_t off, uint32_t size);
 	/* mark the block as read; may return the data back to malloc */
 	void (*return_block)(void *source, struct reftable_block *blockp);
 
@@ -292,8 +303,8 @@ struct reftable_block_source_vtable {
 };
 
 /* opens a file on the file system as a block_source */
-int reftable_block_source_from_file(struct reftable_block_source *block_src, const char *name);
-
+int reftable_block_source_from_file(struct reftable_block_source *block_src,
+				    const char *name);
 
 /* The reader struct is a handle to an open reftable file. */
 struct reftable_reader;
@@ -302,10 +313,11 @@ struct reftable_reader;
  * code and sets pp.  The name is used for creating a
  * stack. Typically, it is the basename of the file.
  */
-int reftable_new_reader(struct reftable_reader **pp, struct reftable_block_source, const char *name);
+int reftable_new_reader(struct reftable_reader **pp,
+			struct reftable_block_source, const char *name);
 
-/* reftable_reader_seek_ref returns an iterator where 'name' would be inserted in the
-   table.  To seek to the start of the table, use name = "".
+/* reftable_reader_seek_ref returns an iterator where 'name' would be inserted
+   in the table.  To seek to the start of the table, use name = "".
 
    example:
 
@@ -329,7 +341,8 @@ int reftable_new_reader(struct reftable_reader **pp, struct reftable_block_sourc
    reftable_iterator_destroy(&it);
    reftable_ref_record_clear(&ref);
  */
-int reftable_reader_seek_ref(struct reftable_reader *r, struct reftable_iterator *it, const char *name);
+int reftable_reader_seek_ref(struct reftable_reader *r,
+			     struct reftable_iterator *it, const char *name);
 
 /* returns the hash ID used in this table. */
 uint32_t reftable_reader_hash_id(struct reftable_reader *r);
@@ -337,18 +350,21 @@ uint32_t reftable_reader_hash_id(struct reftable_reader *r);
 /* seek to logs for the given name, older than update_index. To seek to the
    start of the table, use name = "".
  */
-int reftable_reader_seek_log_at(struct reftable_reader *r, struct reftable_iterator *it, const char *name,
-		       uint64_t update_index);
+int reftable_reader_seek_log_at(struct reftable_reader *r,
+				struct reftable_iterator *it, const char *name,
+				uint64_t update_index);
 
 /* seek to newest log entry for given name. */
-int reftable_reader_seek_log(struct reftable_reader *r, struct reftable_iterator *it, const char *name);
+int reftable_reader_seek_log(struct reftable_reader *r,
+			     struct reftable_iterator *it, const char *name);
 
 /* closes and deallocates a reader. */
 void reftable_reader_free(struct reftable_reader *);
 
 /* return an iterator for the refs pointing to oid */
-int reftable_reader_refs_for(struct reftable_reader *r, struct reftable_iterator *it, uint8_t *oid,
-		    int oid_len);
+int reftable_reader_refs_for(struct reftable_reader *r,
+			     struct reftable_iterator *it, uint8_t *oid,
+			     int oid_len);
 
 /* return the max_update_index for a table */
 uint64_t reftable_reader_max_update_index(struct reftable_reader *r);
@@ -366,32 +382,38 @@ uint64_t reftable_reader_min_update_index(struct reftable_reader *r);
 /* A merged table is implements seeking/iterating over a stack of tables. */
 struct reftable_merged_table;
 
-/* reftable_new_merged_table creates a new merged table. It takes ownership of the stack
-   array.
+/* reftable_new_merged_table creates a new merged table. It takes ownership of
+   the stack array.
 */
-int reftable_new_merged_table(struct reftable_merged_table **dest, struct reftable_reader **stack, int n,
-		     uint32_t hash_id);
+int reftable_new_merged_table(struct reftable_merged_table **dest,
+			      struct reftable_reader **stack, int n,
+			      uint32_t hash_id);
 
 /* returns the hash id used in this merged table. */
 uint32_t reftable_merged_table_hash_id(struct reftable_merged_table *mt);
 
 /* returns an iterator positioned just before 'name' */
-int reftable_merged_table_seek_ref(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			  const char *name);
+int reftable_merged_table_seek_ref(struct reftable_merged_table *mt,
+				   struct reftable_iterator *it,
+				   const char *name);
 
 /* returns an iterator for log entry, at given update_index */
-int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			     const char *name, uint64_t update_index);
+int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt,
+				      struct reftable_iterator *it,
+				      const char *name, uint64_t update_index);
 
 /* like reftable_merged_table_seek_log_at but look for the newest entry. */
-int reftable_merged_table_seek_log(struct reftable_merged_table *mt, struct reftable_iterator *it,
-			  const char *name);
+int reftable_merged_table_seek_log(struct reftable_merged_table *mt,
+				   struct reftable_iterator *it,
+				   const char *name);
 
 /* returns the max update_index covered by this merged table. */
-uint64_t reftable_merged_table_max_update_index(struct reftable_merged_table *mt);
+uint64_t
+reftable_merged_table_max_update_index(struct reftable_merged_table *mt);
 
 /* returns the min update_index covered by this merged table. */
-uint64_t reftable_merged_table_min_update_index(struct reftable_merged_table *mt);
+uint64_t
+reftable_merged_table_min_update_index(struct reftable_merged_table *mt);
 
 /* closes readers for the merged tables */
 void reftable_merged_table_close(struct reftable_merged_table *mt);
@@ -399,13 +421,12 @@ void reftable_merged_table_close(struct reftable_merged_table *mt);
 /* releases memory for the merged_table */
 void reftable_merged_table_free(struct reftable_merged_table *m);
 
-
 /****************************************************************
  Mutable ref database
 
  The stack presents an interface to a mutable sequence of reftables.
  ****************************************************************/
- 
+
 /* a stack is a stack of reftables, which can be mutated by pushing a table to
  * the top of the stack */
 struct reftable_stack;
@@ -414,8 +435,9 @@ struct reftable_stack;
    of tables is in 'list_file'. Typically, this should be .git/reftables and
    .git/refs respectively.
 */
-int reftable_new_stack(struct reftable_stack **dest, const char *dir, const char *list_file,
-	      struct reftable_write_options config);
+int reftable_new_stack(struct reftable_stack **dest, const char *dir,
+		       const char *list_file,
+		       struct reftable_write_options config);
 
 /* returns the update_index at which a next table should be written. */
 uint64_t reftable_stack_next_update_index(struct reftable_stack *st);
@@ -423,13 +445,15 @@ uint64_t reftable_stack_next_update_index(struct reftable_stack *st);
 /* add a new table to the stack. The write_table function must call
    reftable_writer_set_limits, add refs and return an error value. */
 int reftable_stack_add(struct reftable_stack *st,
-	      int (*write_table)(struct reftable_writer *wr, void *write_arg),
-	      void *write_arg);
+		       int (*write_table)(struct reftable_writer *wr,
+					  void *write_arg),
+		       void *write_arg);
 
 /* returns the merged_table for seeking. This table is valid until the
    next write or reload, and should not be closed or deleted.
 */
-struct reftable_merged_table *reftable_stack_merged_table(struct reftable_stack *st);
+struct reftable_merged_table *
+reftable_stack_merged_table(struct reftable_stack *st);
 
 /* frees all resources associated with the stack. */
 void reftable_stack_destroy(struct reftable_stack *st);
@@ -448,7 +472,8 @@ struct reftable_log_expiry_config {
 
 /* compacts all reftables into a giant table. Expire reflog entries if config is
  * non-NULL */
-int reftable_stack_compact_all(struct reftable_stack *st, struct reftable_log_expiry_config *config);
+int reftable_stack_compact_all(struct reftable_stack *st,
+			       struct reftable_log_expiry_config *config);
 
 /* heuristically compact unbalanced table stack. */
 int reftable_stack_auto_compact(struct reftable_stack *st);
@@ -456,21 +481,22 @@ int reftable_stack_auto_compact(struct reftable_stack *st);
 /* convenience function to read a single ref. Returns < 0 for error, 0
    for success, and 1 if ref not found. */
 int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
-		   struct reftable_ref_record *ref);
+			    struct reftable_ref_record *ref);
 
 /* convenience function to read a single log. Returns < 0 for error, 0
    for success, and 1 if ref not found. */
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
-		   struct reftable_log_record *log);
+			    struct reftable_log_record *log);
 
 /* statistics on past compactions. */
 struct reftable_compaction_stats {
-	uint64_t bytes;                 /* total number of bytes written */
-	int attempts;                   /* how often we tried to compact */
-	int failures;                   /* failures happen on concurrent updates */
+	uint64_t bytes; /* total number of bytes written */
+	int attempts; /* how often we tried to compact */
+	int failures; /* failures happen on concurrent updates */
 };
 
 /* return statistics for compaction up till now. */
-struct reftable_compaction_stats *reftable_stack_compaction_stats(struct reftable_stack *st);
+struct reftable_compaction_stats *
+reftable_stack_compaction_stats(struct reftable_stack *st);
 
 #endif

@@ -16,7 +16,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "tree.h"
 
-static struct reftable_block_stats *writer_reftable_block_stats(struct reftable_writer *w, byte typ)
+static struct reftable_block_stats *
+writer_reftable_block_stats(struct reftable_writer *w, byte typ)
 {
 	switch (typ) {
 	case 'r':
@@ -34,7 +35,8 @@ static struct reftable_block_stats *writer_reftable_block_stats(struct reftable_
 
 /* write data, queuing the padding for the next write. Returns negative for
  * error. */
-static int padded_write(struct reftable_writer *w, byte *data, size_t len, int padding)
+static int padded_write(struct reftable_writer *w, byte *data, size_t len,
+			int padding)
 {
 	int n = 0;
 	if (w->pending_padding > 0) {
@@ -105,10 +107,12 @@ static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
 	w->block_writer->restart_interval = w->opts.restart_interval;
 }
 
-struct reftable_writer *reftable_new_writer(int (*writer_func)(void *, byte *, int),
-			  void *writer_arg, struct reftable_write_options *opts)
+struct reftable_writer *
+reftable_new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
+		    struct reftable_write_options *opts)
 {
-	struct reftable_writer *wp = reftable_calloc(sizeof(struct reftable_writer));
+	struct reftable_writer *wp =
+		reftable_calloc(sizeof(struct reftable_writer));
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
 		/* TODO - error return? */
@@ -123,7 +127,8 @@ struct reftable_writer *reftable_new_writer(int (*writer_func)(void *, byte *, i
 	return wp;
 }
 
-void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min, uint64_t max)
+void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min,
+				uint64_t max)
 {
 	w->min_update_index = min;
 	w->max_update_index = max;
@@ -172,8 +177,8 @@ static void writer_index_hash(struct reftable_writer *w, struct slice hash)
 
 	if (key->offset_len == key->offset_cap) {
 		key->offset_cap = 2 * key->offset_cap + 1;
-		key->offsets = reftable_realloc(key->offsets,
-				       sizeof(uint64_t) * key->offset_cap);
+		key->offsets = reftable_realloc(
+			key->offsets, sizeof(uint64_t) * key->offset_cap);
 	}
 
 	key->offsets[key->offset_len++] = off;
@@ -220,7 +225,8 @@ exit:
 	return result;
 }
 
-int reftable_writer_add_ref(struct reftable_writer *w, struct reftable_ref_record *ref)
+int reftable_writer_add_ref(struct reftable_writer *w,
+			    struct reftable_ref_record *ref)
 {
 	struct record rec = { 0 };
 	struct reftable_ref_record copy = *ref;
@@ -259,7 +265,8 @@ int reftable_writer_add_ref(struct reftable_writer *w, struct reftable_ref_recor
 	return 0;
 }
 
-int reftable_writer_add_refs(struct reftable_writer *w, struct reftable_ref_record *refs, int n)
+int reftable_writer_add_refs(struct reftable_writer *w,
+			     struct reftable_ref_record *refs, int n)
 {
 	int err = 0;
 	int i = 0;
@@ -270,7 +277,8 @@ int reftable_writer_add_refs(struct reftable_writer *w, struct reftable_ref_reco
 	return err;
 }
 
-int reftable_writer_add_log(struct reftable_writer *w, struct reftable_log_record *log)
+int reftable_writer_add_log(struct reftable_writer *w,
+			    struct reftable_log_record *log)
 {
 	if (log->ref_name == NULL) {
 		return API_ERROR;
@@ -296,7 +304,8 @@ int reftable_writer_add_log(struct reftable_writer *w, struct reftable_log_recor
 	}
 }
 
-int reftable_writer_add_logs(struct reftable_writer *w, struct reftable_log_record *logs, int n)
+int reftable_writer_add_logs(struct reftable_writer *w,
+			     struct reftable_log_record *logs, int n)
 {
 	int err = 0;
 	int i = 0;
@@ -367,7 +376,8 @@ static int writer_finish_section(struct reftable_writer *w)
 	}
 
 	{
-		struct reftable_block_stats *bstats = writer_reftable_block_stats(w, typ);
+		struct reftable_block_stats *bstats =
+			writer_reftable_block_stats(w, typ);
 		bstats->index_blocks =
 			w->stats.idx_stats.blocks - before_blocks;
 		bstats->index_offset = index_start;
@@ -567,7 +577,8 @@ const int debug = 0;
 static int writer_flush_nonempty_block(struct reftable_writer *w)
 {
 	byte typ = block_writer_type(w->block_writer);
-	struct reftable_block_stats *bstats = writer_reftable_block_stats(w, typ);
+	struct reftable_block_stats *bstats =
+		writer_reftable_block_stats(w, typ);
 	uint64_t block_typ_off = (bstats->blocks == 0) ? w->next : 0;
 	int raw_bytes = block_writer_finish(w->block_writer);
 	int padding = 0;
@@ -606,8 +617,8 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 
 	if (w->index_cap == w->index_len) {
 		w->index_cap = 2 * w->index_cap + 1;
-		w->index = reftable_realloc(w->index,
-				   sizeof(struct index_record) * w->index_cap);
+		w->index = reftable_realloc(
+			w->index, sizeof(struct index_record) * w->index_cap);
 	}
 
 	{

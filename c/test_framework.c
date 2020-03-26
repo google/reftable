@@ -29,8 +29,8 @@ struct test_case *add_test_case(const char *name, void (*testfunc)())
 	struct test_case *tc = new_test_case(name, testfunc);
 	if (test_case_len == test_case_cap) {
 		test_case_cap = 2 * test_case_cap + 1;
-		test_cases = reftable_realloc(test_cases,
-				     sizeof(struct test_case) * test_case_cap);
+		test_cases = reftable_realloc(
+			test_cases, sizeof(struct test_case) * test_case_cap);
 	}
 
 	test_cases[test_case_len++] = tc;
