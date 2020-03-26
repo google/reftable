@@ -636,7 +636,7 @@ int writer_flush_block(struct writer *w)
 	return writer_flush_nonempty_block(w);
 }
 
-struct stats *writer_stats(struct writer *w)
+const struct stats *writer_stats(struct writer *w)
 {
 	return &w->stats;
 }

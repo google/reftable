@@ -100,7 +100,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 	int n = writer_close(w);
 	assert(n == 0);
 
-	struct stats *stats = writer_stats(w);
+	const struct stats *stats = writer_stats(w);
 	int i = 0;
 	for (i = 0; i < stats->ref_stats.blocks; i++) {
 		int off = i * opts.block_size;
@@ -200,7 +200,7 @@ void test_log_write_read(void)
 	int n = writer_close(w);
 	assert(n == 0);
 
-	struct stats *stats = writer_stats(w);
+	const struct stats *stats = writer_stats(w);
 	assert(stats->log_stats.blocks > 0);
 	writer_free(w);
 	w = NULL;

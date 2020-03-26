@@ -249,12 +249,85 @@ int writer_add_logs(struct writer *w, struct log_record *logs, int n);
  * be inspected. */
 int writer_close(struct writer *w);
 
-/* writer_stats returns the statistics on the reftable being written. */
-struct stats *writer_stats(struct writer *w);
+/* writer_stats returns the statistics on the reftable being written.
+
+   This struct becomes invalid when the writer is freed. 
+ */
+const struct stats *writer_stats(struct writer *w);
 
 /* writer_free deallocates memory for the writer */
 void writer_free(struct writer *w);
 
+/****************************************************************
+ * ITERATING 
+ ****************************************************************/ 
+
+/* iterator is the generic interface for walking over data stored in a
+   reftable. It is generally passed around by value.
+*/
+struct iterator {
+	struct iterator_vtable *ops;
+	void *iter_arg;
+};
+
+/* reads the next ref_record. Returns < 0 for error, 0 for OK and > 0:
+   end of iteration.
+*/
+int iterator_next_ref(struct iterator it, struct ref_record *ref);
+
+/* reads the next log_record. Returns < 0 for error, 0 for OK and > 0:
+   end of iteration.
+*/
+int iterator_next_log(struct iterator it, struct log_record *log);
+
+/* releases resources associated with an iterator. */
+void iterator_destroy(struct iterator *it);
+
+/****************************************************************
+ Reading single tables
+
+ The follow routines are for reading single files. For an application-level
+ interface, skip ahead to struct merged_table and struct stack.
+ ****************************************************************/
+
+/* block_source is a generic wrapper for a seekable readable file.
+   It is generally passed around by value.
+ */
+struct block_source {
+	struct block_source_vtable *ops;
+	void *arg;
+};
+
+/* a contiguous segment of bytes. It keeps track of its generating block_source
+   so it can return itself into the pool.
+*/
+struct block {
+	uint8_t *data;
+	int len;
+	struct block_source source;
+};
+
+/* block_source_vtable are the operations that make up block_source */
+struct block_source_vtable {
+	/* returns the size of a block source */
+	uint64_t (*size)(void *source);
+
+	/* reads a segment from the block source. It is an error to read
+	   beyond the end of the block */
+	int (*read_block)(void *source, struct block *dest, uint64_t off,
+			  uint32_t size);
+	/* mark the block as read; may return the data back to malloc */
+	void (*return_block)(void *source, struct block *blockp);
+
+	/* release all resources associated with the block source */
+	void (*close)(void *source);
+};
+
+/* opens a file on the file system as a block_source */
+int block_source_from_file(struct block_source *block_src, const char *name);
+
+
+/* The reader struct is a handle to an open reftable file. */
 struct reader;
 
 /* new_reader opens a reftable for reading. If successful, returns 0
