@@ -27,7 +27,7 @@ struct merged_iter {
 	int stack_len;
 	byte typ;
 	struct merged_iter_pqueue pq;
-} merged_iter;
+};
 
 void merged_table_clear(struct reftable_merged_table *mt);
 
