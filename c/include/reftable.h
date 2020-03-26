@@ -11,61 +11,12 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include <stdint.h>
 
-/* block_source is a generic wrapper for a seekable readable file.
-   It is generally passed around by value.
- */
-struct block_source {
-	struct block_source_vtable *ops;
-	void *arg;
-};
+/****************************************************************
+ Basic data types
 
-/* a contiguous segment of bytes. It keeps track of its generating block_source
-   so it can return itself into the pool.
-*/
-struct block {
-	uint8_t *data;
-	int len;
-	struct block_source source;
-};
-
-/* block_source_vtable are the operations that make up block_source */
-struct block_source_vtable {
-	/* returns the size of a block source */
-	uint64_t (*size)(void *source);
-
-	/* reads a segment from the block source. It is an error to read
-	   beyond the end of the block */
-	int (*read_block)(void *source, struct block *dest, uint64_t off,
-			  uint32_t size);
-	/* mark the block as read; may return the data back to malloc */
-	void (*return_block)(void *source, struct block *blockp);
-
-	/* release all resources associated with the block source */
-	void (*close)(void *source);
-};
-
-/* opens a file on the file system as a block_source */
-int block_source_from_file(struct block_source *block_src, const char *name);
-
-/* write_options sets options for writing a single reftable. */
-struct write_options {
-	/* boolean: do not pad out blocks to block size. */
-	int unpadded;
-
-	/* the blocksize. Should be less than 2^24. */
-	uint32_t block_size;
-
-	/* boolean: do not generate a SHA1 => ref index. */
-	int skip_index_objects;
-
-	/* how often to write complete keys in each block. */
-	int restart_interval;
-
-	/* 4-byte identifier ("sha1", "s256") of the hash.
-	 * Defaults to SHA1 if unset
-	 */
-	uint32_t hash_id;
-};
+ Reftables store the state of each ref in struct ref_record, and they store
+ a sequence of reflog updates in struct log_record.
+ ****************************************************************/
 
 /* ref_record holds a ref database entry target_value */
 struct ref_record {
@@ -114,26 +65,73 @@ int log_record_equal(struct log_record *a, struct log_record *b, int hash_size);
 /* dumps a log_record on stdout, for debugging/testing. */
 void log_record_print(struct log_record *log, int hash_size);
 
-/* iterator is the generic interface for walking over data stored in a
-   reftable. It is generally passed around by value.
-*/
-struct iterator {
-	struct iterator_vtable *ops;
-	void *iter_arg;
+/****************************************************************
+ Error handling
+
+ Error are signaled with negative integer return values. 0 means success.
+ ****************************************************************/
+
+/* different types of errors */
+enum reftable_error {
+	/* Unexpected file system behavior */
+	IO_ERROR = -2,
+
+	/* Format inconsistency on reading data
+	 */
+	FORMAT_ERROR = -3,
+
+	/* File does not exist. Returned from block_source_from_file(),  because
+	   it needs special handling in stack.
+	*/
+	NOT_EXIST_ERROR = -4,
+
+	/* Trying to write out-of-date data. */
+	LOCK_ERROR = -5,
+
+	/* Misuse of the API:
+	   - on writing a record with NULL ref_name.
+	   - on writing a ref_record outside the table limits
+	   - on writing a ref or log record before the stack's next_update_index
+	   - on reading a ref_record from log iterator, or vice versa.
+	*/
+	API_ERROR = -6,
+
+	/* Decompression error */
+	ZLIB_ERROR = -7,
+
+	/* Wrote a table without blocks. */
+	EMPTY_TABLE_ERROR = -8,
 };
 
-/* reads the next ref_record. Returns < 0 for error, 0 for OK and > 0:
-   end of iteration.
-*/
-int iterator_next_ref(struct iterator it, struct ref_record *ref);
+/* convert the numeric error code to a string. The string should not be
+ * deallocated. */
+const char *error_str(int err);
 
-/* reads the next log_record. Returns < 0 for error, 0 for OK and > 0:
-   end of iteration.
-*/
-int iterator_next_log(struct iterator it, struct log_record *log);
+/****************************************************************
+ Writing
 
-/* releases resources associated with an iterator. */
-void iterator_destroy(struct iterator *it);
+ Writing single reftables 
+ ****************************************************************/
+
+/* write_options sets options for writing a single reftable. */
+struct write_options {
+	/* boolean: do not pad out blocks to block size. */
+	int unpadded;
+
+	/* the blocksize. Should be less than 2^24. */
+	uint32_t block_size;
+
+	/* boolean: do not generate a SHA1 => ref index. */
+	int skip_index_objects;
+
+	/* how often to write complete keys in each block. */
+	int restart_interval;
+
+	/* 4-byte identifier ("sha1", "s256") of the hash.
+	 * Defaults to SHA1 if unset
+	 */
+	uint32_t hash_id;
+};
 
 /* block_stats holds statistics for a single block type */
 struct block_stats {
@@ -172,43 +170,6 @@ struct stats {
 	int object_id_len;
 };
 
-/* different types of errors */
-
-enum reftable_error {
-	/* Unexpected file system behavior */
-	IO_ERROR = -2,
-
-	/* Format inconsistency on reading data
-	 */
-	FORMAT_ERROR = -3,
-
-	/* File does not exist. Returned from block_source_from_file(),  because
-	   it needs special handling in stack.
-	*/
-	NOT_EXIST_ERROR = -4,
-
-	/* Trying to write out-of-date data. */
-	LOCK_ERROR = -5,
-
-	/* Misuse of the API:
-	   - on writing a record with NULL ref_name.
-	   - on writing a ref_record outside the table limits
-	   - on writing a ref or log record before the stack's next_update_index
-	   - on reading a ref_record from log iterator, or vice versa.
-	*/
-	API_ERROR = -6,
-
-	/* Decompression error */
-	ZLIB_ERROR = -7,
-
-	/* Wrote a table without blocks. */
-	EMPTY_TABLE_ERROR = -8,
-};
-
-/* convert the numeric error code to a string. The string should not be
- * deallocated. */
-const char *error_str(int err);
-
 /* new_writer creates a new writer */
 struct writer *new_writer(int (*writer_func)(void *, uint8_t *, int),
 			  void *writer_arg, struct write_options *opts);
@@ -229,6 +190,8 @@ void writer_set_limits(struct writer *w, uint64_t min, uint64_t max);
 /* adds a ref_record. Must be called in ascending
    order. The update_index must be within the limits set by
    writer_set_limits(), or API_ERROR is returned.
+
+   It is an error to write a ref record after a log record.
  */
 int writer_add_ref(struct writer *w, struct ref_record *ref);
 
@@ -388,7 +351,14 @@ uint64_t reader_max_update_index(struct reader *r);
 /* return the min_update_index for a table */
 uint64_t reader_min_update_index(struct reader *r);
 
-/* a merged table is implements seeking/iterating over a stack of tables. */
+/****************************************************************
+ Merged tables
+
+ A ref database kept in a sequence of table files. The merged_table presents a
+ unified view to reading (seeking, iterating) a sequence of immutable tables.
+ ****************************************************************/
+
+/* A merged table is implements seeking/iterating over a stack of tables. */
 struct merged_table;
 
 /* new_merged_table creates a new merged table. It takes ownership of the stack
@@ -424,6 +394,13 @@ void merged_table_close(struct merged_table *mt);
 /* releases memory for the merged_table */
 void merged_table_free(struct merged_table *m);
 
+
+/****************************************************************
+ Mutable ref database
+
+ The stack presents an interface to a mutable sequence of reftables.
+ ****************************************************************/
+ 
 /* a stack is a stack of reftables, which can be mutated by pushing a table to
  * the top of the stack */
 struct stack;
@@ -483,9 +460,9 @@ int stack_read_log(struct stack *st, const char *refname,
 
 /* statistics on past compactions. */
 struct compaction_stats {
-	uint64_t bytes;
-	int attempts;
-	int failures;
+	uint64_t bytes;                 /* total number of bytes written */
+	int attempts;                   /* how often we tried to compact */
+	int failures;                   /* failures happen on concurrent updates */
 };
 
 /* return statistics for compaction up till now. */
