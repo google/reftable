@@ -6,24 +6,14 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
+/* record.c - methods for different types of records. */
+
 #include "record.h"
 
 #include "system.h"
 
 #include "constants.h"
 #include "reftable.h"
-
-int is_block_type(byte typ)
-{
-	switch (typ) {
-	case BLOCK_TYPE_REF:
-	case BLOCK_TYPE_LOG:
-	case BLOCK_TYPE_OBJ:
-	case BLOCK_TYPE_INDEX:
-		return true;
-	}
-	return false;
-}
 
 int get_var_int(uint64_t *dest, struct slice in)
 {
@@ -73,17 +63,16 @@ int put_var_int(struct slice dest, uint64_t val)
 	}
 }
 
-int common_prefix_size(struct slice a, struct slice b)
+int is_block_type(byte typ)
 {
-	int p = 0;
-	while (p < a.len && p < b.len) {
-		if (a.buf[p] != b.buf[p]) {
-			break;
-		}
-		p++;
+	switch (typ) {
+	case BLOCK_TYPE_REF:
+	case BLOCK_TYPE_LOG:
+	case BLOCK_TYPE_OBJ:
+	case BLOCK_TYPE_INDEX:
+		return true;
 	}
-
-	return p;
+	return false;
 }
 
 static int decode_string(struct slice *dest, struct slice in)
@@ -107,6 +96,26 @@ static int decode_string(struct slice *dest, struct slice in)
 	in.len -= tsize;
 
 	return start_len - in.len;
+}
+
+static int encode_string(char *str, struct slice s)
+{
+	struct slice start = s;
+	int l = strlen(str);
+	int n = put_var_int(s, l);
+	if (n < 0) {
+		return -1;
+	}
+	s.buf += n;
+	s.len -= n;
+	if (s.len < l) {
+		return -1;
+	}
+	memcpy(s.buf, str, l);
+	s.buf += l;
+	s.len -= l;
+
+	return start.len - s.len;
 }
 
 int encode_key(bool *restart, struct slice dest, struct slice prev_key,
@@ -139,6 +148,47 @@ int encode_key(bool *restart, struct slice dest, struct slice prev_key,
 	dest.len -= suffix_len;
 
 	return start.len - dest.len;
+}
+
+int decode_key(struct slice *key, byte *extra, struct slice last_key,
+	       struct slice in)
+{
+	int start_len = in.len;
+	uint64_t prefix_len = 0;
+	uint64_t suffix_len = 0;
+	int n = get_var_int(&prefix_len, in);
+	if (n < 0) {
+		return -1;
+	}
+	in.buf += n;
+	in.len -= n;
+
+	if (prefix_len > last_key.len) {
+		return -1;
+	}
+
+	n = get_var_int(&suffix_len, in);
+	if (n <= 0) {
+		return -1;
+	}
+	in.buf += n;
+	in.len -= n;
+
+	*extra = (byte)(suffix_len & 0x7);
+	suffix_len >>= 3;
+
+	if (in.len < suffix_len) {
+		return -1;
+	}
+
+	slice_resize(key, suffix_len + prefix_len);
+	memcpy(key->buf, last_key.buf, prefix_len);
+
+	memcpy(key->buf + prefix_len, in.buf, suffix_len);
+	in.buf += suffix_len;
+	in.len -= suffix_len;
+
+	return start_len - in.len;
 }
 
 static byte reftable_ref_record_type(void)
@@ -248,26 +298,6 @@ static byte reftable_ref_record_val_type(const void *rec)
 		return 3;
 	}
 	return 0;
-}
-
-static int encode_string(char *str, struct slice s)
-{
-	struct slice start = s;
-	int l = strlen(str);
-	int n = put_var_int(s, l);
-	if (n < 0) {
-		return -1;
-	}
-	s.buf += n;
-	s.len -= n;
-	if (s.len < l) {
-		return -1;
-	}
-	memcpy(s.buf, str, l);
-	s.buf += l;
-	s.len -= l;
-
-	return start.len - s.len;
 }
 
 static int reftable_ref_record_encode(const void *rec, struct slice s, int hash_size)
@@ -391,46 +421,6 @@ static int reftable_ref_record_decode(void *rec, struct slice key, byte val_type
 	return start.len - in.len;
 }
 
-int decode_key(struct slice *key, byte *extra, struct slice last_key,
-	       struct slice in)
-{
-	int start_len = in.len;
-	uint64_t prefix_len = 0;
-	uint64_t suffix_len = 0;
-	int n = get_var_int(&prefix_len, in);
-	if (n < 0) {
-		return -1;
-	}
-	in.buf += n;
-	in.len -= n;
-
-	if (prefix_len > last_key.len) {
-		return -1;
-	}
-
-	n = get_var_int(&suffix_len, in);
-	if (n <= 0) {
-		return -1;
-	}
-	in.buf += n;
-	in.len -= n;
-
-	*extra = (byte)(suffix_len & 0x7);
-	suffix_len >>= 3;
-
-	if (in.len < suffix_len) {
-		return -1;
-	}
-
-	slice_resize(key, suffix_len + prefix_len);
-	memcpy(key->buf, last_key.buf, prefix_len);
-
-	memcpy(key->buf + prefix_len, in.buf, suffix_len);
-	in.buf += suffix_len;
-	in.len -= suffix_len;
-
-	return start_len - in.len;
-}
 
 struct record_vtable reftable_ref_record_vtable = {
 	.key = &reftable_ref_record_key,

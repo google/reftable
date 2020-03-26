@@ -197,3 +197,17 @@ struct reftable_block_source malloc_block_source(void)
 {
 	return malloc_block_source_instance;
 }
+
+int common_prefix_size(struct slice a, struct slice b)
+{
+	int p = 0;
+	while (p < a.len && p < b.len) {
+		if (a.buf[p] != b.buf[p]) {
+			break;
+		}
+		p++;
+	}
+
+	return p;
+}
+
