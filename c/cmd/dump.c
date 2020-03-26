@@ -6,7 +6,11 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "system.h"
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 
 #include "reftable.h"
 
@@ -76,7 +80,7 @@ int main(int argc, char *argv[])
 	while ((opt = getopt(argc, argv, "t:")) != -1) {
 		switch (opt) {
 		case 't':
-			table = xstrdup(optarg);
+			table = strdup(optarg);
 			break;
 		case '?':
 			printf("usage: %s [-table tablefile]\n", argv[0]);

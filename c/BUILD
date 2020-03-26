@@ -63,6 +63,7 @@ cc_library(
         "-fvisibility=protected",
     ] + GIT_COPTS,
     deps = ["@zlib"],
+    visibility = ["//visibility:public"]
 )
 
 cc_library(
@@ -133,10 +134,4 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
-)
-
-cc_binary(
-    name = "dump",
-    srcs = ["dump.c"],
-    deps = [":reftable"],
 )
