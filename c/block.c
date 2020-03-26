@@ -82,16 +82,13 @@ int block_writer_add(struct reftable_block_writer *w, struct record rec)
 	if (n < 0) {
 		goto err;
 	}
-	out.buf += n;
-	out.len -= n;
+        slice_consume(&out, n);
 
 	n = record_encode(rec, out, w->hash_size);
 	if (n < 0) {
 		goto err;
 	}
-
-	out.buf += n;
-	out.len -= n;
+        slice_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
 					  key) < 0) {
@@ -323,14 +320,12 @@ int block_iter_next(struct reftable_block_iter *it, struct record rec)
 			return -1;
 		}
 
-		in.buf += n;
-		in.len -= n;
+                slice_consume(&in, n);
 		n = record_decode(rec, key, extra, in, it->br->hash_size);
 		if (n < 0) {
 			return -1;
 		}
-		in.buf += n;
-		in.len -= n;
+                slice_consume(&in, n);
 
 		slice_copy(&it->last_key, key);
 		it->next_off += start.len - in.len;
