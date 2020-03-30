@@ -226,43 +226,70 @@ func (st *Stack) Add(write func(w *Writer) error) error {
 }
 
 func (st *Stack) add(write func(w *Writer) error) error {
-	lockFile := st.listFile + ".lock"
-	f, err := os.OpenFile(lockFile, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
-	if os.IsExist(err) {
-		return ErrLockFailure
-	}
+	tr, err := st.NewAddition()
 	if err != nil {
 		return err
 	}
-
-	defer f.Close()
-	defer func() {
-		if lockFile != "" {
-			os.Remove(lockFile)
-		}
-	}()
-
-	if ok, err := st.UpToDate(); err != nil {
+	defer tr.Close()
+	if err := tr.Add(write); err != nil {
 		return err
-	} else if !ok {
-		return ErrLockFailure
 	}
 
-	var names []string
+	return tr.Commit()
+}
+
+// Addition is a transaction that adds new tables to the top of the
+// stack.
+type Addition struct {
+	lockFileName    string
+	lockFile        *os.File
+	stack           *Stack
+	names           []string
+	newTables       []string
+	nextUpdateIndex uint64
+}
+
+// NewAddition returns an Addition instance. As a side effect, this
+// takes a global filesystem lock on the ref database.
+func (st *Stack) NewAddition() (*Addition, error) {
+	tr := Addition{
+		stack:        st,
+		lockFileName: st.listFile + ".lock",
+	}
+	var err error
+	tr.lockFile, err = os.OpenFile(tr.lockFileName, os.O_EXCL|os.O_CREATE|os.O_WRONLY, 0644)
+	if os.IsExist(err) {
+		return nil, ErrLockFailure
+	}
+	if err != nil {
+		return nil, err
+	}
 	for _, e := range st.stack {
-		names = append(names, e.name)
+		tr.names = append(tr.names, e.name)
 	}
+	if ok, err := tr.stack.UpToDate(); err != nil {
+		tr.Close()
+		return nil, err
+	} else if !ok {
+		tr.Close()
+		return nil, ErrLockFailure
+	}
+	tr.nextUpdateIndex = tr.stack.NextUpdateIndex()
+	return &tr, nil
+}
 
-	next := st.NextUpdateIndex()
-	fn := formatName(next, next)
-	tab, err := ioutil.TempFile(st.reftableDir, fn+"-tmp-*.ref")
+// Add calls a the given function to write a new table at the top of
+// the stack.
+func (tr *Addition) Add(write func(w *Writer) error) error {
+	fn := formatName(tr.nextUpdateIndex, tr.nextUpdateIndex)
+	tab, err := ioutil.TempFile(tr.stack.reftableDir, fn+"-tmp-*.ref")
 	if err != nil {
 		return err
 	}
 	defer tab.Close()
 	defer os.Remove(tab.Name())
 
-	wr, err := NewWriter(tab, &st.cfg)
+	wr, err := NewWriter(tab, &tr.stack.cfg)
 	if err != nil {
 		return err
 	}
@@ -282,34 +309,60 @@ func (st *Stack) add(write func(w *Writer) error) error {
 		return err
 	}
 
-	if wr.minUpdateIndex < next {
+	if wr.minUpdateIndex < tr.nextUpdateIndex {
 		return ErrLockFailure
 	}
-
 	dest := fn + ".ref"
-	names = append(names, dest)
-	dest = filepath.Join(st.reftableDir, dest)
+	tr.names = append(tr.names, dest)
+	tr.newTables = append(tr.newTables, dest)
+	dest = filepath.Join(tr.stack.reftableDir, dest)
 	if err := os.Rename(tab.Name(), dest); err != nil {
 		return err
 	}
+	tr.nextUpdateIndex = wr.maxUpdateIndex + 1
+	return nil
+}
 
-	if _, err := f.Write([]byte(strings.Join(names, "\n"))); err != nil {
-		os.Remove(dest)
+// Close releases all non-committed data from the transaction.
+func (tr *Addition) Close() {
+	for _, nm := range tr.newTables {
+		os.Remove(filepath.Join(tr.stack.reftableDir, nm))
+	}
+	if tr.lockFile != nil {
+		tr.lockFile.Close()
+		tr.lockFile = nil
+	}
+	if tr.lockFileName != "" {
+		os.Remove(tr.lockFileName)
+		tr.lockFileName = ""
+	}
+}
+
+// Commit commits the changes to the database, releasing the lock.
+func (tr *Addition) Commit() error {
+	if len(tr.newTables) == 0 {
+		// Nothing to be done.
+		return nil
+	}
+
+	if _, err := tr.lockFile.Write([]byte(strings.Join(tr.names, "\n"))); err != nil {
+		tr.Close()
 		return err
 	}
 
-	if err := f.Close(); err != nil {
-		os.Remove(dest)
+	if err := tr.lockFile.Close(); err != nil {
+		tr.Close()
 		return err
 	}
-
-	if err := os.Rename(lockFile, st.listFile); err != nil {
-		os.Remove(dest)
+	tr.lockFile = nil
+	if err := os.Rename(tr.lockFileName, tr.stack.listFile); err != nil {
+		tr.Close()
 		return err
 	}
-	lockFile = ""
+	tr.lockFileName = ""
+	tr.newTables = nil
 
-	return st.reload(true)
+	return tr.stack.reload(true)
 }
 
 func formatName(min, max uint64) string {
