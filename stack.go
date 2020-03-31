@@ -44,10 +44,11 @@ type Stack struct {
 }
 
 // NewStack returns a new stack.
-func NewStack(dir, listFile string, cfg Config) (*Stack, error) {
+func NewStack(dir string, cfg Config) (*Stack, error) {
 	if cfg.HashID == NullHashID {
 		cfg.HashID = SHA1ID
 	}
+	listFile := filepath.Join(dir, "tables.list")
 	switch cfg.HashID {
 	case SHA1ID, SHA256ID:
 	default:
@@ -278,7 +279,7 @@ func (st *Stack) NewAddition() (*Addition, error) {
 	return &tr, nil
 }
 
-// Add calls a the given function to write a new table at the top of
+// Add calls the given function to write a new table at the top of
 // the stack.
 func (tr *Addition) Add(write func(w *Writer) error) error {
 	fn := formatName(tr.nextUpdateIndex, tr.nextUpdateIndex)

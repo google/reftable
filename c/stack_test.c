@@ -91,13 +91,10 @@ void test_reftable_stack_add(void)
 	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
 	printf("%s\n", dir);
-	char fn[256] = "";
-	strcat(fn, dir);
-	strcat(fn, "/refs");
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
-	int err = reftable_new_stack(&st, dir, fn, cfg);
+	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
 
 	struct reftable_ref_record refs[2] = { 0 };
@@ -149,7 +146,7 @@ void test_reftable_stack_add(void)
 
 	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
 	struct reftable_stack *st32 = NULL;
-	err = reftable_new_stack(&st32, dir, fn, cfg32);
+	err = reftable_new_stack(&st32, dir, cfg32);
 	assert(err == FORMAT_ERROR);
 
 	/* cleanup */
@@ -209,13 +206,10 @@ void test_reflog_expire(void)
 	char dir[256] = "/tmp/stack.test_reflog_expire.XXXXXX";
 	assert(mkdtemp(dir));
 	printf("%s\n", dir);
-	char fn[256] = "";
-	strcat(fn, dir);
-	strcat(fn, "/refs");
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
-	int err = reftable_new_stack(&st, dir, fn, cfg);
+	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
 
 	struct reftable_log_record logs[20] = { 0 };
@@ -281,20 +275,17 @@ void test_empty_add(void)
 {
 	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
-	char fn[256] = "";
-	strcat(fn, dir);
-	strcat(fn, "/refs");
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
-	int err = reftable_new_stack(&st, dir, fn, cfg);
+	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
 
 	err = reftable_stack_add(st, &write_nothing, NULL);
 	assert_err(err);
 
 	struct reftable_stack *st2 = NULL;
-	err = reftable_new_stack(&st2, dir, fn, cfg);
+	err = reftable_new_stack(&st2, dir, cfg);
 	assert_err(err);
 }
 

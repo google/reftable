@@ -15,14 +15,19 @@ https://developers.google.com/open-source/licenses/bsd
 #include "writer.h"
 
 int reftable_new_stack(struct reftable_stack **dest, const char *dir,
-		       const char *list_file,
 		       struct reftable_write_options config)
 {
 	struct reftable_stack *p =
 		reftable_calloc(sizeof(struct reftable_stack));
+	struct slice list_file_name = {};
 	int err = 0;
 	*dest = NULL;
-	p->list_file = xstrdup(list_file);
+
+	slice_set_string(&list_file_name, dir);
+	slice_append_string(&list_file_name, "/reftables.list");
+
+	p->list_file = slice_to_string(list_file_name);
+	reftable_free(slice_yield(&list_file_name));
 	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 

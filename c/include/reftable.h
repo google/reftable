@@ -431,12 +431,10 @@ void reftable_merged_table_free(struct reftable_merged_table *m);
  * the top of the stack */
 struct reftable_stack;
 
-/* open a new reftable stack. The tables will be stored in 'dir', while the list
-   of tables is in 'list_file'. Typically, this should be .git/reftables and
-   .git/refs respectively.
+/* open a new reftable stack. The tables along with the table list will be
+   stored in 'dir'. Typically, this should be .git/reftables.
 */
 int reftable_new_stack(struct reftable_stack **dest, const char *dir,
-		       const char *list_file,
 		       struct reftable_write_options config);
 
 /* returns the update_index at which a next table should be written. */

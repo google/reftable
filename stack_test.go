@@ -34,7 +34,7 @@ func testStackN(t *testing.T, N int) {
 		Unaligned: true,
 	}
 
-	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	st, err := NewStack(dir+"/reftable", cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestMixedHashSize(t *testing.T) {
 		HashID:    SHA1ID,
 	}
 
-	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	st, err := NewStack(dir+"/reftable", cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestMixedHashSize(t *testing.T) {
 
 	cfg2 := cfg
 	cfg2.HashID = SHA256ID
-	if _, err := NewStack(dir+"/reftable", dir+"/refs", cfg2); err == nil {
+	if _, err := NewStack(dir+"/reftable", cfg2); err == nil {
 		t.Fatal("got success; want an error for hash size mismatch")
 	}
 }
@@ -143,7 +143,7 @@ func TestTombstones(t *testing.T) {
 		Unaligned: true,
 	}
 
-	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	st, err := NewStack(dir+"/reftable", cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestCompactionReflogExpiry(t *testing.T) {
 		Unaligned: true,
 	}
 
-	st, err := NewStack(dir+"/reftable", dir+"/refs", cfg)
+	st, err := NewStack(dir+"/reftable", cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func TestIgnoreEmptyTables(t *testing.T) {
 		Unaligned: true,
 	}
 
-	st, err := NewStack(dir+"/reftable", dir+"/reftable/tables.list", cfg)
+	st, err := NewStack(dir+"/reftable", cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
