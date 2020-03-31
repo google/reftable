@@ -43,6 +43,46 @@ void test_buffer(void)
 	reftable_free(slice_yield(&buf));
 }
 
+void test_default_write_opts(void)
+{
+	struct reftable_write_options opts = { 0 };
+	struct slice buf = { 0 };
+	struct reftable_writer *w =
+		reftable_new_writer(&slice_write_void, &buf, &opts);
+	reftable_writer_set_limits(w, 1, 1);
+
+	struct reftable_ref_record rec = {
+		.ref_name = "master",
+		.update_index = 1,
+	};
+
+	int err = reftable_writer_add_ref(w, &rec);
+	assert_err(err);
+
+	err = reftable_writer_close(w);
+	assert_err(err);
+
+	struct reftable_block_source source = { 0 };
+	block_source_from_slice(&source, &buf);
+
+	struct reftable_reader *rd = NULL;
+	err = reftable_new_reader(&rd, source, "filename");
+	assert_err(err);
+
+	uint32_t hash_id = reftable_reader_hash_id(rd);
+	assert(hash_id == SHA1_ID);
+
+	struct reftable_reader **readers = malloc(sizeof(*readers) * 1);
+	readers[0] = rd;
+
+	struct reftable_merged_table *merged = NULL;
+	err = reftable_new_merged_table(&merged, readers, 1, SHA1_ID);
+	assert_err(err);
+
+	reftable_merged_table_close(merged);
+	reftable_merged_table_free(merged);
+}
+
 void write_table(char ***names, struct slice *buf, int N, int block_size,
 		 uint32_t hash_id)
 {
@@ -509,6 +549,7 @@ void test_table_refs_for_obj_index(void)
 
 int main()
 {
+	add_test_case("test_default_write_opts", test_default_write_opts);
 	add_test_case("test_log_write_read", test_log_write_read);
 	add_test_case("test_table_read_write_seek_linear_sha256",
 		      &test_table_read_write_seek_linear_sha256);
