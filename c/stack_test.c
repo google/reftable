@@ -85,6 +85,34 @@ int write_test_log(struct reftable_writer *wr, void *arg)
 	return err;
 }
 
+void test_reftable_stack_add_one(void)
+{
+	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	assert(mkdtemp(dir));
+	printf("%s\n", dir);
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	struct reftable_ref_record ref = {
+		.ref_name = "HEAD",
+		.update_index = 1,
+		.target = "master",
+	};
+
+	err = reftable_stack_add(st, &write_test_ref, &ref);
+	assert_err(err);
+
+	struct reftable_ref_record dest = { 0 };
+	err = reftable_stack_read_ref(st, ref.ref_name, &dest);
+	assert_err(err);
+	assert(0 == strcmp("master", dest.target));
+
+	reftable_stack_destroy(st);
+}
+
 void test_reftable_stack_add(void)
 {
 	int i = 0;
@@ -291,6 +319,8 @@ void test_empty_add(void)
 
 int main()
 {
+	add_test_case("test_reftable_stack_add_one",
+		      &test_reftable_stack_add_one);
 	add_test_case("test_empty_add", test_empty_add);
 	add_test_case("test_reflog_expire", test_reflog_expire);
 	add_test_case("test_suggest_compaction_segment",

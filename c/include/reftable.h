@@ -440,6 +440,26 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 /* returns the update_index at which a next table should be written. */
 uint64_t reftable_stack_next_update_index(struct reftable_stack *st);
 
+/* holds a transaction to add tables at the top of a stack. */
+struct reftable_addition;
+
+/*
+  returns a new transaction to add reftables to the given stack. As a side
+  effect, the ref database is locked.
+*/ 
+int reftable_stack_new_addition(struct reftable_addition **dest, struct reftable_stack *st);
+
+/* Adds a reftable to transaction. */ 
+int reftable_addition_add(struct reftable_addition *add,
+                          int (*write_table)(struct reftable_writer *wr, void *arg),
+                          void *arg);
+
+/* Commits the transaction, releasing the lock. */
+int reftable_addition_commit(struct reftable_addition *add);
+
+/* Release all non-committed data from the transaction; releases the lock if held. */
+void reftable_addition_close(struct reftable_addition *add);
+
 /* add a new table to the stack. The write_table function must call
    reftable_writer_set_limits, add refs and return an error value. */
 int reftable_stack_add(struct reftable_stack *st,
