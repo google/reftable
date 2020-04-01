@@ -1012,8 +1012,9 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n)
 		cur.end = i + 1;
 		cur.bytes += sizes[i];
 	}
-
-	segs[next++] = cur;
+	if (next > 0) {
+		segs[next++] = cur;
+	}
 	*seglen = next;
 	return segs;
 }

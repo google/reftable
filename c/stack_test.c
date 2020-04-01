@@ -210,6 +210,18 @@ void test_sizes_to_segments(void)
 	reftable_free(segs);
 }
 
+void test_sizes_to_segments_empty(void)
+{
+	uint64_t sizes[] = {};
+	/* .................0  1  2  3  4  5 */
+
+	int seglen = 0;
+	struct segment *segs =
+		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
+	assert(seglen == 0);
+	reftable_free(segs);
+}
+
 void test_suggest_compaction_segment(void)
 {
 	{
@@ -326,6 +338,8 @@ int main(int argc, char *argv[])
 	add_test_case("test_suggest_compaction_segment",
 		      &test_suggest_compaction_segment);
 	add_test_case("test_sizes_to_segments", &test_sizes_to_segments);
+	add_test_case("test_sizes_to_segments_empty",
+		      &test_sizes_to_segments_empty);
 	add_test_case("test_log2", &test_log2);
 	add_test_case("test_parse_names", &test_parse_names);
 	add_test_case("test_read_file", &test_read_file);
