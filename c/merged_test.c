@@ -105,18 +105,18 @@ void write_test_table(struct slice *buf, struct reftable_ref_record refs[],
 }
 
 static struct reftable_merged_table *
-merged_table_from_records(struct reftable_ref_record **refs, int *sizes,
+merged_table_from_records(struct reftable_ref_record **refs,
+			  struct reftable_block_source **source, int *sizes,
 			  struct slice *buf, int n)
 {
-	struct reftable_block_source *source =
-		reftable_calloc(n * sizeof(*source));
+	*source = reftable_calloc(n * sizeof(**source));
 	struct reftable_reader **rd = reftable_calloc(n * sizeof(*rd));
 	int i = 0;
 	for (i = 0; i < n; i++) {
 		write_test_table(&buf[i], refs[i], sizes[i]);
-		block_source_from_slice(&source[i], &buf[i]);
+		block_source_from_slice(&(*source)[i], &buf[i]);
 
-		int err = reftable_new_reader(&rd[i], source[i], "name");
+		int err = reftable_new_reader(&rd[i], (*source)[i], "name");
 		assert(err == 0);
 	}
 
@@ -146,8 +146,9 @@ void test_merged_between(void)
 	struct reftable_ref_record *refs[] = { r1, r2 };
 	int sizes[] = { 1, 1 };
 	struct slice bufs[2] = { 0 };
+	struct reftable_block_source *bs = NULL;
 	struct reftable_merged_table *mt =
-		merged_table_from_records(refs, sizes, bufs, 2);
+		merged_table_from_records(refs, &bs, sizes, bufs, 2);
 
 	struct reftable_iterator it = { 0 };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
@@ -157,6 +158,15 @@ void test_merged_between(void)
 	err = reftable_iterator_next_ref(it, &ref);
 	assert_err(err);
 	assert(ref.update_index == 2);
+	reftable_ref_record_clear(&ref);
+
+	reftable_iterator_destroy(&it);
+	reftable_merged_table_close(mt);
+	reftable_merged_table_free(mt);
+	for (int i = 0; i < ARRAY_SIZE(bufs); i++) {
+		free(slice_yield(&bufs[i]));
+	}
+	reftable_free(bs);
 }
 
 void test_merged(void)
@@ -201,9 +211,10 @@ void test_merged(void)
 	struct reftable_ref_record *refs[] = { r1, r2, r3 };
 	int sizes[3] = { 3, 1, 2 };
 	struct slice bufs[3] = { 0 };
+	struct reftable_block_source *bs = NULL;
 
 	struct reftable_merged_table *mt =
-		merged_table_from_records(refs, sizes, bufs, 3);
+		merged_table_from_records(refs, &bs, sizes, bufs, 3);
 
 	struct reftable_iterator it = { 0 };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
@@ -248,6 +259,7 @@ void test_merged(void)
 	}
 	reftable_merged_table_close(mt);
 	reftable_merged_table_free(mt);
+	reftable_free(bs);
 }
 
 /* XXX test refs_for(oid) */
