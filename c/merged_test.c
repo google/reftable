@@ -252,10 +252,10 @@ void test_merged(void)
 
 /* XXX test refs_for(oid) */
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_merged_between", &test_merged_between);
 	add_test_case("test_pq", &test_pq);
 	add_test_case("test_merged", &test_merged);
-	test_main();
+	test_main(argc, argv);
 }

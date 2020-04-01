@@ -31,8 +31,8 @@ void test_slice(void)
 	reftable_free(slice_yield(&t));
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_slice", &test_slice);
-	test_main();
+	test_main(argc, argv);
 }

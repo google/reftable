@@ -37,11 +37,22 @@ struct test_case *add_test_case(const char *name, void (*testfunc)())
 	return tc;
 }
 
-void test_main()
+void test_main(int argc, char *argv[])
 {
+	const char *filter = NULL;
+	if (argc > 1) {
+		filter = argv[1];
+	}
+
 	int i = 0;
 	for (i = 0; i < test_case_len; i++) {
-		printf("case %s\n", test_cases[i]->name);
+		const char *name = test_cases[i]->name;
+		if (filter != NULL && strstr(name, filter) == NULL) {
+			printf("skip %s\n", name);
+			continue;
+		}
+
+		printf("case %s\n", name);
 		test_cases[i]->testfunc();
 	}
 }

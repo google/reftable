@@ -143,9 +143,9 @@ void test_block_read_write()
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("binsearch", &test_binsearch);
 	add_test_case("block_read_write", &test_block_read_write);
-	test_main();
+	test_main(argc, argv);
 }

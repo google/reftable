@@ -317,7 +317,7 @@ void test_empty_add(void)
 	assert_err(err);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_reftable_stack_add_one",
 		      &test_reftable_stack_add_one);
@@ -331,5 +331,5 @@ int main()
 	add_test_case("test_read_file", &test_read_file);
 	add_test_case("test_names_equal", &test_names_equal);
 	add_test_case("test_reftable_stack_add", &test_reftable_stack_add);
-	test_main();
+	test_main(argc, argv);
 }

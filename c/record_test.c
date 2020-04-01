@@ -325,7 +325,7 @@ void test_index_record_roundtrip()
 	reftable_free(slice_yield(&in.last_key));
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_reftable_log_record_roundtrip",
 		      &test_reftable_log_record_roundtrip);
@@ -338,5 +338,5 @@ int main()
 	add_test_case("test_index_record_roundtrip",
 		      &test_index_record_roundtrip);
 	add_test_case("test_u24_roundtrip", &test_u24_roundtrip);
-	test_main();
+	test_main(argc, argv);
 }

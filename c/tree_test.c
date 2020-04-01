@@ -54,8 +54,8 @@ void test_tree()
 	tree_free(root);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_tree", &test_tree);
-	test_main();
+	test_main(argc, argv);
 }

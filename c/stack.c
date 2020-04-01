@@ -580,8 +580,9 @@ int reftable_addition_add(struct reftable_addition *add,
 		goto exit;
 	}
 
-	add->new_tables =
-		reftable_realloc(add->new_tables, add->new_tables_len + 1);
+	add->new_tables = reftable_realloc(add->new_tables,
+					   sizeof(*add->new_tables) *
+						   (add->new_tables_len + 1));
 	add->new_tables[add->new_tables_len] = slice_to_string(next_name);
 	add->new_tables_len++;
 exit:

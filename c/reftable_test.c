@@ -547,7 +547,7 @@ void test_table_refs_for_obj_index(void)
 	test_table_refs_for(true);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	add_test_case("test_default_write_opts", test_default_write_opts);
 	add_test_case("test_log_write_read", test_log_write_read);
@@ -568,5 +568,5 @@ int main()
 		      &test_table_refs_for_no_index);
 	add_test_case("test_table_read_write_refs_for_obj_index",
 		      &test_table_refs_for_obj_index);
-	test_main();
+	test_main(argc, argv);
 }
