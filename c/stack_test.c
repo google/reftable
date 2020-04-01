@@ -89,7 +89,6 @@ void test_reftable_stack_add_one(void)
 {
 	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
-	printf("%s\n", dir);
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
@@ -118,7 +117,6 @@ void test_reftable_stack_add(void)
 	int i = 0;
 	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
 	assert(mkdtemp(dir));
-	printf("%s\n", dir);
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
@@ -245,7 +243,6 @@ void test_reflog_expire(void)
 {
 	char dir[256] = "/tmp/stack.test_reflog_expire.XXXXXX";
 	assert(mkdtemp(dir));
-	printf("%s\n", dir);
 
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;

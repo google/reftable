@@ -416,7 +416,6 @@ void reftable_addition_close(struct reftable_addition *add)
 	if (add->lock_file_fd > 0) {
 		close(add->lock_file_fd);
 		add->lock_file_fd = 0;
-		printf("close\n");
 	}
 	if (add->lock_file_name.len > 0) {
 		unlink(slice_as_string(&add->lock_file_name));
@@ -449,7 +448,6 @@ int reftable_addition_commit(struct reftable_addition *add)
 	err = write(add->lock_file_fd, table_list.buf, table_list.len);
 	free(slice_yield(&table_list));
 	if (err < 0) {
-		printf("Write fd %d\n", add->lock_file_fd);
 		err = IO_ERROR;
 		goto exit;
 	}
@@ -457,7 +455,6 @@ int reftable_addition_commit(struct reftable_addition *add)
 	err = close(add->lock_file_fd);
 	add->lock_file_fd = 0;
 	if (err < 0) {
-		printf("lcok\n");
 		err = IO_ERROR;
 		goto exit;
 	}
@@ -465,7 +462,6 @@ int reftable_addition_commit(struct reftable_addition *add)
 	err = rename(slice_as_string(&add->lock_file_name),
 		     add->stack->list_file);
 	if (err < 0) {
-		printf("rename\n");
 		err = IO_ERROR;
 		goto exit;
 	}
