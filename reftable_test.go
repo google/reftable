@@ -555,3 +555,38 @@ func TestUnalignedBlock(t *testing.T) {
 		t.Fatalf("Next: %v", err)
 	}
 }
+
+func TestEmptyTable(t *testing.T) {
+	buf := &bytes.Buffer{}
+	cfg := Config{}
+	w, err := NewWriter(buf, &cfg)
+	if err != nil {
+		t.Fatalf("NewWriter: %v", err)
+	}
+	w.SetLimits(1, 1)
+	if err := w.Close(); err != ErrEmptyTable {
+		t.Fatalf("Close: got %v, want %v", err, ErrEmptyTable)
+	}
+
+	if got, want := buf.Len(), 24+68; got != want {
+		t.Fatalf("got len %d, want %d", got, want)
+	}
+
+	src := &ByteBlockSource{buf.Bytes()}
+	r, err := NewReader(src, "buffer")
+	if err != nil {
+		t.Fatalf("NewReader: %v", err)
+	}
+
+	it, err := r.SeekRef("")
+	if err != nil {
+		t.Errorf("SeekRef: %v", err)
+	}
+
+	var ref RefRecord
+	ok, err := it.NextRef(&ref)
+	if ok || err != nil {
+		t.Errorf("Next: %v, %v want false, nil", ok, err)
+	}
+
+}

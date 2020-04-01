@@ -519,10 +519,20 @@ int reftable_writer_close(struct reftable_writer *w)
 {
 	byte footer[72];
 	byte *p = footer;
-
 	int err = writer_finish_public_section(w);
+	int empty_table = w->next == 0;
 	if (err != 0) {
 		goto exit;
+	}
+	w->pending_padding = 0;
+	if (empty_table) {
+		// Empty tables need a header anyway.
+		byte header[28];
+		int n = writer_write_header(w, header);
+		err = padded_write(w, header, n, 0);
+		if (err < 0) {
+			goto exit;
+		}
 	}
 
 	p += writer_write_header(w, footer);
@@ -540,14 +550,13 @@ int reftable_writer_close(struct reftable_writer *w)
 
 	put_be32(p, crc32(0, footer, p - footer));
 	p += 4;
-	w->pending_padding = 0;
 
 	err = padded_write(w, footer, footer_size(writer_version(w)), 0);
 	if (err < 0) {
 		goto exit;
 	}
 
-	if (w->stats.log_stats.entries + w->stats.ref_stats.entries == 0) {
+	if (empty_table) {
 		err = EMPTY_TABLE_ERROR;
 		goto exit;
 	}

@@ -257,8 +257,18 @@ func (w *Writer) Close() error {
 	if err := w.finishPublicSection(); err != nil {
 		return err
 	}
+	w.paddedWriter.pendingPadding = 0
 
 	hb := w.headerBytes()
+	emptyTable := w.next == 0
+
+	if emptyTable {
+		// Even an empty file needs a file header, separate
+		// from the file footer.
+		if _, err := w.paddedWriter.Write(hb, 0); err != nil {
+			return err
+		}
+	}
 
 	buf := bytes.NewBuffer(hb)
 	f := footer{
@@ -281,17 +291,15 @@ func (w *Writer) Close() error {
 
 	binary.Write(buf, binary.BigEndian, crc)
 
-	w.paddedWriter.pendingPadding = 0
-	n, err := w.paddedWriter.Write(buf.Bytes(), 0)
-	if n != w.footerSize() {
-		log.Panicf("footer size %d", n)
+	if _, err := w.paddedWriter.Write(buf.Bytes(), 0); err != nil {
+		return err
 	}
 
-	if w.Stats.RefStats.Entries+w.Stats.LogStats.Entries == 0 {
+	if emptyTable {
 		return ErrEmptyTable
 	}
 
-	return err
+	return nil
 }
 
 const debug = false
