@@ -20,6 +20,7 @@ struct slice {
 
 void slice_set_string(struct slice *dest, const char *);
 void slice_append_string(struct slice *dest, const char *);
+void slice_clear(struct slice *slice);
 char *slice_to_string(struct slice src);
 const char *slice_as_string(struct slice *src);
 bool slice_equal(struct slice a, struct slice b);

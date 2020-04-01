@@ -99,7 +99,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 		record_key(top.rec, &k);
 
 		cmp = slice_compare(k, entry_key);
-		reftable_free(slice_yield(&k));
+		slice_clear(&k);
 
 		if (cmp > 0) {
 			break;
@@ -117,7 +117,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 	record_copy_from(rec, entry.rec, hash_size(mi->hash_id));
 	record_clear(entry.rec);
 	reftable_free(record_yield(&entry.rec));
-	reftable_free(slice_yield(&entry_key));
+	slice_clear(&entry_key);
 	return 0;
 }
 

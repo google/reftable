@@ -789,7 +789,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	return start.len - in.len;
 
 error:
-	reftable_free(slice_yield(&dest));
+	slice_clear(&dest);
 	return FORMAT_ERROR;
 }
 
@@ -895,7 +895,7 @@ static void index_record_copy_from(void *rec, const void *src_rec,
 static void index_record_clear(void *rec)
 {
 	struct index_record *idx = (struct index_record *)rec;
-	reftable_free(slice_yield(&idx->last_key));
+	slice_clear(&idx->last_key);
 }
 
 static byte index_record_val_type(const void *rec)

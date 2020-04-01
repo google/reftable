@@ -164,7 +164,7 @@ void test_merged_between(void)
 	reftable_merged_table_close(mt);
 	reftable_merged_table_free(mt);
 	for (int i = 0; i < ARRAY_SIZE(bufs); i++) {
-		free(slice_yield(&bufs[i]));
+		slice_clear(&bufs[i]);
 	}
 	reftable_free(bs);
 }
@@ -255,7 +255,7 @@ void test_merged(void)
 	reftable_free(out);
 
 	for (i = 0; i < 3; i++) {
-		reftable_free(slice_yield(&bufs[i]));
+		slice_clear(&bufs[i]);
 	}
 	reftable_merged_table_close(mt);
 	reftable_merged_table_free(mt);

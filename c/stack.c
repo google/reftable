@@ -27,7 +27,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	slice_append_string(&list_file_name, "/reftables.list");
 
 	p->list_file = slice_to_string(list_file_name);
-	reftable_free(slice_yield(&list_file_name));
+	slice_clear(&list_file_name);
 	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 
@@ -199,7 +199,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		}
 	}
 exit:
-	reftable_free(slice_yield(&table_path));
+	slice_clear(&table_path);
 	{
 		int i = 0;
 		for (i = 0; i < new_tables_len; i++) {
@@ -419,7 +419,7 @@ void reftable_addition_close(struct reftable_addition *add)
 	}
 	if (add->lock_file_name.len > 0) {
 		unlink(slice_as_string(&add->lock_file_name));
-		reftable_free(slice_yield(&add->lock_file_name));
+		slice_clear(&add->lock_file_name);
 	}
 
 	free_names(add->names);
@@ -446,7 +446,7 @@ int reftable_addition_commit(struct reftable_addition *add)
 	}
 
 	err = write(add->lock_file_fd, table_list.buf, table_list.len);
-	free(slice_yield(&table_list));
+	slice_clear(&table_list);
 	if (err < 0) {
 		err = IO_ERROR;
 		goto exit;
@@ -590,9 +590,9 @@ exit:
 		unlink(slice_as_string(&temp_tab_file_name));
 	}
 
-	reftable_free(slice_yield(&temp_tab_file_name));
-	reftable_free(slice_yield(&tab_file_name));
-	reftable_free(slice_yield(&next_name));
+	slice_clear(&temp_tab_file_name);
+	slice_clear(&tab_file_name);
+	slice_clear(&next_name);
 	reftable_writer_free(wr);
 	return err;
 }
@@ -649,9 +649,9 @@ exit:
 	}
 	if (err != 0 && temp_tab->len > 0) {
 		unlink(slice_as_string(temp_tab));
-		reftable_free(slice_yield(temp_tab));
+		slice_clear(temp_tab);
 	}
-	reftable_free(slice_yield(&next_name));
+	slice_clear(&next_name);
 	return err;
 }
 
@@ -947,11 +947,11 @@ exit:
 	if (have_lock) {
 		unlink(slice_as_string(&lock_file_name));
 	}
-	reftable_free(slice_yield(&new_table_name));
-	reftable_free(slice_yield(&new_table_path));
-	reftable_free(slice_yield(&ref_list_contents));
-	reftable_free(slice_yield(&temp_tab_file_name));
-	reftable_free(slice_yield(&lock_file_name));
+	slice_clear(&new_table_name);
+	slice_clear(&new_table_path);
+	slice_clear(&ref_list_contents);
+	slice_clear(&temp_tab_file_name);
+	slice_clear(&lock_file_name);
 	return err;
 }
 

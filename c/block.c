@@ -95,11 +95,11 @@ int block_writer_add(struct reftable_block_writer *w, struct record rec)
 		goto err;
 	}
 
-	reftable_free(slice_yield(&key));
+	slice_clear(&key);
 	return 0;
 
 err:
-	reftable_free(slice_yield(&key));
+	slice_clear(&key);
 	return -1;
 }
 
@@ -164,7 +164,7 @@ int block_writer_finish(struct reftable_block_writer *w)
 			}
 
 			if (Z_OK != zresult) {
-				reftable_free(slice_yield(&compressed));
+				slice_clear(&compressed);
 				return ZLIB_ERROR;
 			}
 
@@ -207,7 +207,7 @@ int block_reader_init(struct reftable_block_reader *br,
 				    uncompressed.buf + block_header_skip,
 				    &dst_len, block->data + block_header_skip,
 				    &src_len)) {
-			reftable_free(slice_yield(&uncompressed));
+			slice_clear(&uncompressed);
 			return ZLIB_ERROR;
 		}
 
@@ -290,7 +290,7 @@ static int restart_key_less(int idx, void *args)
 
 	{
 		int result = slice_compare(a->key, rkey);
-		reftable_free(slice_yield(&rkey));
+		slice_clear(&rkey);
 		return result;
 	}
 }
@@ -332,7 +332,7 @@ int block_iter_next(struct reftable_block_iter *it, struct record rec)
 
 		slice_copy(&it->last_key, key);
 		it->next_off += start.len - in.len;
-		reftable_free(slice_yield(&key));
+		slice_clear(&key);
 		return 0;
 	}
 }
@@ -361,7 +361,7 @@ int block_iter_seek(struct reftable_block_iter *it, struct slice want)
 
 void block_iter_close(struct reftable_block_iter *it)
 {
-	reftable_free(slice_yield(&it->last_key));
+	slice_clear(&it->last_key);
 }
 
 int block_reader_seek(struct reftable_block_reader *br,
@@ -410,8 +410,8 @@ int block_reader_seek(struct reftable_block_reader *br,
 		}
 
 	exit:
-		reftable_free(slice_yield(&key));
-		reftable_free(slice_yield(&next.last_key));
+		slice_clear(&key);
+		slice_clear(&next.last_key);
 		record_clear(rec);
 		reftable_free(record_yield(&rec));
 
@@ -428,6 +428,6 @@ void block_writer_reset(struct reftable_block_writer *bw)
 void block_writer_clear(struct reftable_block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
-	reftable_free(slice_yield(&bw->last_key));
+	slice_clear(&bw->last_key);
 	/* the block is not owned. */
 }

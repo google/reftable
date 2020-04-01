@@ -488,8 +488,8 @@ exit:
 	block_iter_close(&next.bi);
 	record_clear(rec);
 	reftable_free(record_yield(&rec));
-	reftable_free(slice_yield(&want_key));
-	reftable_free(slice_yield(&got_key));
+	slice_clear(&want_key);
+	slice_clear(&got_key);
 	return err;
 }
 

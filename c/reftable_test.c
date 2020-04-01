@@ -40,7 +40,7 @@ void test_buffer(void)
 
 	block_source_return_block(source, &out);
 	block_source_close(&source);
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 }
 
 void test_default_write_opts(void)
@@ -296,7 +296,7 @@ void test_log_write_read(void)
 	}
 
 	/* cleanup. */
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	free_names(names);
 	reader_close(&rd);
 }
@@ -335,7 +335,7 @@ void test_table_read_write_sequential(void)
 	}
 	assert(j == N);
 	reftable_iterator_destroy(&it);
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	free_names(names);
 
 	reader_close(&rd);
@@ -348,7 +348,7 @@ void test_table_write_small_table(void)
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	free_names(names);
 }
 
@@ -374,7 +374,7 @@ void test_table_read_api(void)
 	err = reftable_iterator_next_log(it, &log);
 	assert(err == API_ERROR);
 
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	int i = 0;
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
@@ -417,7 +417,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 		reftable_iterator_destroy(&it);
 	}
 
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}
@@ -531,7 +531,7 @@ void test_table_refs_for(bool indexed)
 	}
 	assert(j == want_names_len);
 
-	reftable_free(slice_yield(&buf));
+	slice_clear(&buf);
 	free_names(want_names);
 	reftable_iterator_destroy(&it);
 	reader_close(&rd);
@@ -578,7 +578,7 @@ void test_table_empty(void)
 
 	reftable_iterator_destroy(&it);
 	reftable_reader_free(rd);
-	free(slice_yield(&buf));
+	slice_clear(&buf);
 }
 
 int main(int argc, char *argv[])

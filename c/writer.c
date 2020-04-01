@@ -221,7 +221,7 @@ static int writer_add_record(struct reftable_writer *w, struct record rec)
 
 	result = 0;
 exit:
-	reftable_free(slice_yield(&key));
+	slice_clear(&key);
 	return result;
 }
 
@@ -363,7 +363,7 @@ static int writer_finish_section(struct reftable_writer *w)
 			assert(err == 0);
 		}
 		for (i = 0; i < idx_len; i++) {
-			reftable_free(slice_yield(&idx[i].last_key));
+			slice_clear(&idx[i].last_key);
 		}
 		reftable_free(idx);
 	}
@@ -458,7 +458,7 @@ static void object_record_free(void *void_arg, void *key)
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 
 	FREE_AND_NULL(entry->offsets);
-	reftable_free(slice_yield(&entry->hash));
+	slice_clear(&entry->hash);
 	reftable_free(entry);
 }
 
@@ -565,7 +565,7 @@ exit:
 	/* free up memory. */
 	block_writer_clear(&w->block_writer_data);
 	writer_clear_index(w);
-	reftable_free(slice_yield(&w->last_key));
+	slice_clear(&w->last_key);
 	return err;
 }
 
@@ -573,7 +573,7 @@ void writer_clear_index(struct reftable_writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->index_len; i++) {
-		reftable_free(slice_yield(&w->index[i].last_key));
+		slice_clear(&w->index[i].last_key);
 	}
 
 	FREE_AND_NULL(w->index);

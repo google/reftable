@@ -67,8 +67,8 @@ void test_common_prefix()
 		int got = common_prefix_size(a, b);
 		assert(got == cases[i].want);
 
-		reftable_free(slice_yield(&a));
-		reftable_free(slice_yield(&b));
+		slice_clear(&a);
+		slice_clear(&b);
 	}
 }
 
@@ -127,7 +127,7 @@ void test_reftable_ref_record_roundtrip()
 		assert((out.value != NULL) == (in.value != NULL));
 		assert((out.target_value != NULL) == (in.target_value != NULL));
 		assert((out.target != NULL) == (in.target != NULL));
-		reftable_free(slice_yield(&key));
+		slice_clear(&key);
 		record_clear(rec_out);
 		reftable_ref_record_clear(&in);
 	}
@@ -178,7 +178,7 @@ void test_reftable_log_record_roundtrip()
 
 		assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
 		reftable_log_record_clear(&in[i]);
-		reftable_free(slice_yield(&key));
+		slice_clear(&key);
 		record_clear(rec_out);
 	}
 }
@@ -213,10 +213,10 @@ void test_key_roundtrip()
 	assert(slice_equal(key, roundtrip));
 	assert(rt_extra == extra);
 
-	reftable_free(slice_yield(&last_key));
-	reftable_free(slice_yield(&key));
-	reftable_free(slice_yield(&dest));
-	reftable_free(slice_yield(&roundtrip));
+	slice_clear(&last_key);
+	slice_clear(&key);
+	slice_clear(&dest);
+	slice_clear(&roundtrip);
 }
 
 void print_bytes(byte *p, int l)
@@ -285,7 +285,7 @@ void test_obj_record_roundtrip()
 			       in.hash_prefix_len));
 		assert(0 == memcmp(in.offsets, out.offsets,
 				   sizeof(uint64_t) * in.offset_len));
-		reftable_free(slice_yield(&key));
+		slice_clear(&key);
 		record_clear(rec_out);
 	}
 }
@@ -321,8 +321,8 @@ void test_index_record_roundtrip()
 	assert(in.offset == out.offset);
 
 	record_clear(out_rec);
-	reftable_free(slice_yield(&key));
-	reftable_free(slice_yield(&in.last_key));
+	slice_clear(&key);
+	slice_clear(&in.last_key);
 }
 
 int main(int argc, char *argv[])
