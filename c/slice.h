@@ -12,29 +12,62 @@ https://developers.google.com/open-source/licenses/bsd
 #include "basics.h"
 #include "reftable.h"
 
+/*
+  provides bounds-checked byte ranges.
+  To use, initialize as "slice x = {0};"
+ */
 struct slice {
-	byte *buf;
 	int len;
 	int cap;
+	byte *buf;
 };
 
-void slice_set_string(struct slice *dest, const char *);
-void slice_append_string(struct slice *dest, const char *);
+void slice_set_string(struct slice *dest, const char *src);
+void slice_append_string(struct slice *dest, const char *src);
+/* Set length to 0, but retain buffer */
 void slice_clear(struct slice *slice);
+
+/* Return a malloced string for `src` */
 char *slice_to_string(struct slice src);
+
+/* Ensure that `buf` is \0 terminated. */
 const char *slice_as_string(struct slice *src);
+
+/* Compare slices */
 bool slice_equal(struct slice a, struct slice b);
+
+/* Return `buf`, clearing out `s` */
 byte *slice_yield(struct slice *s);
+
+/* Copy bytes */
 void slice_copy(struct slice *dest, struct slice src);
+
+/* Advance `buf` by `n`, and decrease length. A copy of the slice
+   should be kept for deallocating the slice. */
 void slice_consume(struct slice *s, int n);
+
+/* Set length of the slice to `l` */
 void slice_resize(struct slice *s, int l);
+
+/* Signed comparison */
 int slice_compare(struct slice a, struct slice b);
-int slice_write(struct slice *b, byte *data, int sz);
-int slice_write_void(void *b, byte *data, int sz);
+
+/* Append `data` to the `dest` slice.  */
+int slice_write(struct slice *dest, byte *data, int sz);
+
+/* Append `add` to `dest. */
 void slice_append(struct slice *dest, struct slice add);
+
+/* Like slice_write, but suitable for passing to reftable_new_writer
+ */
+int slice_write_void(void *b, byte *data, int sz);
+
+/* Find the longest shared prefix size of `a` and `b` */
 int common_prefix_size(struct slice a, struct slice b);
 
 struct reftable_block_source;
+
+/* Create an in-memory block source for reading reftables */
 void block_source_from_slice(struct reftable_block_source *bs,
 			     struct slice *buf);
 
