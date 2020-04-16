@@ -48,14 +48,20 @@ struct record {
 	struct record_vtable *ops;
 };
 
+/* returns true for recognized block types. Block start with the block type. */
 int is_block_type(byte typ);
 
+/* creates a malloced record of the given type. Dispose with record_destroy */
 struct record new_record(byte typ);
 
 extern struct record_vtable reftable_ref_record_vtable;
 
+/* Encode `key` into `dest`. Sets `restart` to indicate a restart. Returns
+   number of bytes written. */
 int encode_key(bool *restart, struct slice dest, struct slice prev_key,
 	       struct slice key, byte extra);
+
+/* Decode into `key` and `extra` from `in` */
 int decode_key(struct slice *key, byte *extra, struct slice last_key,
 	       struct slice in);
 
@@ -83,14 +89,18 @@ byte record_val_type(struct record rec);
 int record_encode(struct record rec, struct slice dest, int hash_size);
 int record_decode(struct record rec, struct slice key, byte extra,
 		  struct slice src, int hash_size);
+
+/* zeroes out the embedded record */
 void record_clear(struct record rec);
 
 /* clear out the record, yielding the record data that was encapsulated. */
 void *record_yield(struct record *rec);
 
+/* clear and deallocate embedded record, and zero `rec`. */
+void record_destroy(struct record *rec);
+
 /* initialize generic records from concrete records. The generic record should
  * be zeroed out. */
-
 void record_from_obj(struct record *rec, struct obj_record *objrec);
 void record_from_index(struct record *rec, struct index_record *idxrec);
 void record_from_ref(struct record *rec, struct reftable_ref_record *refrec);

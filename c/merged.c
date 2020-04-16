@@ -27,8 +27,7 @@ static int merged_iter_init(struct merged_iter *mi)
 
 		if (err > 0) {
 			reftable_iterator_destroy(&mi->stack[i]);
-			record_clear(rec);
-			reftable_free(record_yield(&rec));
+			record_destroy(&rec);
 		} else {
 			struct pq_entry e = {
 				.rec = rec,
@@ -71,8 +70,7 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
 
 		if (err > 0) {
 			reftable_iterator_destroy(&mi->stack[idx]);
-			record_clear(rec);
-			reftable_free(record_yield(&rec));
+			record_destroy(&rec);
 			return 0;
 		}
 

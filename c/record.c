@@ -871,6 +871,19 @@ struct record new_record(byte typ)
 	return rec;
 }
 
+void *record_yield(struct record *rec)
+{
+	void *p = rec->data;
+	rec->data = NULL;
+	return p;
+}
+
+void record_destroy(struct record *rec)
+{
+	record_clear(*rec);
+	reftable_free(record_yield(rec));
+}
+
 static byte index_record_type(void)
 {
 	return BLOCK_TYPE_INDEX;
@@ -1006,13 +1019,6 @@ void record_from_log(struct record *rec, struct reftable_log_record *log_rec)
 {
 	rec->data = log_rec;
 	rec->ops = &reftable_log_record_vtable;
-}
-
-void *record_yield(struct record *rec)
-{
-	void *p = rec->data;
-	rec->data = NULL;
-	return p;
 }
 
 struct reftable_ref_record *record_as_ref(struct record rec)

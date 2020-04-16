@@ -412,8 +412,7 @@ int block_reader_seek(struct reftable_block_reader *br,
 	exit:
 		slice_clear(&key);
 		slice_clear(&next.last_key);
-		record_clear(rec);
-		reftable_free(record_yield(&rec));
+		record_destroy(&rec);
 
 		return result;
 	}
