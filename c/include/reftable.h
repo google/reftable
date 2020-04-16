@@ -446,18 +446,21 @@ struct reftable_addition;
 /*
   returns a new transaction to add reftables to the given stack. As a side
   effect, the ref database is locked.
-*/ 
-int reftable_stack_new_addition(struct reftable_addition **dest, struct reftable_stack *st);
+*/
+int reftable_stack_new_addition(struct reftable_addition **dest,
+				struct reftable_stack *st);
 
-/* Adds a reftable to transaction. */ 
+/* Adds a reftable to transaction. */
 int reftable_addition_add(struct reftable_addition *add,
-                          int (*write_table)(struct reftable_writer *wr, void *arg),
-                          void *arg);
+			  int (*write_table)(struct reftable_writer *wr,
+					     void *arg),
+			  void *arg);
 
 /* Commits the transaction, releasing the lock. */
 int reftable_addition_commit(struct reftable_addition *add);
 
-/* Release all non-committed data from the transaction; releases the lock if held. */
+/* Release all non-committed data from the transaction; releases the lock if
+ * held. */
 void reftable_addition_close(struct reftable_addition *add);
 
 /* add a new table to the stack. The write_table function must call
