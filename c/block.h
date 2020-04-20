@@ -40,7 +40,7 @@ struct block_writer {
 
 /*
   initializes the blockwriter to write `typ` entries, using `buf` as temporary
-  storage. */
+  storage. `buf` is not owned by the block_writer. */
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size);
 
@@ -58,41 +58,69 @@ int block_writer_finish(struct block_writer *w);
 /* clears out internally allocated block_writer members. */
 void block_writer_clear(struct block_writer *bw);
 
+/* Read a block. */
 struct reftable_block_reader {
+	/* offset of the block header; nonzero for the first block in a
+	 * reftable. */
 	uint32_t header_off;
+
+	/* the memory block */
 	struct reftable_block block;
 	int hash_size;
 
 	/* size of the data, excluding restart data. */
 	uint32_t block_len;
 	byte *restart_bytes;
-	uint32_t full_block_size;
 	uint16_t restart_count;
+
+	/* size of the data in the file. For log blocks, this is the compressed
+	 * size. */
+	uint32_t full_block_size;
 };
 
+/* Iterate over entries in a block */
 struct reftable_block_iter {
+	/* offset within the block of the next entry to read. */
 	uint32_t next_off;
 	struct reftable_block_reader *br;
+
+	/* key for last entry we read. */
 	struct slice last_key;
 };
 
+/* initializes a block reader */
 int block_reader_init(struct reftable_block_reader *br,
 		      struct reftable_block *bl, uint32_t header_off,
 		      uint32_t table_block_size, int hash_size);
+
+/* Position `it` at start of the block */
 void block_reader_start(struct reftable_block_reader *br,
 			struct reftable_block_iter *it);
+
+/* Position `it` to the `want` key in the block */
 int block_reader_seek(struct reftable_block_reader *br,
 		      struct reftable_block_iter *it, struct slice want);
+
+/* Returns the block type (eg. 'r' for refs) */
 byte block_reader_type(struct reftable_block_reader *r);
+
+/* Decodes the first key in the block */
 int block_reader_first_key(struct reftable_block_reader *br, struct slice *key);
 
 void block_iter_copy_from(struct reftable_block_iter *dest,
 			  struct reftable_block_iter *src);
 int block_iter_next(struct reftable_block_iter *it, struct record rec);
+
+/* Seek to `want` with in the block pointed to by `it` */
 int block_iter_seek(struct reftable_block_iter *it, struct slice want);
+
+/* deallocate memory for `it`. The block reader and its block is left intact. */
 void block_iter_close(struct reftable_block_iter *it);
 
+/* size of file header, depending on format version */
 int header_size(int version);
+
+/* size of file footer, depending on format version */
 int footer_size(int version);
 
 #endif
