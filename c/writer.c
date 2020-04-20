@@ -640,7 +640,6 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 
 	w->index_len++;
 	w->next += padding + raw_bytes;
-	block_writer_reset(&w->block_writer_data);
 	w->block_writer = NULL;
 	return 0;
 }

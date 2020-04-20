@@ -38,8 +38,8 @@ int footer_size(int version)
 	abort();
 }
 
-int block_writer_register_restart(struct block_writer *w, int n,
-				  bool restart, struct slice key);
+int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+				  struct slice key);
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
@@ -52,6 +52,8 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 	bw->next = header_off + 4;
 	bw->restart_interval = 16;
 	bw->entries = 0;
+	bw->restart_len = 0;
+	bw->last_key.len = 0;
 }
 
 byte block_writer_type(struct block_writer *bw)
@@ -103,8 +105,8 @@ err:
 	return -1;
 }
 
-int block_writer_register_restart(struct block_writer *w, int n,
-				  bool restart, struct slice key)
+int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+				  struct slice key)
 {
 	int rlen = w->restart_len;
 	if (rlen >= MAX_RESTARTS) {
@@ -416,12 +418,6 @@ int block_reader_seek(struct reftable_block_reader *br,
 
 		return result;
 	}
-}
-
-void block_writer_reset(struct block_writer *bw)
-{
-	bw->restart_len = 0;
-	bw->last_key.len = 0;
 }
 
 void block_writer_clear(struct block_writer *bw)

@@ -55,8 +55,6 @@ int block_writer_add(struct block_writer *w, struct record rec);
 /* appends the key restarts, and compress the block if necessary. */
 int block_writer_finish(struct block_writer *w);
 
-void block_writer_reset(struct block_writer *bw);
-
 /* clears out internally allocated block_writer members. */
 void block_writer_clear(struct block_writer *bw);
 
