@@ -16,17 +16,35 @@ https://developers.google.com/open-source/licenses/bsd
 #define true 1
 #define false 0
 
+/* Bigendian en/decoding of integers */
+
 void put_be24(byte *out, uint32_t i);
 uint32_t get_be24(byte *in);
 void put_be16(uint8_t *out, uint16_t i);
 
+/*
+  find smallest index i in [0, sz) at which f(i) is true, assuming
+  that f is ascending. Return sz if f(i) is false for all indices.
+*/
 int binsearch(int sz, int (*f)(int k, void *args), void *args);
 
+/*
+  Frees a NULL terminated array of malloced strings. The array itself is also
+  freed.
+ */
 void free_names(char **a);
+
+/* parse a newline separated list of names. Empty names are discarded. */
 void parse_names(char *buf, int size, char ***namesp);
+
+/* compares two NULL-terminated arrays of strings. */
 int names_equal(char **a, char **b);
+
+/* returns the array size of a NULL-terminated array of strings. */
 int names_length(char **names);
 
+/* Allocation routines; they invoke the functions set through
+ * reftable_set_alloc() */
 void *reftable_malloc(size_t sz);
 void *reftable_realloc(void *p, size_t sz);
 void reftable_free(void *p);

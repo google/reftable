@@ -29,10 +29,6 @@ void put_be16(uint8_t *out, uint16_t i)
 	out[1] = (uint8_t)((i)&0xff);
 }
 
-/*
-  find smallest index i in [0, sz) at which f(i) is true, assuming
-  that f is ascending. Return sz if f(i) is false for all indices.
-*/
 int binsearch(int sz, int (*f)(int k, void *args), void *args)
 {
 	int lo = 0;
@@ -87,7 +83,6 @@ int names_length(char **names)
 	return len;
 }
 
-/* parse a newline separated list of names. Empty names are discarded. */
 void parse_names(char *buf, int size, char ***namesp)
 {
 	char **names = NULL;
