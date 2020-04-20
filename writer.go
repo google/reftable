@@ -397,17 +397,30 @@ func commonPrefixSize(a, b string) int {
 	return p
 }
 
+func uniqSorted(ss []string) []string {
+	sort.Strings(ss)
+	u := ss[:0]
+	last := ""
+	for i, s := range ss {
+		if i == 0 || last != s {
+			u = append(u, s)
+		}
+
+		last = s
+	}
+	return u
+}
+
 func (w *Writer) dumpObjectIndex() error {
 	strs := make([]string, 0, len(w.objIndex))
 	for k := range w.objIndex {
 		strs = append(strs, k)
 	}
-	sort.Strings(strs)
 
 	last := ""
 	maxCommon := 0
 
-	strs = uniq(strs)
+	strs = uniqSorted(strs)
 
 	last = ""
 	for _, k := range strs {

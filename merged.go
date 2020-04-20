@@ -11,7 +11,6 @@ package reftable
 import (
 	"fmt"
 	"log"
-	"sort"
 )
 
 // pqEntry is an entry of the priority queue
@@ -159,20 +158,6 @@ func (m *Merged) RefsFor(oid []byte) (*Iterator, error) {
 		it:          mit,
 		doubleCheck: true,
 	}}, nil
-}
-
-func uniq(ss []string) []string {
-	sort.Strings(ss)
-	u := ss[:0]
-	last := ""
-	for i, s := range ss {
-		if i == 0 || last != s {
-			u = append(u, s)
-		}
-
-		last = s
-	}
-	return u
 }
 
 // Seek returns an iterator positioned before the wanted record.
