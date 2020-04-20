@@ -88,6 +88,15 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 		return err;
 	}
 
+
+        /*
+          One can also use reftable as datacenter-local storage, where the ref
+          database is maintained in globally consistent database (eg.
+          CockroachDB or Spanner). In this scenario, replication delays together
+          with compaction may cause newer tables to contain older entries. In
+          such a deployment, the loop below must be changed to collect all
+          entries for the same key, and return new the newest one.
+        */
 	record_key(entry.rec, &entry_key);
 	while (!merged_iter_pqueue_is_empty(mi->pq)) {
 		struct pq_entry top = merged_iter_pqueue_top(mi->pq);

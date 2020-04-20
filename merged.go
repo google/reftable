@@ -209,7 +209,6 @@ func (m *Merged) seek(rec record) (iterator, error) {
 	return merged, nil
 }
 
-// mergedIter iterates over a stack of reftables. Entries from higher
 // in the stack obscure lower entries.
 type mergedIter struct {
 	// TODO: We could short-circuit the entries coming from the
@@ -273,6 +272,13 @@ func (m *mergedIter) Next(rec record) (bool, error) {
 		return false, err
 	}
 
+	// One can also use reftable as datacenter-local storage, where the
+	// ref database is maintained in globally consistent database
+	// (eg. CockroachDB or Spanner). In this scenario, replication
+	// delays together with compaction may cause newer tables to
+	// contain older entries. In such a deployment, the loop below
+	// must be changed to collect all entries for the same key,
+	// and return new the newest one.
 	for !m.pq.isEmpty() {
 		top := m.pq.top()
 		if top.rec.key() > entry.rec.key() {
