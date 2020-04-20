@@ -601,10 +601,19 @@ static void reftable_log_record_copy_from(void *rec, const void *src_rec,
 		(const struct reftable_log_record *)src_rec;
 
 	*dst = *src;
-	dst->ref_name = xstrdup(dst->ref_name);
-	dst->email = xstrdup(dst->email);
-	dst->name = xstrdup(dst->name);
-	dst->message = xstrdup(dst->message);
+	if (dst->ref_name != NULL) {
+		dst->ref_name = xstrdup(dst->ref_name);
+	}
+	if (dst->email != NULL) {
+		dst->email = xstrdup(dst->email);
+	}
+	if (dst->name != NULL) {
+		dst->name = xstrdup(dst->name);
+	}
+	if (dst->message != NULL) {
+		dst->message = xstrdup(dst->message);
+	}
+
 	if (dst->new_hash != NULL) {
 		dst->new_hash = reftable_malloc(hash_size);
 		memcpy(dst->new_hash, src->new_hash, hash_size);
@@ -1025,6 +1034,12 @@ struct reftable_ref_record *record_as_ref(struct record rec)
 {
 	assert(record_type(rec) == BLOCK_TYPE_REF);
 	return (struct reftable_ref_record *)rec.data;
+}
+
+struct reftable_log_record *record_as_log(struct record rec)
+{
+	assert(record_type(rec) == BLOCK_TYPE_LOG);
+	return (struct reftable_log_record *)rec.data;
 }
 
 static bool hash_equal(byte *a, byte *b, int hash_size)

@@ -15,6 +15,23 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "test_framework.h"
 
+void test_copy(struct record rec)
+{
+	struct record copy = new_record(record_type(rec));
+	record_copy_from(copy, rec, SHA1_SIZE);
+	switch (record_type(copy)) {
+	case BLOCK_TYPE_REF:
+		assert(reftable_ref_record_equal(
+			record_as_ref(copy), record_as_ref(rec), SHA1_SIZE));
+		break;
+	case BLOCK_TYPE_LOG:
+		assert(reftable_log_record_equal(
+			record_as_log(copy), record_as_log(rec), SHA1_SIZE));
+		break;
+	}
+	record_destroy(&copy);
+}
+
 void varint_roundtrip()
 {
 	uint64_t inputs[] = { 0,
@@ -107,6 +124,8 @@ void test_reftable_ref_record_roundtrip()
 
 		struct record rec = { 0 };
 		record_from_ref(&rec, &in);
+		test_copy(rec);
+
 		assert(record_val_type(rec) == i);
 		byte buf[1024];
 		struct slice key = { 0 };
@@ -156,6 +175,8 @@ void test_reftable_log_record_roundtrip()
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
 		struct record rec = { 0 };
 		record_from_log(&rec, &in[i]);
+
+		test_copy(rec);
 
 		struct slice key = { 0 };
 		record_key(rec, &key);
@@ -263,6 +284,9 @@ void test_obj_record_roundtrip()
 		byte buf[1024];
 		struct record rec = { 0 };
 		record_from_obj(&rec, &in);
+
+		test_copy(rec);
+
 		struct slice key = { 0 };
 		record_key(rec, &key);
 		struct slice dest = {
@@ -300,6 +324,7 @@ void test_index_record_roundtrip()
 	struct record rec = { 0 };
 	record_from_index(&rec, &in);
 	record_key(rec, &key);
+	test_copy(rec);
 
 	assert(0 == slice_compare(key, in.last_key));
 

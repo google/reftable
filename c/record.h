@@ -106,6 +106,7 @@ void record_from_index(struct record *rec, struct index_record *idxrec);
 void record_from_ref(struct record *rec, struct reftable_ref_record *refrec);
 void record_from_log(struct record *rec, struct reftable_log_record *logrec);
 struct reftable_ref_record *record_as_ref(struct record ref);
+struct reftable_log_record *record_as_log(struct record ref);
 
 /* for qsort. */
 int reftable_ref_record_compare_name(const void *a, const void *b);
