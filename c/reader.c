@@ -223,7 +223,7 @@ struct table_iter {
 	struct reftable_reader *r;
 	byte typ;
 	uint64_t block_off;
-	struct reftable_block_iter bi;
+	struct block_iter bi;
 	bool finished;
 };
 
@@ -276,8 +276,7 @@ static int32_t extract_block_size(byte *data, byte *typ, uint64_t off,
 	return result;
 }
 
-int reader_init_block_reader(struct reftable_reader *r,
-			     struct reftable_block_reader *br,
+int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
 			     uint64_t next_off, byte want_typ)
 {
 	int32_t guess_block_size = r->block_size ? r->block_size :
@@ -324,7 +323,7 @@ static int table_iter_next_block(struct table_iter *dest,
 				 struct table_iter *src)
 {
 	uint64_t next_block_off = src->block_off + src->bi.br->full_block_size;
-	struct reftable_block_reader br = { 0 };
+	struct block_reader br = { 0 };
 	int err = 0;
 
 	dest->r = src->r;
@@ -341,8 +340,8 @@ static int table_iter_next_block(struct table_iter *dest,
 	}
 
 	{
-		struct reftable_block_reader *brp =
-			reftable_malloc(sizeof(struct reftable_block_reader));
+		struct block_reader *brp =
+			reftable_malloc(sizeof(struct block_reader));
 		*brp = br;
 
 		dest->finished = false;
@@ -409,15 +408,15 @@ static void iterator_from_table_iter(struct reftable_iterator *it,
 static int reader_table_iter_at(struct reftable_reader *r,
 				struct table_iter *ti, uint64_t off, byte typ)
 {
-	struct reftable_block_reader br = { 0 };
-	struct reftable_block_reader *brp = NULL;
+	struct block_reader br = { 0 };
+	struct block_reader *brp = NULL;
 
 	int err = reader_init_block_reader(r, &br, off, typ);
 	if (err != 0) {
 		return err;
 	}
 
-	brp = reftable_malloc(sizeof(struct reftable_block_reader));
+	brp = reftable_malloc(sizeof(struct block_reader));
 	*brp = br;
 	ti->r = r;
 	ti->typ = block_reader_type(brp);

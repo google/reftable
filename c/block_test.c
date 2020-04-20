@@ -91,10 +91,10 @@ void test_block_read_write()
 
 	block_writer_clear(&bw);
 
-	struct reftable_block_reader br = { 0 };
+	struct block_reader br = { 0 };
 	block_reader_init(&br, &block, header_off, block_size, SHA1_SIZE);
 
-	struct reftable_block_iter it = { 0 };
+	struct block_iter it = { 0 };
 	block_reader_start(&br, &it);
 
 	int j = 0;
@@ -115,7 +115,7 @@ void test_block_read_write()
 	for (i = 0; i < N; i++) {
 		slice_set_string(&want, names[i]);
 
-		struct reftable_block_iter it = { 0 };
+		struct block_iter it = { 0 };
 		int n = block_reader_seek(&br, &it, want);
 		assert(n == 0);
 
