@@ -13,7 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 
-struct reftable_block_writer {
+struct block_writer {
 	byte *buf;
 	uint32_t block_size;
 	uint32_t header_off;
@@ -28,13 +28,13 @@ struct reftable_block_writer {
 	int entries;
 };
 
-void block_writer_init(struct reftable_block_writer *bw, byte typ, byte *buf,
+void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size);
-byte block_writer_type(struct reftable_block_writer *bw);
-int block_writer_add(struct reftable_block_writer *w, struct record rec);
-int block_writer_finish(struct reftable_block_writer *w);
-void block_writer_reset(struct reftable_block_writer *bw);
-void block_writer_clear(struct reftable_block_writer *bw);
+byte block_writer_type(struct block_writer *bw);
+int block_writer_add(struct block_writer *w, struct record rec);
+int block_writer_finish(struct block_writer *w);
+void block_writer_reset(struct block_writer *bw);
+void block_writer_clear(struct block_writer *bw);
 
 struct reftable_block_reader {
 	uint32_t header_off;

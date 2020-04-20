@@ -38,10 +38,10 @@ int footer_size(int version)
 	abort();
 }
 
-int block_writer_register_restart(struct reftable_block_writer *w, int n,
+int block_writer_register_restart(struct block_writer *w, int n,
 				  bool restart, struct slice key);
 
-void block_writer_init(struct reftable_block_writer *bw, byte typ, byte *buf,
+void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
 {
 	bw->buf = buf;
@@ -54,14 +54,14 @@ void block_writer_init(struct reftable_block_writer *bw, byte typ, byte *buf,
 	bw->entries = 0;
 }
 
-byte block_writer_type(struct reftable_block_writer *bw)
+byte block_writer_type(struct block_writer *bw)
 {
 	return bw->buf[bw->header_off];
 }
 
 /* adds the record to the block. Returns -1 if it does not fit, 0 on
    success */
-int block_writer_add(struct reftable_block_writer *w, struct record rec)
+int block_writer_add(struct block_writer *w, struct record rec)
 {
 	struct slice empty = { 0 };
 	struct slice last = w->entries % w->restart_interval == 0 ? empty :
@@ -103,7 +103,7 @@ err:
 	return -1;
 }
 
-int block_writer_register_restart(struct reftable_block_writer *w, int n,
+int block_writer_register_restart(struct block_writer *w, int n,
 				  bool restart, struct slice key)
 {
 	int rlen = w->restart_len;
@@ -133,7 +133,7 @@ int block_writer_register_restart(struct reftable_block_writer *w, int n,
 	return 0;
 }
 
-int block_writer_finish(struct reftable_block_writer *w)
+int block_writer_finish(struct block_writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->restart_len; i++) {
@@ -418,13 +418,13 @@ int block_reader_seek(struct reftable_block_reader *br,
 	}
 }
 
-void block_writer_reset(struct reftable_block_writer *bw)
+void block_writer_reset(struct block_writer *bw)
 {
 	bw->restart_len = 0;
 	bw->last_key.len = 0;
 }
 
-void block_writer_clear(struct reftable_block_writer *bw)
+void block_writer_clear(struct block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
 	slice_clear(&bw->last_key);

@@ -26,8 +26,8 @@ struct reftable_writer {
 	struct reftable_write_options opts;
 
 	byte *block;
-	struct reftable_block_writer *block_writer;
-	struct reftable_block_writer block_writer_data;
+	struct block_writer *block_writer;
+	struct block_writer block_writer_data;
 	struct index_record *index;
 	int index_len;
 	int index_cap;

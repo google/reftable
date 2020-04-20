@@ -62,7 +62,7 @@ void test_block_read_write()
 	block.data = reftable_calloc(block_size);
 	block.len = block_size;
 
-	struct reftable_block_writer bw = { 0 };
+	struct block_writer bw = { 0 };
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
 			  header_off, hash_size(SHA1_ID));
 	struct reftable_ref_record ref = { 0 };
