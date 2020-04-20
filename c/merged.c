@@ -257,7 +257,8 @@ static int merged_table_seek_record(struct reftable_merged_table *mt,
 		return err;
 	}
 
-	merged.stack_len = n, err = merged_iter_init(&merged);
+	merged.stack_len = n;
+	err = merged_iter_init(&merged);
 	if (err < 0) {
 		merged_iter_close(&merged);
 		return err;
