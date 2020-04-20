@@ -13,27 +13,51 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 
+/*
+  Writes reftable blocks. The block_writer is reused across blocks to minimize
+  allocation overhead.
+*/
 struct block_writer {
 	byte *buf;
 	uint32_t block_size;
+
+	/* Offset ofof the global header. Nonzero in the first block only. */
 	uint32_t header_off;
+
+	/* How often to restart keys. */
 	int restart_interval;
 	int hash_size;
 
+	/* Offset of next byte to write. */
 	uint32_t next;
 	uint32_t *restarts;
 	uint32_t restart_len;
 	uint32_t restart_cap;
+
 	struct slice last_key;
 	int entries;
 };
 
+/*
+  initializes the blockwriter to write `typ` entries, using `buf` as temporary
+  storage. */
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size);
+
+/*
+  returns the block type (eg. 'r' for ref records.
+*/
 byte block_writer_type(struct block_writer *bw);
+
+/* appends the record, or -1 if it doesn't fit. */
 int block_writer_add(struct block_writer *w, struct record rec);
+
+/* appends the key restarts, and compress the block if necessary. */
 int block_writer_finish(struct block_writer *w);
+
 void block_writer_reset(struct block_writer *bw);
+
+/* clears out internally allocated block_writer members. */
 void block_writer_clear(struct block_writer *bw);
 
 struct reftable_block_reader {
