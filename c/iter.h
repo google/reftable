@@ -22,6 +22,7 @@ void iterator_set_empty(struct reftable_iterator *it);
 int iterator_next(struct reftable_iterator it, struct record rec);
 bool iterator_is_null(struct reftable_iterator it);
 
+/* iterator that produces only ref records that point to `oid` */
 struct filtering_ref_iterator {
 	bool double_check;
 	struct reftable_reader *r;
@@ -32,6 +33,9 @@ struct filtering_ref_iterator {
 void iterator_from_filtering_ref_iterator(struct reftable_iterator *,
 					  struct filtering_ref_iterator *);
 
+/* iterator that produces only ref records that point to `oid`,
+   but using the object index.
+ */
 struct indexed_table_ref_iter {
 	struct reftable_reader *r;
 	struct slice oid;
