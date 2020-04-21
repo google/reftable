@@ -14,6 +14,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable.h"
 
+uint32_t hash_id;
+
 static int dump_table(const char *tablename)
 {
 	struct reftable_block_source src = { 0 };
@@ -44,7 +46,7 @@ static int dump_table(const char *tablename)
 			if (err < 0) {
 				return err;
 			}
-			reftable_ref_record_print(&ref, 20);
+			reftable_ref_record_print(&ref, hash_id);
 		}
 		reftable_iterator_destroy(&it);
 		reftable_ref_record_clear(&ref);
@@ -65,37 +67,161 @@ static int dump_table(const char *tablename)
 			if (err < 0) {
 				return err;
 			}
-			reftable_log_record_print(&log, 20);
+			reftable_log_record_print(&log, hash_id);
 		}
 		reftable_iterator_destroy(&it);
 		reftable_log_record_clear(&log);
 	}
+
+	reftable_reader_free(r);
 	return 0;
+}
+
+static int compact_stack(const char *stackdir)
+{
+	struct reftable_stack *stack = NULL;
+	struct reftable_write_options cfg = {};
+
+	int err = reftable_new_stack(&stack, stackdir, cfg);
+	if (err < 0) {
+		goto exit;
+	}
+
+	struct reftable_log_expiry_config config = {
+		.time = (1UL << 63),
+	};
+	err = reftable_stack_compact_all(stack, &config);
+	if (err < 0) {
+		goto exit;
+	}
+exit:
+	if (stack != NULL) {
+		reftable_stack_destroy(stack);
+	}
+	return err;
+}
+
+static int dump_stack(const char *stackdir)
+{
+	struct reftable_stack *stack = NULL;
+	struct reftable_write_options cfg = {};
+
+	int err = reftable_new_stack(&stack, stackdir, cfg);
+	if (err < 0) {
+		return err;
+	}
+
+	struct reftable_merged_table *merged =
+		reftable_stack_merged_table(stack);
+
+	{
+		struct reftable_iterator it = { 0 };
+		err = reftable_merged_table_seek_ref(merged, &it, "");
+		if (err < 0) {
+			return err;
+		}
+
+		struct reftable_ref_record ref = { 0 };
+		while (1) {
+			err = reftable_iterator_next_ref(it, &ref);
+			if (err > 0) {
+				break;
+			}
+			if (err < 0) {
+				return err;
+			}
+			reftable_ref_record_print(&ref, hash_id);
+		}
+		reftable_iterator_destroy(&it);
+		reftable_ref_record_clear(&ref);
+	}
+
+	{
+		struct reftable_iterator it = { 0 };
+		err = reftable_merged_table_seek_log(merged, &it, "");
+		if (err < 0) {
+			return err;
+		}
+		struct reftable_log_record log = { 0 };
+		while (1) {
+			err = reftable_iterator_next_log(it, &log);
+			if (err > 0) {
+				break;
+			}
+			if (err < 0) {
+				return err;
+			}
+			reftable_log_record_print(&log, hash_id);
+		}
+		reftable_iterator_destroy(&it);
+		reftable_log_record_clear(&log);
+	}
+
+	reftable_stack_destroy(stack);
+	return 0;
+}
+
+static void print_help()
+{
+	printf("usage: dump [-ct] arg\n\n"
+	       "options: \n"
+	       "  -c compact\n"
+	       "  -t dump table\n"
+	       "  -s dump stack\n"
+	       "  -h this help\n"
+	       "  -2 use SHA256\n"
+	       "\n");
 }
 
 int main(int argc, char *argv[])
 {
 	int opt;
-	const char *table = NULL;
-	while ((opt = getopt(argc, argv, "t:")) != -1) {
+	int opt_dump_table = 0;
+	int opt_dump_stack = 0;
+	int opt_compact = 0;
+	while ((opt = getopt(argc, argv, "2chts")) != -1) {
 		switch (opt) {
+		case '2':
+			hash_id = 0x73323536;
+			break;
 		case 't':
-			table = strdup(optarg);
+			opt_dump_table = 1;
+			break;
+		case 's':
+			opt_dump_stack = 1;
+			break;
+		case 'c':
+			opt_compact = 1;
 			break;
 		case '?':
-			printf("usage: %s [-table tablefile]\n", argv[0]);
+		case 'h':
+			print_help();
 			return 2;
 			break;
 		}
 	}
 
-	if (table != NULL) {
-		int err = dump_table(table);
-		if (err < 0) {
-			fprintf(stderr, "%s: %s: %s\n", argv[0], table,
-				reftable_error_str(err));
-			return 1;
-		}
+	if (argv[optind] == NULL) {
+		fprintf(stderr, "need argument\n");
+		print_help();
+		return 2;
+	}
+
+	const char *arg = argv[optind];
+	int err = 0;
+
+	if (opt_dump_table) {
+		err = dump_table(arg);
+	} else if (opt_dump_stack) {
+		err = dump_stack(arg);
+	} else if (opt_compact) {
+		err = compact_stack(arg);
+	}
+
+	if (err < 0) {
+		fprintf(stderr, "%s: %s: %s\n", argv[0], arg,
+			reftable_error_str(err));
+		return 1;
 	}
 	return 0;
 }
