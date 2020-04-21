@@ -28,6 +28,7 @@ type record interface {
 	// XXX negative n == error.s
 	encode(buf []byte, hashSize int) (n int, fits bool)
 	decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool)
+	IsDeletion() bool
 }
 
 type HashID [4]byte

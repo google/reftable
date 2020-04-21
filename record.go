@@ -258,6 +258,10 @@ func (r *objRecord) String() string {
 	return fmt.Sprintf("obj(%x)", r.HashPrefix)
 }
 
+func (r *objRecord) IsDeletion() bool {
+	return false
+}
+
 func (r *objRecord) valType() uint8 {
 	var lower uint8
 	if l := len(r.Offsets); l > 0 && l < 8 {
@@ -363,6 +367,10 @@ func (r *indexRecord) valType() byte {
 
 func (r *indexRecord) copyFrom(in record) {
 	*r = *in.(*indexRecord)
+}
+
+func (r *indexRecord) IsDeletion() bool {
+	return false
 }
 
 func (r *indexRecord) String() string {
