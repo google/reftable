@@ -24,7 +24,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	*dest = NULL;
 
 	slice_set_string(&list_file_name, dir);
-	slice_append_string(&list_file_name, "/reftables.list");
+	slice_append_string(&list_file_name, "/tables.list");
 
 	p->list_file = slice_to_string(list_file_name);
 	slice_clear(&list_file_name);
