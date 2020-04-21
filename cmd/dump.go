@@ -9,70 +9,47 @@ https://developers.google.com/open-source/licenses/bsd
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/google/reftable"
 )
 
 func main() {
-	tabName := flag.String("table", "", "dump single reftable")
-	stackName := flag.String("stack", "", "dump a stack of reftables")
-	tabDir := flag.String("table_dir", "", "directory with reftables")
+	optDumpTab := flag.Bool("table", false, "dump single reftable")
+	optDumpStack := flag.Bool("stack", true, "dump a stack of reftables")
 	flag.Parse()
 
-	if *tabName != "" {
-		if err := dumpTableFile(*tabName); err != nil {
-			log.Fatalf("dumpTableFile(%s): %v", *tabName, err)
+	if len(flag.Args()) != 1 {
+		log.Fatalf("Need 1 argument.")
+	}
+
+	arg := flag.Arg(0)
+	if *optDumpTab {
+		if err := dumpTableFile(arg); err != nil {
+			log.Fatalf("dumpTableFile(%s): %v", arg, err)
 		}
-	} else if *stackName != "" {
-		if err := dumpStack(*stackName, *tabDir); err != nil {
+	} else if *optDumpStack {
+		if err := dumpStack(arg); err != nil {
 			log.Fatal(err)
 		}
 	} else if _, err := os.Lstat(".git"); err == nil {
-		if err := dumpStack(".git/reftable/tables.list", ".git/reftable/"); err != nil {
+		if err := dumpStack(".git/reftable"); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func dumpStack(nm, dir string) error {
-	f, err := os.Open(nm)
+func dumpStack(dir string) error {
+	st, err := reftable.NewStack(dir, reftable.Config{})
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer st.Close()
 
-	scanner := bufio.NewScanner(f)
-
-	var names []string
-	for scanner.Scan() {
-		names = append(names, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return (err)
-	}
-
-	var tabs []*reftable.Reader
-	for _, nm := range names {
-		f, err := reftable.NewFileBlockSource(filepath.Join(dir, nm))
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		r, err := reftable.NewReader(f, nm)
-		if err != nil {
-			return err
-		}
-		tabs = append(tabs, r)
-	}
-
-	merged, err := reftable.NewMerged(tabs, 20)
+	merged := st.Merged()
 	if err != nil {
 		return err
 	}
@@ -94,7 +71,6 @@ func dumpTableFile(nm string) error {
 	fmt.Printf("** DEBUG **\n%s\n", r.DebugData())
 
 	return dumpTable(r)
-
 }
 
 func dumpTable(tab reftable.Table) error {
