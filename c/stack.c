@@ -21,6 +21,10 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 		reftable_calloc(sizeof(struct reftable_stack));
 	struct slice list_file_name = {};
 	int err = 0;
+	if (config.hash_id == 0) {
+		config.hash_id = SHA1_ID;
+	}
+
 	*dest = NULL;
 
 	slice_set_string(&list_file_name, dir);

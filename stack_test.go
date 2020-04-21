@@ -122,6 +122,12 @@ func TestMixedHashSize(t *testing.T) {
 			t.Fatalf("write %d: %v", i, err)
 		}
 	}
+	defaultConf := Config{}
+	if defaultSt, err := NewStack(dir+"/reftable", defaultConf); err != nil {
+		t.Fatalf("NewStack(defaultConf): %v", err)
+	} else {
+		defaultSt.Close()
+	}
 
 	cfg2 := cfg
 	cfg2.HashID = SHA256ID

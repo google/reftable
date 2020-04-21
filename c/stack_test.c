@@ -170,6 +170,12 @@ void test_reftable_stack_add(void)
 		reftable_log_record_clear(&dest);
 	}
 
+	// check that we can read it back with default config too.
+	struct reftable_write_options cfg_default = { 0 };
+	struct reftable_stack *st_default = NULL;
+	err = reftable_new_stack(&st_default, dir, cfg_default);
+	assert_err(err);
+
 	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
 	struct reftable_stack *st32 = NULL;
 	err = reftable_new_stack(&st32, dir, cfg32);
