@@ -87,10 +87,7 @@ static int compact_stack(const char *stackdir)
 		goto exit;
 	}
 
-	struct reftable_log_expiry_config config = {
-		.time = (1UL << 63),
-	};
-	err = reftable_stack_compact_all(stack, &config);
+	err = reftable_stack_compact_all(stack, NULL);
 	if (err < 0) {
 		goto exit;
 	}
