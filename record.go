@@ -131,7 +131,18 @@ func (r *RefRecord) IsDeletion() bool {
 }
 
 func (r *RefRecord) String() string {
-	return fmt.Sprintf("ref(%s)", r.RefName)
+	v := fmt.Sprintf("ref{%s(%d)", r.RefName, r.UpdateIndex)
+	if r.Value != nil {
+		v += fmt.Sprintf("%x", r.Value)
+	}
+	if r.TargetValue != nil {
+		v += fmt.Sprintf("(T %x)", r.TargetValue)
+	}
+	if r.Target != "" {
+		v += fmt.Sprintf("=> %s", r.Target)
+	}
+	v += "}"
+	return v
 }
 
 func (r *RefRecord) decode(buf []byte, key string, valType uint8, hashSize int) (n int, ok bool) {
