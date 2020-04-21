@@ -244,17 +244,17 @@ static void hex_format(char *dest, byte *src, int hash_size)
 	}
 }
 
-void reftable_ref_record_print(struct reftable_ref_record *ref, int hash_size)
+void reftable_ref_record_print(struct reftable_ref_record *ref,
+			       uint32_t hash_id)
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
-
 	printf("ref{%s(%" PRIu64 ") ", ref->ref_name, ref->update_index);
 	if (ref->value != NULL) {
-		hex_format(hex, ref->value, hash_size);
+		hex_format(hex, ref->value, hash_size(hash_id));
 		printf("%s", hex);
 	}
 	if (ref->target_value != NULL) {
-		hex_format(hex, ref->target_value, hash_size);
+		hex_format(hex, ref->target_value, hash_size(hash_id));
 		printf(" (T %s)", hex);
 	}
 	if (ref->target != NULL) {
@@ -563,16 +563,17 @@ struct record_vtable obj_record_vtable = {
 	.clear = &obj_record_clear,
 };
 
-void reftable_log_record_print(struct reftable_log_record *log, int hash_size)
+void reftable_log_record_print(struct reftable_log_record *log,
+			       uint32_t hash_id)
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
 
 	printf("log{%s(%" PRIu64 ") %s <%s> %" PRIu64 " %04d\n", log->ref_name,
 	       log->update_index, log->name, log->email, log->time,
 	       log->tz_offset);
-	hex_format(hex, log->old_hash, hash_size);
+	hex_format(hex, log->old_hash, hash_size(hash_id));
 	printf("%s => ", hex);
-	hex_format(hex, log->new_hash, hash_size);
+	hex_format(hex, log->new_hash, hash_size(hash_id));
 	printf("%s\n\n%s\n}\n", hex, log->message);
 }
 

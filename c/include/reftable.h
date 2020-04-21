@@ -36,7 +36,8 @@ struct reftable_ref_record {
 int reftable_ref_record_is_deletion(const struct reftable_ref_record *ref);
 
 /* prints a reftable_ref_record onto stdout */
-void reftable_ref_record_print(struct reftable_ref_record *ref, int hash_size);
+void reftable_ref_record_print(struct reftable_ref_record *ref,
+			       uint32_t hash_id);
 
 /* frees and nulls all pointer values. */
 void reftable_ref_record_clear(struct reftable_ref_record *ref);
@@ -70,7 +71,8 @@ int reftable_log_record_equal(struct reftable_log_record *a,
 			      struct reftable_log_record *b, int hash_size);
 
 /* dumps a reftable_log_record on stdout, for debugging/testing. */
-void reftable_log_record_print(struct reftable_log_record *log, int hash_size);
+void reftable_log_record_print(struct reftable_log_record *log,
+			       uint32_t hash_id);
 
 /****************************************************************
  Error handling
