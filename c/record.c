@@ -409,6 +409,12 @@ static int reftable_ref_record_decode(void *rec, struct slice key,
 	return start.len - in.len;
 }
 
+static bool reftable_ref_record_is_deletion_void(const void *p)
+{
+	return reftable_ref_record_is_deletion(
+		(const struct reftable_ref_record *)p);
+}
+
 struct record_vtable reftable_ref_record_vtable = {
 	.key = &reftable_ref_record_key,
 	.type = &reftable_ref_record_type,
@@ -417,6 +423,7 @@ struct record_vtable reftable_ref_record_vtable = {
 	.encode = &reftable_ref_record_encode,
 	.decode = &reftable_ref_record_decode,
 	.clear = &reftable_ref_record_clear_void,
+	.is_deletion = &reftable_ref_record_is_deletion_void,
 };
 
 static byte obj_record_type(void)
@@ -553,6 +560,11 @@ static int obj_record_decode(void *rec, struct slice key, byte val_type,
 	return start.len - in.len;
 }
 
+static bool not_a_deletion(const void *p)
+{
+	return false;
+}
+
 struct record_vtable obj_record_vtable = {
 	.key = &obj_record_key,
 	.type = &obj_record_type,
@@ -561,6 +573,7 @@ struct record_vtable obj_record_vtable = {
 	.encode = &obj_record_encode,
 	.decode = &obj_record_decode,
 	.clear = &obj_record_clear,
+	.is_deletion = not_a_deletion,
 };
 
 void reftable_log_record_print(struct reftable_log_record *log,
@@ -837,6 +850,12 @@ bool reftable_log_record_equal(struct reftable_log_record *a,
 	       a->update_index == b->update_index;
 }
 
+static bool reftable_log_record_is_deletion_void(const void *p)
+{
+	return reftable_log_record_is_deletion(
+		(const struct reftable_log_record *)p);
+}
+
 struct record_vtable reftable_log_record_vtable = {
 	.key = &reftable_log_record_key,
 	.type = &reftable_log_record_type,
@@ -845,6 +864,7 @@ struct record_vtable reftable_log_record_vtable = {
 	.encode = &reftable_log_record_encode,
 	.decode = &reftable_log_record_decode,
 	.clear = &reftable_log_record_clear_void,
+	.is_deletion = &reftable_log_record_is_deletion_void,
 };
 
 struct record new_record(byte typ)
@@ -967,6 +987,7 @@ struct record_vtable index_record_vtable = {
 	.encode = &index_record_encode,
 	.decode = &index_record_decode,
 	.clear = &index_record_clear,
+	.is_deletion = &not_a_deletion,
 };
 
 void record_key(struct record rec, struct slice *dest)
@@ -1005,6 +1026,11 @@ int record_decode(struct record rec, struct slice key, byte extra,
 void record_clear(struct record rec)
 {
 	return rec.ops->clear(rec.data);
+}
+
+bool record_is_deletion(struct record rec)
+{
+	return rec.ops->is_deletion(rec.data);
 }
 
 void record_from_ref(struct record *rec, struct reftable_ref_record *ref_rec)

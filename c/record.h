@@ -40,6 +40,9 @@ struct record_vtable {
 
 	/* deallocate and null the record. */
 	void (*clear)(void *rec);
+
+	/* is this a tombstone? */
+	bool (*is_deletion)(const void *rec);
 };
 
 /* record is a generic wrapper for different types of records. */
@@ -89,6 +92,7 @@ byte record_val_type(struct record rec);
 int record_encode(struct record rec, struct slice dest, int hash_size);
 int record_decode(struct record rec, struct slice key, byte extra,
 		  struct slice src, int hash_size);
+bool record_is_deletion(struct record rec);
 
 /* zeroes out the embedded record */
 void record_clear(struct record rec);
