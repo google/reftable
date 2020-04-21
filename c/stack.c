@@ -21,6 +21,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 		reftable_calloc(sizeof(struct reftable_stack));
 	struct slice list_file_name = {};
 	int err = 0;
+
 	if (config.hash_id == 0) {
 		config.hash_id = SHA1_ID;
 	}
@@ -349,7 +350,7 @@ int reftable_stack_add(struct reftable_stack *st,
 static void format_name(struct slice *dest, uint64_t min, uint64_t max)
 {
 	char buf[100];
-	snprintf(buf, sizeof(buf), "%012" PRIx64 "-%012" PRIx64, min, max);
+	snprintf(buf, sizeof(buf), "0x%012" PRIx64 "-0x%012" PRIx64, min, max);
 	slice_set_string(dest, buf);
 }
 

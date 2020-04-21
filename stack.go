@@ -367,7 +367,7 @@ func (tr *Addition) Commit() error {
 }
 
 func formatName(min, max uint64) string {
-	return fmt.Sprintf("%012x-%012x", min, max)
+	return fmt.Sprintf("0x%012x-0x%012x", min, max)
 }
 
 // NextUpdateIndex returns the update index at which to write the next table.
