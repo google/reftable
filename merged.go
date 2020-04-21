@@ -103,6 +103,8 @@ func (pq *mergedIterPQueue) add(e pqEntry) {
 type Merged struct {
 	stack  []*Reader
 	hashID HashID
+
+	suppressDeletions bool
 }
 
 func (m *Merged) HashID() HashID {
@@ -123,7 +125,10 @@ func NewMerged(tabs []*Reader, hashID [4]byte) (*Merged, error) {
 		last = t
 	}
 
-	return &Merged{tabs, hashID}, nil
+	return &Merged{
+		stack:  tabs,
+		hashID: hashID,
+	}, nil
 }
 
 // MaxUpdateIndex implements the Table interface.
@@ -197,9 +202,10 @@ func (m *Merged) seek(rec record) (iterator, error) {
 	}
 
 	merged := &mergedIter{
-		typ:   rec.typ(),
-		stack: its,
-		names: names,
+		typ:               rec.typ(),
+		suppressDeletions: m.suppressDeletions,
+		stack:             its,
+		names:             names,
 	}
 
 	if err := merged.init(); err != nil {
@@ -215,6 +221,8 @@ type mergedIter struct {
 	// base stack
 	typ byte
 	pq  mergedIterPQueue
+
+	suppressDeletions bool
 
 	// Fixed side arrays, matched with merged.stack
 	stack []iterator
@@ -263,6 +271,17 @@ func (m *mergedIter) advanceSubIter(index int) error {
 }
 
 func (m *mergedIter) Next(rec record) (bool, error) {
+	for {
+		ok, err := m.nextEntry(rec)
+		if ok && rec.IsDeletion() && m.suppressDeletions {
+			continue
+		}
+
+		return ok, err
+	}
+}
+
+func (m *mergedIter) nextEntry(rec record) (bool, error) {
 	if m.pq.isEmpty() {
 		return false, nil
 	}

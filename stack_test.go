@@ -154,7 +154,9 @@ func TestTombstones(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	N := 30
+	st.disableAutoCompact = true
+
+	N := 30 // must be even
 	refmap := map[string][]byte{}
 	for i := 0; i < N; i++ {
 		if err := st.Add(func(w *Writer) error {
@@ -176,22 +178,21 @@ func TestTombstones(t *testing.T) {
 			t.Fatalf("write %d: %v", i, err)
 		}
 	}
+
+	if r, err := ReadRef(st.Merged(), "branch"); err != nil {
+		t.Fatalf("ReadRef: %v", err)
+	} else if r != nil {
+		t.Fatalf("got record %v", r)
+	}
+
 	if err := st.CompactAll(nil); err != nil {
 		t.Fatal(err)
 	}
-	m := st.Merged()
-	it, err := m.SeekRef("branch")
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	var r RefRecord
-	ok, err := it.NextRef(&r)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ok {
-		t.Errorf("got %v, but value should not be there", r)
+	if r, err := ReadRef(st.Merged(), "branch"); err != nil {
+		t.Fatalf("ReadRef: %v", err)
+	} else if r != nil {
+		t.Fatalf("got record %v", r)
 	}
 }
 

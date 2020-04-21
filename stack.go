@@ -37,8 +37,9 @@ type Stack struct {
 	cfg         Config
 
 	// mutable
-	stack  []*Reader
-	merged *Merged
+	stack              []*Reader
+	merged             *Merged
+	disableAutoCompact bool
 
 	Stats CompactionStats
 }
@@ -188,6 +189,7 @@ func (st *Stack) reload(reuseOpen bool) error {
 	if err != nil {
 		return err
 	}
+	m.suppressDeletions = true
 	st.merged = m
 	return nil
 }
@@ -223,7 +225,10 @@ func (st *Stack) Add(write func(w *Writer) error) error {
 		return err
 	}
 
-	return st.AutoCompact()
+	if !st.disableAutoCompact {
+		return st.AutoCompact()
+	}
+	return nil
 }
 
 func (st *Stack) add(write func(w *Writer) error) error {
