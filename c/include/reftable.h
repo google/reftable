@@ -391,9 +391,6 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 			      struct reftable_reader **stack, int n,
 			      uint32_t hash_id);
 
-/* returns the hash id used in this merged table. */
-uint32_t reftable_merged_table_hash_id(struct reftable_merged_table *mt);
-
 /* returns an iterator positioned just before 'name' */
 int reftable_merged_table_seek_ref(struct reftable_merged_table *mt,
 				   struct reftable_iterator *it,
