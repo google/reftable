@@ -23,7 +23,7 @@ struct record_vtable {
 	void (*key)(const void *rec, struct slice *dest);
 
 	/* The record type of ('r' for ref). */
-	byte (*type)(void);
+	byte type;
 
 	void (*copy_from)(void *dest, const void *src, int hash_size);
 
