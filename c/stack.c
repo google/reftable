@@ -45,34 +45,30 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	return err;
 }
 
-static int fread_lines(FILE *f, char ***namesp)
+static int fd_read_lines(int fd, char ***namesp)
 {
-	long size = 0;
-	int err = fseek(f, 0, SEEK_END);
+	off_t size = lseek(fd, 0, SEEK_END);
 	char *buf = NULL;
-	if (err < 0) {
-		err = IO_ERROR;
-		goto exit;
-	}
-	size = ftell(f);
+	int err = 0;
 	if (size < 0) {
 		err = IO_ERROR;
 		goto exit;
 	}
-	err = fseek(f, 0, SEEK_SET);
+	err = lseek(fd, 0, SEEK_SET);
 	if (err < 0) {
 		err = IO_ERROR;
 		goto exit;
 	}
 
 	buf = reftable_malloc(size + 1);
-	if (fread(buf, 1, size, f) != size) {
+	if (read(fd, buf, size) != size) {
 		err = IO_ERROR;
 		goto exit;
 	}
 	buf[size] = 0;
 
 	parse_names(buf, size, namesp);
+
 exit:
 	reftable_free(buf);
 	return err;
@@ -80,9 +76,9 @@ exit:
 
 int read_lines(const char *filename, char ***namesp)
 {
-	FILE *f = fopen(filename, "r");
+	int fd = open(filename, O_RDONLY, 0644);
 	int err = 0;
-	if (f == NULL) {
+	if (fd < 0) {
 		if (errno == ENOENT) {
 			*namesp = reftable_calloc(sizeof(char *));
 			return 0;
@@ -90,8 +86,8 @@ int read_lines(const char *filename, char ***namesp)
 
 		return IO_ERROR;
 	}
-	err = fread_lines(f, namesp);
-	fclose(f);
+	err = fd_read_lines(fd, namesp);
+	close(fd);
 	return err;
 }
 
