@@ -247,6 +247,7 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 		char **names_after = NULL;
 		struct timeval now = { 0 };
 		int err = gettimeofday(&now, NULL);
+		int err2 = 0;
 		if (err < 0) {
 			return err;
 		}
@@ -273,16 +274,19 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 			return err;
 		}
 
-		err = read_lines(st->list_file, &names_after);
-		if (err < 0) {
+		/* err == NOT_EXIST_ERROR can be caused by a concurrent writer.
+		   Check if there was one by checking if the name list changed.
+		*/
+		err2 = read_lines(st->list_file, &names_after);
+		if (err2 < 0) {
 			free_names(names);
-			return err;
+			return err2;
 		}
 
 		if (names_equal(names_after, names)) {
 			free_names(names);
 			free_names(names_after);
-			return -1;
+			return err;
 		}
 		free_names(names);
 		free_names(names_after);
