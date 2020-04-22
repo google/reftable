@@ -628,9 +628,13 @@ func (st *Stack) compactRange(first, last int, expiration *LogExpirationConfig) 
 
 func (st *Stack) tableSizesForCompaction() []uint64 {
 	var res []uint64
+	version := 1
+	if st.cfg.HashID == SHA256ID {
+		version = 2
+	}
+	var overhead = uint64(footerSize(version) + headerSize(version) - 1)
 	for _, t := range st.stack {
-		// overhead is 92 bytes
-		res = append(res, t.size-91)
+		res = append(res, t.size-overhead)
 	}
 	return res
 }
