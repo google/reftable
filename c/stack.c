@@ -891,6 +891,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		err = rename(slice_as_string(&temp_tab_file_name),
 			     slice_as_string(&new_table_path));
 		if (err < 0) {
+                        err = IO_ERROR;
 			goto exit;
 		}
 	}
