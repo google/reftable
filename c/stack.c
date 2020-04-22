@@ -192,6 +192,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		merged_table_clear(st->merged);
 		reftable_merged_table_free(st->merged);
 	}
+	new_merged->suppress_deletions = true;
 	st->merged = new_merged;
 
 	{
@@ -344,7 +345,11 @@ int reftable_stack_add(struct reftable_stack *st,
 		return err;
 	}
 
-	return reftable_stack_auto_compact(st);
+	if (!st->disable_auto_compact) {
+		return reftable_stack_auto_compact(st);
+	}
+
+	return 0;
 }
 
 static void format_name(struct slice *dest, uint64_t min, uint64_t max)

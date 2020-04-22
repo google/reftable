@@ -10,10 +10,12 @@ https://developers.google.com/open-source/licenses/bsd
 #define STACK_H
 
 #include "reftable.h"
+#include "system.h"
 
 struct reftable_stack {
 	char *list_file;
 	char *reftable_dir;
+	bool disable_auto_compact;
 
 	struct reftable_write_options config;
 

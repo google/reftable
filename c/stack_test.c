@@ -75,12 +75,17 @@ int write_test_ref(struct reftable_writer *wr, void *arg)
 	return err;
 }
 
+struct write_log_arg {
+	struct reftable_log_record *log;
+	uint64_t update_index;
+};
+
 int write_test_log(struct reftable_writer *wr, void *arg)
 {
-	struct reftable_log_record *log = arg;
+	struct write_log_arg *wla = arg;
 
-	reftable_writer_set_limits(wr, log->update_index, log->update_index);
-	int err = reftable_writer_add_log(wr, log);
+	reftable_writer_set_limits(wr, wla->update_index, wla->update_index);
+	int err = reftable_writer_add_log(wr, wla->log);
 
 	return err;
 }
@@ -122,6 +127,7 @@ void test_reftable_stack_add(void)
 	struct reftable_stack *st = NULL;
 	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
+	st->disable_auto_compact = true;
 
 	struct reftable_ref_record refs[2] = { 0 };
 	struct reftable_log_record logs[2] = { 0 };
@@ -147,7 +153,11 @@ void test_reftable_stack_add(void)
 	}
 
 	for (i = 0; i < N; i++) {
-		int err = reftable_stack_add(st, &write_test_log, &logs[i]);
+		struct write_log_arg arg = {
+			.log = &logs[i],
+			.update_index = reftable_stack_next_update_index(st),
+		};
+		int err = reftable_stack_add(st, &write_test_log, &arg);
 		assert_err(err);
 	}
 
@@ -180,6 +190,85 @@ void test_reftable_stack_add(void)
 	struct reftable_stack *st32 = NULL;
 	err = reftable_new_stack(&st32, dir, cfg32);
 	assert(err == FORMAT_ERROR);
+
+	/* cleanup */
+	reftable_stack_destroy(st);
+	for (i = 0; i < N; i++) {
+		reftable_ref_record_clear(&refs[i]);
+		reftable_log_record_clear(&logs[i]);
+	}
+}
+
+void test_reftable_stack_tombstone(void)
+{
+	int i = 0;
+	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	struct reftable_ref_record refs[2] = { 0 };
+	struct reftable_log_record logs[2] = { 0 };
+	int N = ARRAY_SIZE(refs);
+
+	for (i = 0; i < N; i++) {
+		const char *buf = "branch";
+		refs[i].ref_name = xstrdup(buf);
+		refs[i].update_index = i + 1;
+		if (i % 2 == 0) {
+			refs[i].value = reftable_malloc(SHA1_SIZE);
+			set_test_hash(refs[i].value, i);
+		}
+		logs[i].ref_name = xstrdup(buf);
+		/* update_index is part of the key. */
+		logs[i].update_index = 42;
+		if (i % 2 == 0) {
+			logs[i].new_hash = reftable_malloc(SHA1_SIZE);
+			set_test_hash(logs[i].new_hash, i);
+			logs[i].email = xstrdup("identity@invalid");
+		}
+	}
+	for (i = 0; i < N; i++) {
+		int err = reftable_stack_add(st, &write_test_ref, &refs[i]);
+		assert_err(err);
+	}
+	for (i = 0; i < N; i++) {
+		struct write_log_arg arg = {
+			.log = &logs[i],
+			.update_index = reftable_stack_next_update_index(st),
+		};
+		int err = reftable_stack_add(st, &write_test_log, &arg);
+		assert_err(err);
+	}
+
+	{
+		struct reftable_ref_record dest = { 0 };
+		err = reftable_stack_read_ref(st, "branch", &dest);
+		assert(err == 1);
+		reftable_ref_record_clear(&dest);
+
+		struct reftable_log_record log_dest = { 0 };
+		err = reftable_stack_read_log(st, "branch", &log_dest);
+		assert(err == 1);
+		reftable_log_record_clear(&log_dest);
+	}
+	err = reftable_stack_compact_all(st, NULL);
+	assert_err(err);
+
+	{
+		struct reftable_ref_record dest = { 0 };
+		err = reftable_stack_read_ref(st, "branch", &dest);
+		assert(err == 1);
+
+		struct reftable_log_record log_dest = { 0 };
+		err = reftable_stack_read_log(st, "branch", &log_dest);
+		assert(err == 1);
+		reftable_ref_record_clear(&dest);
+		reftable_log_record_clear(&log_dest);
+	}
 
 	/* cleanup */
 	reftable_stack_destroy(st);
@@ -271,7 +360,11 @@ void test_reflog_expire(void)
 	}
 
 	for (i = 1; i <= N; i++) {
-		int err = reftable_stack_add(st, &write_test_log, &logs[i]);
+		struct write_log_arg arg = {
+			.log = &logs[i],
+			.update_index = reftable_stack_next_update_index(st),
+		};
+		int err = reftable_stack_add(st, &write_test_log, &arg);
 		assert_err(err);
 	}
 
@@ -334,6 +427,8 @@ void test_empty_add(void)
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_stack_tombstone",
+		      &test_reftable_stack_tombstone);
 	add_test_case("test_reftable_stack_add_one",
 		      &test_reftable_stack_add_one);
 	add_test_case("test_empty_add", test_empty_add);

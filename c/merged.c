@@ -79,24 +79,30 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
 	return 0;
 }
 
-static int merged_iter_next(struct merged_iter *mi, struct record rec)
+static int merged_iter_next_entry(struct merged_iter *mi, struct record rec)
 {
 	struct slice entry_key = { 0 };
-	struct pq_entry entry = merged_iter_pqueue_remove(&mi->pq);
-	int err = merged_iter_advance_subiter(mi, entry.index);
+	struct pq_entry entry = { 0 };
+	int err = 0;
+
+	if (merged_iter_pqueue_is_empty(mi->pq)) {
+		return 1;
+	}
+
+	entry = merged_iter_pqueue_remove(&mi->pq);
+	err = merged_iter_advance_subiter(mi, entry.index);
 	if (err < 0) {
 		return err;
 	}
 
-
-        /*
-          One can also use reftable as datacenter-local storage, where the ref
-          database is maintained in globally consistent database (eg.
-          CockroachDB or Spanner). In this scenario, replication delays together
-          with compaction may cause newer tables to contain older entries. In
-          such a deployment, the loop below must be changed to collect all
-          entries for the same key, and return new the newest one.
-        */
+	/*
+	  One can also use reftable as datacenter-local storage, where the ref
+	  database is maintained in globally consistent database (eg.
+	  CockroachDB or Spanner). In this scenario, replication delays together
+	  with compaction may cause newer tables to contain older entries. In
+	  such a deployment, the loop below must be changed to collect all
+	  entries for the same key, and return new the newest one.
+	*/
 	record_key(entry.rec, &entry_key);
 	while (!merged_iter_pqueue_is_empty(mi->pq)) {
 		struct pq_entry top = merged_iter_pqueue_top(mi->pq);
@@ -126,6 +132,19 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 	reftable_free(record_yield(&entry.rec));
 	slice_clear(&entry_key);
 	return 0;
+}
+
+static int merged_iter_next(struct merged_iter *mi, struct record rec)
+{
+	while (true) {
+		int err = merged_iter_next_entry(mi, rec);
+		if (err == 0 && mi->suppress_deletions &&
+		    record_is_deletion(rec)) {
+			continue;
+		}
+
+		return err;
+	}
 }
 
 static int merged_iter_next_void(void *p, struct record rec)
@@ -235,6 +254,7 @@ static int merged_table_seek_record(struct reftable_merged_table *mt,
 		.stack = iters,
 		.typ = record_type(rec),
 		.hash_id = mt->hash_id,
+		.suppress_deletions = mt->suppress_deletions,
 	};
 	int n = 0;
 	int err = 0;
