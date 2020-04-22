@@ -833,8 +833,9 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 			} else if (sublock_file_fd < 0) {
 				if (errno == EEXIST) {
 					err = 1;
+				} else {
+					err = IO_ERROR;
 				}
-				err = IO_ERROR;
 			}
 		}
 
@@ -891,7 +892,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		err = rename(slice_as_string(&temp_tab_file_name),
 			     slice_as_string(&new_table_path));
 		if (err < 0) {
-                        err = IO_ERROR;
+			err = IO_ERROR;
 			goto exit;
 		}
 	}
@@ -913,18 +914,21 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 
 	err = write(lock_file_fd, ref_list_contents.buf, ref_list_contents.len);
 	if (err < 0) {
+		err = IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}
 	err = close(lock_file_fd);
 	lock_file_fd = 0;
 	if (err < 0) {
+		err = IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}
 
 	err = rename(slice_as_string(&lock_file_name), st->list_file);
 	if (err < 0) {
+		err = IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}
