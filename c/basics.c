@@ -154,6 +154,26 @@ const char *reftable_error_str(int err)
 	}
 }
 
+int reftable_error_to_errno(int err) {
+	switch (err) {
+	case IO_ERROR:
+		return EIO;
+	case FORMAT_ERROR:
+		return EFAULT;
+	case NOT_EXIST_ERROR:
+		return ENOENT;
+	case LOCK_ERROR:
+		return EBUSY;
+	case API_ERROR:
+		return EINVAL;
+	case ZLIB_ERROR:
+		return EDOM;
+	default:
+		return ERANGE;
+	}
+}
+
+
 void *(*reftable_malloc_ptr)(size_t sz) = &malloc;
 void *(*reftable_realloc_ptr)(void *, size_t) = &realloc;
 void (*reftable_free_ptr)(void *) = &free;
