@@ -179,10 +179,10 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 	for (i = 0; i < n; i++) {
 		struct reftable_reader *r = stack[i];
 		if (r->hash_id != hash_id) {
-			return FORMAT_ERROR;
+			return REFTABLE_FORMAT_ERROR;
 		}
 		if (i > 0 && last_max >= reftable_reader_min_update_index(r)) {
-			return FORMAT_ERROR;
+			return REFTABLE_FORMAT_ERROR;
 		}
 		if (i == 0) {
 			first_min = reftable_reader_min_update_index(r);

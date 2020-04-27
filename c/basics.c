@@ -135,18 +135,18 @@ int names_equal(char **a, char **b)
 const char *reftable_error_str(int err)
 {
 	switch (err) {
-	case IO_ERROR:
+	case REFTABLE_IO_ERROR:
 		return "I/O error";
-	case FORMAT_ERROR:
-		return "FORMAT_ERROR";
-	case NOT_EXIST_ERROR:
-		return "NOT_EXIST_ERROR";
-	case LOCK_ERROR:
-		return "LOCK_ERROR";
-	case API_ERROR:
-		return "API_ERROR";
-	case ZLIB_ERROR:
-		return "ZLIB_ERROR";
+	case REFTABLE_FORMAT_ERROR:
+		return "corrupt reftable file";
+	case REFTABLE_NOT_EXIST_ERROR:
+		return "file does not exist";
+	case REFTABLE_LOCK_ERROR:
+		return "data is outdated";
+	case REFTABLE_API_ERROR:
+		return "misuse of the reftable API";
+	case REFTABLE_ZLIB_ERROR:
+		return "zlib failure";
 	case -1:
 		return "general error";
 	default:
@@ -156,17 +156,17 @@ const char *reftable_error_str(int err)
 
 int reftable_error_to_errno(int err) {
 	switch (err) {
-	case IO_ERROR:
+	case REFTABLE_IO_ERROR:
 		return EIO;
-	case FORMAT_ERROR:
+	case REFTABLE_FORMAT_ERROR:
 		return EFAULT;
-	case NOT_EXIST_ERROR:
+	case REFTABLE_NOT_EXIST_ERROR:
 		return ENOENT;
-	case LOCK_ERROR:
+	case REFTABLE_LOCK_ERROR:
 		return EBUSY;
-	case API_ERROR:
+	case REFTABLE_API_ERROR:
 		return EINVAL;
-	case ZLIB_ERROR:
+	case REFTABLE_ZLIB_ERROR:
 		return EDOM;
 	default:
 		return ERANGE;

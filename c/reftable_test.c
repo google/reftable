@@ -372,7 +372,7 @@ void test_table_read_api(void)
 
 	struct reftable_log_record log = { 0 };
 	err = reftable_iterator_next_log(it, &log);
-	assert(err == API_ERROR);
+	assert(err == REFTABLE_API_ERROR);
 
 	slice_clear(&buf);
 	int i = 0;
@@ -556,7 +556,7 @@ void test_table_empty(void)
 	reftable_writer_set_limits(w, 1, 1);
 
 	int err = reftable_writer_close(w);
-	assert(err == EMPTY_TABLE_ERROR);
+	assert(err == REFTABLE_EMPTY_TABLE_ERROR);
 	reftable_writer_free(w);
 
 	assert(buf.len == header_size(1) + footer_size(1));

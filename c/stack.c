@@ -51,18 +51,18 @@ static int fd_read_lines(int fd, char ***namesp)
 	char *buf = NULL;
 	int err = 0;
 	if (size < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 	err = lseek(fd, 0, SEEK_SET);
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
 	buf = reftable_malloc(size + 1);
 	if (read(fd, buf, size) != size) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 	buf[size] = 0;
@@ -84,7 +84,7 @@ int read_lines(const char *filename, char ***namesp)
 			return 0;
 		}
 
-		return IO_ERROR;
+		return REFTABLE_IO_ERROR;
 	}
 	err = fd_read_lines(fd, namesp);
 	close(fd);
@@ -265,12 +265,12 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 			free_names(names);
 			break;
 		}
-		if (err != NOT_EXIST_ERROR) {
+		if (err != REFTABLE_NOT_EXIST_ERROR) {
 			free_names(names);
 			return err;
 		}
 
-		/* err == NOT_EXIST_ERROR can be caused by a concurrent writer.
+		/* err == REFTABLE_NOT_EXIST_ERROR can be caused by a concurrent writer.
 		   Check if there was one by checking if the name list changed.
 		*/
 		err2 = read_lines(st->list_file, &names_after);
@@ -339,8 +339,8 @@ int reftable_stack_add(struct reftable_stack *st,
 {
 	int err = stack_try_add(st, write, arg);
 	if (err < 0) {
-		if (err == LOCK_ERROR) {
-                        // Ignore error return, we want to propagate LOCK_ERROR.
+		if (err == REFTABLE_LOCK_ERROR) {
+                        // Ignore error return, we want to propagate REFTABLE_LOCK_ERROR.
 			reftable_stack_reload(st);
 		}
 		return err;
@@ -383,9 +383,9 @@ static int reftable_stack_init_addition(struct reftable_addition *add,
 				 O_EXCL | O_CREAT | O_WRONLY, 0644);
 	if (add->lock_file_fd < 0) {
 		if (errno == EEXIST) {
-			err = LOCK_ERROR;
+			err = REFTABLE_LOCK_ERROR;
 		} else {
-			err = IO_ERROR;
+			err = REFTABLE_IO_ERROR;
 		}
 		goto exit;
 	}
@@ -395,7 +395,7 @@ static int reftable_stack_init_addition(struct reftable_addition *add,
 	}
 
 	if (err > 1) {
-		err = LOCK_ERROR;
+		err = REFTABLE_LOCK_ERROR;
 		goto exit;
 	}
 
@@ -459,21 +459,21 @@ int reftable_addition_commit(struct reftable_addition *add)
 	err = write(add->lock_file_fd, table_list.buf, table_list.len);
 	slice_clear(&table_list);
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
 	err = close(add->lock_file_fd);
 	add->lock_file_fd = 0;
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
 	err = rename(slice_as_string(&add->lock_file_name),
 		     add->stack->list_file);
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
@@ -541,7 +541,7 @@ int reftable_addition_add(struct reftable_addition *add,
 
 	tab_fd = mkstemp((char *)slice_as_string(&temp_tab_file_name));
 	if (tab_fd < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
@@ -553,7 +553,7 @@ int reftable_addition_add(struct reftable_addition *add,
 	}
 
 	err = reftable_writer_close(wr);
-	if (err == EMPTY_TABLE_ERROR) {
+	if (err == REFTABLE_EMPTY_TABLE_ERROR) {
 		err = 0;
 		goto exit;
 	}
@@ -564,12 +564,12 @@ int reftable_addition_add(struct reftable_addition *add,
 	err = close(tab_fd);
 	tab_fd = 0;
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
 	if (wr->min_update_index < next_update_index) {
-		err = API_ERROR;
+		err = REFTABLE_API_ERROR;
 		goto exit;
 	}
 
@@ -583,7 +583,7 @@ int reftable_addition_add(struct reftable_addition *add,
 	err = rename(slice_as_string(&temp_tab_file_name),
 		     slice_as_string(&tab_file_name));
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
@@ -804,7 +804,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		if (errno == EEXIST) {
 			err = 1;
 		} else {
-			err = IO_ERROR;
+			err = REFTABLE_IO_ERROR;
 		}
 		goto exit;
 	}
@@ -835,7 +835,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 				if (errno == EEXIST) {
 					err = 1;
 				} else {
-					err = IO_ERROR;
+					err = REFTABLE_IO_ERROR;
 				}
 			}
 		}
@@ -860,7 +860,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 				   expiry);
 	/* Compaction + tombstones can create an empty table out of non-empty
 	 * tables. */
-	is_empty_table = (err == EMPTY_TABLE_ERROR);
+	is_empty_table = (err == REFTABLE_EMPTY_TABLE_ERROR);
 	if (is_empty_table) {
 		err = 0;
 	}
@@ -874,7 +874,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		if (errno == EEXIST) {
 			err = 1;
 		} else {
-			err = IO_ERROR;
+			err = REFTABLE_IO_ERROR;
 		}
 		goto exit;
 	}
@@ -893,7 +893,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		err = rename(slice_as_string(&temp_tab_file_name),
 			     slice_as_string(&new_table_path));
 		if (err < 0) {
-			err = IO_ERROR;
+			err = REFTABLE_IO_ERROR;
 			goto exit;
 		}
 	}
@@ -915,21 +915,21 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 
 	err = write(lock_file_fd, ref_list_contents.buf, ref_list_contents.len);
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}
 	err = close(lock_file_fd);
 	lock_file_fd = 0;
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}
 
 	err = rename(slice_as_string(&lock_file_name), st->list_file);
 	if (err < 0) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
 		goto exit;
 	}

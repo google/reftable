@@ -723,7 +723,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	int n;
 
 	if (key.len <= 9 || key.buf[key.len - 9] != 0) {
-		return FORMAT_ERROR;
+		return REFTABLE_FORMAT_ERROR;
 	}
 
 	r->ref_name = reftable_realloc(r->ref_name, key.len - 8);
@@ -737,7 +737,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	}
 
 	if (in.len < 2 * hash_size) {
-		return FORMAT_ERROR;
+		return REFTABLE_FORMAT_ERROR;
 	}
 
 	r->old_hash = reftable_realloc(r->old_hash, hash_size);
@@ -798,7 +798,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 
 error:
 	slice_clear(&dest);
-	return FORMAT_ERROR;
+	return REFTABLE_FORMAT_ERROR;
 }
 
 static bool null_streq(char *a, char *b)

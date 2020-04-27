@@ -100,13 +100,13 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 	byte *f = footer;
 	int err = 0;
 	if (memcmp(f, "REFT", 4)) {
-		err = FORMAT_ERROR;
+		err = REFTABLE_FORMAT_ERROR;
 		goto exit;
 	}
 	f += 4;
 
 	if (memcmp(footer, header, header_size(r->version))) {
-		err = FORMAT_ERROR;
+		err = REFTABLE_FORMAT_ERROR;
 		goto exit;
 	}
 
@@ -129,7 +129,7 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 		case SHA256_ID:
 			break;
 		default:
-			err = FORMAT_ERROR;
+			err = REFTABLE_FORMAT_ERROR;
 			goto exit;
 		}
 		f += 4;
@@ -156,7 +156,7 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 		uint32_t file_crc = get_be32(f);
 		f += 4;
 		if (computed_crc != file_crc) {
-			err = FORMAT_ERROR;
+			err = REFTABLE_FORMAT_ERROR;
 			goto exit;
 		}
 	}
@@ -186,17 +186,17 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source source,
 	/* Need +1 to read type of first block. */
 	err = block_source_read_block(source, &header, 0, header_size(2) + 1);
 	if (err != header_size(2) + 1) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
 	if (memcmp(header.data, "REFT", 4)) {
-		err = FORMAT_ERROR;
+		err = REFTABLE_FORMAT_ERROR;
 		goto exit;
 	}
 	r->version = header.data[4];
 	if (r->version != 1 && r->version != 2) {
-		err = FORMAT_ERROR;
+		err = REFTABLE_FORMAT_ERROR;
 		goto exit;
 	}
 
@@ -208,7 +208,7 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source source,
 	err = block_source_read_block(source, &footer, r->size,
 				      footer_size(r->version));
 	if (err != footer_size(r->version)) {
-		err = IO_ERROR;
+		err = REFTABLE_IO_ERROR;
 		goto exit;
 	}
 
@@ -353,7 +353,7 @@ static int table_iter_next_block(struct table_iter *dest,
 static int table_iter_next(struct table_iter *ti, struct record rec)
 {
 	if (record_type(rec) != ti->typ) {
-		return API_ERROR;
+		return REFTABLE_API_ERROR;
 	}
 
 	while (true) {
@@ -535,7 +535,7 @@ static int reader_seek_indexed(struct reftable_reader *r,
 		}
 
 		if (next.typ != BLOCK_TYPE_INDEX) {
-			err = FORMAT_ERROR;
+			err = REFTABLE_FORMAT_ERROR;
 			break;
 		}
 

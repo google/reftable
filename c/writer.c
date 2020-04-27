@@ -233,11 +233,11 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 	int err = 0;
 
 	if (ref->ref_name == NULL) {
-		return API_ERROR;
+		return REFTABLE_API_ERROR;
 	}
 	if (ref->update_index < w->min_update_index ||
 	    ref->update_index > w->max_update_index) {
-		return API_ERROR;
+		return REFTABLE_API_ERROR;
 	}
 
 	record_from_ref(&rec, &copy);
@@ -281,7 +281,7 @@ int reftable_writer_add_log(struct reftable_writer *w,
 			    struct reftable_log_record *log)
 {
 	if (log->ref_name == NULL) {
-		return API_ERROR;
+		return REFTABLE_API_ERROR;
 	}
 
 	if (w->block_writer != NULL &&
@@ -557,7 +557,7 @@ int reftable_writer_close(struct reftable_writer *w)
 	}
 
 	if (empty_table) {
-		err = EMPTY_TABLE_ERROR;
+		err = REFTABLE_EMPTY_TABLE_ERROR;
 		goto exit;
 	}
 

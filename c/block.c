@@ -167,7 +167,7 @@ int block_writer_finish(struct block_writer *w)
 
 			if (Z_OK != zresult) {
 				slice_clear(&compressed);
-				return ZLIB_ERROR;
+				return REFTABLE_ZLIB_ERROR;
 			}
 
 			memcpy(w->buf + block_header_skip, compressed.buf,
@@ -193,7 +193,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 	uint32_t sz = get_be24(block->data + header_off + 1);
 
 	if (!is_block_type(typ)) {
-		return FORMAT_ERROR;
+		return REFTABLE_FORMAT_ERROR;
 	}
 
 	if (typ == BLOCK_TYPE_LOG) {
@@ -210,7 +210,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 				    &dst_len, block->data + block_header_skip,
 				    &src_len)) {
 			slice_clear(&uncompressed);
-			return ZLIB_ERROR;
+			return REFTABLE_ZLIB_ERROR;
 		}
 
 		block_source_return_block(block->source, block);

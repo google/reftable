@@ -83,19 +83,19 @@ void reftable_log_record_print(struct reftable_log_record *log,
 /* different types of errors */
 enum reftable_error {
 	/* Unexpected file system behavior */
-	IO_ERROR = -2,
+	REFTABLE_IO_ERROR = -2,
 
 	/* Format inconsistency on reading data
 	 */
-	FORMAT_ERROR = -3,
+	REFTABLE_FORMAT_ERROR = -3,
 
 	/* File does not exist. Returned from block_source_from_file(),  because
 	   it needs special handling in stack.
 	*/
-	NOT_EXIST_ERROR = -4,
+	REFTABLE_NOT_EXIST_ERROR = -4,
 
 	/* Trying to write out-of-date data. */
-	LOCK_ERROR = -5,
+	REFTABLE_LOCK_ERROR = -5,
 
 	/* Misuse of the API:
 	   - on writing a record with NULL ref_name.
@@ -103,13 +103,13 @@ enum reftable_error {
 	   - on writing a ref or log record before the stack's next_update_index
 	   - on reading a reftable_ref_record from log iterator, or vice versa.
 	*/
-	API_ERROR = -6,
+	REFTABLE_API_ERROR = -6,
 
 	/* Decompression error */
-	ZLIB_ERROR = -7,
+	REFTABLE_ZLIB_ERROR = -7,
 
 	/* Wrote a table without blocks. */
-	EMPTY_TABLE_ERROR = -8,
+	REFTABLE_EMPTY_TABLE_ERROR = -8,
 };
 
 /* convert the numeric error code to a string. The string should not be
@@ -194,7 +194,7 @@ int reftable_fd_write(void *fdp, uint8_t *data, int size);
 
 /* Set the range of update indices for the records we will add.  When
    writing a table into a stack, the min should be at least
-   reftable_stack_next_update_index(), or API_ERROR is returned.
+   reftable_stack_next_update_index(), or REFTABLE_API_ERROR is returned.
 
    For transactional updates, typically min==max. When converting an existing
    ref database into a single reftable, this would be a range of update-index
@@ -205,7 +205,7 @@ void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min,
 
 /* adds a reftable_ref_record. Must be called in ascending
    order. The update_index must be within the limits set by
-   reftable_writer_set_limits(), or API_ERROR is returned.
+   reftable_writer_set_limits(), or REFTABLE_API_ERROR is returned.
 
    It is an error to write a ref record after a log record.
  */

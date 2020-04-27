@@ -131,7 +131,7 @@ void test_reftable_stack_lock_failure(void)
 	struct reftable_stack *st = NULL;
 	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
-        for (int i = -1; i != EMPTY_TABLE_ERROR; i--) {
+        for (int i = -1; i != REFTABLE_EMPTY_TABLE_ERROR; i--) {
                 err = reftable_stack_add(st, &write_error, &i);
                 assert(err == i);
         }
@@ -211,7 +211,7 @@ void test_reftable_stack_add(void)
 	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
 	struct reftable_stack *st32 = NULL;
 	err = reftable_new_stack(&st32, dir, cfg32);
-	assert(err == FORMAT_ERROR);
+	assert(err == REFTABLE_FORMAT_ERROR);
 
 	/* cleanup */
 	reftable_stack_destroy(st);

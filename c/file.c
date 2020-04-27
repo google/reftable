@@ -69,7 +69,7 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 	int fd = open(name, O_RDONLY);
 	if (fd < 0) {
 		if (errno == ENOENT) {
-			return NOT_EXIST_ERROR;
+			return REFTABLE_NOT_EXIST_ERROR;
 		}
 		return -1;
 	}
