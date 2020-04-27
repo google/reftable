@@ -16,6 +16,22 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "test_framework.h"
 
+#include <sys/types.h>
+#include <dirent.h>
+
+void clear_dir(const char* dirname)
+{
+        int fd = open(dirname, O_DIRECTORY, 0);
+        assert(fd >= 0);
+        DIR *dir = fdopendir(fd);
+        struct dirent *ent = NULL;
+        while ((ent = readdir(dir)) != NULL) {
+                unlinkat(fd, ent->d_name, 0);
+        }
+        closedir(dir);
+        rmdir(dirname);
+}
+
 void test_read_file(void)
 {
 	char fn[256] = "/tmp/stack.test_read_file.XXXXXX";
@@ -92,7 +108,7 @@ int write_test_log(struct reftable_writer *wr, void *arg)
 
 void test_reftable_stack_add_one(void)
 {
-	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack_test.XXXXXX";
 	assert(mkdtemp(dir));
 
 	struct reftable_write_options cfg = { 0 };
@@ -115,6 +131,7 @@ void test_reftable_stack_add_one(void)
 	assert(0 == strcmp("master", dest.target));
 
 	reftable_stack_destroy(st);
+        clear_dir(dir);
 }
 
 int write_error(struct reftable_writer *wr, void *arg)
@@ -124,7 +141,7 @@ int write_error(struct reftable_writer *wr, void *arg)
 
 void test_reftable_stack_lock_failure(void)
 {
-	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack_test.XXXXXX";
 	assert(mkdtemp(dir));
 
 	struct reftable_write_options cfg = { 0 };
@@ -137,12 +154,13 @@ void test_reftable_stack_lock_failure(void)
         }
 
 	reftable_stack_destroy(st);
+        clear_dir(dir);
 }
 
 void test_reftable_stack_add(void)
 {
 	int i = 0;
-	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack_test.XXXXXX";
 	assert(mkdtemp(dir));
 
 	struct reftable_write_options cfg = { 0 };
@@ -219,12 +237,13 @@ void test_reftable_stack_add(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
+        clear_dir(dir);
 }
 
 void test_reftable_stack_tombstone(void)
 {
 	int i = 0;
-	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack_test.XXXXXX";
 	assert(mkdtemp(dir));
 
 	struct reftable_write_options cfg = { 0 };
@@ -298,6 +317,7 @@ void test_reftable_stack_tombstone(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
+        clear_dir(dir);
 }
 
 void test_log2(void)
@@ -421,6 +441,7 @@ void test_reflog_expire(void)
 	for (i = 0; i < N; i++) {
 		reftable_log_record_clear(&logs[i]);
 	}
+        clear_dir(dir);
 }
 
 int write_nothing(struct reftable_writer *wr, void *arg)
@@ -431,7 +452,7 @@ int write_nothing(struct reftable_writer *wr, void *arg)
 
 void test_empty_add(void)
 {
-	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	char dir[256] = "/tmp/stack_test.XXXXXX";
 	assert(mkdtemp(dir));
 
 	struct reftable_write_options cfg = { 0 };
@@ -445,6 +466,7 @@ void test_empty_add(void)
 	struct reftable_stack *st2 = NULL;
 	err = reftable_new_stack(&st2, dir, cfg);
 	assert_err(err);
+        clear_dir(dir);
 }
 
 int main(int argc, char *argv[])
