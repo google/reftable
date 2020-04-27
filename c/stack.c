@@ -340,7 +340,8 @@ int reftable_stack_add(struct reftable_stack *st,
 	int err = stack_try_add(st, write, arg);
 	if (err < 0) {
 		if (err == LOCK_ERROR) {
-			err = reftable_stack_reload(st);
+                        // Ignore error return, we want to propagate LOCK_ERROR.
+			reftable_stack_reload(st);
 		}
 		return err;
 	}

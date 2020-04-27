@@ -117,6 +117,28 @@ void test_reftable_stack_add_one(void)
 	reftable_stack_destroy(st);
 }
 
+int write_error(struct reftable_writer *wr, void *arg)
+{
+        return *((int*) arg);
+}
+
+void test_reftable_stack_lock_failure(void)
+{
+	char dir[256] = "/tmp/stack.test_reftable_stack_add.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+        for (int i = -1; i != EMPTY_TABLE_ERROR; i--) {
+                err = reftable_stack_add(st, &write_error, &i);
+                assert(err == i);
+        }
+
+	reftable_stack_destroy(st);
+}
+
 void test_reftable_stack_add(void)
 {
 	int i = 0;
@@ -427,6 +449,8 @@ void test_empty_add(void)
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_stack_lock_failure",
+		      &test_reftable_stack_lock_failure);
 	add_test_case("test_reftable_stack_tombstone",
 		      &test_reftable_stack_tombstone);
 	add_test_case("test_reftable_stack_add_one",
