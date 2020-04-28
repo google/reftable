@@ -107,6 +107,8 @@ byte block_reader_type(struct block_reader *r);
 int block_reader_first_key(struct block_reader *br, struct slice *key);
 
 void block_iter_copy_from(struct block_iter *dest, struct block_iter *src);
+
+/* return < 0 for error, 0 for OK, > 0 for EOF. */
 int block_iter_next(struct block_iter *it, struct record rec);
 
 /* Seek to `want` with in the block pointed to by `it` */

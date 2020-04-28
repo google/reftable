@@ -302,7 +302,6 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 	slice_copy(&dest->last_key, src->last_key);
 }
 
-/* return < 0 for error, 0 for OK, > 0 for EOF. */
 int block_iter_next(struct block_iter *it, struct record rec)
 {
 	if (it->next_off >= it->br->block_len) {
