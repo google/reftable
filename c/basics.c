@@ -14,7 +14,7 @@ void put_be24(byte *out, uint32_t i)
 {
 	out[0] = (byte)((i >> 16) & 0xff);
 	out[1] = (byte)((i >> 8) & 0xff);
-	out[2] = (byte)((i)&0xff);
+	out[2] = (byte)(i&0xff);
 }
 
 uint32_t get_be24(byte *in)
@@ -26,19 +26,19 @@ uint32_t get_be24(byte *in)
 void put_be16(uint8_t *out, uint16_t i)
 {
 	out[0] = (uint8_t)((i >> 8) & 0xff);
-	out[1] = (uint8_t)((i)&0xff);
+	out[1] = (uint8_t)(i&0xff);
 }
 
-int binsearch(int sz, int (*f)(int k, void *args), void *args)
+int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args)
 {
-	int lo = 0;
-	int hi = sz;
+	size_t lo = 0;
+	size_t hi = sz;
 
 	/* invariant: (hi == sz) || f(hi) == true
 	   (lo == 0 && f(0) == true) || fi(lo) == false
 	 */
 	while (hi - lo > 1) {
-		int mid = lo + (hi - lo) / 2;
+		size_t mid = lo + (hi - lo) / 2;
 
 		int val = f(mid, args);
 		if (val) {

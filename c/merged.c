@@ -51,7 +51,7 @@ static void merged_iter_close(void *p)
 	reftable_free(mi->stack);
 }
 
-static int merged_iter_advance_subiter(struct merged_iter *mi, int idx)
+static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 {
 	if (iterator_is_null(mi->stack[idx])) {
 		return 0;

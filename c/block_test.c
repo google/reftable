@@ -21,7 +21,7 @@ struct binsearch_args {
 	int *arr;
 };
 
-static int binsearch_func(int i, void *void_args)
+static int binsearch_func(size_t i, void *void_args)
 {
 	struct binsearch_args *args = (struct binsearch_args *)void_args;
 
@@ -31,7 +31,7 @@ static int binsearch_func(int i, void *void_args)
 void test_binsearch()
 {
 	int arr[] = { 2, 4, 6, 8, 10 };
-	int sz = ARRAY_SIZE(arr);
+	size_t sz = ARRAY_SIZE(arr);
 	struct binsearch_args args = {
 		.arr = arr,
 	};

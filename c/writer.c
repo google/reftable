@@ -108,7 +108,7 @@ static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
 }
 
 struct reftable_writer *
-reftable_new_writer(int (*writer_func)(void *, byte *, int), void *writer_arg,
+reftable_new_writer(int (*writer_func)(void *, byte *, size_t), void *writer_arg,
 		    struct reftable_write_options *opts)
 {
 	struct reftable_writer *wp =

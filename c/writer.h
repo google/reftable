@@ -16,7 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "tree.h"
 
 struct reftable_writer {
-	int (*write)(void *, byte *, int);
+	int (*write)(void *, byte *, size_t);
 	void *write_arg;
 	int pending_padding;
 	struct slice last_key;

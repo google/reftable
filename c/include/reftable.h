@@ -186,11 +186,11 @@ struct reftable_stats {
 
 /* reftable_new_writer creates a new writer */
 struct reftable_writer *
-reftable_new_writer(int (*writer_func)(void *, uint8_t *, int),
+reftable_new_writer(int (*writer_func)(void *, uint8_t *, size_t),
 		    void *writer_arg, struct reftable_write_options *opts);
 
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
-int reftable_fd_write(void *fdp, uint8_t *data, int size);
+int reftable_fd_write(void *fdp, uint8_t *data, size_t size);
 
 /* Set the range of update indices for the records we will add.  When
    writing a table into a stack, the min should be at least
