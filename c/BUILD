@@ -32,6 +32,7 @@ cc_library(
         "pq.c",
         "reader.c",
         "record.c",
+        "refname.c",
         "slice.c",
         "stack.c",
         "tree.c",
