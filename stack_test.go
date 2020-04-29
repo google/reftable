@@ -330,3 +330,56 @@ func TestIgnoreEmptyTables(t *testing.T) {
 		t.Fatalf("got: %v", strings.Join(ss, " "))
 	}
 }
+
+func TestNameCheck(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		Unaligned: true,
+	}
+
+	st, err := NewStack(dir, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.Add(func(w *Writer) error {
+		next := st.NextUpdateIndex()
+		r := RefRecord{
+			RefName:     "branch",
+			UpdateIndex: next,
+			Value:       testHash(1),
+		}
+
+		w.SetLimits(next, next)
+		if err := w.AddRef(&r); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("write %v", err)
+	}
+
+	if err := st.Add(func(w *Writer) error {
+		next := st.NextUpdateIndex()
+		r := RefRecord{
+			RefName:     "branch/dir",
+			UpdateIndex: next,
+			Value:       testHash(2),
+		}
+
+		w.SetLimits(next, next)
+		if err := w.AddRef(&r); err != nil {
+			return err
+		}
+		return nil
+	}); err == nil {
+		t.Fatalf("should have failed to add dir/file conflict")
+	}
+}

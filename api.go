@@ -80,6 +80,9 @@ type Config struct {
 
 	// Hash identifier. Unset means sha1.
 	HashID HashID
+
+	// Allow dir/file conflicts and illegal refnames
+	SkipNameCheck bool
 }
 
 // RefRecord is a Record from the ref database.

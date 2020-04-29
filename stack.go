@@ -318,6 +318,11 @@ func (tr *Addition) Add(write func(w *Writer) error) error {
 	if wr.minUpdateIndex < tr.nextUpdateIndex {
 		return ErrLockFailure
 	}
+
+	if err := tr.stack.checkAddition(tab.Name()); err != nil {
+		return err
+	}
+
 	dest := fn + ".ref"
 	tr.names = append(tr.names, dest)
 	tr.newTables = append(tr.newTables, dest)
@@ -369,6 +374,40 @@ func (tr *Addition) Commit() error {
 	tr.newTables = nil
 
 	return tr.stack.reload(true)
+}
+
+func (s *Stack) checkAddition(tabname string) error {
+	if s.cfg.SkipNameCheck {
+		return nil
+	}
+	bs, err := NewFileBlockSource(tabname)
+	if err != nil {
+		return err
+	}
+	r, err := NewReader(bs, tabname)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	it, err := r.SeekRef("")
+	if err != nil {
+		return err
+	}
+
+	var recs []RefRecord
+	for {
+		var rec RefRecord
+		ok, err := it.NextRef(&rec)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			break
+		}
+		recs = append(recs, rec)
+	}
+
+	return validateRefRecordAddition(s.Merged(), recs)
 }
 
 func formatName(min, max uint64) string {
