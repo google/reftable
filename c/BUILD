@@ -32,6 +32,7 @@ cc_library(
         "pq.c",
         "reader.c",
         "record.c",
+        "refname.c",
         "reftable.c",
         "slice.c",
         "stack.c",
@@ -47,6 +48,7 @@ cc_library(
         "merged.h",
         "pq.h",
         "reader.h",
+        "refname.h",
         "record.h",
         "slice.h",
         "stack.h",
@@ -122,6 +124,15 @@ cc_test(
 cc_test(
     name = "block_test",
     srcs = ["block_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+)
+
+cc_test(
+    name = "refname_test",
+    srcs = ["refname_test.c"],
     deps = [
         ":reftable",
         ":testlib",
