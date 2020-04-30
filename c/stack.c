@@ -1099,27 +1099,9 @@ reftable_stack_compaction_stats(struct reftable_stack *st)
 int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
 			    struct reftable_ref_record *ref)
 {
-	struct reftable_iterator it = { 0 };
-	struct reftable_merged_table *mt = reftable_stack_merged_table(st);
-	int err = reftable_merged_table_seek_ref(mt, &it, refname);
-	if (err) {
-		goto exit;
-	}
-
-	err = reftable_iterator_next_ref(it, ref);
-	if (err) {
-		goto exit;
-	}
-
-	if (strcmp(ref->ref_name, refname) ||
-	    reftable_ref_record_is_deletion(ref)) {
-		err = 1;
-		goto exit;
-	}
-
-exit:
-	reftable_iterator_destroy(&it);
-	return err;
+	struct reftable_table tab = { NULL };
+	reftable_table_from_merged_table(&tab, reftable_stack_merged_table(st));
+	return reftable_table_read_ref(tab, refname, ref);
 }
 
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,

@@ -244,9 +244,8 @@ reftable_merged_table_min_update_index(struct reftable_merged_table *mt)
 	return mt->min;
 }
 
-static int merged_table_seek_record(struct reftable_merged_table *mt,
-				    struct reftable_iterator *it,
-				    struct record rec)
+int merged_table_seek_record(struct reftable_merged_table *mt,
+			     struct reftable_iterator *it, struct record rec)
 {
 	struct reftable_iterator *iters = reftable_calloc(
 		sizeof(struct reftable_iterator) * mt->stack_len);

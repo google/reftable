@@ -32,5 +32,7 @@ struct merged_iter {
 };
 
 void merged_table_clear(struct reftable_merged_table *mt);
+int merged_table_seek_record(struct reftable_merged_table *mt,
+			     struct reftable_iterator *it, struct record rec);
 
 #endif
