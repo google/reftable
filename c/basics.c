@@ -134,6 +134,7 @@ int names_equal(char **a, char **b)
 
 const char *reftable_error_str(int err)
 {
+	static char buf[250];
 	switch (err) {
 	case REFTABLE_IO_ERROR:
 		return "I/O error";
@@ -147,10 +148,15 @@ const char *reftable_error_str(int err)
 		return "misuse of the reftable API";
 	case REFTABLE_ZLIB_ERROR:
 		return "zlib failure";
+	case REFTABLE_NAME_CONFLICT:
+		return "file/directory conflict";
+	case REFTABLE_REFNAME_ERROR:
+		return "invalid refname";
 	case -1:
 		return "general error";
 	default:
-		return "unknown error code";
+		snprintf(buf, sizeof(buf), "unknown error code %d", err);
+		return buf;
 	}
 }
 
