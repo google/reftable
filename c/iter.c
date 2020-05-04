@@ -36,6 +36,7 @@ struct reftable_iterator_vtable empty_vtable = {
 
 void iterator_set_empty(struct reftable_iterator *it)
 {
+	assert(it->ops == NULL);
 	it->iter_arg = NULL;
 	it->ops = &empty_vtable;
 }
@@ -85,18 +86,18 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 		(struct filtering_ref_iterator *)iter_arg;
 	struct reftable_ref_record *ref =
 		(struct reftable_ref_record *)rec.data;
-
+	int err = 0;
 	while (true) {
-		int err = reftable_iterator_next_ref(fri->it, ref);
+		err = reftable_iterator_next_ref(fri->it, ref);
 		if (err != 0) {
-			return err;
+			break;
 		}
 
 		if (fri->double_check) {
 			struct reftable_iterator it = { 0 };
 
-			int err = reftable_reader_seek_ref(fri->r, &it,
-							   ref->ref_name);
+			err = reftable_reader_seek_ref(fri->r, &it,
+						       ref->ref_name);
 			if (err == 0) {
 				err = reftable_iterator_next_ref(it, ref);
 			}
@@ -104,7 +105,7 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 			reftable_iterator_destroy(&it);
 
 			if (err < 0) {
-				return err;
+				break;
 			}
 
 			if (err > 0) {
@@ -119,6 +120,9 @@ static int filtering_ref_iterator_next(void *iter_arg, struct record rec)
 			return 0;
 		}
 	}
+
+	reftable_ref_record_clear(ref);
+	return err;
 }
 
 struct reftable_iterator_vtable filtering_ref_iterator_vtable = {
@@ -129,6 +133,7 @@ struct reftable_iterator_vtable filtering_ref_iterator_vtable = {
 void iterator_from_filtering_ref_iterator(struct reftable_iterator *it,
 					  struct filtering_ref_iterator *fri)
 {
+	assert(it->ops == NULL);
 	it->iter_arg = fri;
 	it->ops = &filtering_ref_iterator_vtable;
 }
@@ -229,6 +234,7 @@ struct reftable_iterator_vtable indexed_table_ref_iter_vtable = {
 void iterator_from_indexed_table_ref_iter(struct reftable_iterator *it,
 					  struct indexed_table_ref_iter *itr)
 {
+	assert(it->ops == NULL);
 	it->iter_arg = itr;
 	it->ops = &indexed_table_ref_iter_vtable;
 }

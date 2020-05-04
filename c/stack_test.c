@@ -131,6 +131,7 @@ void test_reftable_stack_add_one(void)
 	assert_err(err);
 	assert(0 == strcmp("master", dest.target));
 
+	reftable_ref_record_clear(&dest);
 	reftable_stack_destroy(st);
 	clear_dir(dir);
 }
@@ -298,6 +299,7 @@ void test_reftable_stack_add(void)
 
 	/* cleanup */
 	reftable_stack_destroy(st);
+	reftable_stack_destroy(st_default);
 	for (i = 0; i < N; i++) {
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
@@ -515,7 +517,7 @@ void test_reflog_expire(void)
 
 	/* cleanup */
 	reftable_stack_destroy(st);
-	for (i = 0; i < N; i++) {
+	for (i = 0; i <= N; i++) {
 		reftable_log_record_clear(&logs[i]);
 	}
 	clear_dir(dir);
@@ -544,6 +546,8 @@ void test_empty_add(void)
 	err = reftable_new_stack(&st2, dir, cfg);
 	assert_err(err);
 	clear_dir(dir);
+	reftable_stack_destroy(st);
+	reftable_stack_destroy(st2);
 }
 
 void test_reftable_stack_auto_compaction(void)

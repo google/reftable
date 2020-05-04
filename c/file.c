@@ -85,6 +85,7 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 		p->size = st.st_size;
 		p->fd = fd;
 
+		assert(bs->ops == NULL);
 		bs->ops = &file_vtable;
 		bs->arg = p;
 	}

@@ -27,6 +27,8 @@ static int find_name(size_t k, void *arg)
 int modification_has_ref(struct modification *mod, const char *name)
 {
 	struct reftable_ref_record ref = { 0 };
+	int err = 0;
+
 	if (mod->add_len > 0) {
 		struct find_arg arg = {
 			.names = mod->add,
@@ -49,7 +51,17 @@ int modification_has_ref(struct modification *mod, const char *name)
 		}
 	}
 
-	return reftable_table_read_ref(mod->tab, name, &ref);
+	err = reftable_table_read_ref(mod->tab, name, &ref);
+	reftable_ref_record_clear(&ref);
+	return err;
+}
+
+static void modification_clear(struct modification *mod)
+{
+	FREE_AND_NULL(mod->add);
+	FREE_AND_NULL(mod->del);
+	mod->add_len = 0;
+	mod->del_len = 0;
 }
 
 // -1 = error, 0 = found, 1 = not found.
@@ -136,7 +148,7 @@ int validate_ref_record_addition(struct reftable_table tab,
 		.del = reftable_calloc(sizeof(char *) * sz),
 	};
 	int i = 0;
-
+	int err = 0;
 	for (; i < sz; i++) {
 		if (reftable_ref_record_is_deletion(&recs[i])) {
 			mod.del[mod.del_len++] = recs[i].ref_name;
@@ -145,7 +157,9 @@ int validate_ref_record_addition(struct reftable_table tab,
 		}
 	}
 
-	return modification_validate(&mod);
+	err = modification_validate(&mod);
+	modification_clear(&mod);
+	return err;
 }
 
 static void slice_trim_component(struct slice *sl)
@@ -160,12 +174,13 @@ static void slice_trim_component(struct slice *sl)
 
 int modification_validate(struct modification *mod)
 {
+	struct slice slashed = { 0 };
+	int err = 0;
 	int i = 0;
 	for (; i < mod->add_len; i++) {
-		int err = validate_ref_name(mod->add[i]);
-		struct slice slashed = { 0 };
+		err = validate_ref_name(mod->add[i]);
 		if (err) {
-			return err;
+			goto exit;
 		}
 		slice_set_string(&slashed, mod->add[i]);
 		slice_append_string(&slashed, "/");
@@ -173,10 +188,11 @@ int modification_validate(struct modification *mod)
 		err = modification_has_ref_with_prefix(
 			mod, slice_as_string(&slashed));
 		if (err == 0) {
-			return REFTABLE_NAME_CONFLICT;
+			err = REFTABLE_NAME_CONFLICT;
+			goto exit;
 		}
 		if (err < 0) {
-			return err;
+			goto exit;
 		}
 
 		slice_set_string(&slashed, mod->add[i]);
@@ -185,12 +201,16 @@ int modification_validate(struct modification *mod)
 			err = modification_has_ref(mod,
 						   slice_as_string(&slashed));
 			if (err == 0) {
-				return REFTABLE_NAME_CONFLICT;
+				err = REFTABLE_NAME_CONFLICT;
+				goto exit;
 			}
 			if (err < 0) {
-				return err;
+				goto exit;
 			}
 		}
 	}
-	return 0;
+	err = 0;
+exit:
+	slice_clear(&slashed);
+	return err;
 }

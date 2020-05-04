@@ -420,7 +420,6 @@ void reftable_addition_close(struct reftable_addition *add)
 		slice_append_string(&nm, "/");
 		slice_append_string(&nm, add->new_tables[i]);
 		unlink(slice_as_string(&nm));
-
 		reftable_free(add->new_tables[i]);
 		add->new_tables[i] = NULL;
 	}
@@ -439,6 +438,7 @@ void reftable_addition_close(struct reftable_addition *add)
 
 	free_names(add->names);
 	add->names = NULL;
+	slice_clear(&nm);
 }
 
 int reftable_addition_commit(struct reftable_addition *add)
@@ -687,6 +687,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	struct reftable_iterator it = { 0 };
 	struct reftable_ref_record ref = { 0 };
 	struct reftable_log_record log = { 0 };
+
 	uint64_t entries = 0;
 
 	int i = 0, j = 0;
@@ -730,6 +731,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 		}
 		entries++;
 	}
+	reftable_iterator_destroy(&it);
 
 	err = reftable_merged_table_seek_log(mt, &it, "");
 	if (err < 0) {
@@ -773,7 +775,7 @@ exit:
 		reftable_merged_table_free(mt);
 	}
 	reftable_ref_record_clear(&ref);
-
+	reftable_log_record_clear(&log);
 	st->stats.entries_written += entries;
 	return err;
 }
@@ -1142,6 +1144,9 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 	}
 
 exit:
+	if (err) {
+		reftable_log_record_clear(log);
+	}
 	reftable_iterator_destroy(&it);
 	return err;
 }

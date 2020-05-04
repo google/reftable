@@ -25,7 +25,7 @@ void test_buffer(void)
 
 	byte in[] = "hello";
 	slice_write(&buf, in, sizeof(in));
-	struct reftable_block_source source;
+	struct reftable_block_source source = { NULL };
 	block_source_from_slice(&source, &buf);
 	assert(block_source_size(source) == 6);
 	struct reftable_block out = { 0 };
@@ -61,6 +61,7 @@ void test_default_write_opts(void)
 
 	err = reftable_writer_close(w);
 	assert_err(err);
+	reftable_writer_free(w);
 
 	struct reftable_block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
@@ -81,6 +82,7 @@ void test_default_write_opts(void)
 
 	reftable_merged_table_close(merged);
 	reftable_merged_table_free(merged);
+	slice_clear(&buf);
 }
 
 void write_table(char ***names, struct slice *buf, int N, int block_size,
@@ -190,6 +192,8 @@ void test_log_buffer_size(void)
 	assert_err(err);
 	err = reftable_writer_close(w);
 	assert_err(err);
+	reftable_writer_free(w);
+	slice_clear(&buf);
 }
 
 void test_log_write_read(void)
@@ -289,6 +293,7 @@ void test_log_write_read(void)
 			assert_streq(names[i], log.ref_name);
 			assert(i == log.update_index);
 			i++;
+			reftable_log_record_clear(&log);
 		}
 
 		assert(i == N);
@@ -379,8 +384,10 @@ void test_table_read_api(void)
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}
+	reftable_iterator_destroy(&it);
 	reftable_free(names);
 	reader_close(&rd);
+	slice_clear(&buf);
 }
 
 void test_table_read_write_seek(bool index, int hash_id)
@@ -436,6 +443,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 		}
 
 		slice_clear(&pastLast);
+		reftable_iterator_destroy(&it);
 	}
 
 	slice_clear(&buf);

@@ -401,6 +401,7 @@ struct reftable_iterator_vtable table_iter_vtable = {
 static void iterator_from_table_iter(struct reftable_iterator *it,
 				     struct table_iter *ti)
 {
+	assert(it->ops == NULL);
 	it->iter_arg = ti;
 	it->ops = &table_iter_vtable;
 }
@@ -673,24 +674,26 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 	struct record got_rec = { 0 };
 	int err = 0;
 
+	/* Look through the reverse index. */
 	record_from_obj(&want_rec, &want);
-
 	err = reader_seek(r, &oit, want_rec);
 	if (err != 0) {
-		return err;
+		goto exit;
 	}
 
+	/* read out the obj_record */
 	record_from_obj(&got_rec, &got);
 	err = iterator_next(oit, got_rec);
-	reftable_iterator_destroy(&oit);
 	if (err < 0) {
-		return err;
+		goto exit;
 	}
 
 	if (err > 0 ||
 	    memcmp(want.hash_prefix, got.hash_prefix, r->object_id_len)) {
+		/* didn't find it; return empty iterator */
 		iterator_set_empty(it);
-		return 0;
+		err = 0;
+		goto exit;
 	}
 
 	{
@@ -699,16 +702,16 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 						 hash_size(r->hash_id),
 						 got.offsets, got.offset_len);
 		if (err < 0) {
-			record_clear(got_rec);
-			return err;
+			goto exit;
 		}
 		got.offsets = NULL;
-		record_clear(got_rec);
-
 		iterator_from_indexed_table_ref_iter(it, itr);
 	}
 
-	return 0;
+exit:
+	reftable_iterator_destroy(&oit);
+	record_clear(got_rec);
+	return err;
 }
 
 static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,

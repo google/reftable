@@ -187,6 +187,7 @@ struct reftable_block_source_vtable slice_vtable = {
 void block_source_from_slice(struct reftable_block_source *bs,
 			     struct slice *buf)
 {
+	assert(bs->ops == NULL);
 	bs->ops = &slice_vtable;
 	bs->arg = buf;
 }

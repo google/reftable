@@ -794,6 +794,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	memcpy(r->message, dest.buf, dest.len);
 	r->message[dest.len] = 0;
 
+	slice_clear(&dest);
 	return start.len - in.len;
 
 error:
@@ -854,7 +855,7 @@ struct record_vtable reftable_log_record_vtable = {
 
 struct record new_record(byte typ)
 {
-	struct record rec;
+	struct record rec = { NULL };
 	switch (typ) {
 	case BLOCK_TYPE_REF: {
 		struct reftable_ref_record *r =
@@ -1015,24 +1016,28 @@ bool record_is_deletion(struct record rec)
 
 void record_from_ref(struct record *rec, struct reftable_ref_record *ref_rec)
 {
+	assert(rec->ops == NULL);
 	rec->data = ref_rec;
 	rec->ops = &reftable_ref_record_vtable;
 }
 
 void record_from_obj(struct record *rec, struct obj_record *obj_rec)
 {
+	assert(rec->ops == NULL);
 	rec->data = obj_rec;
 	rec->ops = &obj_record_vtable;
 }
 
 void record_from_index(struct record *rec, struct index_record *index_rec)
 {
+	assert(rec->ops == NULL);
 	rec->data = index_rec;
 	rec->ops = &index_record_vtable;
 }
 
 void record_from_log(struct record *rec, struct reftable_log_record *log_rec)
 {
+	assert(rec->ops == NULL);
 	rec->data = log_rec;
 	rec->ops = &reftable_log_record_vtable;
 }

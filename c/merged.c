@@ -165,6 +165,7 @@ struct reftable_iterator_vtable merged_iter_vtable = {
 static void iterator_from_merged_iter(struct reftable_iterator *it,
 				      struct merged_iter *mi)
 {
+	assert(it->ops == NULL);
 	it->iter_arg = mi;
 	it->ops = &merged_iter_vtable;
 }

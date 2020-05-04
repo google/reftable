@@ -38,8 +38,6 @@ static struct reftable_table_vtable merged_table_vtable = {
 };
 
 int reftable_table_seek_ref(struct reftable_table tab,
-			    struct reftable_iterator *it, const char *name);
-int reftable_table_seek_ref(struct reftable_table tab,
 			    struct reftable_iterator *it, const char *name)
 {
 	struct reftable_ref_record ref = {
@@ -53,6 +51,7 @@ int reftable_table_seek_ref(struct reftable_table tab,
 void reftable_table_from_reader(struct reftable_table *tab,
 				struct reftable_reader *reader)
 {
+	assert(tab->ops == NULL);
 	tab->ops = &reader_vtable;
 	tab->table_arg = reader;
 }
@@ -60,6 +59,7 @@ void reftable_table_from_reader(struct reftable_table *tab,
 void reftable_table_from_merged_table(struct reftable_table *tab,
 				      struct reftable_merged_table *merged)
 {
+	assert(tab->ops == NULL);
 	tab->ops = &merged_table_vtable;
 	tab->table_arg = merged;
 }

@@ -173,6 +173,7 @@ int block_writer_finish(struct block_writer *w)
 			memcpy(w->buf + block_header_skip, compressed.buf,
 			       dest_len);
 			w->next = dest_len + block_header_skip;
+			slice_clear(&compressed);
 			break;
 		}
 	}

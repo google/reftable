@@ -337,7 +337,7 @@ void test_index_record_roundtrip()
 
 	byte extra = record_val_type(rec);
 	struct index_record out = { 0 };
-	struct record out_rec;
+	struct record out_rec = { NULL };
 	record_from_index(&out_rec, &out);
 	int m = record_decode(out_rec, key, extra, dest, SHA1_SIZE);
 	assert(m == n);
