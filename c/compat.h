@@ -39,4 +39,6 @@ uint16_t get_be16(uint8_t *in);
 
 char *xstrdup(const char *s);
 
+void sleep_millisec(int millisecs);
+
 #endif

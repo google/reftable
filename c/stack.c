@@ -290,8 +290,8 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 		free_names(names);
 		free_names(names_after);
 
-		delay = delay + (delay * rand()) / RAND_MAX + 100;
-		usleep(delay);
+		delay = delay + (delay * rand()) / RAND_MAX + 1;
+		sleep_millisec(delay);
 	}
 
 	return 0;

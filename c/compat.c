@@ -57,3 +57,8 @@ char *xstrdup(const char *s)
 	strncpy(dest, s, l + 1);
 	return dest;
 }
+
+void sleep_millisec(int millisecs)
+{
+	usleep(millisecs * 1000);
+}
