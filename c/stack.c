@@ -343,8 +343,9 @@ int reftable_stack_add(struct reftable_stack *st,
 	int err = stack_try_add(st, write, arg);
 	if (err < 0) {
 		if (err == REFTABLE_LOCK_ERROR) {
-			// Ignore error return, we want to propagate
-			// REFTABLE_LOCK_ERROR.
+			/* Ignore error return, we want to propagate
+			   REFTABLE_LOCK_ERROR.
+			*/
 			reftable_stack_reload(st);
 		}
 		return err;
@@ -821,6 +822,10 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		}
 		goto exit;
 	}
+	/* Don't want to write to the lock for now.  */
+	close(lock_file_fd);
+	lock_file_fd = 0;
+
 	have_lock = true;
 	err = stack_uptodate(st);
 	if (err != 0) {
