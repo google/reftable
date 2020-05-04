@@ -292,8 +292,8 @@ func (tr *Addition) Add(write func(w *Writer) error) error {
 	if err != nil {
 		return err
 	}
-	defer tab.Close()
 	defer os.Remove(tab.Name())
+	defer tab.Close()
 
 	wr, err := NewWriter(tab, &tr.stack.cfg)
 	if err != nil {
