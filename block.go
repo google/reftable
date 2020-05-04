@@ -207,6 +207,10 @@ func newBlockReader(block []byte, headerOff uint32, tableBlockSize uint32, hashS
 
 		r.Close()
 
+		if out.Len() != int(sz) {
+			return nil, fmtError
+		}
+
 		block = out.Bytes()
 		fullBlockSize = uint32(before - buf.Len())
 	} else if fullBlockSize == 0 {

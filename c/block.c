@@ -200,12 +200,18 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 	if (typ == BLOCK_TYPE_LOG) {
 		struct slice uncompressed = { 0 };
 		int block_header_skip = 4 + header_off;
-		uLongf dst_len = sz - block_header_skip;
+		uLongf dst_len = sz - block_header_skip; /* total size of dest
+							    buffer. */
 		uLongf src_len = block->len - block_header_skip;
 
+		/* Log blocks specify the *uncompressed* size in their header.
+		 */
 		slice_resize(&uncompressed, sz);
+
+		/* Copy over the block header verbatim. It's not compressed. */
 		memcpy(uncompressed.buf, block->data, block_header_skip);
 
+		/* Uncompress */
 		if (Z_OK != uncompress_return_consumed(
 				    uncompressed.buf + block_header_skip,
 				    &dst_len, block->data + block_header_skip,
@@ -214,9 +220,14 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 			return REFTABLE_ZLIB_ERROR;
 		}
 
+		if (dst_len + block_header_skip != sz) {
+			return REFTABLE_FORMAT_ERROR;
+		}
+
+		/* We're done with the input data. */
 		block_source_return_block(block->source, block);
 		block->data = uncompressed.buf;
-		block->len = dst_len; /* XXX: 4 bytes missing? */
+		block->len = sz;
 		block->source = malloc_block_source();
 		full_block_size = src_len + block_header_skip;
 	} else if (full_block_size == 0) {
