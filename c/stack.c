@@ -953,6 +953,11 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	}
 	have_lock = false;
 
+	/* Reload the stack before deleting. On windows, we can only delete the
+	   files after we closed them.
+	*/
+	err = reftable_stack_reload_maybe_reuse(st, first < last);
+
 	{
 		char **p = delete_on_success;
 		while (*p) {
@@ -963,7 +968,6 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		}
 	}
 
-	err = reftable_stack_reload_maybe_reuse(st, first < last);
 exit:
 	free_names(delete_on_success);
 	{
