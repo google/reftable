@@ -88,6 +88,47 @@ func testStackN(t *testing.T, N int) {
 	}
 }
 
+func TestAutoCompaction(t *testing.T) {
+	const N = 1000
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st, err := NewStack(dir, Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < N; i++ {
+		if err := st.Add(func(w *Writer) error {
+			r := RefRecord{
+				RefName:     fmt.Sprintf("branch%04d", i),
+				Target:      "target",
+				UpdateIndex: st.NextUpdateIndex(),
+			}
+			w.SetLimits(r.UpdateIndex, r.UpdateIndex)
+			if err := w.AddRef(&r); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("write %d: %v", i, err)
+		}
+
+		if i < 3 {
+			continue
+		}
+		if got, limit := len(st.stack), 2*log2(uint64(i)); got > limit {
+			t.Fatalf("stack is %d long, more than limit %d", got, limit)
+		}
+	}
+
+	if got, limit := st.Stats.EntriesWritten, uint64(log2(N)*N); got > limit {
+		t.Fatalf("wrote %d entries, more than limit %d", got, limit)
+	}
+}
+
 func TestMixedHashSize(t *testing.T) {
 	dir, err := ioutil.TempDir("", "")
 	if err != nil {

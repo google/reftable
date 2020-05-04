@@ -25,9 +25,12 @@ import (
 // CompactionStats holds some statistics of compaction over the
 // lifetime of the stack.
 type CompactionStats struct {
-	Bytes    uint64
-	Attempts int
-	Failures int
+	Bytes uint64
+
+	// All entries written, including from failed compaction attempts.
+	EntriesWritten uint64
+	Attempts       int
+	Failures       int
 }
 
 // Stack is an auto-compacting stack of reftables.
@@ -480,6 +483,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 		return err
 	}
 
+	var entries uint64
 	for {
 		var rec RefRecord
 		ok, err := it.NextRef(&rec)
@@ -497,6 +501,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 		if err := wr.AddRef(&rec); err != nil {
 			return err
 		}
+		entries++
 	}
 
 	it, err = merged.SeekLog("", math.MaxUint64)
@@ -529,7 +534,10 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 		if err := wr.AddLog(&rec); err != nil {
 			return err
 		}
+		entries++
 	}
+
+	st.Stats.EntriesWritten += entries
 	return nil
 }
 
@@ -671,7 +679,7 @@ func (st *Stack) tableSizesForCompaction() []uint64 {
 	if st.cfg.HashID == SHA256ID {
 		version = 2
 	}
-	var overhead = uint64(footerSize(version) + headerSize(version) - 1)
+	var overhead = uint64(headerSize(version) - 1)
 	for _, t := range st.stack {
 		res = append(res, t.size-overhead)
 	}
@@ -690,7 +698,7 @@ func (st *segment) size() int { return st.end - st.start }
 func log2(sz uint64) int {
 	base := uint64(2)
 	if sz == 0 {
-		panic("log(0)")
+		return 0
 	}
 
 	l := 0
@@ -722,6 +730,14 @@ func sizesToSegments(sizes []uint64) []segment {
 	return res
 }
 
+/*
+  We play the game of 2048: consecutive tables of the same size (as
+  determined by their log2) are compacted together. We try to combine
+  the result with preceding tables, if they are smaller (as determined
+  by their log2). As a result, if we have N entries, each entry will
+  go into a bigger table in a maximum of log2(N) times, making for
+  log2(N) * N overall cost.
+*/
 func suggestCompactionSegment(sizes []uint64) *segment {
 	segs := sizesToSegments(sizes)
 
