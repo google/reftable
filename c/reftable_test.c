@@ -400,6 +400,8 @@ void test_table_read_write_seek(bool index, int hash_id)
 
 	if (!index) {
 		rd.ref_offsets.index_offset = 0;
+	} else {
+		assert(rd.ref_offsets.index_offset > 0);
 	}
 
 	int i = 0;
@@ -415,6 +417,17 @@ void test_table_read_write_seek(bool index, int hash_id)
 
 		reftable_ref_record_clear(&ref);
 		reftable_iterator_destroy(&it);
+	}
+
+	{
+		struct reftable_iterator it = { 0 };
+		struct slice pastLast = { 0 };
+		slice_set_string(&pastLast, names[N - 1]);
+		slice_append_string(&pastLast, "/");
+
+		int err = reftable_reader_seek_ref(&rd, &it,
+						   slice_as_string(&pastLast));
+		assert(err > 0);
 	}
 
 	slice_clear(&buf);
