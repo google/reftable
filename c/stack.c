@@ -531,10 +531,9 @@ int reftable_addition_add(struct reftable_addition *add,
 	struct reftable_writer *wr = NULL;
 	int err = 0;
 	int tab_fd = 0;
-	uint64_t next_update_index = 0;
 
 	slice_resize(&next_name, 0);
-	format_name(&next_name, next_update_index, next_update_index);
+	format_name(&next_name, add->next_update_index, add->next_update_index);
 
 	slice_set_string(&temp_tab_file_name, add->stack->reftable_dir);
 	slice_append_string(&temp_tab_file_name, "/");
@@ -576,7 +575,7 @@ int reftable_addition_add(struct reftable_addition *add,
 		goto exit;
 	}
 
-	if (wr->min_update_index < next_update_index) {
+	if (wr->min_update_index < add->next_update_index) {
 		err = REFTABLE_API_ERROR;
 		goto exit;
 	}

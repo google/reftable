@@ -174,6 +174,35 @@ int write_error(struct reftable_writer *wr, void *arg)
         return *((int*) arg);
 }
 
+void test_reftable_stack_update_index_check(void)
+{
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	struct reftable_ref_record ref1 = {
+		.ref_name = "name1",
+		.update_index = 1,
+		.target = "master",
+	};
+	err = reftable_stack_add(st, &write_test_ref, &ref1);
+	assert_err(err);
+
+	struct reftable_ref_record ref2 = {
+		.ref_name = "name2",
+		.update_index = 1,
+		.target = "master",
+	};
+	err = reftable_stack_add(st, &write_test_ref, &ref2);
+	assert(err == REFTABLE_API_ERROR);
+	reftable_stack_destroy(st);
+	clear_dir(dir);
+}
+
 void test_reftable_stack_lock_failure(void)
 {
 	char dir[256] = "/tmp/stack_test.XXXXXX";
@@ -507,6 +536,8 @@ int main(int argc, char *argv[])
 {
 	add_test_case("test_reftable_stack_validate_refname",
 		      &test_reftable_stack_validate_refname);
+	add_test_case("test_reftable_stack_update_index_check",
+		      &test_reftable_stack_update_index_check);
 	add_test_case("test_reftable_stack_lock_failure",
 		      &test_reftable_stack_lock_failure);
 	add_test_case("test_reftable_stack_tombstone",
