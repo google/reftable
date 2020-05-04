@@ -64,7 +64,6 @@ static void modification_clear(struct modification *mod)
 	mod->del_len = 0;
 }
 
-// -1 = error, 0 = found, 1 = not found.
 int modification_has_ref_with_prefix(struct modification *mod,
 				     const char *prefix)
 {

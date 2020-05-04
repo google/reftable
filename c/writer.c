@@ -526,7 +526,7 @@ int reftable_writer_close(struct reftable_writer *w)
 	}
 	w->pending_padding = 0;
 	if (empty_table) {
-		// Empty tables need a header anyway.
+		/* Empty tables need a header anyway. */
 		byte header[28];
 		int n = writer_write_header(w, header);
 		err = padded_write(w, header, n, 0);
