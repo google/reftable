@@ -151,6 +151,10 @@ struct reftable_write_options {
 	 * Defaults to SHA1 if unset
 	 */
 	uint32_t hash_id;
+
+	/* boolean: do not check ref names for validity or dir/file conflicts.
+	 */
+	int skip_name_check;
 };
 
 /* reftable_block_stats holds statistics for a single block type */

@@ -11,6 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 #include "merged.h"
 #include "reader.h"
+#include "refname.h"
 #include "reftable.h"
 #include "writer.h"
 
@@ -200,6 +201,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 			}
 		}
 	}
+
 exit:
 	slice_clear(&table_path);
 	{
@@ -565,6 +567,12 @@ int reftable_addition_add(struct reftable_addition *add,
 	tab_fd = 0;
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
+		goto exit;
+	}
+
+	err = stack_check_addition(add->stack,
+				   slice_as_string(&temp_tab_file_name));
+	if (err < 0) {
 		goto exit;
 	}
 
@@ -1127,5 +1135,73 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 
 exit:
 	reftable_iterator_destroy(&it);
+	return err;
+}
+
+int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
+{
+	int err = 0;
+	struct reftable_block_source src = { 0 };
+	struct reftable_reader *rd = NULL;
+	struct reftable_table tab = { NULL };
+	struct reftable_ref_record *refs = NULL;
+	struct reftable_iterator it = { NULL };
+	int cap = 0;
+	int len = 0;
+	int i = 0;
+
+	if (st->config.skip_name_check) {
+		return 0;
+	}
+
+	err = reftable_block_source_from_file(&src, new_tab_name);
+	if (err < 0) {
+		goto exit;
+	}
+
+	err = reftable_new_reader(&rd, src, new_tab_name);
+	if (err < 0) {
+		goto exit;
+	}
+
+	err = reftable_reader_seek_ref(rd, &it, "");
+	if (err > 0) {
+		err = 0;
+		goto exit;
+	}
+	if (err < 0) {
+		goto exit;
+	}
+
+	while (true) {
+		struct reftable_ref_record ref = { 0 };
+		err = reftable_iterator_next_ref(it, &ref);
+		if (err > 0) {
+			break;
+		}
+		if (err < 0) {
+			goto exit;
+		}
+
+		if (len >= cap) {
+			cap = 2 * cap + 1;
+			refs = reftable_realloc(refs, cap * sizeof(refs[0]));
+		}
+
+		refs[len++] = ref;
+	}
+
+	reftable_table_from_merged_table(&tab, reftable_stack_merged_table(st));
+
+	err = validate_ref_record_addition(tab, refs, len);
+
+	for (i = 0; i < len; i++) {
+		reftable_ref_record_clear(&refs[i]);
+	}
+
+exit:
+	free(refs);
+	reftable_iterator_destroy(&it);
+	reftable_reader_free(rd);
 	return err;
 }
