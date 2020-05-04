@@ -14,7 +14,7 @@ void put_be24(byte *out, uint32_t i)
 {
 	out[0] = (byte)((i >> 16) & 0xff);
 	out[1] = (byte)((i >> 8) & 0xff);
-	out[2] = (byte)(i&0xff);
+	out[2] = (byte)(i & 0xff);
 }
 
 uint32_t get_be24(byte *in)
@@ -26,7 +26,7 @@ uint32_t get_be24(byte *in)
 void put_be16(uint8_t *out, uint16_t i)
 {
 	out[0] = (uint8_t)((i >> 8) & 0xff);
-	out[1] = (uint8_t)(i&0xff);
+	out[1] = (uint8_t)(i & 0xff);
 }
 
 int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args)
@@ -154,7 +154,8 @@ const char *reftable_error_str(int err)
 	}
 }
 
-int reftable_error_to_errno(int err) {
+int reftable_error_to_errno(int err)
+{
 	switch (err) {
 	case REFTABLE_IO_ERROR:
 		return EIO;
@@ -172,7 +173,6 @@ int reftable_error_to_errno(int err) {
 		return ERANGE;
 	}
 }
-
 
 void *(*reftable_malloc_ptr)(size_t sz) = &malloc;
 void *(*reftable_realloc_ptr)(void *, size_t) = &realloc;

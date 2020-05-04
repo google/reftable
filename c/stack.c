@@ -272,8 +272,9 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 			return err;
 		}
 
-		/* err == REFTABLE_NOT_EXIST_ERROR can be caused by a concurrent writer.
-		   Check if there was one by checking if the name list changed.
+		/* err == REFTABLE_NOT_EXIST_ERROR can be caused by a concurrent
+		   writer. Check if there was one by checking if the name list
+		   changed.
 		*/
 		err2 = read_lines(st->list_file, &names_after);
 		if (err2 < 0) {
@@ -342,7 +343,8 @@ int reftable_stack_add(struct reftable_stack *st,
 	int err = stack_try_add(st, write, arg);
 	if (err < 0) {
 		if (err == REFTABLE_LOCK_ERROR) {
-                        // Ignore error return, we want to propagate REFTABLE_LOCK_ERROR.
+			// Ignore error return, we want to propagate
+			// REFTABLE_LOCK_ERROR.
 			reftable_stack_reload(st);
 		}
 		return err;

@@ -20,17 +20,17 @@ https://developers.google.com/open-source/licenses/bsd
 #include <sys/types.h>
 #include <dirent.h>
 
-void clear_dir(const char* dirname)
+void clear_dir(const char *dirname)
 {
-        int fd = open(dirname, O_DIRECTORY, 0);
-        assert(fd >= 0);
-        DIR *dir = fdopendir(fd);
-        struct dirent *ent = NULL;
-        while ((ent = readdir(dir)) != NULL) {
-                unlinkat(fd, ent->d_name, 0);
-        }
-        closedir(dir);
-        rmdir(dirname);
+	int fd = open(dirname, O_DIRECTORY, 0);
+	assert(fd >= 0);
+	DIR *dir = fdopendir(fd);
+	struct dirent *ent = NULL;
+	while ((ent = readdir(dir)) != NULL) {
+		unlinkat(fd, ent->d_name, 0);
+	}
+	closedir(dir);
+	rmdir(dirname);
 }
 
 void test_read_file(void)
@@ -132,7 +132,7 @@ void test_reftable_stack_add_one(void)
 	assert(0 == strcmp("master", dest.target));
 
 	reftable_stack_destroy(st);
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 void test_reftable_stack_validate_refname(void)
@@ -172,7 +172,7 @@ void test_reftable_stack_validate_refname(void)
 
 int write_error(struct reftable_writer *wr, void *arg)
 {
-        return *((int*) arg);
+	return *((int *)arg);
 }
 
 void test_reftable_stack_update_index_check(void)
@@ -213,13 +213,13 @@ void test_reftable_stack_lock_failure(void)
 	struct reftable_stack *st = NULL;
 	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
-        for (int i = -1; i != REFTABLE_EMPTY_TABLE_ERROR; i--) {
-                err = reftable_stack_add(st, &write_error, &i);
-                assert(err == i);
-        }
+	for (int i = -1; i != REFTABLE_EMPTY_TABLE_ERROR; i--) {
+		err = reftable_stack_add(st, &write_error, &i);
+		assert(err == i);
+	}
 
 	reftable_stack_destroy(st);
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 void test_reftable_stack_add(void)
@@ -302,7 +302,7 @@ void test_reftable_stack_add(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 void test_reftable_stack_tombstone(void)
@@ -382,7 +382,7 @@ void test_reftable_stack_tombstone(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 void test_log2(void)
@@ -518,7 +518,7 @@ void test_reflog_expire(void)
 	for (i = 0; i < N; i++) {
 		reftable_log_record_clear(&logs[i]);
 	}
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 int write_nothing(struct reftable_writer *wr, void *arg)
@@ -543,7 +543,7 @@ void test_empty_add(void)
 	struct reftable_stack *st2 = NULL;
 	err = reftable_new_stack(&st2, dir, cfg);
 	assert_err(err);
-        clear_dir(dir);
+	clear_dir(dir);
 }
 
 void test_reftable_stack_auto_compaction(void)
