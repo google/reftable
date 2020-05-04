@@ -427,7 +427,15 @@ void test_table_read_write_seek(bool index, int hash_id)
 
 		int err = reftable_reader_seek_ref(&rd, &it,
 						   slice_as_string(&pastLast));
-		assert(err > 0);
+		if (err == 0) {
+			struct reftable_ref_record ref = { 0 };
+			int err = reftable_iterator_next_ref(it, &ref);
+			assert(err > 0);
+		} else {
+			assert(err > 0);
+		}
+
+		slice_clear(&pastLast);
 	}
 
 	slice_clear(&buf);
