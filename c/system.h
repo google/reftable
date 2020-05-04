@@ -12,6 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #if REFTABLE_IN_GITCORE
 
 #include "git-compat-util.h"
+#include "cache.h"
 #include <zlib.h>
 
 #else
