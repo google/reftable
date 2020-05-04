@@ -35,7 +35,4 @@ int validate_ref_record_addition(struct reftable_table tab,
 
 int modification_validate(struct modification *mod);
 
-/* illegal name, or dir/file conflict */
-#define REFTABLE_REFNAME_ERROR -9
-
 #endif
