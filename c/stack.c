@@ -20,7 +20,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 {
 	struct reftable_stack *p =
 		reftable_calloc(sizeof(struct reftable_stack));
-	struct slice list_file_name = {};
+	struct slice list_file_name = { 0 };
 	int err = 0;
 
 	if (config.hash_id == 0) {
@@ -412,7 +412,7 @@ exit:
 void reftable_addition_close(struct reftable_addition *add)
 {
 	int i = 0;
-	struct slice nm = {};
+	struct slice nm = { 0 };
 	for (i = 0; i < add->new_tables_len; i++) {
 		slice_set_string(&nm, add->stack->list_file);
 		slice_append_string(&nm, "/");

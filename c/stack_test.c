@@ -382,8 +382,7 @@ void test_sizes_to_segments(void)
 
 void test_sizes_to_segments_empty(void)
 {
-	uint64_t sizes[] = {};
-	/* .................0  1  2  3  4  5 */
+	uint64_t sizes[0];
 
 	int seglen = 0;
 	struct segment *segs =
