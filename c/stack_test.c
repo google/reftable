@@ -10,6 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
+#include "merged.h"
 #include "basics.h"
 #include "constants.h"
 #include "record.h"
@@ -420,6 +421,19 @@ void test_sizes_to_segments_empty(void)
 	reftable_free(segs);
 }
 
+void test_sizes_to_segments_all_equal(void)
+{
+	uint64_t sizes[] = { 5, 5 };
+
+	int seglen = 0;
+	struct segment *segs =
+		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
+	assert(seglen == 1);
+	assert(segs[0].start == 0);
+	assert(segs[0].end == 2);
+	reftable_free(segs);
+}
+
 void test_suggest_compaction_segment(void)
 {
 	{
@@ -532,8 +546,45 @@ void test_empty_add(void)
         clear_dir(dir);
 }
 
+void test_reftable_stack_auto_compaction(void)
+{
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	int N = 1000;
+	for (int i = 0; i < N; i++) {
+		char name[100];
+		snprintf(name, sizeof(name), "branch%04d", i);
+		struct reftable_ref_record ref = {
+			.ref_name = name,
+			.update_index = reftable_stack_next_update_index(st),
+			.target = "master",
+		};
+
+		err = reftable_stack_add(st, &write_test_ref, &ref);
+		assert_err(err);
+
+		assert(i < 3 || st->merged->stack_len < 2 * fastlog2(i));
+	}
+
+	assert(reftable_stack_compaction_stats(st)->entries_written <
+	       (uint64_t)(N * fastlog2(N)));
+
+	reftable_stack_destroy(st);
+	clear_dir(dir);
+}
+
 int main(int argc, char *argv[])
 {
+	add_test_case("test_sizes_to_segments_all_equal",
+		      &test_sizes_to_segments_all_equal);
+	add_test_case("test_reftable_stack_auto_compaction",
+		      &test_reftable_stack_auto_compaction);
 	add_test_case("test_reftable_stack_validate_refname",
 		      &test_reftable_stack_validate_refname);
 	add_test_case("test_reftable_stack_update_index_check",

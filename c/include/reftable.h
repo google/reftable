@@ -551,6 +551,8 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 /* statistics on past compactions. */
 struct reftable_compaction_stats {
 	uint64_t bytes; /* total number of bytes written */
+	uint64_t entries_written; /* total number of entries written, including
+				     failures. */
 	int attempts; /* how often we tried to compact */
 	int failures; /* failures happen on concurrent updates */
 };

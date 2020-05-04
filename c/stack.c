@@ -685,6 +685,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	struct reftable_iterator it = { 0 };
 	struct reftable_ref_record ref = { 0 };
 	struct reftable_log_record log = { 0 };
+	uint64_t entries = 0;
 
 	int i = 0, j = 0;
 	for (i = first, j = 0; i <= last; i++) {
@@ -725,6 +726,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 		if (err < 0) {
 			break;
 		}
+		entries++;
 	}
 
 	err = reftable_merged_table_seek_log(mt, &it, "");
@@ -745,8 +747,6 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 			continue;
 		}
 
-		/* XXX collect stats? */
-
 		if (config != NULL && config->time > 0 &&
 		    log.time < config->time) {
 			continue;
@@ -761,6 +761,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 		if (err < 0) {
 			break;
 		}
+		entries++;
 	}
 
 exit:
@@ -771,6 +772,7 @@ exit:
 	}
 	reftable_ref_record_clear(&ref);
 
+	st->stats.entries_written += entries;
 	return err;
 }
 
@@ -1003,7 +1005,9 @@ static int segment_size(struct segment *s)
 int fastlog2(uint64_t sz)
 {
 	int l = 0;
-	assert(sz > 0);
+	if (sz == 0) {
+		return 0;
+	}
 	for (; sz; sz /= 2) {
 		l++;
 	}
@@ -1016,6 +1020,11 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n)
 	int next = 0;
 	struct segment cur = { 0 };
 	int i = 0;
+
+	if (n == 0) {
+		*seglen = 0;
+		return segs;
+	}
 	for (i = 0; i < n; i++) {
 		int log = fastlog2(sizes[i]);
 		if (cur.log != log && cur.bytes > 0) {
@@ -1031,9 +1040,7 @@ struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n)
 		cur.end = i + 1;
 		cur.bytes += sizes[i];
 	}
-	if (next > 0) {
-		segs[next++] = cur;
-	}
+	segs[next++] = cur;
 	*seglen = next;
 	return segs;
 }
@@ -1075,7 +1082,7 @@ static uint64_t *stack_table_sizes_for_compaction(struct reftable_stack *st)
 	uint64_t *sizes =
 		reftable_calloc(sizeof(uint64_t) * st->merged->stack_len);
 	int version = (st->config.hash_id == SHA1_ID) ? 1 : 2;
-	int overhead = footer_size(version) + header_size(version) - 1;
+	int overhead = header_size(version) - 1;
 	int i = 0;
 	for (i = 0; i < st->merged->stack_len; i++) {
 		sizes[i] = st->merged->stack[i]->size - overhead;
