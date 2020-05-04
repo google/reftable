@@ -103,6 +103,7 @@ func constructTestTable(t *testing.T, refs []RefRecord, logs []LogRecord, cfg Co
 		}
 	}
 	if err := w.Close(); err != nil {
+
 		t.Fatalf("Close: %v", err)
 	}
 
@@ -346,6 +347,25 @@ func testTableSeek(t *testing.T, typ byte, recCount, recSize int, blockSize uint
 
 		if rec.key() != nm {
 			t.Errorf("got %q want %q", rec.key(), nm)
+		}
+	}
+
+	// Seek beyond last record.
+	beyondLastName := names[len(names)-1] + "/"
+	switch typ {
+	case blockTypeRef:
+		var ref RefRecord
+		if it, err := reader.SeekRef(beyondLastName); err != nil {
+			t.Fatalf("SeekRef(%v): %v", beyondLastName, err)
+		} else if ok, err := it.NextRef(&ref); ok || err != nil {
+			t.Fatalf("Next beyond last: got (%v, %v) want (false, nil)", ok, err)
+		}
+	case blockTypeLog:
+		var log LogRecord
+		if it, err := reader.SeekLog(beyondLastName, math.MaxUint64); err != nil {
+			t.Fatalf("SeekLog(%v): %v", beyondLastName, err)
+		} else if ok, err := it.NextLog(&log); ok || err != nil {
+			t.Fatalf("Next beyond last: got (%v, %v) want (false, nil)", ok, err)
 		}
 	}
 }

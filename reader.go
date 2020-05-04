@@ -356,7 +356,11 @@ func (r *Reader) seekRecord(rec record) (iterator, error) {
 	if !r.offsets[rec.typ()].Present {
 		return &emptyIterator{}, nil
 	}
-	return r.seek(rec)
+	tabIter, err := r.seek(rec)
+	if tabIter == nil {
+		return &emptyIterator{}, err
+	}
+	return tabIter, err
 }
 
 func (r *Reader) SeekRef(name string) (*Iterator, error) {
@@ -404,7 +408,6 @@ func (r *Reader) seek(rec record) (*tableIter, error) {
 	if ok {
 		return tabIter, nil
 	}
-
 	return nil, err
 }
 
