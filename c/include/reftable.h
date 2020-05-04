@@ -323,11 +323,12 @@ int reftable_block_source_from_file(struct reftable_block_source *block_src,
 struct reftable_reader;
 
 /* reftable_new_reader opens a reftable for reading. If successful, returns 0
- * code and sets pp.  The name is used for creating a
- * stack. Typically, it is the basename of the file.
+ * code and sets pp. The name is used for creating a stack. Typically, it is the
+ * basename of the file. The block source `src` is owned by the reader, and is
+ * closed on calling reftable_reader_destroy().
  */
 int reftable_new_reader(struct reftable_reader **pp,
-			struct reftable_block_source, const char *name);
+			struct reftable_block_source src, const char *name);
 
 /* reftable_reader_seek_ref returns an iterator where 'name' would be inserted
    in the table.  To seek to the start of the table, use name = "".

@@ -647,6 +647,7 @@ int reftable_new_reader(struct reftable_reader **p,
 	if (err == 0) {
 		*p = rd;
 	} else {
+		block_source_close(&src);
 		reftable_free(rd);
 	}
 	return err;
