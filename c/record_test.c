@@ -151,6 +151,26 @@ void test_reftable_ref_record_roundtrip()
 	}
 }
 
+void test_reftable_log_record_equal()
+{
+	struct reftable_log_record in[2] = {
+		{
+			.ref_name = xstrdup("refs/heads/master"),
+			.update_index = 42,
+		},
+		{
+			.ref_name = xstrdup("refs/heads/master"),
+			.update_index = 22,
+		}
+	};
+
+	assert(!reftable_log_record_equal(&in[0], &in[1], SHA1_SIZE));
+	in[1].update_index = in[0].update_index;
+	assert(reftable_log_record_equal(&in[0], &in[1], SHA1_SIZE));
+	reftable_log_record_clear(&in[0]);
+	reftable_log_record_clear(&in[1]);
+}
+
 void test_reftable_log_record_roundtrip()
 {
 	struct reftable_log_record in[2] = {
@@ -170,7 +190,8 @@ void test_reftable_log_record_roundtrip()
 			.update_index = 22,
 		}
 	};
-
+	set_test_hash(in[0].new_hash, 1);
+	set_test_hash(in[0].old_hash, 2);
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
 		struct record rec = { 0 };
 		record_from_log(&rec, &in[i]);
@@ -351,6 +372,8 @@ void test_index_record_roundtrip()
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_log_record_equal",
+		      &test_reftable_log_record_equal);
 	add_test_case("test_reftable_log_record_roundtrip",
 		      &test_reftable_log_record_roundtrip);
 	add_test_case("test_reftable_ref_record_roundtrip",
