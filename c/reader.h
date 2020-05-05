@@ -18,8 +18,6 @@ uint64_t block_source_size(struct reftable_block_source source);
 int block_source_read_block(struct reftable_block_source source,
 			    struct reftable_block *dest, uint64_t off,
 			    uint32_t size);
-void block_source_return_block(struct reftable_block_source source,
-			       struct reftable_block *ret);
 void block_source_close(struct reftable_block_source *source);
 
 /* metadata for a block type */
@@ -59,7 +57,6 @@ int reader_seek(struct reftable_reader *r, struct reftable_iterator *it,
 		struct record rec);
 void reader_close(struct reftable_reader *r);
 const char *reader_name(struct reftable_reader *r);
-void reader_return_block(struct reftable_reader *r, struct reftable_block *p);
 
 /* initialize a block reader to read from `r` */
 int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,

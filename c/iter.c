@@ -142,7 +142,7 @@ static void indexed_table_ref_iter_close(void *p)
 {
 	struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
 	block_iter_close(&it->cur);
-	reader_return_block(it->r, &it->block_reader.block);
+	reftable_block_done(&it->block_reader.block);
 	slice_clear(&it->oid);
 }
 
@@ -153,7 +153,7 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 		return 1;
 	}
 
-	reader_return_block(it->r, &it->block_reader.block);
+	reftable_block_done(&it->block_reader.block);
 
 	{
 		uint64_t off = it->offsets[it->offset_idx++];

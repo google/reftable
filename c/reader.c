@@ -9,7 +9,6 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 
 #include "system.h"
-
 #include "block.h"
 #include "constants.h"
 #include "iter.h"
@@ -31,10 +30,11 @@ int block_source_read_block(struct reftable_block_source source,
 	return result;
 }
 
-void block_source_return_block(struct reftable_block_source source,
-			       struct reftable_block *blockp)
+void reftable_block_done(struct reftable_block *blockp)
 {
-	source.ops->return_block(source.arg, blockp);
+	struct reftable_block_source source = blockp->source;
+	if (blockp != NULL && source.ops != NULL)
+		source.ops->return_block(source.arg, blockp);
 	blockp->data = NULL;
 	blockp->len = 0;
 	blockp->source.ops = NULL;
@@ -78,11 +78,6 @@ static int reader_get_block(struct reftable_reader *r,
 	}
 
 	return block_source_read_block(r->source, dest, off, sz);
-}
-
-void reader_return_block(struct reftable_reader *r, struct reftable_block *p)
-{
-	block_source_return_block(r->source, p);
 }
 
 uint32_t reftable_reader_hash_id(struct reftable_reader *r)
@@ -214,8 +209,8 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source source,
 
 	err = parse_footer(r, footer.data, header.data);
 exit:
-	block_source_return_block(r->source, &footer);
-	block_source_return_block(r->source, &header);
+	reftable_block_done(&footer);
+	reftable_block_done(&header);
 	return err;
 }
 
@@ -253,7 +248,7 @@ static void table_iter_block_done(struct table_iter *ti)
 	if (ti->bi.br == NULL) {
 		return;
 	}
-	reader_return_block(ti->r, &ti->bi.br->block);
+	reftable_block_done(&ti->bi.br->block);
 	FREE_AND_NULL(ti->bi.br);
 
 	ti->bi.last_key.len = 0;
@@ -303,12 +298,12 @@ int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
 	}
 
 	if (want_typ != BLOCK_TYPE_ANY && block_typ != want_typ) {
-		reader_return_block(r, &block);
+		reftable_block_done(&block);
 		return 1;
 	}
 
 	if (block_size > guess_block_size) {
-		reader_return_block(r, &block);
+		reftable_block_done(&block);
 		err = reader_get_block(r, &block, next_off, block_size);
 		if (err < 0) {
 			return err;

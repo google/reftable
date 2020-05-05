@@ -32,13 +32,13 @@ void test_buffer(void)
 	int n = block_source_read_block(source, &out, 0, sizeof(in));
 	assert(n == sizeof(in));
 	assert(!memcmp(in, out.data, n));
-	block_source_return_block(source, &out);
+	reftable_block_done(&out);
 
 	n = block_source_read_block(source, &out, 1, 2);
 	assert(n == 2);
 	assert(!memcmp(out.data, "el", 2));
 
-	block_source_return_block(source, &out);
+	reftable_block_done(&out);
 	block_source_close(&source);
 	slice_clear(&buf);
 }

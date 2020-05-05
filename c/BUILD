@@ -41,7 +41,6 @@ cc_library(
         "zlib-compat.c",
         "basics.h",
         "block.h",
-        "blocksource.h",
         "compat.h",
         "constants.h",
         "iter.h",

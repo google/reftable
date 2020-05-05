@@ -10,7 +10,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#include "blocksource.h"
 #include "constants.h"
 #include "record.h"
 #include "reftable.h"
@@ -225,7 +224,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		}
 
 		/* We're done with the input data. */
-		block_source_return_block(block->source, block);
+		reftable_block_done(block);
 		block->data = uncompressed.buf;
 		block->len = sz;
 		block->source = malloc_block_source();

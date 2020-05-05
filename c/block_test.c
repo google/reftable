@@ -61,6 +61,7 @@ void test_block_read_write()
 	struct reftable_block block = { 0 };
 	block.data = reftable_calloc(block_size);
 	block.len = block_size;
+	block.source = malloc_block_source();
 
 	struct block_writer bw = { 0 };
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
@@ -136,7 +137,7 @@ void test_block_read_write()
 	}
 
 	record_clear(rec);
-	reftable_free(block.data);
+	reftable_block_done(&br.block);
 	slice_clear(&want);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
