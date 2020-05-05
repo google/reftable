@@ -147,3 +147,16 @@ cc_test(
         ":testlib",
     ],
 )
+
+[sh_test(
+    name = "%s_valgrind_test" % t,
+    srcs = [ "valgrind_test.sh" ],
+    args = [ t ],
+    data = [ t ])
+ for t in ["record_test",
+           "merged_test",
+           "refname_test",
+           "tree_test",
+           "block_test",
+           "slice_test",
+           "stack_test"]]
