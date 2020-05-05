@@ -43,6 +43,7 @@ void test_conflict(void)
 
 	err = reftable_writer_close(w);
 	assert_err(err);
+	reftable_writer_free(w);
 
 	struct reftable_block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
@@ -85,6 +86,9 @@ void test_conflict(void)
 		int err = modification_validate(&mod);
 		assert(err == cases[i].error_code);
 	}
+
+	reftable_reader_free(rd);
+	slice_clear(&buf);
 }
 
 int main(int argc, char *argv[])
