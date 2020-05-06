@@ -18,6 +18,8 @@ void test_copy(struct record rec)
 {
 	struct record copy = new_record(record_type(rec));
 	record_copy_from(copy, rec, SHA1_SIZE);
+	/* do it twice to catch memory leaks */
+	record_copy_from(copy, rec, SHA1_SIZE);
 	switch (record_type(copy)) {
 	case BLOCK_TYPE_REF:
 		assert(reftable_ref_record_equal(

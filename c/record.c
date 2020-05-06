@@ -428,28 +428,29 @@ static void obj_record_key(const void *r, struct slice *dest)
 	memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
 }
 
-static void obj_record_copy_from(void *rec, const void *src_rec, int hash_size)
-{
-	struct obj_record *ref = (struct obj_record *)rec;
-	const struct obj_record *src = (const struct obj_record *)src_rec;
-
-	*ref = *src;
-	ref->hash_prefix = reftable_malloc(ref->hash_prefix_len);
-	memcpy(ref->hash_prefix, src->hash_prefix, ref->hash_prefix_len);
-
-	{
-		int olen = ref->offset_len * sizeof(uint64_t);
-		ref->offsets = reftable_malloc(olen);
-		memcpy(ref->offsets, src->offsets, olen);
-	}
-}
-
 static void obj_record_clear(void *rec)
 {
-	struct obj_record *ref = (struct obj_record *)rec;
-	FREE_AND_NULL(ref->hash_prefix);
-	FREE_AND_NULL(ref->offsets);
-	memset(ref, 0, sizeof(struct obj_record));
+	struct obj_record *obj = (struct obj_record *)rec;
+	FREE_AND_NULL(obj->hash_prefix);
+	FREE_AND_NULL(obj->offsets);
+	memset(obj, 0, sizeof(struct obj_record));
+}
+
+static void obj_record_copy_from(void *rec, const void *src_rec, int hash_size)
+{
+	struct obj_record *obj = (struct obj_record *)rec;
+	const struct obj_record *src = (const struct obj_record *)src_rec;
+
+	obj_record_clear(obj);
+	*obj = *src;
+	obj->hash_prefix = reftable_malloc(obj->hash_prefix_len);
+	memcpy(obj->hash_prefix, src->hash_prefix, obj->hash_prefix_len);
+
+	{
+		int olen = obj->offset_len * sizeof(uint64_t);
+		obj->offsets = reftable_malloc(olen);
+		memcpy(obj->offsets, src->offsets, olen);
+	}
 }
 
 static byte obj_record_val_type(const void *rec)
@@ -599,6 +600,7 @@ static void reftable_log_record_copy_from(void *rec, const void *src_rec,
 	const struct reftable_log_record *src =
 		(const struct reftable_log_record *)src_rec;
 
+	reftable_log_record_clear(dst);
 	*dst = *src;
 	if (dst->ref_name != NULL) {
 		dst->ref_name = xstrdup(dst->ref_name);
