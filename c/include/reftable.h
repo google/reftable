@@ -379,10 +379,9 @@ int reftable_reader_seek_log(struct reftable_reader *r,
 /* closes and deallocates a reader. */
 void reftable_reader_free(struct reftable_reader *);
 
-/* return an iterator for the refs pointing to oid */
+/* return an iterator for the refs pointing to `oid`. */
 int reftable_reader_refs_for(struct reftable_reader *r,
-			     struct reftable_iterator *it, uint8_t *oid,
-			     int oid_len);
+			     struct reftable_iterator *it, uint8_t *oid);
 
 /* return the max_update_index for a table */
 uint64_t reftable_reader_max_update_index(struct reftable_reader *r);

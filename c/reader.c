@@ -711,10 +711,11 @@ exit:
 
 static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 					      struct reftable_iterator *it,
-					      byte *oid, int oid_len)
+					      byte *oid)
 {
 	struct table_iter *ti = reftable_calloc(sizeof(struct table_iter));
 	struct filtering_ref_iterator *filter = NULL;
+	int oid_len = hash_size(r->hash_id);
 	int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
 	if (err < 0) {
 		reftable_free(ti);
@@ -733,13 +734,12 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 }
 
 int reftable_reader_refs_for(struct reftable_reader *r,
-			     struct reftable_iterator *it, byte *oid,
-			     int oid_len)
+			     struct reftable_iterator *it, byte *oid)
 {
 	if (r->obj_offsets.present) {
 		return reftable_reader_refs_for_indexed(r, it, oid);
 	}
-	return reftable_reader_refs_for_unindexed(r, it, oid, oid_len);
+	return reftable_reader_refs_for_unindexed(r, it, oid);
 }
 
 uint64_t reftable_reader_max_update_index(struct reftable_reader *r)

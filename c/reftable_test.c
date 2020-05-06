@@ -540,7 +540,7 @@ void test_table_refs_for(bool indexed)
 	assert(err == 0);
 	reftable_iterator_destroy(&it);
 
-	err = reftable_reader_refs_for(&rd, &it, want_hash, SHA1_SIZE);
+	err = reftable_reader_refs_for(&rd, &it, want_hash);
 	assert(err == 0);
 
 	struct reftable_ref_record ref = { 0 };
