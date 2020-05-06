@@ -208,6 +208,7 @@ exit:
 		int i = 0;
 		for (i = 0; i < new_tables_len; i++) {
 			reader_close(new_tables[i]);
+			reftable_reader_free(new_tables[i]);
 		}
 	}
 	reftable_free(new_tables);
