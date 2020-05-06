@@ -560,7 +560,7 @@ void test_reftable_stack_auto_compaction(void)
 	int err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
 
-	int N = 1000;
+	int N = 100;
 	for (int i = 0; i < N; i++) {
 		char name[100];
 		snprintf(name, sizeof(name), "branch%04d", i);
