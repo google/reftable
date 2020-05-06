@@ -28,7 +28,7 @@ bool iterator_is_null(struct reftable_iterator it);
 /* iterator that produces only ref records that point to `oid` */
 struct filtering_ref_iterator {
 	bool double_check;
-	struct reftable_reader *r;
+	struct reftable_table tab;
 	struct slice oid;
 	struct reftable_iterator it;
 };
