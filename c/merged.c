@@ -123,13 +123,11 @@ static int merged_iter_next_entry(struct merged_iter *mi, struct record rec)
 		if (err < 0) {
 			return err;
 		}
-		record_clear(top.rec);
-		reftable_free(record_yield(&top.rec));
+		record_destroy(&top.rec);
 	}
 
 	record_copy_from(rec, entry.rec, hash_size(mi->hash_id));
-	record_clear(entry.rec);
-	reftable_free(record_yield(&entry.rec));
+	record_destroy(&entry.rec);
 	slice_clear(&entry_key);
 	return 0;
 }

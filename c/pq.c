@@ -107,8 +107,7 @@ void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
 {
 	int i = 0;
 	for (i = 0; i < pq->len; i++) {
-		record_clear(pq->heap[i].rec);
-		reftable_free(record_yield(&pq->heap[i].rec));
+		record_destroy(&pq->heap[i].rec);
 	}
 	FREE_AND_NULL(pq->heap);
 	pq->len = pq->cap = 0;
