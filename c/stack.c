@@ -659,12 +659,12 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 	if (err < 0) {
 		goto exit;
 	}
-	reftable_writer_free(wr);
 
 	err = close(tab_fd);
 	tab_fd = 0;
 
 exit:
+	reftable_writer_free(wr);
 	if (tab_fd > 0) {
 		close(tab_fd);
 		tab_fd = 0;
