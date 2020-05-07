@@ -101,14 +101,11 @@ reftable_stack_merged_table(struct reftable_stack *st)
 /* Close and free the stack */
 void reftable_stack_destroy(struct reftable_stack *st)
 {
-	if (st->merged == NULL) {
-		return;
+	if (st->merged != NULL) {
+		reftable_merged_table_close(st->merged);
+		reftable_merged_table_free(st->merged);
+		st->merged = NULL;
 	}
-
-	reftable_merged_table_close(st->merged);
-	reftable_merged_table_free(st->merged);
-	st->merged = NULL;
-
 	FREE_AND_NULL(st->list_file);
 	FREE_AND_NULL(st->reftable_dir);
 	reftable_free(st);

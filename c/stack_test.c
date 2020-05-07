@@ -286,20 +286,8 @@ void test_reftable_stack_add(void)
 		reftable_log_record_clear(&dest);
 	}
 
-	// check that we can read it back with default config too.
-	struct reftable_write_options cfg_default = { 0 };
-	struct reftable_stack *st_default = NULL;
-	err = reftable_new_stack(&st_default, dir, cfg_default);
-	assert_err(err);
-
-	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
-	struct reftable_stack *st32 = NULL;
-	err = reftable_new_stack(&st32, dir, cfg32);
-	assert(err == REFTABLE_FORMAT_ERROR);
-
 	/* cleanup */
 	reftable_stack_destroy(st);
-	reftable_stack_destroy(st_default);
 	for (i = 0; i < N; i++) {
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
@@ -384,6 +372,47 @@ void test_reftable_stack_tombstone(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
+	clear_dir(dir);
+}
+
+void test_reftable_stack_hash_id(void)
+{
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+	assert(mkdtemp(dir));
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	struct reftable_ref_record ref = {
+		.ref_name = "master",
+		.target = "target",
+		.update_index = 1,
+	};
+
+	err = reftable_stack_add(st, &write_test_ref, &ref);
+	assert_err(err);
+
+	/* can't read it with the wrong hash ID. */
+	struct reftable_write_options cfg32 = { .hash_id = SHA256_ID };
+	struct reftable_stack *st32 = NULL;
+	err = reftable_new_stack(&st32, dir, cfg32);
+	assert(err == REFTABLE_FORMAT_ERROR);
+
+	/* check that we can read it back with default config too. */
+	struct reftable_write_options cfg_default = { 0 };
+	struct reftable_stack *st_default = NULL;
+	err = reftable_new_stack(&st_default, dir, cfg_default);
+	assert_err(err);
+
+	struct reftable_ref_record dest = { 0 };
+	err = reftable_stack_read_ref(st_default, "master", &dest);
+	assert_err(err);
+
+	assert(!strcmp(dest.target, ref.target));
+
+	reftable_stack_destroy(st);
+	reftable_stack_destroy(st_default);
 	clear_dir(dir);
 }
 
@@ -585,6 +614,8 @@ void test_reftable_stack_auto_compaction(void)
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_stack_hash_id",
+		      &test_reftable_stack_hash_id);
 	add_test_case("test_sizes_to_segments_all_equal",
 		      &test_sizes_to_segments_all_equal);
 	add_test_case("test_reftable_stack_auto_compaction",
