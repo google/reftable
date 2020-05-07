@@ -410,7 +410,7 @@ void test_reftable_stack_hash_id(void)
 	assert_err(err);
 
 	assert(!strcmp(dest.target, ref.target));
-
+	reftable_ref_record_clear(&dest);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st_default);
 	clear_dir(dir);
@@ -550,6 +550,7 @@ void test_reflog_expire(void)
 		reftable_log_record_clear(&logs[i]);
 	}
 	clear_dir(dir);
+	reftable_log_record_clear(&log);
 }
 
 int write_nothing(struct reftable_writer *wr, void *arg)
