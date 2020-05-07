@@ -138,7 +138,13 @@ void test_reftable_ref_record_roundtrip()
 		int n = record_encode(rec, dest, SHA1_SIZE);
 		assert(n > 0);
 
-		struct reftable_ref_record out = { 0 };
+		/* decode into a non-zero record to test for leaks. */
+		struct reftable_ref_record out = {
+			.ref_name = xstrdup("old name"),
+			.value = reftable_calloc(SHA1_SIZE),
+			.target_value = reftable_calloc(SHA1_SIZE),
+			.target = xstrdup("old value"),
+		};
 		struct record rec_out = { 0 };
 		record_from_ref(&rec_out, &out);
 		int m = record_decode(rec_out, key, i, dest, SHA1_SIZE);
@@ -212,7 +218,15 @@ void test_reftable_log_record_roundtrip()
 		int n = record_encode(rec, dest, SHA1_SIZE);
 		assert(n >= 0);
 
-		struct reftable_log_record out = { 0 };
+		/* populate out, to check for leaks. */
+		struct reftable_log_record out = {
+			.ref_name = xstrdup("old name"),
+			.new_hash = reftable_calloc(SHA1_SIZE),
+			.old_hash = reftable_calloc(SHA1_SIZE),
+			.name = xstrdup("old name"),
+			.email = xstrdup("old@email"),
+			.message = xstrdup("old message"),
+		};
 		struct record rec_out = { 0 };
 		record_from_log(&rec_out, &out);
 		int valtype = record_val_type(rec);

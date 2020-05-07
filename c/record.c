@@ -381,6 +381,9 @@ static int reftable_ref_record_decode(void *rec, struct slice key,
 		}
 		slice_consume(&in, n);
 		seen_target = true;
+		if (r->target != NULL) {
+			reftable_free(r->target);
+		}
 		r->target = (char *)slice_as_string(&dest);
 	} break;
 
@@ -735,6 +738,11 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	r->update_index = (~max) - ts;
 
 	if (val_type == 0) {
+		FREE_AND_NULL(r->old_hash);
+		FREE_AND_NULL(r->new_hash);
+		FREE_AND_NULL(r->message);
+		FREE_AND_NULL(r->email);
+		FREE_AND_NULL(r->name);
 		return 0;
 	}
 
