@@ -380,10 +380,15 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		.key = want,
 		.r = br,
 	};
+	struct record rec = new_record(block_reader_type(br));
+	struct slice key = { 0 };
+	int err = 0;
+	struct block_iter next = { 0 };
 
 	int i = binsearch(br->restart_count, &restart_key_less, &args);
 	if (args.error) {
-		return -1;
+		err = REFTABLE_FORMAT_ERROR;
+		goto exit;
 	}
 
 	it->br = br;
@@ -394,37 +399,32 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		it->next_off = br->header_off + 4;
 	}
 
-	{
-		struct record rec = new_record(block_reader_type(br));
-		struct slice key = { 0 };
-		int result = 0;
-		int err = 0;
-		struct block_iter next = { 0 };
-		while (true) {
-			block_iter_copy_from(&next, it);
+	/* We're looking for the last entry less/equal than the wanted key, so
+	   we have to go one entry too far and then back up.
+	*/
+	while (true) {
+		block_iter_copy_from(&next, it);
 
-			err = block_iter_next(&next, rec);
-			if (err < 0) {
-				result = -1;
-				goto exit;
-			}
-
-			record_key(rec, &key);
-			if (err > 0 || slice_compare(key, want) >= 0) {
-				result = 0;
-				goto exit;
-			}
-
-			block_iter_copy_from(it, &next);
+		err = block_iter_next(&next, rec);
+		if (err < 0) {
+			goto exit;
 		}
 
-	exit:
-		slice_clear(&key);
-		slice_clear(&next.last_key);
-		record_destroy(&rec);
+		record_key(rec, &key);
+		if (err > 0 || slice_compare(key, want) >= 0) {
+			err = 0;
+			goto exit;
+		}
 
-		return result;
+		block_iter_copy_from(it, &next);
 	}
+
+exit:
+	slice_clear(&key);
+	slice_clear(&next.last_key);
+	record_destroy(&rec);
+
+	return err;
 }
 
 void block_writer_clear(struct block_writer *bw)
