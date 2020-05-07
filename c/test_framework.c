@@ -47,14 +47,16 @@ void test_main(int argc, char *argv[])
 	int i = 0;
 	for (i = 0; i < test_case_len; i++) {
 		const char *name = test_cases[i]->name;
-		if (filter != NULL && strstr(name, filter) == NULL) {
+		if (filter == NULL || strstr(name, filter) != NULL) {
+			printf("case %s\n", name);
+			test_cases[i]->testfunc();
+		} else {
 			printf("skip %s\n", name);
-			continue;
 		}
 
-		printf("case %s\n", name);
-		test_cases[i]->testfunc();
+		reftable_free(test_cases[i]);
 	}
+	reftable_free(test_cases);
 }
 
 void set_test_hash(byte *p, int i)
