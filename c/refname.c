@@ -20,7 +20,6 @@ struct find_arg {
 static int find_name(size_t k, void *arg)
 {
 	struct find_arg *f_arg = (struct find_arg *)arg;
-
 	return strcmp(f_arg->names[k], f_arg->want) >= 0;
 }
 
@@ -58,6 +57,8 @@ int modification_has_ref(struct modification *mod, const char *name)
 
 static void modification_clear(struct modification *mod)
 {
+	/* don't delete the strings themselves; they're owned by ref records.
+	 */
 	FREE_AND_NULL(mod->add);
 	FREE_AND_NULL(mod->del);
 	mod->add_len = 0;
@@ -82,7 +83,6 @@ int modification_has_ref_with_prefix(struct modification *mod,
 			goto exit;
 		}
 	}
-
 	err = reftable_table_seek_ref(mod->tab, &it, prefix);
 	if (err) {
 		goto exit;
