@@ -315,35 +315,35 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 
 int block_iter_next(struct block_iter *it, struct record rec)
 {
+	struct slice in = {
+		.buf = it->br->block.data + it->next_off,
+		.len = it->br->block_len - it->next_off,
+	};
+	struct slice start = in;
+	struct slice key = { 0 };
+	byte extra = 0;
+	int n = 0;
+
 	if (it->next_off >= it->br->block_len) {
 		return 1;
 	}
 
-	{
-		struct slice in = {
-			.buf = it->br->block.data + it->next_off,
-			.len = it->br->block_len - it->next_off,
-		};
-		struct slice start = in;
-		struct slice key = { 0 };
-		byte extra;
-		int n = decode_key(&key, &extra, it->last_key, in);
-		if (n < 0) {
-			return -1;
-		}
-
-		slice_consume(&in, n);
-		n = record_decode(rec, key, extra, in, it->br->hash_size);
-		if (n < 0) {
-			return -1;
-		}
-		slice_consume(&in, n);
-
-		slice_copy(&it->last_key, key);
-		it->next_off += start.len - in.len;
-		slice_clear(&key);
-		return 0;
+	n = decode_key(&key, &extra, it->last_key, in);
+	if (n < 0) {
+		return -1;
 	}
+
+	slice_consume(&in, n);
+	n = record_decode(rec, key, extra, in, it->br->hash_size);
+	if (n < 0) {
+		return -1;
+	}
+	slice_consume(&in, n);
+
+	slice_copy(&it->last_key, key);
+	it->next_off += start.len - in.len;
+	slice_clear(&key);
+	return 0;
 }
 
 int block_reader_first_key(struct block_reader *br, struct slice *key)
@@ -404,7 +404,6 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	*/
 	while (true) {
 		block_iter_copy_from(&next, it);
-
 		err = block_iter_next(&next, rec);
 		if (err < 0) {
 			goto exit;
