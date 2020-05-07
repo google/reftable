@@ -360,7 +360,11 @@ static int writer_finish_section(struct reftable_writer *w)
 			writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
 			err = block_writer_add(w->block_writer, rec);
-			assert(err == 0);
+			if (err != 0) {
+				/* write into fresh block should always succeed
+				 */
+				abort();
+			}
 		}
 		for (i = 0; i < idx_len; i++) {
 			slice_clear(&idx[i].last_key);

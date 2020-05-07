@@ -99,7 +99,7 @@ void write_test_table(struct slice *buf, struct reftable_ref_record refs[],
 	}
 
 	int err = reftable_writer_close(w);
-	assert(err == 0);
+	assert_err(err);
 
 	reftable_writer_free(w);
 }
@@ -117,12 +117,12 @@ merged_table_from_records(struct reftable_ref_record **refs,
 		block_source_from_slice(&(*source)[i], &buf[i]);
 
 		int err = reftable_new_reader(&rd[i], (*source)[i], "name");
-		assert(err == 0);
+		assert_err(err);
 	}
 
 	struct reftable_merged_table *mt = NULL;
 	int err = reftable_new_merged_table(&mt, rd, n, SHA1_ID);
-	assert(err == 0);
+	assert_err(err);
 	return mt;
 }
 
@@ -152,7 +152,7 @@ void test_merged_between(void)
 
 	struct reftable_iterator it = { 0 };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_ref_record ref = { 0 };
 	err = reftable_iterator_next_ref(it, &ref);
@@ -218,7 +218,7 @@ void test_merged(void)
 
 	struct reftable_iterator it = { 0 };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_ref_record *out = NULL;
 	int len = 0;

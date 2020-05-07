@@ -262,7 +262,7 @@ void test_log_write_read(void)
 	{
 		struct reftable_iterator it = { 0 };
 		err = reftable_reader_seek_ref(&rd, &it, names[N - 1]);
-		assert(err == 0);
+		assert_err(err);
 
 		struct reftable_ref_record ref = { 0 };
 		err = reftable_iterator_next_ref(it, &ref);
@@ -279,7 +279,7 @@ void test_log_write_read(void)
 	{
 		struct reftable_iterator it = { 0 };
 		err = reftable_reader_seek_log(&rd, &it, "");
-		assert(err == 0);
+		assert_err(err);
 
 		struct reftable_log_record log = { 0 };
 		int i = 0;
@@ -318,11 +318,11 @@ void test_table_read_write_sequential(void)
 
 	struct reftable_reader rd = { 0 };
 	int err = init_reader(&rd, source, "file.ref");
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_iterator it = { 0 };
 	err = reftable_reader_seek_ref(&rd, &it, "");
-	assert(err == 0);
+	assert_err(err);
 
 	int j = 0;
 	while (true) {
@@ -369,11 +369,11 @@ void test_table_read_api(void)
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_iterator it = { 0 };
 	err = reftable_reader_seek_ref(&rd, &it, names[0]);
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_log_record log = { 0 };
 	err = reftable_iterator_next_log(it, &log);
@@ -402,7 +402,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
-	assert(err == 0);
+	assert_err(err);
 	assert(hash_id == reftable_reader_hash_id(&rd));
 
 	if (!index) {
@@ -415,10 +415,10 @@ void test_table_read_write_seek(bool index, int hash_id)
 	for (i = 1; i < N; i++) {
 		struct reftable_iterator it = { 0 };
 		int err = reftable_reader_seek_ref(&rd, &it, names[i]);
-		assert(err == 0);
+		assert_err(err);
 		struct reftable_ref_record ref = { 0 };
 		err = reftable_iterator_next_ref(it, &ref);
-		assert(err == 0);
+		assert_err(err);
 		assert(0 == strcmp(names[i], ref.ref_name));
 		assert(i == ref.value[0]);
 
@@ -530,18 +530,18 @@ void test_table_refs_for(bool indexed)
 	block_source_from_slice(&source, &buf);
 
 	int err = init_reader(&rd, source, "file.ref");
-	assert(err == 0);
+	assert_err(err);
 	if (!indexed) {
 		rd.obj_offsets.present = 0;
 	}
 
 	struct reftable_iterator it = { 0 };
 	err = reftable_reader_seek_ref(&rd, &it, "");
-	assert(err == 0);
+	assert_err(err);
 	reftable_iterator_destroy(&it);
 
 	err = reftable_reader_refs_for(&rd, &it, want_hash);
-	assert(err == 0);
+	assert_err(err);
 
 	struct reftable_ref_record ref = { 0 };
 
