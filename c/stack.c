@@ -1215,11 +1215,11 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 
 	err = validate_ref_record_addition(tab, refs, len);
 
+exit:
 	for (i = 0; i < len; i++) {
 		reftable_ref_record_clear(&refs[i]);
 	}
 
-exit:
 	free(refs);
 	reftable_iterator_destroy(&it);
 	reftable_reader_free(rd);
