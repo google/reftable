@@ -442,6 +442,9 @@ void reftable_addition_close(struct reftable_addition *add)
 
 void reftable_addition_destroy(struct reftable_addition *add)
 {
+	if (add == NULL) {
+		return;
+	}
 	reftable_addition_close(add);
 	reftable_free(add);
 }

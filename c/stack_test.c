@@ -147,6 +147,8 @@ void test_reftable_stack_transaction_api(void)
 	assert_err(err);
 
 	struct reftable_addition *add = NULL;
+	reftable_addition_destroy(add);
+
 	err = reftable_stack_new_addition(&add, st);
 	assert_err(err);
 
