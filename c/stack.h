@@ -32,6 +32,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 			struct reftable_log_expiry_config *config);
 int fastlog2(uint64_t sz);
 int stack_check_addition(struct reftable_stack *st, const char *new_tab_name);
+void reftable_addition_close(struct reftable_addition *add);
 
 struct segment {
 	int start, end;

@@ -440,6 +440,12 @@ void reftable_addition_close(struct reftable_addition *add)
 	slice_clear(&nm);
 }
 
+void reftable_addition_destroy(struct reftable_addition *add)
+{
+	reftable_addition_close(add);
+	reftable_free(add);
+}
+
 int reftable_addition_commit(struct reftable_addition *add)
 {
 	struct slice table_list = { 0 };
@@ -491,7 +497,7 @@ int reftable_stack_new_addition(struct reftable_addition **dest,
 				struct reftable_stack *st)
 {
 	int err = 0;
-	*dest = reftable_malloc(sizeof(**dest));
+	*dest = reftable_calloc(sizeof(**dest));
 	err = reftable_stack_init_addition(*dest, st);
 	if (err) {
 		reftable_free(*dest);

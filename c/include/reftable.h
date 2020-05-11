@@ -497,9 +497,9 @@ int reftable_addition_add(struct reftable_addition *add,
 /* Commits the transaction, releasing the lock. */
 int reftable_addition_commit(struct reftable_addition *add);
 
-/* Release all non-committed data from the transaction; releases the lock if
- * held. */
-void reftable_addition_close(struct reftable_addition *add);
+/* Release all non-committed data from the transaction, and deallocate the
+   transaction. Releases the lock if held. */
+void reftable_addition_destroy(struct reftable_addition *add);
 
 /* add a new table to the stack. The write_table function must call
    reftable_writer_set_limits, add refs and return an error value. */

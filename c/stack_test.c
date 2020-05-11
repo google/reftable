@@ -136,6 +136,44 @@ void test_reftable_stack_add_one(void)
 	clear_dir(dir);
 }
 
+void test_reftable_stack_transaction_api(void)
+{
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st = NULL;
+	int err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	struct reftable_addition *add = NULL;
+	err = reftable_stack_new_addition(&add, st);
+	assert_err(err);
+
+	struct reftable_ref_record ref = {
+		.ref_name = "HEAD",
+		.update_index = 1,
+		.target = "master",
+	};
+
+	err = reftable_addition_add(add, &write_test_ref, &ref);
+	assert_err(err);
+
+	err = reftable_addition_commit(add);
+	assert_err(err);
+
+	reftable_addition_destroy(add);
+
+	struct reftable_ref_record dest = { 0 };
+	err = reftable_stack_read_ref(st, ref.ref_name, &dest);
+	assert_err(err);
+	assert(0 == strcmp("master", dest.target));
+
+	reftable_ref_record_clear(&dest);
+	reftable_stack_destroy(st);
+	clear_dir(dir);
+}
+
 void test_reftable_stack_validate_refname(void)
 {
 	char dir[256] = "/tmp/stack_test.XXXXXX";
@@ -615,6 +653,8 @@ void test_reftable_stack_auto_compaction(void)
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_stack_transaction_api",
+		      &test_reftable_stack_transaction_api);
 	add_test_case("test_reftable_stack_hash_id",
 		      &test_reftable_stack_hash_id);
 	add_test_case("test_sizes_to_segments_all_equal",
