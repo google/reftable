@@ -37,7 +37,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 
-	err = reftable_stack_reload(p);
+	err = reftable_stack_reload_maybe_reuse(p, true);
 	if (err < 0) {
 		reftable_stack_destroy(p);
 	} else {
@@ -226,8 +226,8 @@ static int tv_cmp(struct timeval *a, struct timeval *b)
 	return udiff;
 }
 
-static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
-					     bool reuse_open)
+int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
+				      bool reuse_open)
 {
 	struct timeval deadline = { 0 };
 	int err = gettimeofday(&deadline, NULL);
@@ -295,11 +295,6 @@ static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 	return 0;
 }
 
-int reftable_stack_reload(struct reftable_stack *st)
-{
-	return reftable_stack_reload_maybe_reuse(st, true);
-}
-
 /* -1 = error
  0 = up to date
  1 = changed. */
@@ -331,6 +326,15 @@ static int stack_uptodate(struct reftable_stack *st)
 
 exit:
 	free_names(names);
+	return err;
+}
+
+int reftable_stack_reload(struct reftable_stack *st)
+{
+	int err = stack_uptodate(st);
+	if (err > 0) {
+		return reftable_stack_reload_maybe_reuse(st, true);
+	}
 	return err;
 }
 
@@ -518,6 +522,10 @@ int stack_try_add(struct reftable_stack *st,
 	if (err < 0) {
 		goto exit;
 	}
+	if (err > 0) {
+		err = REFTABLE_LOCK_ERROR;
+		goto exit;
+	}
 
 	err = reftable_addition_add(&add, write_table, arg);
 	if (err < 0) {
@@ -597,6 +605,7 @@ int reftable_addition_add(struct reftable_addition *add,
 	slice_append_string(&tab_file_name, "/");
 	slice_append(&tab_file_name, next_name);
 
+	/* TODO: should check destination out of paranoia */
 	err = rename(slice_as_string(&temp_tab_file_name),
 		     slice_as_string(&tab_file_name));
 	if (err < 0) {

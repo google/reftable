@@ -136,6 +136,48 @@ void test_reftable_stack_add_one(void)
 	clear_dir(dir);
 }
 
+void test_reftable_stack_uptodate(void)
+{
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+	assert(mkdtemp(dir));
+
+	struct reftable_write_options cfg = { 0 };
+	struct reftable_stack *st1 = NULL;
+	int err = reftable_new_stack(&st1, dir, cfg);
+	assert_err(err);
+
+	struct reftable_stack *st2 = NULL;
+	err = reftable_new_stack(&st2, dir, cfg);
+	assert_err(err);
+
+	struct reftable_ref_record ref1 = {
+		.ref_name = "HEAD",
+		.update_index = 1,
+		.target = "master",
+	};
+
+	err = reftable_stack_add(st1, &write_test_ref, &ref1);
+	assert_err(err);
+
+	struct reftable_ref_record ref2 = {
+		.ref_name = "branch2",
+		.update_index = 2,
+		.target = "master",
+	};
+
+	err = reftable_stack_add(st2, &write_test_ref, &ref2);
+	assert(err == REFTABLE_LOCK_ERROR);
+
+	err = reftable_stack_reload(st2);
+	assert_err(err);
+
+	err = reftable_stack_add(st2, &write_test_ref, &ref2);
+	assert_err(err);
+	reftable_stack_destroy(st1);
+	reftable_stack_destroy(st2);
+	clear_dir(dir);
+}
+
 void test_reftable_stack_transaction_api(void)
 {
 	char dir[256] = "/tmp/stack_test.XXXXXX";
@@ -655,6 +697,8 @@ void test_reftable_stack_auto_compaction(void)
 
 int main(int argc, char *argv[])
 {
+	add_test_case("test_reftable_stack_uptodate",
+		      &test_reftable_stack_uptodate);
 	add_test_case("test_reftable_stack_transaction_api",
 		      &test_reftable_stack_transaction_api);
 	add_test_case("test_reftable_stack_hash_id",

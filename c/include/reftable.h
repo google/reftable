@@ -517,7 +517,8 @@ reftable_stack_merged_table(struct reftable_stack *st);
 /* frees all resources associated with the stack. */
 void reftable_stack_destroy(struct reftable_stack *st);
 
-/* reloads the stack if necessary. */
+/* Reloads the stack if necessary. This is very cheap to run if the stack was up
+ * to date */
 int reftable_stack_reload(struct reftable_stack *st);
 
 /* Policy for expiring reflog entries. */
