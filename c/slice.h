@@ -38,7 +38,7 @@ const char *slice_as_string(struct slice *src);
 bool slice_equal(struct slice a, struct slice b);
 
 /* Return `buf`, clearing out `s` */
-byte *slice_yield(struct slice *s);
+byte *slice_detach(struct slice *s);
 
 /* Copy bytes */
 void slice_copy(struct slice *dest, struct slice src);

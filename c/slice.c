@@ -63,7 +63,7 @@ void slice_consume(struct slice *s, int n)
 	s->len -= n;
 }
 
-byte *slice_yield(struct slice *s)
+byte *slice_detach(struct slice *s)
 {
 	byte *p = s->buf;
 	s->buf = NULL;
@@ -74,7 +74,7 @@ byte *slice_yield(struct slice *s)
 
 void slice_release(struct slice *s)
 {
-	reftable_free(slice_yield(s));
+	reftable_free(slice_detach(s));
 }
 
 void slice_copy(struct slice *dest, struct slice src)
@@ -103,7 +103,7 @@ char *slice_to_string(struct slice in)
 	slice_resize(&s, in.len + 1);
 	s.buf[in.len] = 0;
 	memcpy(s.buf, in.buf, in.len);
-	return (char *)slice_yield(&s);
+	return (char *)slice_detach(&s);
 }
 
 bool slice_equal(struct slice a, struct slice b)
