@@ -446,7 +446,7 @@ struct reftable_table {
 	void *table_arg;
 };
 
-int reftable_table_seek_ref(struct reftable_table tab,
+int reftable_table_seek_ref(struct reftable_table *tab,
 			    struct reftable_iterator *it, const char *name);
 
 void reftable_table_from_reader(struct reftable_table *tab,
@@ -456,7 +456,7 @@ void reftable_table_from_merged_table(struct reftable_table *tab,
 
 /* convenience function to read a single ref. Returns < 0 for error, 0
    for success, and 1 if ref not found. */
-int reftable_table_read_ref(struct reftable_table tab, const char *name,
+int reftable_table_read_ref(struct reftable_table *tab, const char *name,
 			    struct reftable_ref_record *ref);
 
 /****************************************************************

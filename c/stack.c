@@ -1144,7 +1144,7 @@ int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
 {
 	struct reftable_table tab = { NULL };
 	reftable_table_from_merged_table(&tab, reftable_stack_merged_table(st));
-	return reftable_table_read_ref(tab, refname, ref);
+	return reftable_table_read_ref(&tab, refname, ref);
 }
 
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,

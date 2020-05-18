@@ -50,7 +50,7 @@ int modification_has_ref(struct modification *mod, const char *name)
 		}
 	}
 
-	err = reftable_table_read_ref(mod->tab, name, &ref);
+	err = reftable_table_read_ref(&mod->tab, name, &ref);
 	reftable_ref_record_clear(&ref);
 	return err;
 }
@@ -83,7 +83,7 @@ int modification_has_ref_with_prefix(struct modification *mod,
 			goto exit;
 		}
 	}
-	err = reftable_table_seek_ref(mod->tab, &it, prefix);
+	err = reftable_table_seek_ref(&mod->tab, &it, prefix);
 	if (err) {
 		goto exit;
 	}

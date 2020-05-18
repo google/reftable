@@ -97,7 +97,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 		if (fri->double_check) {
 			struct reftable_iterator it = { 0 };
 
-			err = reftable_table_seek_ref(fri->tab, &it,
+			err = reftable_table_seek_ref(&fri->tab, &it,
 						      ref->ref_name);
 			if (err == 0) {
 				err = reftable_iterator_next_ref(&it, ref);
