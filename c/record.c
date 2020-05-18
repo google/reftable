@@ -41,6 +41,7 @@ int put_var_int(struct slice dest, uint64_t val)
 {
 	byte buf[10] = { 0 };
 	int i = 9;
+	int n = 0;
 	buf[i] = (byte)(val & 0x7f);
 	i--;
 	while (true) {
@@ -53,14 +54,12 @@ int put_var_int(struct slice dest, uint64_t val)
 		i--;
 	}
 
-	{
-		int n = sizeof(buf) - i - 1;
-		if (dest.len < n) {
-			return -1;
-		}
-		memcpy(dest.buf, &buf[i + 1], n);
-		return n;
+	n = sizeof(buf) - i - 1;
+	if (dest.len < n) {
+		return -1;
 	}
+	memcpy(dest.buf, &buf[i + 1], n);
+	return n;
 }
 
 int reftable_is_block_type(byte typ)
@@ -473,7 +472,9 @@ static int reftable_obj_record_encode(const void *rec, struct slice s,
 {
 	struct reftable_obj_record *r = (struct reftable_obj_record *)rec;
 	struct slice start = s;
+	int i = 0;
 	int n = 0;
+	uint64_t last = 0;
 	if (r->offset_len == 0 || r->offset_len >= 8) {
 		n = put_var_int(s, r->offset_len);
 		if (n < 0) {
@@ -490,17 +491,14 @@ static int reftable_obj_record_encode(const void *rec, struct slice s,
 	}
 	slice_consume(&s, n);
 
-	{
-		uint64_t last = r->offsets[0];
-		int i = 0;
-		for (i = 1; i < r->offset_len; i++) {
-			int n = put_var_int(s, r->offsets[i] - last);
-			if (n < 0) {
-				return -1;
-			}
-			slice_consume(&s, n);
-			last = r->offsets[i];
+	last = r->offsets[0];
+	for (i = 1; i < r->offset_len; i++) {
+		int n = put_var_int(s, r->offsets[i] - last);
+		if (n < 0) {
+			return -1;
 		}
+		slice_consume(&s, n);
+		last = r->offsets[i];
 	}
 	return start.len - s.len;
 }
@@ -513,6 +511,8 @@ static int reftable_obj_record_decode(void *rec, struct slice key,
 	struct reftable_obj_record *r = (struct reftable_obj_record *)rec;
 	uint64_t count = val_type;
 	int n = 0;
+	uint64_t last;
+	int j;
 	r->hash_prefix = reftable_malloc(key.len);
 	memcpy(r->hash_prefix, key.buf, key.len);
 	r->hash_prefix_len = key.len;
@@ -541,20 +541,18 @@ static int reftable_obj_record_decode(void *rec, struct slice key,
 	}
 	slice_consume(&in, n);
 
-	{
-		uint64_t last = r->offsets[0];
-		int j = 1;
-		while (j < count) {
-			uint64_t delta = 0;
-			int n = get_var_int(&delta, in);
-			if (n < 0) {
-				return n;
-			}
-			slice_consume(&in, n);
-
-			last = r->offsets[j] = (delta + last);
-			j++;
+	last = r->offsets[0];
+	j = 1;
+	while (j < count) {
+		uint64_t delta = 0;
+		int n = get_var_int(&delta, in);
+		if (n < 0) {
+			return n;
 		}
+		slice_consume(&in, n);
+
+		last = r->offsets[j] = (delta + last);
+		j++;
 	}
 	return start.len - in.len;
 }

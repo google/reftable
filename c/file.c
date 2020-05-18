@@ -67,6 +67,7 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 	struct stat st = { 0 };
 	int err = 0;
 	int fd = open(name, O_RDONLY);
+	struct file_block_source *p = NULL;
 	if (fd < 0) {
 		if (errno == ENOENT) {
 			return REFTABLE_NOT_EXIST_ERROR;
@@ -79,16 +80,13 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 		return -1;
 	}
 
-	{
-		struct file_block_source *p =
-			reftable_calloc(sizeof(struct file_block_source));
-		p->size = st.st_size;
-		p->fd = fd;
+	p = reftable_calloc(sizeof(struct file_block_source));
+	p->size = st.st_size;
+	p->fd = fd;
 
-		assert(bs->ops == NULL);
-		bs->ops = &file_vtable;
-		bs->arg = p;
-	}
+	assert(bs->ops == NULL);
+	bs->ops = &file_vtable;
+	bs->arg = p;
 	return 0;
 }
 

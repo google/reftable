@@ -15,6 +15,7 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
 			      int (*compare)(const void *, const void *),
 			      int insert)
 {
+	int res;
 	if (*rootp == NULL) {
 		if (!insert) {
 			return NULL;
@@ -27,15 +28,11 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
 		}
 	}
 
-	{
-		int res = compare(key, (*rootp)->key);
-		if (res < 0) {
-			return tree_search(key, &(*rootp)->left, compare,
-					   insert);
-		} else if (res > 0) {
-			return tree_search(key, &(*rootp)->right, compare,
-					   insert);
-		}
+	res = compare(key, (*rootp)->key);
+	if (res < 0) {
+		return tree_search(key, &(*rootp)->left, compare, insert);
+	} else if (res > 0) {
+		return tree_search(key, &(*rootp)->right, compare, insert);
 	}
 	return *rootp;
 }

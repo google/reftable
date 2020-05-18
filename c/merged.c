@@ -51,32 +51,35 @@ static void merged_iter_close(void *p)
 	reftable_free(mi->stack);
 }
 
+static int merged_iter_advance_nonnull_subiter(struct merged_iter *mi,
+					       size_t idx)
+{
+	struct reftable_record rec = reftable_new_record(mi->typ);
+	struct pq_entry e = {
+		.rec = rec,
+		.index = idx,
+	};
+	int err = iterator_next(&mi->stack[idx], &rec);
+	if (err < 0) {
+		return err;
+	}
+
+	if (err > 0) {
+		reftable_iterator_destroy(&mi->stack[idx]);
+		reftable_record_destroy(&rec);
+		return 0;
+	}
+
+	merged_iter_pqueue_add(&mi->pq, e);
+	return 0;
+}
+
 static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 {
 	if (iterator_is_null(&mi->stack[idx])) {
 		return 0;
 	}
-
-	{
-		struct reftable_record rec = reftable_new_record(mi->typ);
-		struct pq_entry e = {
-			.rec = rec,
-			.index = idx,
-		};
-		int err = iterator_next(&mi->stack[idx], &rec);
-		if (err < 0) {
-			return err;
-		}
-
-		if (err > 0) {
-			reftable_iterator_destroy(&mi->stack[idx]);
-			reftable_record_destroy(&rec);
-			return 0;
-		}
-
-		merged_iter_pqueue_add(&mi->pq, e);
-	}
-	return 0;
+	return merged_iter_advance_nonnull_subiter(mi, idx);
 }
 
 static int merged_iter_next_entry(struct merged_iter *mi,
@@ -173,6 +176,7 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 			      struct reftable_reader **stack, int n,
 			      uint32_t hash_id)
 {
+	struct reftable_merged_table *m = NULL;
 	uint64_t last_max = 0;
 	uint64_t first_min = 0;
 	int i = 0;
@@ -191,18 +195,14 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 		last_max = reftable_reader_max_update_index(r);
 	}
 
-	{
-		struct reftable_merged_table m = {
-			.stack = stack,
-			.stack_len = n,
-			.min = first_min,
-			.max = last_max,
-			.hash_id = hash_id,
-		};
-
-		*dest = reftable_calloc(sizeof(struct reftable_merged_table));
-		**dest = m;
-	}
+	m = (struct reftable_merged_table *)reftable_calloc(
+		sizeof(struct reftable_merged_table));
+	m->stack = stack;
+	m->stack_len = n;
+	m->min = first_min;
+	m->max = last_max;
+	m->hash_id = hash_id;
+	*dest = m;
 	return 0;
 }
 

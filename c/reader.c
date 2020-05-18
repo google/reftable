@@ -93,7 +93,11 @@ const char *reader_name(struct reftable_reader *r)
 static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 {
 	byte *f = footer;
+	byte first_block_typ;
 	int err = 0;
+	uint32_t computed_crc;
+	uint32_t file_crc;
+
 	if (memcmp(f, "REFT", 4)) {
 		err = REFTABLE_FORMAT_ERROR;
 		goto exit;
@@ -146,24 +150,20 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 	r->log_offsets.index_offset = get_be64(f);
 	f += 8;
 
-	{
-		uint32_t computed_crc = crc32(0, footer, f - footer);
-		uint32_t file_crc = get_be32(f);
-		f += 4;
-		if (computed_crc != file_crc) {
-			err = REFTABLE_FORMAT_ERROR;
-			goto exit;
-		}
+	computed_crc = crc32(0, footer, f - footer);
+	file_crc = get_be32(f);
+	f += 4;
+	if (computed_crc != file_crc) {
+		err = REFTABLE_FORMAT_ERROR;
+		goto exit;
 	}
 
-	{
-		byte first_block_typ = header[header_size(r->version)];
-		r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
-		r->ref_offsets.offset = 0;
-		r->log_offsets.present = (first_block_typ == BLOCK_TYPE_LOG ||
-					  r->log_offsets.offset > 0);
-		r->obj_offsets.present = r->obj_offsets.offset > 0;
-	}
+	first_block_typ = header[header_size(r->version)];
+	r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
+	r->ref_offsets.offset = 0;
+	r->log_offsets.present = (first_block_typ == BLOCK_TYPE_LOG ||
+				  r->log_offsets.offset > 0);
+	r->obj_offsets.present = r->obj_offsets.offset > 0;
 	err = 0;
 exit:
 	return err;
@@ -672,6 +672,7 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 	struct reftable_obj_record got = { 0 };
 	struct reftable_record got_rec = { 0 };
 	int err = 0;
+	struct indexed_table_ref_iter *itr = NULL;
 
 	/* Look through the reverse index. */
 	reftable_record_from_obj(&want_rec, &want);
@@ -695,17 +696,13 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 		goto exit;
 	}
 
-	{
-		struct indexed_table_ref_iter *itr = NULL;
-		err = new_indexed_table_ref_iter(&itr, r, oid,
-						 hash_size(r->hash_id),
-						 got.offsets, got.offset_len);
-		if (err < 0) {
-			goto exit;
-		}
-		got.offsets = NULL;
-		iterator_from_indexed_table_ref_iter(it, itr);
+	err = new_indexed_table_ref_iter(&itr, r, oid, hash_size(r->hash_id),
+					 got.offsets, got.offset_len);
+	if (err < 0) {
+		goto exit;
 	}
+	got.offsets = NULL;
+	iterator_from_indexed_table_ref_iter(it, itr);
 
 exit:
 	reftable_iterator_destroy(&oit);

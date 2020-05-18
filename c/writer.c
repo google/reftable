@@ -281,6 +281,8 @@ int reftable_writer_add_refs(struct reftable_writer *w,
 int reftable_writer_add_log(struct reftable_writer *w,
 			    struct reftable_log_record *log)
 {
+	struct reftable_record rec = { 0 };
+	int err;
 	if (log->ref_name == NULL) {
 		return REFTABLE_API_ERROR;
 	}
@@ -296,13 +298,9 @@ int reftable_writer_add_log(struct reftable_writer *w,
 	w->next -= w->pending_padding;
 	w->pending_padding = 0;
 
-	{
-		struct reftable_record rec = { 0 };
-		int err;
-		reftable_record_from_log(&rec, log);
-		err = writer_add_record(w, &rec);
-		return err;
-	}
+	reftable_record_from_log(&rec, log);
+	err = writer_add_record(w, &rec);
+	return err;
 }
 
 int reftable_writer_add_logs(struct reftable_writer *w,
@@ -326,6 +324,7 @@ static int writer_finish_section(struct reftable_writer *w)
 	int before_blocks = w->stats.idx_stats.blocks;
 	int err = writer_flush_block(w);
 	int i = 0;
+	struct reftable_block_stats *bstats = NULL;
 	if (err < 0) {
 		return err;
 	}
@@ -380,14 +379,10 @@ static int writer_finish_section(struct reftable_writer *w)
 		return err;
 	}
 
-	{
-		struct reftable_block_stats *bstats =
-			writer_reftable_block_stats(w, typ);
-		bstats->index_blocks =
-			w->stats.idx_stats.blocks - before_blocks;
-		bstats->index_offset = index_start;
-		bstats->max_index_level = max_level;
-	}
+	bstats = writer_reftable_block_stats(w, typ);
+	bstats->index_blocks = w->stats.idx_stats.blocks - before_blocks;
+	bstats->index_offset = index_start;
+	bstats->max_index_level = max_level;
 
 	/* Reinit lastKey, as the next section can start with any key. */
 	w->last_key.len = 0;
@@ -597,6 +592,7 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	int raw_bytes = block_writer_finish(w->block_writer);
 	int padding = 0;
 	int err = 0;
+	struct reftable_index_record ir = { 0 };
 	if (raw_bytes < 0) {
 		return raw_bytes;
 	}
@@ -636,13 +632,9 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 			sizeof(struct reftable_index_record) * w->index_cap);
 	}
 
-	{
-		struct reftable_index_record ir = {
-			.offset = w->next,
-		};
-		slice_copy(&ir.last_key, w->block_writer->last_key);
-		w->index[w->index_len] = ir;
-	}
+	ir.offset = w->next;
+	slice_copy(&ir.last_key, w->block_writer->last_key);
+	w->index[w->index_len] = ir;
 
 	w->index_len++;
 	w->next += padding + raw_bytes;

@@ -134,7 +134,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		reftable_malloc(sizeof(struct reftable_reader *) * names_len);
 	int new_tables_len = 0;
 	struct reftable_merged_table *new_merged = NULL;
-
+	int i;
 	struct slice table_path = { 0 };
 
 	while (*names) {
@@ -189,24 +189,18 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	new_merged->suppress_deletions = true;
 	st->merged = new_merged;
 
-	{
-		int i = 0;
-		for (i = 0; i < cur_len; i++) {
-			if (cur[i] != NULL) {
-				reader_close(cur[i]);
-				reftable_reader_free(cur[i]);
-			}
+	for (i = 0; i < cur_len; i++) {
+		if (cur[i] != NULL) {
+			reader_close(cur[i]);
+			reftable_reader_free(cur[i]);
 		}
 	}
 
 exit:
 	slice_release(&table_path);
-	{
-		int i = 0;
-		for (i = 0; i < new_tables_len; i++) {
-			reader_close(new_tables[i]);
-			reftable_reader_free(new_tables[i]);
-		}
+	for (i = 0; i < new_tables_len; i++) {
+		reader_close(new_tables[i]);
+		reftable_reader_free(new_tables[i]);
 	}
 	reftable_free(new_tables);
 	reftable_free(cur);
@@ -809,6 +803,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	bool have_lock = false;
 	int lock_file_fd = 0;
 	int compact_count = last - first + 1;
+	char **listp = NULL;
 	char **delete_on_success =
 		reftable_calloc(sizeof(char *) * (compact_count + 1));
 	char **subtable_locks =
@@ -971,24 +966,21 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	*/
 	err = reftable_stack_reload_maybe_reuse(st, first < last);
 
-	{
-		char **p = delete_on_success;
-		while (*p) {
-			if (strcmp(*p, slice_as_string(&new_table_path))) {
-				unlink(*p);
-			}
-			p++;
+	listp = delete_on_success;
+	while (*listp) {
+		if (strcmp(*listp, slice_as_string(&new_table_path))) {
+			unlink(*listp);
 		}
+		listp++;
 	}
 
 exit:
 	free_names(delete_on_success);
-	{
-		char **p = subtable_locks;
-		while (*p) {
-			unlink(*p);
-			p++;
-		}
+
+	listp = subtable_locks;
+	while (*listp) {
+		unlink(*listp);
+		listp++;
 	}
 	free_names(subtable_locks);
 	if (lock_file_fd > 0) {
