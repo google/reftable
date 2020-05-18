@@ -190,17 +190,17 @@ static int writer_add_record(struct reftable_writer *w,
 	int result = -1;
 	struct slice key = { 0 };
 	int err = 0;
-	record_key(rec, &key);
+	reftable_record_key(rec, &key);
 	if (slice_compare(w->last_key, key) >= 0) {
 		goto exit;
 	}
 
 	slice_copy(&w->last_key, key);
 	if (w->block_writer == NULL) {
-		writer_reinit_block_writer(w, record_type(rec));
+		writer_reinit_block_writer(w, reftable_record_type(rec));
 	}
 
-	assert(block_writer_type(w->block_writer) == record_type(rec));
+	assert(block_writer_type(w->block_writer) == reftable_record_type(rec));
 
 	if (block_writer_add(w->block_writer, rec) == 0) {
 		result = 0;
@@ -213,7 +213,7 @@ static int writer_add_record(struct reftable_writer *w,
 		goto exit;
 	}
 
-	writer_reinit_block_writer(w, record_type(rec));
+	writer_reinit_block_writer(w, reftable_record_type(rec));
 	err = block_writer_add(w->block_writer, rec);
 	if (err < 0) {
 		result = err;
@@ -241,7 +241,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 		return REFTABLE_API_ERROR;
 	}
 
-	record_from_ref(&rec, &copy);
+	reftable_record_from_ref(&rec, &copy);
 	copy.update_index -= w->min_update_index;
 	err = writer_add_record(w, &rec);
 	if (err < 0) {
@@ -299,7 +299,7 @@ int reftable_writer_add_log(struct reftable_writer *w,
 	{
 		struct reftable_record rec = { 0 };
 		int err;
-		record_from_log(&rec, log);
+		reftable_record_from_log(&rec, log);
 		err = writer_add_record(w, &rec);
 		return err;
 	}
@@ -331,7 +331,7 @@ static int writer_finish_section(struct reftable_writer *w)
 	}
 
 	while (w->index_len > threshold) {
-		struct index_record *idx = NULL;
+		struct reftable_index_record *idx = NULL;
 		int idx_len = 0;
 
 		max_level++;
@@ -346,7 +346,7 @@ static int writer_finish_section(struct reftable_writer *w)
 		w->index_cap = 0;
 		for (i = 0; i < idx_len; i++) {
 			struct reftable_record rec = { 0 };
-			record_from_index(&rec, idx + i);
+			reftable_record_from_index(&rec, idx + i);
 			if (block_writer_add(w->block_writer, &rec) == 0) {
 				continue;
 			}
@@ -422,7 +422,7 @@ static void write_object_record(void *void_arg, void *key)
 {
 	struct write_record_arg *arg = (struct write_record_arg *)void_arg;
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
-	struct obj_record obj_rec = {
+	struct reftable_obj_record obj_rec = {
 		.hash_prefix = entry->hash.buf,
 		.hash_prefix_len = arg->w->stats.object_id_len,
 		.offsets = entry->offsets,
@@ -433,7 +433,7 @@ static void write_object_record(void *void_arg, void *key)
 		goto exit;
 	}
 
-	record_from_obj(&rec, &obj_rec);
+	reftable_record_from_obj(&rec, &obj_rec);
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
 	if (arg->err == 0) {
 		goto exit;
@@ -632,11 +632,12 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	if (w->index_cap == w->index_len) {
 		w->index_cap = 2 * w->index_cap + 1;
 		w->index = reftable_realloc(
-			w->index, sizeof(struct index_record) * w->index_cap);
+			w->index,
+			sizeof(struct reftable_index_record) * w->index_cap);
 	}
 
 	{
-		struct index_record ir = {
+		struct reftable_index_record ir = {
 			.offset = w->next,
 		};
 		slice_copy(&ir.last_key, w->block_writer->last_key);

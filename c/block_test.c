@@ -68,7 +68,7 @@ void test_block_read_write()
 			  header_off, hash_size(SHA1_ID));
 	struct reftable_ref_record ref = { 0 };
 	struct reftable_record rec = { 0 };
-	record_from_ref(&rec, &ref);
+	reftable_record_from_ref(&rec, &ref);
 
 	int i = 0;
 	for (i = 0; i < N; i++) {
@@ -109,7 +109,7 @@ void test_block_read_write()
 		j++;
 	}
 
-	record_clear(&rec);
+	reftable_record_clear(&rec);
 	block_iter_close(&it);
 
 	struct slice want = { 0 };
@@ -136,7 +136,7 @@ void test_block_read_write()
 		block_iter_close(&it);
 	}
 
-	record_clear(&rec);
+	reftable_record_clear(&rec);
 	reftable_block_done(&br.block);
 	slice_clear(&want);
 	for (i = 0; i < N; i++) {

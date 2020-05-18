@@ -60,7 +60,7 @@ byte block_writer_type(struct block_writer *bw)
 	return bw->buf[bw->header_off];
 }
 
-/* adds the record to the block. Returns -1 if it does not fit, 0 on
+/* adds the reftable_record to the block. Returns -1 if it does not fit, 0 on
    success */
 int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 {
@@ -78,14 +78,15 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	struct slice key = { 0 };
 	int n = 0;
 
-	record_key(rec, &key);
-	n = encode_key(&restart, out, last, key, record_val_type(rec));
+	reftable_record_key(rec, &key);
+	n = reftable_encode_key(&restart, out, last, key,
+				reftable_record_val_type(rec));
 	if (n < 0) {
 		goto err;
 	}
 	slice_consume(&out, n);
 
-	n = record_encode(rec, out, w->hash_size);
+	n = reftable_record_encode(rec, out, w->hash_size);
 	if (n < 0) {
 		goto err;
 	}
@@ -192,7 +193,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 	byte typ = block->data[header_off];
 	uint32_t sz = get_be24(block->data + header_off + 1);
 
-	if (!is_block_type(typ)) {
+	if (!reftable_is_block_type(typ)) {
 		return REFTABLE_FORMAT_ERROR;
 	}
 
@@ -293,7 +294,7 @@ static int restart_key_less(size_t idx, void *args)
 	struct slice rkey = { 0 };
 	struct slice last_key = { 0 };
 	byte unused_extra;
-	int n = decode_key(&rkey, &unused_extra, last_key, in);
+	int n = reftable_decode_key(&rkey, &unused_extra, last_key, in);
 	if (n < 0) {
 		a->error = 1;
 		return -1;
@@ -328,13 +329,13 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 		return 1;
 	}
 
-	n = decode_key(&key, &extra, it->last_key, in);
+	n = reftable_decode_key(&key, &extra, it->last_key, in);
 	if (n < 0) {
 		return -1;
 	}
 
 	slice_consume(&in, n);
-	n = record_decode(rec, key, extra, in, it->br->hash_size);
+	n = reftable_record_decode(rec, key, extra, in, it->br->hash_size);
 	if (n < 0) {
 		return -1;
 	}
@@ -356,7 +357,7 @@ int block_reader_first_key(struct block_reader *br, struct slice *key)
 	};
 
 	byte extra = 0;
-	int n = decode_key(key, &extra, empty, in);
+	int n = reftable_decode_key(key, &extra, empty, in);
 	if (n < 0) {
 		return n;
 	}
@@ -380,7 +381,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		.key = want,
 		.r = br,
 	};
-	struct reftable_record rec = new_record(block_reader_type(br));
+	struct reftable_record rec = reftable_new_record(block_reader_type(br));
 	struct slice key = { 0 };
 	int err = 0;
 	struct block_iter next = { 0 };
@@ -409,7 +410,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 			goto exit;
 		}
 
-		record_key(&rec, &key);
+		reftable_record_key(&rec, &key);
 		if (err > 0 || slice_compare(key, want) >= 0) {
 			err = 0;
 			goto exit;
@@ -421,7 +422,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 exit:
 	slice_clear(&key);
 	slice_clear(&next.last_key);
-	record_destroy(&rec);
+	reftable_record_destroy(&rec);
 
 	return err;
 }

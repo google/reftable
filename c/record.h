@@ -18,7 +18,7 @@ int get_var_int(uint64_t *dest, struct slice in);
 int put_var_int(struct slice dest, uint64_t val);
 
 /* Methods for records. */
-struct record_vtable {
+struct reftable_record_vtable {
 	/* encode the key of to a byte slice. */
 	void (*key)(const void *rec, struct slice *dest);
 
@@ -48,34 +48,34 @@ struct record_vtable {
 /* record is a generic wrapper for different types of records. */
 struct reftable_record {
 	void *data;
-	struct record_vtable *ops;
+	struct reftable_record_vtable *ops;
 };
 
 /* returns true for recognized block types. Block start with the block type. */
-int is_block_type(byte typ);
+int reftable_is_block_type(byte typ);
 
 /* creates a malloced record of the given type. Dispose with record_destroy */
-struct reftable_record new_record(byte typ);
+struct reftable_record reftable_new_record(byte typ);
 
-extern struct record_vtable reftable_ref_record_vtable;
+extern struct reftable_record_vtable reftable_ref_record_vtable;
 
 /* Encode `key` into `dest`. Sets `restart` to indicate a restart. Returns
    number of bytes written. */
-int encode_key(bool *restart, struct slice dest, struct slice prev_key,
-	       struct slice key, byte extra);
+int reftable_encode_key(bool *restart, struct slice dest, struct slice prev_key,
+			struct slice key, byte extra);
 
 /* Decode into `key` and `extra` from `in` */
-int decode_key(struct slice *key, byte *extra, struct slice last_key,
-	       struct slice in);
+int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
+			struct slice in);
 
-/* index_record are used internally to speed up lookups. */
-struct index_record {
+/* reftable_index_record are used internally to speed up lookups. */
+struct reftable_index_record {
 	uint64_t offset; /* Offset of block */
 	struct slice last_key; /* Last key of the block. */
 };
 
-/* obj_record stores an object ID => ref mapping. */
-struct obj_record {
+/* reftable_obj_record stores an object ID => ref mapping. */
+struct reftable_obj_record {
 	byte *hash_prefix; /* leading bytes of the object ID */
 	int hash_prefix_len; /* number of leading bytes. Constant
 			      * across a single table. */
@@ -85,37 +85,39 @@ struct obj_record {
 
 /* see struct record_vtable */
 
-void record_key(struct reftable_record *rec, struct slice *dest);
-byte record_type(struct reftable_record *rec);
-void record_copy_from(struct reftable_record *rec, struct reftable_record *src,
-		      int hash_size);
-byte record_val_type(struct reftable_record *rec);
-int record_encode(struct reftable_record *rec, struct slice dest,
-		  int hash_size);
-int record_decode(struct reftable_record *rec, struct slice key, byte extra,
-		  struct slice src, int hash_size);
-bool record_is_deletion(struct reftable_record *rec);
+void reftable_record_key(struct reftable_record *rec, struct slice *dest);
+byte reftable_record_type(struct reftable_record *rec);
+void reftable_record_copy_from(struct reftable_record *rec,
+			       struct reftable_record *src, int hash_size);
+byte reftable_record_val_type(struct reftable_record *rec);
+int reftable_record_encode(struct reftable_record *rec, struct slice dest,
+			   int hash_size);
+int reftable_record_decode(struct reftable_record *rec, struct slice key,
+			   byte extra, struct slice src, int hash_size);
+bool reftable_record_is_deletion(struct reftable_record *rec);
 
 /* zeroes out the embedded record */
-void record_clear(struct reftable_record *rec);
+void reftable_record_clear(struct reftable_record *rec);
 
-/* clear out the record, yielding the record data that was encapsulated. */
-void *record_yield(struct reftable_record *rec);
+/* clear out the record, yielding the reftable_record data that was
+ * encapsulated. */
+void *reftable_record_yield(struct reftable_record *rec);
 
 /* clear and deallocate embedded record, and zero `rec`. */
-void record_destroy(struct reftable_record *rec);
+void reftable_record_destroy(struct reftable_record *rec);
 
 /* initialize generic records from concrete records. The generic record should
  * be zeroed out. */
-void record_from_obj(struct reftable_record *rec, struct obj_record *objrec);
-void record_from_index(struct reftable_record *rec,
-		       struct index_record *idxrec);
-void record_from_ref(struct reftable_record *rec,
-		     struct reftable_ref_record *refrec);
-void record_from_log(struct reftable_record *rec,
-		     struct reftable_log_record *logrec);
-struct reftable_ref_record *record_as_ref(struct reftable_record *ref);
-struct reftable_log_record *record_as_log(struct reftable_record *ref);
+void reftable_record_from_obj(struct reftable_record *rec,
+			      struct reftable_obj_record *objrec);
+void reftable_record_from_index(struct reftable_record *rec,
+				struct reftable_index_record *idxrec);
+void reftable_record_from_ref(struct reftable_record *rec,
+			      struct reftable_ref_record *refrec);
+void reftable_record_from_log(struct reftable_record *rec,
+			      struct reftable_log_record *logrec);
+struct reftable_ref_record *reftable_record_as_ref(struct reftable_record *ref);
+struct reftable_log_record *reftable_record_as_log(struct reftable_record *ref);
 
 /* for qsort. */
 int reftable_ref_record_compare_name(const void *a, const void *b);

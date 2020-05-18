@@ -60,7 +60,7 @@ int reftable_iterator_next_ref(struct reftable_iterator *it,
 			       struct reftable_ref_record *ref)
 {
 	struct reftable_record rec = { 0 };
-	record_from_ref(&rec, ref);
+	reftable_record_from_ref(&rec, ref);
 	return iterator_next(it, &rec);
 }
 
@@ -68,7 +68,7 @@ int reftable_iterator_next_log(struct reftable_iterator *it,
 			       struct reftable_log_record *log)
 {
 	struct reftable_record rec = { 0 };
-	record_from_log(&rec, log);
+	reftable_record_from_log(&rec, log);
 	return iterator_next(it, &rec);
 }
 

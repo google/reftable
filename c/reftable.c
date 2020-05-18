@@ -45,7 +45,7 @@ int reftable_table_seek_ref(struct reftable_table *tab,
 		.ref_name = (char *)name,
 	};
 	struct reftable_record rec = { 0 };
-	record_from_ref(&rec, &ref);
+	reftable_record_from_ref(&rec, &ref);
 	return tab->ops->seek(tab->table_arg, it, &rec);
 }
 

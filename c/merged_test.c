@@ -35,8 +35,9 @@ void test_pq(void)
 
 	i = 1;
 	do {
-		struct reftable_record rec = new_record(BLOCK_TYPE_REF);
-		record_as_ref(&rec)->ref_name = names[i];
+		struct reftable_record rec =
+			reftable_new_record(BLOCK_TYPE_REF);
+		reftable_record_as_ref(&rec)->ref_name = names[i];
 
 		struct pq_entry e = {
 			.rec = rec,
@@ -50,7 +51,8 @@ void test_pq(void)
 	while (!merged_iter_pqueue_is_empty(pq)) {
 		struct pq_entry e = merged_iter_pqueue_remove(&pq);
 		merged_iter_pqueue_check(pq);
-		struct reftable_ref_record *ref = record_as_ref(&e.rec);
+		struct reftable_ref_record *ref =
+			reftable_record_as_ref(&e.rec);
 
 		if (last != NULL) {
 			assert(strcmp(last, ref->ref_name) < 0);

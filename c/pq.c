@@ -15,8 +15,8 @@ int pq_less(struct pq_entry a, struct pq_entry b)
 	struct slice ak = { 0 };
 	struct slice bk = { 0 };
 	int cmp = 0;
-	record_key(&a.rec, &ak);
-	record_key(&b.rec, &bk);
+	reftable_record_key(&a.rec, &ak);
+	reftable_record_key(&b.rec, &bk);
 
 	cmp = slice_compare(ak, bk);
 
@@ -107,7 +107,7 @@ void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
 {
 	int i = 0;
 	for (i = 0; i < pq->len; i++) {
-		record_destroy(&pq->heap[i].rec);
+		reftable_record_destroy(&pq->heap[i].rec);
 	}
 	FREE_AND_NULL(pq->heap);
 	pq->len = pq->cap = 0;

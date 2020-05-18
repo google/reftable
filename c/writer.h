@@ -36,7 +36,7 @@ struct reftable_writer {
 	struct block_writer block_writer_data;
 
 	/* pending index records for the current section */
-	struct index_record *index;
+	struct reftable_index_record *index;
 	int index_len;
 	int index_cap;
 
