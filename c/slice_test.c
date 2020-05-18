@@ -24,7 +24,7 @@ void test_slice(void)
 	struct slice t = { 0 };
 	slice_set_string(&t, "pqr");
 
-	slice_append(&s, t);
+	slice_addbuf(&s, t);
 	assert(0 == strcmp("abcpqr", slice_as_string(&s)));
 
 	slice_release(&s);

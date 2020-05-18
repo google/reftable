@@ -57,7 +57,7 @@ int slice_cmp(struct slice a, struct slice b);
 int slice_write(struct slice *dest, byte *data, size_t sz);
 
 /* Append `add` to `dest. */
-void slice_append(struct slice *dest, struct slice add);
+void slice_addbuf(struct slice *dest, struct slice add);
 
 /* Like slice_write, but suitable for passing to reftable_new_writer
  */

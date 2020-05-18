@@ -50,7 +50,7 @@ void slice_addstr(struct slice *d, const char *s)
 	memcpy(d->buf + l1, s, l2);
 }
 
-void slice_append(struct slice *s, struct slice a)
+void slice_addbuf(struct slice *s, struct slice a)
 {
 	int end = s->len;
 	slice_resize(s, s->len + a.len);

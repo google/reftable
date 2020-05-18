@@ -554,7 +554,7 @@ int reftable_addition_add(struct reftable_addition *add,
 
 	slice_set_string(&temp_tab_file_name, add->stack->reftable_dir);
 	slice_addstr(&temp_tab_file_name, "/");
-	slice_append(&temp_tab_file_name, next_name);
+	slice_addbuf(&temp_tab_file_name, next_name);
 	slice_addstr(&temp_tab_file_name, ".temp.XXXXXX");
 
 	tab_fd = mkstemp((char *)slice_as_string(&temp_tab_file_name));
@@ -602,7 +602,7 @@ int reftable_addition_add(struct reftable_addition *add,
 
 	slice_set_string(&tab_file_name, add->stack->reftable_dir);
 	slice_addstr(&tab_file_name, "/");
-	slice_append(&tab_file_name, next_name);
+	slice_addbuf(&tab_file_name, next_name);
 
 	/* TODO: should check destination out of paranoia */
 	err = rename(slice_as_string(&temp_tab_file_name),
@@ -659,7 +659,7 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 
 	slice_set_string(temp_tab, st->reftable_dir);
 	slice_addstr(temp_tab, "/");
-	slice_append(temp_tab, next_name);
+	slice_addbuf(temp_tab, next_name);
 	slice_addstr(temp_tab, ".temp.XXXXXX");
 
 	tab_fd = mkstemp((char *)slice_as_string(temp_tab));
@@ -920,7 +920,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	slice_set_string(&new_table_path, st->reftable_dir);
 	slice_addstr(&new_table_path, "/");
 
-	slice_append(&new_table_path, new_table_name);
+	slice_addbuf(&new_table_path, new_table_name);
 
 	if (!is_empty_table) {
 		err = rename(slice_as_string(&temp_tab_file_name),
@@ -936,7 +936,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		slice_addstr(&ref_list_contents, "\n");
 	}
 	if (!is_empty_table) {
-		slice_append(&ref_list_contents, new_table_name);
+		slice_addbuf(&ref_list_contents, new_table_name);
 		slice_addstr(&ref_list_contents, "\n");
 	}
 	for (i = last + 1; i < st->merged->stack_len; i++) {
