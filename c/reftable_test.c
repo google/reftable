@@ -27,14 +27,14 @@ void test_buffer(void)
 	slice_write(&buf, in, sizeof(in));
 	struct reftable_block_source source = { NULL };
 	block_source_from_slice(&source, &buf);
-	assert(block_source_size(source) == 6);
+	assert(block_source_size(&source) == 6);
 	struct reftable_block out = { 0 };
-	int n = block_source_read_block(source, &out, 0, sizeof(in));
+	int n = block_source_read_block(&source, &out, 0, sizeof(in));
 	assert(n == sizeof(in));
 	assert(!memcmp(in, out.data, n));
 	reftable_block_done(&out);
 
-	n = block_source_read_block(source, &out, 1, 2);
+	n = block_source_read_block(&source, &out, 1, 2);
 	assert(n == 2);
 	assert(!memcmp(out.data, "el", 2));
 
@@ -67,7 +67,7 @@ void test_default_write_opts(void)
 	block_source_from_slice(&source, &buf);
 
 	struct reftable_reader *rd = NULL;
-	err = reftable_new_reader(&rd, source, "filename");
+	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
 
 	uint32_t hash_id = reftable_reader_hash_id(rd);
@@ -256,7 +256,7 @@ void test_log_write_read(void)
 	block_source_from_slice(&source, &buf);
 
 	struct reftable_reader rd = { 0 };
-	int err = init_reader(&rd, source, "file.log");
+	int err = init_reader(&rd, &source, "file.log");
 	assert_err(err);
 
 	{
@@ -317,7 +317,7 @@ void test_table_read_write_sequential(void)
 	block_source_from_slice(&source, &buf);
 
 	struct reftable_reader rd = { 0 };
-	int err = init_reader(&rd, source, "file.ref");
+	int err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
 
 	struct reftable_iterator it = { 0 };
@@ -368,7 +368,7 @@ void test_table_read_api(void)
 	struct reftable_block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
-	int err = init_reader(&rd, source, "file.ref");
+	int err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
 
 	struct reftable_iterator it = { 0 };
@@ -401,7 +401,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 	struct reftable_block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
-	int err = init_reader(&rd, source, "file.ref");
+	int err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
 	assert(hash_id == reftable_reader_hash_id(&rd));
 
@@ -529,7 +529,7 @@ void test_table_refs_for(bool indexed)
 	struct reftable_block_source source = { 0 };
 	block_source_from_slice(&source, &buf);
 
-	int err = init_reader(&rd, source, "file.ref");
+	int err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
 	if (!indexed) {
 		rd.obj_offsets.present = 0;
@@ -594,7 +594,7 @@ void test_table_empty(void)
 	block_source_from_slice(&source, &buf);
 
 	struct reftable_reader *rd = NULL;
-	err = reftable_new_reader(&rd, source, "filename");
+	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
 
 	struct reftable_iterator it = { 0 };

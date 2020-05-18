@@ -116,7 +116,7 @@ merged_table_from_records(struct reftable_ref_record **refs,
 		write_test_table(&buf[i], refs[i], sizes[i]);
 		block_source_from_slice(&(*source)[i], &buf[i]);
 
-		int err = reftable_new_reader(&rd[i], (*source)[i], "name");
+		int err = reftable_new_reader(&rd[i], &(*source)[i], "name");
 		assert_err(err);
 	}
 

@@ -16,17 +16,17 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "tree.h"
 
-uint64_t block_source_size(struct reftable_block_source source)
+uint64_t block_source_size(struct reftable_block_source *source)
 {
-	return source.ops->size(source.arg);
+	return source->ops->size(source->arg);
 }
 
-int block_source_read_block(struct reftable_block_source source,
+int block_source_read_block(struct reftable_block_source *source,
 			    struct reftable_block *dest, uint64_t off,
 			    uint32_t size)
 {
-	int result = source.ops->read_block(source.arg, dest, off, size);
-	dest->source = source;
+	int result = source->ops->read_block(source->arg, dest, off, size);
+	dest->source = *source;
 	return result;
 }
 
@@ -77,7 +77,7 @@ static int reader_get_block(struct reftable_reader *r,
 		sz = r->size - off;
 	}
 
-	return block_source_read_block(r->source, dest, off, sz);
+	return block_source_read_block(&r->source, dest, off, sz);
 }
 
 uint32_t reftable_reader_hash_id(struct reftable_reader *r)
@@ -169,7 +169,7 @@ exit:
 	return err;
 }
 
-int init_reader(struct reftable_reader *r, struct reftable_block_source source,
+int init_reader(struct reftable_reader *r, struct reftable_block_source *source,
 		const char *name)
 {
 	struct reftable_block footer = { 0 };
@@ -196,7 +196,7 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source source,
 	}
 
 	r->size = block_source_size(source) - footer_size(r->version);
-	r->source = source;
+	r->source = *source;
 	r->name = xstrdup(name);
 	r->hash_id = 0;
 
@@ -638,7 +638,7 @@ void reader_close(struct reftable_reader *r)
 }
 
 int reftable_new_reader(struct reftable_reader **p,
-			struct reftable_block_source src, char const *name)
+			struct reftable_block_source *src, char const *name)
 {
 	struct reftable_reader *rd =
 		reftable_calloc(sizeof(struct reftable_reader));
@@ -646,7 +646,7 @@ int reftable_new_reader(struct reftable_reader **p,
 	if (err == 0) {
 		*p = rd;
 	} else {
-		block_source_close(&src);
+		block_source_close(src);
 		reftable_free(rd);
 	}
 	return err;

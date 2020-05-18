@@ -164,7 +164,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 				goto exit;
 			}
 
-			err = reftable_new_reader(&rd, src, name);
+			err = reftable_new_reader(&rd, &src, name);
 			if (err < 0) {
 				goto exit;
 			}
@@ -1197,7 +1197,7 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 		goto exit;
 	}
 
-	err = reftable_new_reader(&rd, src, new_tab_name);
+	err = reftable_new_reader(&rd, &src, new_tab_name);
 	if (err < 0) {
 		goto exit;
 	}

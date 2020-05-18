@@ -49,7 +49,7 @@ void test_conflict(void)
 	block_source_from_slice(&source, &buf);
 
 	struct reftable_reader *rd = NULL;
-	err = reftable_new_reader(&rd, source, "filename");
+	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
 
 	struct reftable_table tab = { NULL };
