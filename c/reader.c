@@ -464,7 +464,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 			goto exit;
 		}
 		{
-			int cmp = slice_compare(got_key, want_key);
+			int cmp = slice_cmp(got_key, want_key);
 			if (cmp > 0) {
 				table_iter_block_done(&next);
 				break;

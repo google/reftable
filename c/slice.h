@@ -51,7 +51,7 @@ void slice_consume(struct slice *s, int n);
 void slice_resize(struct slice *s, int l);
 
 /* Signed comparison */
-int slice_compare(struct slice a, struct slice b);
+int slice_cmp(struct slice a, struct slice b);
 
 /* Append `data` to the `dest` slice.  */
 int slice_write(struct slice *dest, byte *data, size_t sz);

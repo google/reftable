@@ -368,7 +368,7 @@ void test_reftable_index_record_roundtrip()
 	reftable_record_key(&rec, &key);
 	test_copy(&rec);
 
-	assert(0 == slice_compare(key, in.last_key));
+	assert(0 == slice_cmp(key, in.last_key));
 
 	byte buf[1024];
 	struct slice dest = {

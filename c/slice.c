@@ -114,7 +114,7 @@ bool slice_equal(struct slice a, struct slice b)
 	return memcmp(a.buf, b.buf, a.len) == 0;
 }
 
-int slice_compare(struct slice a, struct slice b)
+int slice_cmp(struct slice a, struct slice b)
 {
 	int min = a.len < b.len ? a.len : b.len;
 	int res = memcmp(a.buf, b.buf, min);

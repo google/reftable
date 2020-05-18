@@ -301,7 +301,7 @@ static int restart_key_less(size_t idx, void *args)
 	}
 
 	{
-		int result = slice_compare(a->key, rkey);
+		int result = slice_cmp(a->key, rkey);
 		slice_release(&rkey);
 		return result;
 	}
@@ -411,7 +411,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		}
 
 		reftable_record_key(&rec, &key);
-		if (err > 0 || slice_compare(key, want) >= 0) {
+		if (err > 0 || slice_cmp(key, want) >= 0) {
 			err = 0;
 			goto exit;
 		}

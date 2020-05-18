@@ -112,7 +112,7 @@ static int merged_iter_next_entry(struct merged_iter *mi,
 
 		reftable_record_key(&top.rec, &k);
 
-		cmp = slice_compare(k, entry_key);
+		cmp = slice_cmp(k, entry_key);
 		slice_release(&k);
 
 		if (cmp > 0) {

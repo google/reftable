@@ -149,8 +149,8 @@ struct obj_index_tree_node {
 
 static int obj_index_tree_node_compare(const void *a, const void *b)
 {
-	return slice_compare(((const struct obj_index_tree_node *)a)->hash,
-			     ((const struct obj_index_tree_node *)b)->hash);
+	return slice_cmp(((const struct obj_index_tree_node *)a)->hash,
+			 ((const struct obj_index_tree_node *)b)->hash);
 }
 
 static void writer_index_hash(struct reftable_writer *w, struct slice hash)
@@ -191,7 +191,7 @@ static int writer_add_record(struct reftable_writer *w,
 	struct slice key = { 0 };
 	int err = 0;
 	reftable_record_key(rec, &key);
-	if (slice_compare(w->last_key, key) >= 0) {
+	if (slice_cmp(w->last_key, key) >= 0) {
 		goto exit;
 	}
 
