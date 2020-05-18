@@ -730,7 +730,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	}
 
 	while (true) {
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			err = 0;
 			break;
@@ -756,7 +756,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	}
 
 	while (true) {
-		err = reftable_iterator_next_log(it, &log);
+		err = reftable_iterator_next_log(&it, &log);
 		if (err > 0) {
 			err = 0;
 			break;
@@ -1157,7 +1157,7 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 		goto exit;
 	}
 
-	err = reftable_iterator_next_log(it, log);
+	err = reftable_iterator_next_log(&it, log);
 	if (err) {
 		goto exit;
 	}
@@ -1213,7 +1213,7 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 
 	while (true) {
 		struct reftable_ref_record ref = { 0 };
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			break;
 		}

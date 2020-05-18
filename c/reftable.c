@@ -74,7 +74,7 @@ int reftable_table_read_ref(struct reftable_table tab, const char *name,
 		goto exit;
 	}
 
-	err = reftable_iterator_next_ref(it, ref);
+	err = reftable_iterator_next_ref(&it, ref);
 	if (err) {
 		goto exit;
 	}

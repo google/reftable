@@ -266,13 +266,13 @@ struct reftable_iterator {
 /* reads the next reftable_ref_record. Returns < 0 for error, 0 for OK and > 0:
    end of iteration.
 */
-int reftable_iterator_next_ref(struct reftable_iterator it,
+int reftable_iterator_next_ref(struct reftable_iterator *it,
 			       struct reftable_ref_record *ref);
 
 /* reads the next reftable_log_record. Returns < 0 for error, 0 for OK and > 0:
    end of iteration.
 */
-int reftable_iterator_next_log(struct reftable_iterator it,
+int reftable_iterator_next_log(struct reftable_iterator *it,
 			       struct reftable_log_record *log);
 
 /* releases resources associated with an iterator. */
@@ -340,14 +340,14 @@ int reftable_new_reader(struct reftable_reader **pp,
    example:
 
    struct reftable_reader *r = NULL;
-   int err = reftable_new_reader(&r, src, "filename");
+   int err = reftable_new_reader(&r, &src, "filename");
    if (err < 0) { ... }
    struct reftable_iterator it  = {0};
    err = reftable_reader_seek_ref(r, &it, "refs/heads/master");
    if (err < 0) { ... }
    struct reftable_ref_record ref  = {0};
    while (1) {
-     err = reftable_iterator_next_ref(it, &ref);
+     err = reftable_iterator_next_ref(&it, &ref);
      if (err > 0) {
        break;
      }

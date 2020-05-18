@@ -19,11 +19,11 @@ struct reftable_iterator_vtable {
 };
 
 void iterator_set_empty(struct reftable_iterator *it);
-int iterator_next(struct reftable_iterator it, struct reftable_record *rec);
+int iterator_next(struct reftable_iterator *it, struct reftable_record *rec);
 
 /* Returns true for a zeroed out iterator, such as the one returned from
    iterator_destroy. */
-bool iterator_is_null(struct reftable_iterator it);
+bool iterator_is_null(struct reftable_iterator *it);
 
 /* iterator that produces only ref records that point to `oid` */
 struct filtering_ref_iterator {

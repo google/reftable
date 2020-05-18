@@ -89,7 +89,7 @@ int modification_has_ref_with_prefix(struct modification *mod,
 	}
 
 	while (true) {
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		if (err) {
 			goto exit;
 		}

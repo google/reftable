@@ -15,9 +15,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 #include "reftable.h"
 
-bool iterator_is_null(struct reftable_iterator it)
+bool iterator_is_null(struct reftable_iterator *it)
 {
-	return it.ops == NULL;
+	return it->ops == NULL;
 }
 
 static int empty_iterator_next(void *arg, struct reftable_record *rec)
@@ -41,9 +41,9 @@ void iterator_set_empty(struct reftable_iterator *it)
 	it->ops = &empty_vtable;
 }
 
-int iterator_next(struct reftable_iterator it, struct reftable_record *rec)
+int iterator_next(struct reftable_iterator *it, struct reftable_record *rec)
 {
-	return it.ops->next(it.iter_arg, rec);
+	return it->ops->next(it->iter_arg, rec);
 }
 
 void reftable_iterator_destroy(struct reftable_iterator *it)
@@ -56,7 +56,7 @@ void reftable_iterator_destroy(struct reftable_iterator *it)
 	FREE_AND_NULL(it->iter_arg);
 }
 
-int reftable_iterator_next_ref(struct reftable_iterator it,
+int reftable_iterator_next_ref(struct reftable_iterator *it,
 			       struct reftable_ref_record *ref)
 {
 	struct reftable_record rec = { 0 };
@@ -64,7 +64,7 @@ int reftable_iterator_next_ref(struct reftable_iterator it,
 	return iterator_next(it, &rec);
 }
 
-int reftable_iterator_next_log(struct reftable_iterator it,
+int reftable_iterator_next_log(struct reftable_iterator *it,
 			       struct reftable_log_record *log)
 {
 	struct reftable_record rec = { 0 };
@@ -89,7 +89,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 		(struct reftable_ref_record *)rec->data;
 	int err = 0;
 	while (true) {
-		err = reftable_iterator_next_ref(fri->it, ref);
+		err = reftable_iterator_next_ref(&fri->it, ref);
 		if (err != 0) {
 			break;
 		}
@@ -100,7 +100,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 			err = reftable_table_seek_ref(fri->tab, &it,
 						      ref->ref_name);
 			if (err == 0) {
-				err = reftable_iterator_next_ref(it, ref);
+				err = reftable_iterator_next_ref(&it, ref);
 			}
 
 			reftable_iterator_destroy(&it);

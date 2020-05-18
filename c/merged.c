@@ -20,7 +20,7 @@ static int merged_iter_init(struct merged_iter *mi)
 	int i = 0;
 	for (i = 0; i < mi->stack_len; i++) {
 		struct reftable_record rec = new_record(mi->typ);
-		int err = iterator_next(mi->stack[i], &rec);
+		int err = iterator_next(&mi->stack[i], &rec);
 		if (err < 0) {
 			return err;
 		}
@@ -53,7 +53,7 @@ static void merged_iter_close(void *p)
 
 static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 {
-	if (iterator_is_null(mi->stack[idx])) {
+	if (iterator_is_null(&mi->stack[idx])) {
 		return 0;
 	}
 
@@ -63,7 +63,7 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 			.rec = rec,
 			.index = idx,
 		};
-		int err = iterator_next(mi->stack[idx], &rec);
+		int err = iterator_next(&mi->stack[idx], &rec);
 		if (err < 0) {
 			return err;
 		}

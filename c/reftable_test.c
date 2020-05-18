@@ -265,11 +265,11 @@ void test_log_write_read(void)
 		assert_err(err);
 
 		struct reftable_ref_record ref = { 0 };
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		assert_err(err);
 
 		/* end of iteration. */
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		assert(0 < err);
 
 		reftable_iterator_destroy(&it);
@@ -284,7 +284,7 @@ void test_log_write_read(void)
 		struct reftable_log_record log = { 0 };
 		int i = 0;
 		while (true) {
-			int err = reftable_iterator_next_log(it, &log);
+			int err = reftable_iterator_next_log(&it, &log);
 			if (err > 0) {
 				break;
 			}
@@ -327,7 +327,7 @@ void test_table_read_write_sequential(void)
 	int j = 0;
 	while (true) {
 		struct reftable_ref_record ref = { 0 };
-		int r = reftable_iterator_next_ref(it, &ref);
+		int r = reftable_iterator_next_ref(&it, &ref);
 		assert(r >= 0);
 		if (r > 0) {
 			break;
@@ -376,7 +376,7 @@ void test_table_read_api(void)
 	assert_err(err);
 
 	struct reftable_log_record log = { 0 };
-	err = reftable_iterator_next_log(it, &log);
+	err = reftable_iterator_next_log(&it, &log);
 	assert(err == REFTABLE_API_ERROR);
 
 	slice_clear(&buf);
@@ -417,7 +417,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 		int err = reftable_reader_seek_ref(&rd, &it, names[i]);
 		assert_err(err);
 		struct reftable_ref_record ref = { 0 };
-		err = reftable_iterator_next_ref(it, &ref);
+		err = reftable_iterator_next_ref(&it, &ref);
 		assert_err(err);
 		assert(0 == strcmp(names[i], ref.ref_name));
 		assert(i == ref.value[0]);
@@ -436,7 +436,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 						   slice_as_string(&pastLast));
 		if (err == 0) {
 			struct reftable_ref_record ref = { 0 };
-			int err = reftable_iterator_next_ref(it, &ref);
+			int err = reftable_iterator_next_ref(&it, &ref);
 			assert(err > 0);
 		} else {
 			assert(err > 0);
@@ -547,7 +547,7 @@ void test_table_refs_for(bool indexed)
 
 	int j = 0;
 	while (true) {
-		int err = reftable_iterator_next_ref(it, &ref);
+		int err = reftable_iterator_next_ref(&it, &ref);
 		assert(err >= 0);
 		if (err > 0) {
 			break;
@@ -602,7 +602,7 @@ void test_table_empty(void)
 	assert_err(err);
 
 	struct reftable_ref_record rec = { 0 };
-	err = reftable_iterator_next_ref(it, &rec);
+	err = reftable_iterator_next_ref(&it, &rec);
 	assert(err > 0);
 
 	reftable_iterator_destroy(&it);

@@ -681,7 +681,7 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 
 	/* read out the obj_record */
 	record_from_obj(&got_rec, &got);
-	err = iterator_next(oit, &got_rec);
+	err = iterator_next(&oit, &got_rec);
 	if (err < 0) {
 		goto exit;
 	}

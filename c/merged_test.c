@@ -155,7 +155,7 @@ void test_merged_between(void)
 	assert_err(err);
 
 	struct reftable_ref_record ref = { 0 };
-	err = reftable_iterator_next_ref(it, &ref);
+	err = reftable_iterator_next_ref(&it, &ref);
 	assert_err(err);
 	assert(ref.update_index == 2);
 	reftable_ref_record_clear(&ref);
@@ -225,7 +225,7 @@ void test_merged(void)
 	int cap = 0;
 	while (len < 100) { /* cap loops/recursion. */
 		struct reftable_ref_record ref = { 0 };
-		int err = reftable_iterator_next_ref(it, &ref);
+		int err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			break;
 		}
