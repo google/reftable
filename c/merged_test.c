@@ -90,7 +90,7 @@ void write_test_table(struct slice *buf, struct reftable_ref_record refs[],
 	};
 
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, buf, &opts);
+		reftable_new_writer(&slice_add_void, buf, &opts);
 	reftable_writer_set_limits(w, min, max);
 
 	for (i = 0; i < n; i++) {

@@ -54,14 +54,14 @@ void slice_resize(struct slice *s, int l);
 int slice_cmp(struct slice a, struct slice b);
 
 /* Append `data` to the `dest` slice.  */
-int slice_write(struct slice *dest, byte *data, size_t sz);
+int slice_add(struct slice *dest, byte *data, size_t sz);
 
 /* Append `add` to `dest. */
 void slice_addbuf(struct slice *dest, struct slice add);
 
-/* Like slice_write, but suitable for passing to reftable_new_writer
+/* Like slice_add, but suitable for passing to reftable_new_writer
  */
-int slice_write_void(void *b, byte *data, size_t sz);
+int slice_add_void(void *b, byte *data, size_t sz);
 
 /* Find the longest shared prefix size of `a` and `b` */
 int common_prefix_size(struct slice a, struct slice b);

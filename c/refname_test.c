@@ -29,7 +29,7 @@ void test_conflict(void)
 	struct reftable_write_options opts = { 0 };
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 	reftable_writer_set_limits(w, 1, 1);
 
 	struct reftable_ref_record rec = {

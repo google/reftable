@@ -130,7 +130,7 @@ int slice_cmp(struct slice a, struct slice b)
 	}
 }
 
-int slice_write(struct slice *b, byte *data, size_t sz)
+int slice_add(struct slice *b, byte *data, size_t sz)
 {
 	if (b->len + sz > b->cap) {
 		int newcap = 2 * b->cap + 1;
@@ -146,9 +146,9 @@ int slice_write(struct slice *b, byte *data, size_t sz)
 	return sz;
 }
 
-int slice_write_void(void *b, byte *data, size_t sz)
+int slice_add_void(void *b, byte *data, size_t sz)
 {
-	return slice_write((struct slice *)b, data, sz);
+	return slice_add((struct slice *)b, data, sz);
 }
 
 static uint64_t slice_size(void *b)

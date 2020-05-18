@@ -24,7 +24,7 @@ void test_buffer(void)
 	struct slice buf = { 0 };
 
 	byte in[] = "hello";
-	slice_write(&buf, in, sizeof(in));
+	slice_add(&buf, in, sizeof(in));
 	struct reftable_block_source source = { NULL };
 	block_source_from_slice(&source, &buf);
 	assert(block_source_size(&source) == 6);
@@ -48,7 +48,7 @@ void test_default_write_opts(void)
 	struct reftable_write_options opts = { 0 };
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 	reftable_writer_set_limits(w, 1, 1);
 
 	struct reftable_ref_record rec = {
@@ -96,7 +96,7 @@ void write_table(char ***names, struct slice *buf, int N, int block_size,
 	};
 
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, buf, &opts);
+		reftable_new_writer(&slice_add_void, buf, &opts);
 
 	reftable_writer_set_limits(w, update_index, update_index);
 	{
@@ -165,7 +165,7 @@ void test_log_buffer_size(void)
 	};
 
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 
 	reftable_writer_set_limits(w, update_index, update_index);
 
@@ -207,7 +207,7 @@ void test_log_write_read(void)
 
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 
 	reftable_writer_set_limits(w, 0, N);
 	{
@@ -483,7 +483,7 @@ void test_table_refs_for(bool indexed)
 
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 	{
 		struct reftable_ref_record ref = { 0 };
 		int i = 0;
@@ -581,7 +581,7 @@ void test_table_empty(void)
 	struct reftable_write_options opts = { 0 };
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_write_void, &buf, &opts);
+		reftable_new_writer(&slice_add_void, &buf, &opts);
 	reftable_writer_set_limits(w, 1, 1);
 
 	int err = reftable_writer_close(w);
