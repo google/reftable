@@ -12,11 +12,12 @@ https://developers.google.com/open-source/licenses/bsd
 #include "merged.h"
 
 struct reftable_table_vtable {
-	int (*seek)(void *tab, struct reftable_iterator *it, struct record);
+	int (*seek)(void *tab, struct reftable_iterator *it,
+		    struct reftable_record *);
 };
 
 static int reftable_reader_seek_void(void *tab, struct reftable_iterator *it,
-				     struct record rec)
+				     struct reftable_record *rec)
 {
 	return reader_seek((struct reftable_reader *)tab, it, rec);
 }
@@ -27,7 +28,7 @@ static struct reftable_table_vtable reader_vtable = {
 
 static int reftable_merged_table_seek_void(void *tab,
 					   struct reftable_iterator *it,
-					   struct record rec)
+					   struct reftable_record *rec)
 {
 	return merged_table_seek_record((struct reftable_merged_table *)tab, it,
 					rec);
@@ -43,9 +44,9 @@ int reftable_table_seek_ref(struct reftable_table tab,
 	struct reftable_ref_record ref = {
 		.ref_name = (char *)name,
 	};
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	record_from_ref(&rec, &ref);
-	return tab.ops->seek(tab.table_arg, it, rec);
+	return tab.ops->seek(tab.table_arg, it, &rec);
 }
 
 void reftable_table_from_reader(struct reftable_table *tab,

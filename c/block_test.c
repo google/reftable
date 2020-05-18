@@ -67,7 +67,7 @@ void test_block_read_write()
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
 			  header_off, hash_size(SHA1_ID));
 	struct reftable_ref_record ref = { 0 };
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	record_from_ref(&rec, &ref);
 
 	int i = 0;
@@ -81,7 +81,7 @@ void test_block_read_write()
 		ref.ref_name = name;
 		ref.value = hash;
 		names[i] = xstrdup(name);
-		int n = block_writer_add(&bw, rec);
+		int n = block_writer_add(&bw, &rec);
 		ref.ref_name = NULL;
 		ref.value = NULL;
 		assert(n == 0);
@@ -100,7 +100,7 @@ void test_block_read_write()
 
 	int j = 0;
 	while (true) {
-		int r = block_iter_next(&it, rec);
+		int r = block_iter_next(&it, &rec);
 		assert(r >= 0);
 		if (r > 0) {
 			break;
@@ -109,7 +109,7 @@ void test_block_read_write()
 		j++;
 	}
 
-	record_clear(rec);
+	record_clear(&rec);
 	block_iter_close(&it);
 
 	struct slice want = { 0 };
@@ -120,7 +120,7 @@ void test_block_read_write()
 		int n = block_reader_seek(&br, &it, want);
 		assert(n == 0);
 
-		n = block_iter_next(&it, rec);
+		n = block_iter_next(&it, &rec);
 		assert(n == 0);
 
 		assert_streq(names[i], ref.ref_name);
@@ -129,14 +129,14 @@ void test_block_read_write()
 		n = block_reader_seek(&br, &it, want);
 		assert(n == 0);
 
-		n = block_iter_next(&it, rec);
+		n = block_iter_next(&it, &rec);
 		assert(n == 0);
 		assert_streq(names[10 * (i / 10)], ref.ref_name);
 
 		block_iter_close(&it);
 	}
 
-	record_clear(rec);
+	record_clear(&rec);
 	reftable_block_done(&br.block);
 	slice_clear(&want);
 	for (i = 0; i < N; i++) {

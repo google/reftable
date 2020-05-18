@@ -14,20 +14,20 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "test_framework.h"
 
-void test_copy(struct record rec)
+void test_copy(struct reftable_record *rec)
 {
-	struct record copy = new_record(record_type(rec));
-	record_copy_from(copy, rec, SHA1_SIZE);
+	struct reftable_record copy = new_record(record_type(rec));
+	record_copy_from(&copy, rec, SHA1_SIZE);
 	/* do it twice to catch memory leaks */
-	record_copy_from(copy, rec, SHA1_SIZE);
-	switch (record_type(copy)) {
+	record_copy_from(&copy, rec, SHA1_SIZE);
+	switch (record_type(&copy)) {
 	case BLOCK_TYPE_REF:
 		assert(reftable_ref_record_equal(
-			record_as_ref(copy), record_as_ref(rec), SHA1_SIZE));
+			record_as_ref(&copy), record_as_ref(rec), SHA1_SIZE));
 		break;
 	case BLOCK_TYPE_LOG:
 		assert(reftable_log_record_equal(
-			record_as_log(copy), record_as_log(rec), SHA1_SIZE));
+			record_as_log(&copy), record_as_log(rec), SHA1_SIZE));
 		break;
 	}
 	record_destroy(&copy);
@@ -123,19 +123,19 @@ void test_reftable_ref_record_roundtrip()
 		}
 		in.ref_name = xstrdup("refs/heads/master");
 
-		struct record rec = { 0 };
+		struct reftable_record rec = { 0 };
 		record_from_ref(&rec, &in);
-		test_copy(rec);
+		test_copy(&rec);
 
-		assert(record_val_type(rec) == i);
+		assert(record_val_type(&rec) == i);
 		byte buf[1024];
 		struct slice key = { 0 };
-		record_key(rec, &key);
+		record_key(&rec, &key);
 		struct slice dest = {
 			.buf = buf,
 			.len = sizeof(buf),
 		};
-		int n = record_encode(rec, dest, SHA1_SIZE);
+		int n = record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
 
 		/* decode into a non-zero record to test for leaks. */
@@ -145,16 +145,16 @@ void test_reftable_ref_record_roundtrip()
 			.target_value = reftable_calloc(SHA1_SIZE),
 			.target = xstrdup("old value"),
 		};
-		struct record rec_out = { 0 };
+		struct reftable_record rec_out = { 0 };
 		record_from_ref(&rec_out, &out);
-		int m = record_decode(rec_out, key, i, dest, SHA1_SIZE);
+		int m = record_decode(&rec_out, key, i, dest, SHA1_SIZE);
 		assert(n == m);
 
 		assert((out.value != NULL) == (in.value != NULL));
 		assert((out.target_value != NULL) == (in.target_value != NULL));
 		assert((out.target != NULL) == (in.target != NULL));
 		slice_clear(&key);
-		record_clear(rec_out);
+		record_clear(&rec_out);
 		reftable_ref_record_clear(&in);
 	}
 }
@@ -201,13 +201,13 @@ void test_reftable_log_record_roundtrip()
 	set_test_hash(in[0].new_hash, 1);
 	set_test_hash(in[0].old_hash, 2);
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
-		struct record rec = { 0 };
+		struct reftable_record rec = { 0 };
 		record_from_log(&rec, &in[i]);
 
-		test_copy(rec);
+		test_copy(&rec);
 
 		struct slice key = { 0 };
-		record_key(rec, &key);
+		record_key(&rec, &key);
 
 		byte buf[1024];
 		struct slice dest = {
@@ -215,7 +215,7 @@ void test_reftable_log_record_roundtrip()
 			.len = sizeof(buf),
 		};
 
-		int n = record_encode(rec, dest, SHA1_SIZE);
+		int n = record_encode(&rec, dest, SHA1_SIZE);
 		assert(n >= 0);
 
 		/* populate out, to check for leaks. */
@@ -227,16 +227,16 @@ void test_reftable_log_record_roundtrip()
 			.email = xstrdup("old@email"),
 			.message = xstrdup("old message"),
 		};
-		struct record rec_out = { 0 };
+		struct reftable_record rec_out = { 0 };
 		record_from_log(&rec_out, &out);
-		int valtype = record_val_type(rec);
-		int m = record_decode(rec_out, key, valtype, dest, SHA1_SIZE);
+		int valtype = record_val_type(&rec);
+		int m = record_decode(&rec_out, key, valtype, dest, SHA1_SIZE);
 		assert(n == m);
 
 		assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
 		reftable_log_record_clear(&in[i]);
 		slice_clear(&key);
-		record_clear(rec_out);
+		record_clear(&rec_out);
 	}
 }
 void test_u24_roundtrip()
@@ -318,24 +318,24 @@ void test_obj_record_roundtrip()
 		printf("subtest %d\n", i);
 		struct obj_record in = recs[i];
 		byte buf[1024];
-		struct record rec = { 0 };
+		struct reftable_record rec = { 0 };
 		record_from_obj(&rec, &in);
 
-		test_copy(rec);
+		test_copy(&rec);
 
 		struct slice key = { 0 };
-		record_key(rec, &key);
+		record_key(&rec, &key);
 		struct slice dest = {
 			.buf = buf,
 			.len = sizeof(buf),
 		};
-		int n = record_encode(rec, dest, SHA1_SIZE);
+		int n = record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
-		byte extra = record_val_type(rec);
+		byte extra = record_val_type(&rec);
 		struct obj_record out = { 0 };
-		struct record rec_out = { 0 };
+		struct reftable_record rec_out = { 0 };
 		record_from_obj(&rec_out, &out);
-		int m = record_decode(rec_out, key, extra, dest, SHA1_SIZE);
+		int m = record_decode(&rec_out, key, extra, dest, SHA1_SIZE);
 		assert(n == m);
 
 		assert(in.hash_prefix_len == out.hash_prefix_len);
@@ -346,7 +346,7 @@ void test_obj_record_roundtrip()
 		assert(0 == memcmp(in.offsets, out.offsets,
 				   sizeof(uint64_t) * in.offset_len));
 		slice_clear(&key);
-		record_clear(rec_out);
+		record_clear(&rec_out);
 	}
 }
 
@@ -357,10 +357,10 @@ void test_index_record_roundtrip()
 	slice_set_string(&in.last_key, "refs/heads/master");
 
 	struct slice key = { 0 };
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	record_from_index(&rec, &in);
-	record_key(rec, &key);
-	test_copy(rec);
+	record_key(&rec, &key);
+	test_copy(&rec);
 
 	assert(0 == slice_compare(key, in.last_key));
 
@@ -369,19 +369,19 @@ void test_index_record_roundtrip()
 		.buf = buf,
 		.len = sizeof(buf),
 	};
-	int n = record_encode(rec, dest, SHA1_SIZE);
+	int n = record_encode(&rec, dest, SHA1_SIZE);
 	assert(n > 0);
 
-	byte extra = record_val_type(rec);
+	byte extra = record_val_type(&rec);
 	struct index_record out = { 0 };
-	struct record out_rec = { NULL };
+	struct reftable_record out_rec = { NULL };
 	record_from_index(&out_rec, &out);
-	int m = record_decode(out_rec, key, extra, dest, SHA1_SIZE);
+	int m = record_decode(&out_rec, key, extra, dest, SHA1_SIZE);
 	assert(m == n);
 
 	assert(in.offset == out.offset);
 
-	record_clear(out_rec);
+	record_clear(&out_rec);
 	slice_clear(&key);
 	slice_clear(&in.last_key);
 }

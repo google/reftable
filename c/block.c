@@ -62,7 +62,7 @@ byte block_writer_type(struct block_writer *bw)
 
 /* adds the record to the block. Returns -1 if it does not fit, 0 on
    success */
-int block_writer_add(struct block_writer *w, struct record rec)
+int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 {
 	struct slice empty = { 0 };
 	struct slice last = w->entries % w->restart_interval == 0 ? empty :
@@ -313,7 +313,7 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 	slice_copy(&dest->last_key, src->last_key);
 }
 
-int block_iter_next(struct block_iter *it, struct record rec)
+int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 {
 	struct slice in = {
 		.buf = it->br->block.data + it->next_off,
@@ -380,7 +380,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		.key = want,
 		.r = br,
 	};
-	struct record rec = new_record(block_reader_type(br));
+	struct reftable_record rec = new_record(block_reader_type(br));
 	struct slice key = { 0 };
 	int err = 0;
 	struct block_iter next = { 0 };
@@ -404,12 +404,12 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	*/
 	while (true) {
 		block_iter_copy_from(&next, it);
-		err = block_iter_next(&next, rec);
+		err = block_iter_next(&next, &rec);
 		if (err < 0) {
 			goto exit;
 		}
 
-		record_key(rec, &key);
+		record_key(&rec, &key);
 		if (err > 0 || slice_compare(key, want) >= 0) {
 			err = 0;
 			goto exit;

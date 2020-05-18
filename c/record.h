@@ -46,7 +46,7 @@ struct record_vtable {
 };
 
 /* record is a generic wrapper for different types of records. */
-struct record {
+struct reftable_record {
 	void *data;
 	struct record_vtable *ops;
 };
@@ -55,7 +55,7 @@ struct record {
 int is_block_type(byte typ);
 
 /* creates a malloced record of the given type. Dispose with record_destroy */
-struct record new_record(byte typ);
+struct reftable_record new_record(byte typ);
 
 extern struct record_vtable reftable_ref_record_vtable;
 
@@ -85,32 +85,37 @@ struct obj_record {
 
 /* see struct record_vtable */
 
-void record_key(struct record rec, struct slice *dest);
-byte record_type(struct record rec);
-void record_copy_from(struct record rec, struct record src, int hash_size);
-byte record_val_type(struct record rec);
-int record_encode(struct record rec, struct slice dest, int hash_size);
-int record_decode(struct record rec, struct slice key, byte extra,
+void record_key(struct reftable_record *rec, struct slice *dest);
+byte record_type(struct reftable_record *rec);
+void record_copy_from(struct reftable_record *rec, struct reftable_record *src,
+		      int hash_size);
+byte record_val_type(struct reftable_record *rec);
+int record_encode(struct reftable_record *rec, struct slice dest,
+		  int hash_size);
+int record_decode(struct reftable_record *rec, struct slice key, byte extra,
 		  struct slice src, int hash_size);
-bool record_is_deletion(struct record rec);
+bool record_is_deletion(struct reftable_record *rec);
 
 /* zeroes out the embedded record */
-void record_clear(struct record rec);
+void record_clear(struct reftable_record *rec);
 
 /* clear out the record, yielding the record data that was encapsulated. */
-void *record_yield(struct record *rec);
+void *record_yield(struct reftable_record *rec);
 
 /* clear and deallocate embedded record, and zero `rec`. */
-void record_destroy(struct record *rec);
+void record_destroy(struct reftable_record *rec);
 
 /* initialize generic records from concrete records. The generic record should
  * be zeroed out. */
-void record_from_obj(struct record *rec, struct obj_record *objrec);
-void record_from_index(struct record *rec, struct index_record *idxrec);
-void record_from_ref(struct record *rec, struct reftable_ref_record *refrec);
-void record_from_log(struct record *rec, struct reftable_log_record *logrec);
-struct reftable_ref_record *record_as_ref(struct record ref);
-struct reftable_log_record *record_as_log(struct record ref);
+void record_from_obj(struct reftable_record *rec, struct obj_record *objrec);
+void record_from_index(struct reftable_record *rec,
+		       struct index_record *idxrec);
+void record_from_ref(struct reftable_record *rec,
+		     struct reftable_ref_record *refrec);
+void record_from_log(struct reftable_record *rec,
+		     struct reftable_log_record *logrec);
+struct reftable_ref_record *record_as_ref(struct reftable_record *ref);
+struct reftable_log_record *record_as_log(struct reftable_record *ref);
 
 /* for qsort. */
 int reftable_ref_record_compare_name(const void *a, const void *b);

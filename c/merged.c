@@ -19,8 +19,8 @@ static int merged_iter_init(struct merged_iter *mi)
 {
 	int i = 0;
 	for (i = 0; i < mi->stack_len; i++) {
-		struct record rec = new_record(mi->typ);
-		int err = iterator_next(mi->stack[i], rec);
+		struct reftable_record rec = new_record(mi->typ);
+		int err = iterator_next(mi->stack[i], &rec);
 		if (err < 0) {
 			return err;
 		}
@@ -58,12 +58,12 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 	}
 
 	{
-		struct record rec = new_record(mi->typ);
+		struct reftable_record rec = new_record(mi->typ);
 		struct pq_entry e = {
 			.rec = rec,
 			.index = idx,
 		};
-		int err = iterator_next(mi->stack[idx], rec);
+		int err = iterator_next(mi->stack[idx], &rec);
 		if (err < 0) {
 			return err;
 		}
@@ -79,7 +79,8 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 	return 0;
 }
 
-static int merged_iter_next_entry(struct merged_iter *mi, struct record rec)
+static int merged_iter_next_entry(struct merged_iter *mi,
+				  struct reftable_record *rec)
 {
 	struct slice entry_key = { 0 };
 	struct pq_entry entry = { 0 };
@@ -103,13 +104,13 @@ static int merged_iter_next_entry(struct merged_iter *mi, struct record rec)
 	  such a deployment, the loop below must be changed to collect all
 	  entries for the same key, and return new the newest one.
 	*/
-	record_key(entry.rec, &entry_key);
+	record_key(&entry.rec, &entry_key);
 	while (!merged_iter_pqueue_is_empty(mi->pq)) {
 		struct pq_entry top = merged_iter_pqueue_top(mi->pq);
 		struct slice k = { 0 };
 		int err = 0, cmp = 0;
 
-		record_key(top.rec, &k);
+		record_key(&top.rec, &k);
 
 		cmp = slice_compare(k, entry_key);
 		slice_clear(&k);
@@ -126,13 +127,13 @@ static int merged_iter_next_entry(struct merged_iter *mi, struct record rec)
 		record_destroy(&top.rec);
 	}
 
-	record_copy_from(rec, entry.rec, hash_size(mi->hash_id));
+	record_copy_from(rec, &entry.rec, hash_size(mi->hash_id));
 	record_destroy(&entry.rec);
 	slice_clear(&entry_key);
 	return 0;
 }
 
-static int merged_iter_next(struct merged_iter *mi, struct record rec)
+static int merged_iter_next(struct merged_iter *mi, struct reftable_record *rec)
 {
 	while (true) {
 		int err = merged_iter_next_entry(mi, rec);
@@ -145,7 +146,7 @@ static int merged_iter_next(struct merged_iter *mi, struct record rec)
 	}
 }
 
-static int merged_iter_next_void(void *p, struct record rec)
+static int merged_iter_next_void(void *p, struct reftable_record *rec)
 {
 	struct merged_iter *mi = (struct merged_iter *)p;
 	if (merged_iter_pqueue_is_empty(mi->pq)) {
@@ -244,7 +245,8 @@ reftable_merged_table_min_update_index(struct reftable_merged_table *mt)
 }
 
 int merged_table_seek_record(struct reftable_merged_table *mt,
-			     struct reftable_iterator *it, struct record rec)
+			     struct reftable_iterator *it,
+			     struct reftable_record *rec)
 {
 	struct reftable_iterator *iters = reftable_calloc(
 		sizeof(struct reftable_iterator) * mt->stack_len);
@@ -298,9 +300,9 @@ int reftable_merged_table_seek_ref(struct reftable_merged_table *mt,
 	struct reftable_ref_record ref = {
 		.ref_name = (char *)name,
 	};
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	record_from_ref(&rec, &ref);
-	return merged_table_seek_record(mt, it, rec);
+	return merged_table_seek_record(mt, it, &rec);
 }
 
 int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt,
@@ -311,9 +313,9 @@ int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt,
 		.ref_name = (char *)name,
 		.update_index = update_index,
 	};
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	record_from_log(&rec, &log);
-	return merged_table_seek_record(mt, it, rec);
+	return merged_table_seek_record(mt, it, &rec);
 }
 
 int reftable_merged_table_seek_log(struct reftable_merged_table *mt,

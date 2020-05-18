@@ -54,7 +54,7 @@ struct reftable_reader {
 int init_reader(struct reftable_reader *r, struct reftable_block_source source,
 		const char *name);
 int reader_seek(struct reftable_reader *r, struct reftable_iterator *it,
-		struct record rec);
+		struct reftable_record *rec);
 void reader_close(struct reftable_reader *r);
 const char *reader_name(struct reftable_reader *r);
 

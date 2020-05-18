@@ -863,9 +863,9 @@ struct record_vtable reftable_log_record_vtable = {
 	.is_deletion = &reftable_log_record_is_deletion_void,
 };
 
-struct record new_record(byte typ)
+struct reftable_record new_record(byte typ)
 {
-	struct record rec = { NULL };
+	struct reftable_record rec = { NULL };
 	switch (typ) {
 	case BLOCK_TYPE_REF: {
 		struct reftable_ref_record *r =
@@ -897,16 +897,16 @@ struct record new_record(byte typ)
 	return rec;
 }
 
-void *record_yield(struct record *rec)
+void *record_yield(struct reftable_record *rec)
 {
 	void *p = rec->data;
 	rec->data = NULL;
 	return p;
 }
 
-void record_destroy(struct record *rec)
+void record_destroy(struct reftable_record *rec)
 {
-	record_clear(*rec);
+	record_clear(rec);
 	reftable_free(record_yield(rec));
 }
 
@@ -981,87 +981,91 @@ struct record_vtable index_record_vtable = {
 	.is_deletion = &not_a_deletion,
 };
 
-void record_key(struct record rec, struct slice *dest)
+void record_key(struct reftable_record *rec, struct slice *dest)
 {
-	rec.ops->key(rec.data, dest);
+	rec->ops->key(rec->data, dest);
 }
 
-byte record_type(struct record rec)
+byte record_type(struct reftable_record *rec)
 {
-	return rec.ops->type;
+	return rec->ops->type;
 }
 
-int record_encode(struct record rec, struct slice dest, int hash_size)
+int record_encode(struct reftable_record *rec, struct slice dest, int hash_size)
 {
-	return rec.ops->encode(rec.data, dest, hash_size);
+	return rec->ops->encode(rec->data, dest, hash_size);
 }
 
-void record_copy_from(struct record rec, struct record src, int hash_size)
+void record_copy_from(struct reftable_record *rec, struct reftable_record *src,
+		      int hash_size)
 {
-	assert(src.ops->type == rec.ops->type);
+	assert(src->ops->type == rec->ops->type);
 
-	rec.ops->copy_from(rec.data, src.data, hash_size);
+	rec->ops->copy_from(rec->data, src->data, hash_size);
 }
 
-byte record_val_type(struct record rec)
+byte record_val_type(struct reftable_record *rec)
 {
-	return rec.ops->val_type(rec.data);
+	return rec->ops->val_type(rec->data);
 }
 
-int record_decode(struct record rec, struct slice key, byte extra,
+int record_decode(struct reftable_record *rec, struct slice key, byte extra,
 		  struct slice src, int hash_size)
 {
-	return rec.ops->decode(rec.data, key, extra, src, hash_size);
+	return rec->ops->decode(rec->data, key, extra, src, hash_size);
 }
 
-void record_clear(struct record rec)
+void record_clear(struct reftable_record *rec)
 {
-	rec.ops->clear(rec.data);
+	rec->ops->clear(rec->data);
 }
 
-bool record_is_deletion(struct record rec)
+bool record_is_deletion(struct reftable_record *rec)
 {
-	return rec.ops->is_deletion(rec.data);
+	return rec->ops->is_deletion(rec->data);
 }
 
-void record_from_ref(struct record *rec, struct reftable_ref_record *ref_rec)
+void record_from_ref(struct reftable_record *rec,
+		     struct reftable_ref_record *ref_rec)
 {
 	assert(rec->ops == NULL);
 	rec->data = ref_rec;
 	rec->ops = &reftable_ref_record_vtable;
 }
 
-void record_from_obj(struct record *rec, struct obj_record *obj_rec)
+void record_from_obj(struct reftable_record *rec, struct obj_record *obj_rec)
 {
 	assert(rec->ops == NULL);
 	rec->data = obj_rec;
 	rec->ops = &obj_record_vtable;
 }
 
-void record_from_index(struct record *rec, struct index_record *index_rec)
+void record_from_index(struct reftable_record *rec,
+		       struct index_record *index_rec)
 {
 	assert(rec->ops == NULL);
 	rec->data = index_rec;
 	rec->ops = &index_record_vtable;
 }
 
-void record_from_log(struct record *rec, struct reftable_log_record *log_rec)
+void record_from_log(struct reftable_record *rec,
+		     struct reftable_log_record *log_rec)
 {
 	assert(rec->ops == NULL);
 	rec->data = log_rec;
 	rec->ops = &reftable_log_record_vtable;
 }
 
-struct reftable_ref_record *record_as_ref(struct record rec)
+struct reftable_ref_record *record_as_ref(struct reftable_record *rec)
 {
 	assert(record_type(rec) == BLOCK_TYPE_REF);
-	return (struct reftable_ref_record *)rec.data;
+	return (struct reftable_ref_record *)rec->data;
 }
 
-struct reftable_log_record *record_as_log(struct record rec)
+struct reftable_log_record *record_as_log(struct reftable_record *rec)
 {
 	assert(record_type(rec) == BLOCK_TYPE_LOG);
-	return (struct reftable_log_record *)rec.data;
+	return (struct reftable_log_record *)rec->data;
 }
 
 static bool hash_equal(byte *a, byte *b, int hash_size)

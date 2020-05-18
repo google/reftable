@@ -50,7 +50,7 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 byte block_writer_type(struct block_writer *bw);
 
 /* appends the record, or -1 if it doesn't fit. */
-int block_writer_add(struct block_writer *w, struct record rec);
+int block_writer_add(struct block_writer *w, struct reftable_record *rec);
 
 /* appends the key restarts, and compress the block if necessary. */
 int block_writer_finish(struct block_writer *w);
@@ -109,7 +109,7 @@ int block_reader_first_key(struct block_reader *br, struct slice *key);
 void block_iter_copy_from(struct block_iter *dest, struct block_iter *src);
 
 /* return < 0 for error, 0 for OK, > 0 for EOF. */
-int block_iter_next(struct block_iter *it, struct record rec);
+int block_iter_next(struct block_iter *it, struct reftable_record *rec);
 
 /* Seek to `want` with in the block pointed to by `it` */
 int block_iter_seek(struct block_iter *it, struct slice want);

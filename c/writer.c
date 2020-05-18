@@ -184,7 +184,8 @@ static void writer_index_hash(struct reftable_writer *w, struct slice hash)
 	key->offsets[key->offset_len++] = off;
 }
 
-static int writer_add_record(struct reftable_writer *w, struct record rec)
+static int writer_add_record(struct reftable_writer *w,
+			     struct reftable_record *rec)
 {
 	int result = -1;
 	struct slice key = { 0 };
@@ -228,7 +229,7 @@ exit:
 int reftable_writer_add_ref(struct reftable_writer *w,
 			    struct reftable_ref_record *ref)
 {
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	struct reftable_ref_record copy = *ref;
 	int err = 0;
 
@@ -242,7 +243,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 
 	record_from_ref(&rec, &copy);
 	copy.update_index -= w->min_update_index;
-	err = writer_add_record(w, rec);
+	err = writer_add_record(w, &rec);
 	if (err < 0) {
 		return err;
 	}
@@ -296,10 +297,10 @@ int reftable_writer_add_log(struct reftable_writer *w,
 	w->pending_padding = 0;
 
 	{
-		struct record rec = { 0 };
+		struct reftable_record rec = { 0 };
 		int err;
 		record_from_log(&rec, log);
-		err = writer_add_record(w, rec);
+		err = writer_add_record(w, &rec);
 		return err;
 	}
 }
@@ -344,9 +345,9 @@ static int writer_finish_section(struct reftable_writer *w)
 		w->index_len = 0;
 		w->index_cap = 0;
 		for (i = 0; i < idx_len; i++) {
-			struct record rec = { 0 };
+			struct reftable_record rec = { 0 };
 			record_from_index(&rec, idx + i);
-			if (block_writer_add(w->block_writer, rec) == 0) {
+			if (block_writer_add(w->block_writer, &rec) == 0) {
 				continue;
 			}
 
@@ -359,7 +360,7 @@ static int writer_finish_section(struct reftable_writer *w)
 
 			writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 
-			err = block_writer_add(w->block_writer, rec);
+			err = block_writer_add(w->block_writer, &rec);
 			if (err != 0) {
 				/* write into fresh block should always succeed
 				 */
@@ -427,13 +428,13 @@ static void write_object_record(void *void_arg, void *key)
 		.offsets = entry->offsets,
 		.offset_len = entry->offset_len,
 	};
-	struct record rec = { 0 };
+	struct reftable_record rec = { 0 };
 	if (arg->err < 0) {
 		goto exit;
 	}
 
 	record_from_obj(&rec, &obj_rec);
-	arg->err = block_writer_add(arg->w->block_writer, rec);
+	arg->err = block_writer_add(arg->w->block_writer, &rec);
 	if (arg->err == 0) {
 		goto exit;
 	}
@@ -444,12 +445,12 @@ static void write_object_record(void *void_arg, void *key)
 	}
 
 	writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
-	arg->err = block_writer_add(arg->w->block_writer, rec);
+	arg->err = block_writer_add(arg->w->block_writer, &rec);
 	if (arg->err == 0) {
 		goto exit;
 	}
 	obj_rec.offset_len = 0;
-	arg->err = block_writer_add(arg->w->block_writer, rec);
+	arg->err = block_writer_add(arg->w->block_writer, &rec);
 
 	/* Should be able to write into a fresh block. */
 	assert(arg->err == 0);

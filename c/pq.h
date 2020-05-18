@@ -13,7 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 struct pq_entry {
 	int index;
-	struct record rec;
+	struct reftable_record rec;
 };
 
 int pq_less(struct pq_entry a, struct pq_entry b);
