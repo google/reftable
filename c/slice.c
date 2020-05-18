@@ -72,7 +72,7 @@ byte *slice_yield(struct slice *s)
 	return p;
 }
 
-void slice_clear(struct slice *s)
+void slice_release(struct slice *s)
 {
 	reftable_free(slice_yield(s));
 }

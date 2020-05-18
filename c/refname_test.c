@@ -88,7 +88,7 @@ void test_conflict(void)
 	}
 
 	reftable_reader_free(rd);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 int main(int argc, char *argv[])

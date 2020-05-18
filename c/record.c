@@ -809,11 +809,11 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	memcpy(r->message, dest.buf, dest.len);
 	r->message[dest.len] = 0;
 
-	slice_clear(&dest);
+	slice_release(&dest);
 	return start.len - in.len;
 
 error:
-	slice_clear(&dest);
+	slice_release(&dest);
 	return REFTABLE_FORMAT_ERROR;
 }
 
@@ -935,7 +935,7 @@ static void reftable_index_record_copy_from(void *rec, const void *src_rec,
 static void reftable_index_record_clear(void *rec)
 {
 	struct reftable_index_record *idx = (struct reftable_index_record *)rec;
-	slice_clear(&idx->last_key);
+	slice_release(&idx->last_key);
 }
 
 static byte reftable_index_record_val_type(const void *rec)

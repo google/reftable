@@ -97,11 +97,11 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 		goto err;
 	}
 
-	slice_clear(&key);
+	slice_release(&key);
 	return 0;
 
 err:
-	slice_clear(&key);
+	slice_release(&key);
 	return -1;
 }
 
@@ -166,14 +166,14 @@ int block_writer_finish(struct block_writer *w)
 			}
 
 			if (Z_OK != zresult) {
-				slice_clear(&compressed);
+				slice_release(&compressed);
 				return REFTABLE_ZLIB_ERROR;
 			}
 
 			memcpy(w->buf + block_header_skip, compressed.buf,
 			       dest_len);
 			w->next = dest_len + block_header_skip;
-			slice_clear(&compressed);
+			slice_release(&compressed);
 			break;
 		}
 	}
@@ -216,7 +216,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 				    uncompressed.buf + block_header_skip,
 				    &dst_len, block->data + block_header_skip,
 				    &src_len)) {
-			slice_clear(&uncompressed);
+			slice_release(&uncompressed);
 			return REFTABLE_ZLIB_ERROR;
 		}
 
@@ -302,7 +302,7 @@ static int restart_key_less(size_t idx, void *args)
 
 	{
 		int result = slice_compare(a->key, rkey);
-		slice_clear(&rkey);
+		slice_release(&rkey);
 		return result;
 	}
 }
@@ -343,7 +343,7 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 
 	slice_copy(&it->last_key, key);
 	it->next_off += start.len - in.len;
-	slice_clear(&key);
+	slice_release(&key);
 	return 0;
 }
 
@@ -371,7 +371,7 @@ int block_iter_seek(struct block_iter *it, struct slice want)
 
 void block_iter_close(struct block_iter *it)
 {
-	slice_clear(&it->last_key);
+	slice_release(&it->last_key);
 }
 
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
@@ -420,8 +420,8 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	}
 
 exit:
-	slice_clear(&key);
-	slice_clear(&next.last_key);
+	slice_release(&key);
+	slice_release(&next.last_key);
 	reftable_record_destroy(&rec);
 
 	return err;
@@ -430,6 +430,6 @@ exit:
 void block_writer_clear(struct block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
-	slice_clear(&bw->last_key);
+	slice_release(&bw->last_key);
 	/* the block is not owned. */
 }

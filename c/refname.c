@@ -210,6 +210,6 @@ int modification_validate(struct modification *mod)
 	}
 	err = 0;
 exit:
-	slice_clear(&slashed);
+	slice_release(&slashed);
 	return err;
 }

@@ -88,8 +88,8 @@ void test_common_prefix()
 		int got = common_prefix_size(a, b);
 		assert(got == cases[i].want);
 
-		slice_clear(&a);
-		slice_clear(&b);
+		slice_release(&a);
+		slice_release(&b);
 	}
 }
 
@@ -157,7 +157,7 @@ void test_reftable_ref_record_roundtrip()
 		assert((out.value != NULL) == (in.value != NULL));
 		assert((out.target_value != NULL) == (in.target_value != NULL));
 		assert((out.target != NULL) == (in.target != NULL));
-		slice_clear(&key);
+		slice_release(&key);
 		reftable_record_clear(&rec_out);
 		reftable_ref_record_clear(&in);
 	}
@@ -240,7 +240,7 @@ void test_reftable_log_record_roundtrip()
 
 		assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
 		reftable_log_record_clear(&in[i]);
-		slice_clear(&key);
+		slice_release(&key);
 		reftable_record_clear(&rec_out);
 	}
 }
@@ -275,10 +275,10 @@ void test_key_roundtrip()
 	assert(slice_equal(key, roundtrip));
 	assert(rt_extra == extra);
 
-	slice_clear(&last_key);
-	slice_clear(&key);
-	slice_clear(&dest);
-	slice_clear(&roundtrip);
+	slice_release(&last_key);
+	slice_release(&key);
+	slice_release(&dest);
+	slice_release(&roundtrip);
 }
 
 void print_bytes(byte *p, int l)
@@ -351,7 +351,7 @@ void test_reftable_obj_record_roundtrip()
 			       in.hash_prefix_len));
 		assert(0 == memcmp(in.offsets, out.offsets,
 				   sizeof(uint64_t) * in.offset_len));
-		slice_clear(&key);
+		slice_release(&key);
 		reftable_record_clear(&rec_out);
 	}
 }
@@ -388,8 +388,8 @@ void test_reftable_index_record_roundtrip()
 	assert(in.offset == out.offset);
 
 	reftable_record_clear(&out_rec);
-	slice_clear(&key);
-	slice_clear(&in.last_key);
+	slice_release(&key);
+	slice_release(&in.last_key);
 }
 
 int main(int argc, char *argv[])

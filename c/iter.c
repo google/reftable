@@ -76,7 +76,7 @@ static void filtering_ref_iterator_close(void *iter_arg)
 {
 	struct filtering_ref_iterator *fri =
 		(struct filtering_ref_iterator *)iter_arg;
-	slice_clear(&fri->oid);
+	slice_release(&fri->oid);
 	reftable_iterator_destroy(&fri->it);
 }
 
@@ -144,7 +144,7 @@ static void indexed_table_ref_iter_close(void *p)
 	struct indexed_table_ref_iter *it = (struct indexed_table_ref_iter *)p;
 	block_iter_close(&it->cur);
 	reftable_block_done(&it->block_reader.block);
-	slice_clear(&it->oid);
+	slice_release(&it->oid);
 }
 
 static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)

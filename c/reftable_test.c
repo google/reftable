@@ -40,7 +40,7 @@ void test_buffer(void)
 
 	reftable_block_done(&out);
 	block_source_close(&source);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 void test_default_write_opts(void)
@@ -82,7 +82,7 @@ void test_default_write_opts(void)
 
 	reftable_merged_table_close(merged);
 	reftable_merged_table_free(merged);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 void write_table(char ***names, struct slice *buf, int N, int block_size,
@@ -193,7 +193,7 @@ void test_log_buffer_size(void)
 	err = reftable_writer_close(w);
 	assert_err(err);
 	reftable_writer_free(w);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 void test_log_write_read(void)
@@ -301,7 +301,7 @@ void test_log_write_read(void)
 	}
 
 	/* cleanup. */
-	slice_clear(&buf);
+	slice_release(&buf);
 	free_names(names);
 	reader_close(&rd);
 }
@@ -340,7 +340,7 @@ void test_table_read_write_sequential(void)
 	}
 	assert(j == N);
 	reftable_iterator_destroy(&it);
-	slice_clear(&buf);
+	slice_release(&buf);
 	free_names(names);
 
 	reader_close(&rd);
@@ -353,7 +353,7 @@ void test_table_write_small_table(void)
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
-	slice_clear(&buf);
+	slice_release(&buf);
 	free_names(names);
 }
 
@@ -379,7 +379,7 @@ void test_table_read_api(void)
 	err = reftable_iterator_next_log(&it, &log);
 	assert(err == REFTABLE_API_ERROR);
 
-	slice_clear(&buf);
+	slice_release(&buf);
 	int i = 0;
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
@@ -387,7 +387,7 @@ void test_table_read_api(void)
 	reftable_iterator_destroy(&it);
 	reftable_free(names);
 	reader_close(&rd);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 void test_table_read_write_seek(bool index, int hash_id)
@@ -442,11 +442,11 @@ void test_table_read_write_seek(bool index, int hash_id)
 			assert(err > 0);
 		}
 
-		slice_clear(&pastLast);
+		slice_release(&pastLast);
 		reftable_iterator_destroy(&it);
 	}
 
-	slice_clear(&buf);
+	slice_release(&buf);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}
@@ -560,7 +560,7 @@ void test_table_refs_for(bool indexed)
 	}
 	assert(j == want_names_len);
 
-	slice_clear(&buf);
+	slice_release(&buf);
 	free_names(want_names);
 	reftable_iterator_destroy(&it);
 	reader_close(&rd);
@@ -607,7 +607,7 @@ void test_table_empty(void)
 
 	reftable_iterator_destroy(&it);
 	reftable_reader_free(rd);
-	slice_clear(&buf);
+	slice_release(&buf);
 }
 
 int main(int argc, char *argv[])

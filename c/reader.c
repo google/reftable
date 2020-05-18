@@ -484,8 +484,8 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 exit:
 	block_iter_close(&next.bi);
 	reftable_record_destroy(&rec);
-	slice_clear(&want_key);
-	slice_clear(&got_key);
+	slice_release(&want_key);
+	slice_release(&got_key);
 	return err;
 }
 

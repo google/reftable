@@ -138,7 +138,7 @@ void test_block_read_write()
 
 	reftable_record_clear(&rec);
 	reftable_block_done(&br.block);
-	slice_clear(&want);
+	slice_release(&want);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}

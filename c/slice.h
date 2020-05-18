@@ -24,8 +24,9 @@ struct slice {
 
 void slice_set_string(struct slice *dest, const char *src);
 void slice_append_string(struct slice *dest, const char *src);
-/* Set length to 0, but retain buffer */
-void slice_clear(struct slice *slice);
+
+/* Deallocate and clear slice */
+void slice_release(struct slice *slice);
 
 /* Return a malloced string for `src` */
 char *slice_to_string(struct slice src);
