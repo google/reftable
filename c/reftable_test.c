@@ -430,7 +430,7 @@ void test_table_read_write_seek(bool index, int hash_id)
 		struct reftable_iterator it = { 0 };
 		struct slice pastLast = { 0 };
 		slice_set_string(&pastLast, names[N - 1]);
-		slice_append_string(&pastLast, "/");
+		slice_addstr(&pastLast, "/");
 
 		int err = reftable_reader_seek_ref(&rd, &it,
 						   slice_as_string(&pastLast));

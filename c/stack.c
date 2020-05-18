@@ -30,7 +30,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	*dest = NULL;
 
 	slice_set_string(&list_file_name, dir);
-	slice_append_string(&list_file_name, "/tables.list");
+	slice_addstr(&list_file_name, "/tables.list");
 
 	p->list_file = slice_to_string(list_file_name);
 	slice_release(&list_file_name);
@@ -155,8 +155,8 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		if (rd == NULL) {
 			struct reftable_block_source src = { 0 };
 			slice_set_string(&table_path, st->reftable_dir);
-			slice_append_string(&table_path, "/");
-			slice_append_string(&table_path, name);
+			slice_addstr(&table_path, "/");
+			slice_addstr(&table_path, name);
 
 			err = reftable_block_source_from_file(
 				&src, slice_as_string(&table_path));
@@ -384,7 +384,7 @@ static int reftable_stack_init_addition(struct reftable_addition *add,
 	add->stack = st;
 
 	slice_set_string(&add->lock_file_name, st->list_file);
-	slice_append_string(&add->lock_file_name, ".lock");
+	slice_addstr(&add->lock_file_name, ".lock");
 
 	add->lock_file_fd = open(slice_as_string(&add->lock_file_name),
 				 O_EXCL | O_CREAT | O_WRONLY, 0644);
@@ -420,8 +420,8 @@ void reftable_addition_close(struct reftable_addition *add)
 	struct slice nm = { 0 };
 	for (i = 0; i < add->new_tables_len; i++) {
 		slice_set_string(&nm, add->stack->list_file);
-		slice_append_string(&nm, "/");
-		slice_append_string(&nm, add->new_tables[i]);
+		slice_addstr(&nm, "/");
+		slice_addstr(&nm, add->new_tables[i]);
 		unlink(slice_as_string(&nm));
 		reftable_free(add->new_tables[i]);
 		add->new_tables[i] = NULL;
@@ -463,13 +463,12 @@ int reftable_addition_commit(struct reftable_addition *add)
 	}
 
 	for (i = 0; i < add->stack->merged->stack_len; i++) {
-		slice_append_string(&table_list,
-				    add->stack->merged->stack[i]->name);
-		slice_append_string(&table_list, "\n");
+		slice_addstr(&table_list, add->stack->merged->stack[i]->name);
+		slice_addstr(&table_list, "\n");
 	}
 	for (i = 0; i < add->new_tables_len; i++) {
-		slice_append_string(&table_list, add->new_tables[i]);
-		slice_append_string(&table_list, "\n");
+		slice_addstr(&table_list, add->new_tables[i]);
+		slice_addstr(&table_list, "\n");
 	}
 
 	err = write(add->lock_file_fd, table_list.buf, table_list.len);
@@ -554,9 +553,9 @@ int reftable_addition_add(struct reftable_addition *add,
 	format_name(&next_name, add->next_update_index, add->next_update_index);
 
 	slice_set_string(&temp_tab_file_name, add->stack->reftable_dir);
-	slice_append_string(&temp_tab_file_name, "/");
+	slice_addstr(&temp_tab_file_name, "/");
 	slice_append(&temp_tab_file_name, next_name);
-	slice_append_string(&temp_tab_file_name, ".temp.XXXXXX");
+	slice_addstr(&temp_tab_file_name, ".temp.XXXXXX");
 
 	tab_fd = mkstemp((char *)slice_as_string(&temp_tab_file_name));
 	if (tab_fd < 0) {
@@ -599,10 +598,10 @@ int reftable_addition_add(struct reftable_addition *add,
 	}
 
 	format_name(&next_name, wr->min_update_index, wr->max_update_index);
-	slice_append_string(&next_name, ".ref");
+	slice_addstr(&next_name, ".ref");
 
 	slice_set_string(&tab_file_name, add->stack->reftable_dir);
-	slice_append_string(&tab_file_name, "/");
+	slice_addstr(&tab_file_name, "/");
 	slice_append(&tab_file_name, next_name);
 
 	/* TODO: should check destination out of paranoia */
@@ -659,9 +658,9 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 		    reftable_reader_max_update_index(st->merged->stack[first]));
 
 	slice_set_string(temp_tab, st->reftable_dir);
-	slice_append_string(temp_tab, "/");
+	slice_addstr(temp_tab, "/");
 	slice_append(temp_tab, next_name);
-	slice_append_string(temp_tab, ".temp.XXXXXX");
+	slice_addstr(temp_tab, ".temp.XXXXXX");
 
 	tab_fd = mkstemp((char *)slice_as_string(temp_tab));
 	wr = reftable_new_writer(reftable_fd_write, &tab_fd, &st->config);
@@ -826,7 +825,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	st->stats.attempts++;
 
 	slice_set_string(&lock_file_name, st->list_file);
-	slice_append_string(&lock_file_name, ".lock");
+	slice_addstr(&lock_file_name, ".lock");
 
 	lock_file_fd = open(slice_as_string(&lock_file_name),
 			    O_EXCL | O_CREAT | O_WRONLY, 0644);
@@ -852,12 +851,12 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		struct slice subtab_file_name = { 0 };
 		struct slice subtab_lock = { 0 };
 		slice_set_string(&subtab_file_name, st->reftable_dir);
-		slice_append_string(&subtab_file_name, "/");
-		slice_append_string(&subtab_file_name,
-				    reader_name(st->merged->stack[i]));
+		slice_addstr(&subtab_file_name, "/");
+		slice_addstr(&subtab_file_name,
+			     reader_name(st->merged->stack[i]));
 
 		slice_copy(&subtab_lock, subtab_file_name);
-		slice_append_string(&subtab_lock, ".lock");
+		slice_addstr(&subtab_lock, ".lock");
 
 		{
 			int sublock_file_fd =
@@ -916,10 +915,10 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 
 	format_name(&new_table_name, st->merged->stack[first]->min_update_index,
 		    st->merged->stack[last]->max_update_index);
-	slice_append_string(&new_table_name, ".ref");
+	slice_addstr(&new_table_name, ".ref");
 
 	slice_set_string(&new_table_path, st->reftable_dir);
-	slice_append_string(&new_table_path, "/");
+	slice_addstr(&new_table_path, "/");
 
 	slice_append(&new_table_path, new_table_name);
 
@@ -933,18 +932,16 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	}
 
 	for (i = 0; i < first; i++) {
-		slice_append_string(&ref_list_contents,
-				    st->merged->stack[i]->name);
-		slice_append_string(&ref_list_contents, "\n");
+		slice_addstr(&ref_list_contents, st->merged->stack[i]->name);
+		slice_addstr(&ref_list_contents, "\n");
 	}
 	if (!is_empty_table) {
 		slice_append(&ref_list_contents, new_table_name);
-		slice_append_string(&ref_list_contents, "\n");
+		slice_addstr(&ref_list_contents, "\n");
 	}
 	for (i = last + 1; i < st->merged->stack_len; i++) {
-		slice_append_string(&ref_list_contents,
-				    st->merged->stack[i]->name);
-		slice_append_string(&ref_list_contents, "\n");
+		slice_addstr(&ref_list_contents, st->merged->stack[i]->name);
+		slice_addstr(&ref_list_contents, "\n");
 	}
 
 	err = write(lock_file_fd, ref_list_contents.buf, ref_list_contents.len);

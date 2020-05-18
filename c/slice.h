@@ -23,7 +23,7 @@ struct slice {
 };
 
 void slice_set_string(struct slice *dest, const char *src);
-void slice_append_string(struct slice *dest, const char *src);
+void slice_addstr(struct slice *dest, const char *src);
 
 /* Deallocate and clear slice */
 void slice_release(struct slice *slice);

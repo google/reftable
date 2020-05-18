@@ -41,7 +41,7 @@ void slice_resize(struct slice *s, int l)
 	s->len = l;
 }
 
-void slice_append_string(struct slice *d, const char *s)
+void slice_addstr(struct slice *d, const char *s)
 {
 	int l1 = d->len;
 	int l2 = strlen(s);

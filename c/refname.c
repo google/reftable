@@ -182,7 +182,7 @@ int modification_validate(struct modification *mod)
 			goto exit;
 		}
 		slice_set_string(&slashed, mod->add[i]);
-		slice_append_string(&slashed, "/");
+		slice_addstr(&slashed, "/");
 
 		err = modification_has_ref_with_prefix(
 			mod, slice_as_string(&slashed));
