@@ -82,25 +82,25 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	n = reftable_encode_key(&restart, out, last, key,
 				reftable_record_val_type(rec));
 	if (n < 0) {
-		goto err;
+		goto done;
 	}
 	slice_consume(&out, n);
 
 	n = reftable_record_encode(rec, out, w->hash_size);
 	if (n < 0) {
-		goto err;
+		goto done;
 	}
 	slice_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
 					  key) < 0) {
-		goto err;
+		goto done;
 	}
 
 	slice_release(&key);
 	return 0;
 
-err:
+done:
 	slice_release(&key);
 	return -1;
 }
@@ -389,7 +389,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	int i = binsearch(br->restart_count, &restart_key_less, &args);
 	if (args.error) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	it->br = br;
@@ -407,19 +407,19 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		block_iter_copy_from(&next, it);
 		err = block_iter_next(&next, &rec);
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 
 		reftable_record_key(&rec, &key);
 		if (err > 0 || slice_cmp(key, want) >= 0) {
 			err = 0;
-			goto exit;
+			goto done;
 		}
 
 		block_iter_copy_from(it, &next);
 	}
 
-exit:
+done:
 	slice_release(&key);
 	slice_release(&next.last_key);
 	reftable_record_destroy(&rec);

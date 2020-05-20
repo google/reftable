@@ -84,14 +84,14 @@ static int compact_stack(const char *stackdir)
 
 	int err = reftable_new_stack(&stack, stackdir, cfg);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_stack_compact_all(stack, NULL);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
-exit:
+done:
 	if (stack != NULL) {
 		reftable_stack_destroy(stack);
 	}

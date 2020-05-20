@@ -763,7 +763,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 
 	n = decode_string(&dest, in);
 	if (n < 0) {
-		goto error;
+		goto done;
 	}
 	slice_consume(&in, n);
 
@@ -774,7 +774,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	slice_resize(&dest, 0);
 	n = decode_string(&dest, in);
 	if (n < 0) {
-		goto error;
+		goto done;
 	}
 	slice_consume(&in, n);
 
@@ -785,12 +785,12 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	ts = 0;
 	n = get_var_int(&ts, in);
 	if (n < 0) {
-		goto error;
+		goto done;
 	}
 	slice_consume(&in, n);
 	r->time = ts;
 	if (in.len < 2) {
-		goto error;
+		goto done;
 	}
 
 	r->tz_offset = get_be16(in.buf);
@@ -799,7 +799,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	slice_resize(&dest, 0);
 	n = decode_string(&dest, in);
 	if (n < 0) {
-		goto error;
+		goto done;
 	}
 	slice_consume(&in, n);
 
@@ -810,7 +810,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	slice_release(&dest);
 	return start.len - in.len;
 
-error:
+done:
 	slice_release(&dest);
 	return REFTABLE_FORMAT_ERROR;
 }

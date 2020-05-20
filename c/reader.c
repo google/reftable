@@ -100,13 +100,13 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 
 	if (memcmp(f, "REFT", 4)) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 	f += 4;
 
 	if (memcmp(footer, header, header_size(r->version))) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	f++;
@@ -129,7 +129,7 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 			break;
 		default:
 			err = REFTABLE_FORMAT_ERROR;
-			goto exit;
+			goto done;
 		}
 		f += 4;
 	}
@@ -155,7 +155,7 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 	f += 4;
 	if (computed_crc != file_crc) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	first_block_typ = header[header_size(r->version)];
@@ -165,7 +165,7 @@ static int parse_footer(struct reftable_reader *r, byte *footer, byte *header)
 				  r->log_offsets.offset > 0);
 	r->obj_offsets.present = r->obj_offsets.offset > 0;
 	err = 0;
-exit:
+done:
 	return err;
 }
 
@@ -182,17 +182,17 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source *source,
 	err = block_source_read_block(source, &header, 0, header_size(2) + 1);
 	if (err != header_size(2) + 1) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	if (memcmp(header.data, "REFT", 4)) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 	r->version = header.data[4];
 	if (r->version != 1 && r->version != 2) {
 		err = REFTABLE_FORMAT_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	r->size = block_source_size(source) - footer_size(r->version);
@@ -204,11 +204,11 @@ int init_reader(struct reftable_reader *r, struct reftable_block_source *source,
 				      footer_size(r->version));
 	if (err != footer_size(r->version)) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = parse_footer(r, footer.data, header.data);
-exit:
+done:
 	reftable_block_done(&footer);
 	reftable_block_done(&header);
 	return err;
@@ -452,7 +452,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 	while (true) {
 		err = table_iter_next_block(&next, ti);
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 
 		if (err > 0) {
@@ -461,7 +461,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 
 		err = block_reader_first_key(next.bi.br, &got_key);
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 		{
 			int cmp = slice_cmp(got_key, want_key);
@@ -477,11 +477,11 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 
 	err = block_iter_seek(&ti->bi, want_key);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 	err = 0;
 
-exit:
+done:
 	block_iter_close(&next.bi);
 	reftable_record_destroy(&rec);
 	slice_release(&want_key);
@@ -507,7 +507,7 @@ static int reader_seek_indexed(struct reftable_reader *r,
 
 	err = reader_start(r, &index_iter, reftable_record_type(rec), true);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reader_seek_linear(r, &index_iter, &want_index_rec);
@@ -515,17 +515,17 @@ static int reader_seek_indexed(struct reftable_reader *r,
 		err = table_iter_next(&index_iter, &index_result_rec);
 		table_iter_block_done(&index_iter);
 		if (err != 0) {
-			goto exit;
+			goto done;
 		}
 
 		err = reader_table_iter_at(r, &next, index_result.offset, 0);
 		if (err != 0) {
-			goto exit;
+			goto done;
 		}
 
 		err = block_iter_seek(&next.bi, want_index.last_key);
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 
 		if (next.typ == reftable_record_type(rec)) {
@@ -547,7 +547,7 @@ static int reader_seek_indexed(struct reftable_reader *r,
 		table_iter_copy_from(malloced, &next);
 		iterator_from_table_iter(it, malloced);
 	}
-exit:
+done:
 	block_iter_close(&next.bi);
 	table_iter_close(&index_iter);
 	reftable_record_clear(&want_index_rec);
@@ -678,14 +678,14 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 	reftable_record_from_obj(&want_rec, &want);
 	err = reader_seek(r, &oit, &want_rec);
 	if (err != 0) {
-		goto exit;
+		goto done;
 	}
 
 	/* read out the reftable_obj_record */
 	reftable_record_from_obj(&got_rec, &got);
 	err = iterator_next(&oit, &got_rec);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	if (err > 0 ||
@@ -693,18 +693,18 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 		/* didn't find it; return empty iterator */
 		iterator_set_empty(it);
 		err = 0;
-		goto exit;
+		goto done;
 	}
 
 	err = new_indexed_table_ref_iter(&itr, r, oid, hash_size(r->hash_id),
 					 got.offsets, got.offset_len);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 	got.offsets = NULL;
 	iterator_from_indexed_table_ref_iter(it, itr);
 
-exit:
+done:
 	reftable_iterator_destroy(&oit);
 	reftable_record_clear(&got_rec);
 	return err;

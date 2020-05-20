@@ -53,24 +53,24 @@ static int fd_read_lines(int fd, char ***namesp)
 	int err = 0;
 	if (size < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 	err = lseek(fd, 0, SEEK_SET);
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	buf = reftable_malloc(size + 1);
 	if (read(fd, buf, size) != size) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 	buf[size] = 0;
 
 	parse_names(buf, size, namesp);
 
-exit:
+done:
 	reftable_free(buf);
 	return err;
 }
@@ -161,12 +161,12 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 			err = reftable_block_source_from_file(
 				&src, slice_as_string(&table_path));
 			if (err < 0) {
-				goto exit;
+				goto done;
 			}
 
 			err = reftable_new_reader(&rd, &src, name);
 			if (err < 0) {
-				goto exit;
+				goto done;
 			}
 		}
 
@@ -177,7 +177,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	err = reftable_new_merged_table(&new_merged, new_tables, new_tables_len,
 					st->config.hash_id);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	new_tables = NULL;
@@ -196,7 +196,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		}
 	}
 
-exit:
+done:
 	slice_release(&table_path);
 	for (i = 0; i < new_tables_len; i++) {
 		reader_close(new_tables[i]);
@@ -304,21 +304,21 @@ static int stack_uptodate(struct reftable_stack *st)
 	for (i = 0; i < st->merged->stack_len; i++) {
 		if (names[i] == NULL) {
 			err = 1;
-			goto exit;
+			goto done;
 		}
 
 		if (strcmp(st->merged->stack[i]->name, names[i])) {
 			err = 1;
-			goto exit;
+			goto done;
 		}
 	}
 
 	if (names[st->merged->stack_len] != NULL) {
 		err = 1;
-		goto exit;
+		goto done;
 	}
 
-exit:
+done:
 	free_names(names);
 	return err;
 }
@@ -388,20 +388,20 @@ static int reftable_stack_init_addition(struct reftable_addition *add,
 		} else {
 			err = REFTABLE_IO_ERROR;
 		}
-		goto exit;
+		goto done;
 	}
 	err = stack_uptodate(st);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	if (err > 1) {
 		err = REFTABLE_LOCK_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	add->next_update_index = reftable_stack_next_update_index(st);
-exit:
+done:
 	if (err) {
 		reftable_addition_close(add);
 	}
@@ -453,7 +453,7 @@ int reftable_addition_commit(struct reftable_addition *add)
 	int i = 0;
 	int err = 0;
 	if (add->new_tables_len == 0) {
-		goto exit;
+		goto done;
 	}
 
 	for (i = 0; i < add->stack->merged->stack_len; i++) {
@@ -469,26 +469,26 @@ int reftable_addition_commit(struct reftable_addition *add)
 	slice_release(&table_list);
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = close(add->lock_file_fd);
 	add->lock_file_fd = 0;
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = rename(slice_as_string(&add->lock_file_name),
 		     add->stack->list_file);
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_stack_reload(add->stack);
 
-exit:
+done:
 	reftable_addition_close(add);
 	return err;
 }
@@ -513,20 +513,20 @@ int stack_try_add(struct reftable_stack *st,
 	struct reftable_addition add = { 0 };
 	int err = reftable_stack_init_addition(&add, st);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 	if (err > 0) {
 		err = REFTABLE_LOCK_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_addition_add(&add, write_table, arg);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_addition_commit(&add);
-exit:
+done:
 	reftable_addition_close(&add);
 	return err;
 }
@@ -554,41 +554,41 @@ int reftable_addition_add(struct reftable_addition *add,
 	tab_fd = mkstemp((char *)slice_as_string(&temp_tab_file_name));
 	if (tab_fd < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	wr = reftable_new_writer(reftable_fd_write, &tab_fd,
 				 &add->stack->config);
 	err = write_table(wr, arg);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_writer_close(wr);
 	if (err == REFTABLE_EMPTY_TABLE_ERROR) {
 		err = 0;
-		goto exit;
+		goto done;
 	}
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = close(tab_fd);
 	tab_fd = 0;
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	err = stack_check_addition(add->stack,
 				   slice_as_string(&temp_tab_file_name));
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	if (wr->min_update_index < add->next_update_index) {
 		err = REFTABLE_API_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	format_name(&next_name, wr->min_update_index, wr->max_update_index);
@@ -603,7 +603,7 @@ int reftable_addition_add(struct reftable_addition *add,
 		     slice_as_string(&tab_file_name));
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
-		goto exit;
+		goto done;
 	}
 
 	add->new_tables = reftable_realloc(add->new_tables,
@@ -611,7 +611,7 @@ int reftable_addition_add(struct reftable_addition *add,
 						   (add->new_tables_len + 1));
 	add->new_tables[add->new_tables_len] = slice_to_string(next_name);
 	add->new_tables_len++;
-exit:
+done:
 	if (tab_fd > 0) {
 		close(tab_fd);
 		tab_fd = 0;
@@ -661,17 +661,17 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 
 	err = stack_write_compact(st, wr, first, last, config);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 	err = reftable_writer_close(wr);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = close(tab_fd);
 	tab_fd = 0;
 
-exit:
+done:
 	reftable_writer_free(wr);
 	if (tab_fd > 0) {
 		close(tab_fd);
@@ -714,12 +714,12 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 					st->config.hash_id);
 	if (err < 0) {
 		reftable_free(subtabs);
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_merged_table_seek_ref(mt, &it, "");
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	while (true) {
@@ -745,7 +745,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 
 	err = reftable_merged_table_seek_log(mt, &it, "");
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	while (true) {
@@ -778,7 +778,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 		entries++;
 	}
 
-exit:
+done:
 	reftable_iterator_destroy(&it);
 	if (mt != NULL) {
 		merged_table_clear(mt);
@@ -814,7 +814,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 
 	if (first > last || (expiry == NULL && first == last)) {
 		err = 0;
-		goto exit;
+		goto done;
 	}
 
 	st->stats.attempts++;
@@ -830,7 +830,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		} else {
 			err = REFTABLE_IO_ERROR;
 		}
-		goto exit;
+		goto done;
 	}
 	/* Don't want to write to the lock for now.  */
 	close(lock_file_fd);
@@ -839,7 +839,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	have_lock = true;
 	err = stack_uptodate(st);
 	if (err != 0) {
-		goto exit;
+		goto done;
 	}
 
 	for (i = first, j = 0; i <= last; i++) {
@@ -874,13 +874,13 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		j++;
 
 		if (err != 0) {
-			goto exit;
+			goto done;
 		}
 	}
 
 	err = unlink(slice_as_string(&lock_file_name));
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 	have_lock = false;
 
@@ -893,7 +893,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		err = 0;
 	}
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	lock_file_fd = open(slice_as_string(&lock_file_name),
@@ -904,7 +904,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		} else {
 			err = REFTABLE_IO_ERROR;
 		}
-		goto exit;
+		goto done;
 	}
 	have_lock = true;
 
@@ -922,7 +922,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 			     slice_as_string(&new_table_path));
 		if (err < 0) {
 			err = REFTABLE_IO_ERROR;
-			goto exit;
+			goto done;
 		}
 	}
 
@@ -943,21 +943,21 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
-		goto exit;
+		goto done;
 	}
 	err = close(lock_file_fd);
 	lock_file_fd = 0;
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
-		goto exit;
+		goto done;
 	}
 
 	err = rename(slice_as_string(&lock_file_name), st->list_file);
 	if (err < 0) {
 		err = REFTABLE_IO_ERROR;
 		unlink(slice_as_string(&new_table_path));
-		goto exit;
+		goto done;
 	}
 	have_lock = false;
 
@@ -974,7 +974,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		listp++;
 	}
 
-exit:
+done:
 	free_names(delete_on_success);
 
 	listp = subtable_locks;
@@ -1143,21 +1143,21 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 	struct reftable_merged_table *mt = reftable_stack_merged_table(st);
 	int err = reftable_merged_table_seek_log(mt, &it, refname);
 	if (err) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_iterator_next_log(&it, log);
 	if (err) {
-		goto exit;
+		goto done;
 	}
 
 	if (strcmp(log->ref_name, refname) ||
 	    reftable_log_record_is_deletion(log)) {
 		err = 1;
-		goto exit;
+		goto done;
 	}
 
-exit:
+done:
 	if (err) {
 		reftable_log_record_clear(log);
 	}
@@ -1183,21 +1183,21 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 
 	err = reftable_block_source_from_file(&src, new_tab_name);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_new_reader(&rd, &src, new_tab_name);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	err = reftable_reader_seek_ref(rd, &it, "");
 	if (err > 0) {
 		err = 0;
-		goto exit;
+		goto done;
 	}
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	while (true) {
@@ -1207,7 +1207,7 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 			break;
 		}
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 
 		if (len >= cap) {
@@ -1222,7 +1222,7 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 
 	err = validate_ref_record_addition(tab, refs, len);
 
-exit:
+done:
 	for (i = 0; i < len; i++) {
 		reftable_ref_record_clear(&refs[i]);
 	}

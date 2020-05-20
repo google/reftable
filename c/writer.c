@@ -192,7 +192,7 @@ static int writer_add_record(struct reftable_writer *w,
 	int err = 0;
 	reftable_record_key(rec, &key);
 	if (slice_cmp(w->last_key, key) >= 0) {
-		goto exit;
+		goto done;
 	}
 
 	slice_copy(&w->last_key, key);
@@ -204,24 +204,24 @@ static int writer_add_record(struct reftable_writer *w,
 
 	if (block_writer_add(w->block_writer, rec) == 0) {
 		result = 0;
-		goto exit;
+		goto done;
 	}
 
 	err = writer_flush_block(w);
 	if (err < 0) {
 		result = err;
-		goto exit;
+		goto done;
 	}
 
 	writer_reinit_block_writer(w, reftable_record_type(rec));
 	err = block_writer_add(w->block_writer, rec);
 	if (err < 0) {
 		result = err;
-		goto exit;
+		goto done;
 	}
 
 	result = 0;
-exit:
+done:
 	slice_release(&key);
 	return result;
 }
@@ -425,24 +425,24 @@ static void write_object_record(void *void_arg, void *key)
 	};
 	struct reftable_record rec = { 0 };
 	if (arg->err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	reftable_record_from_obj(&rec, &obj_rec);
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
 	if (arg->err == 0) {
-		goto exit;
+		goto done;
 	}
 
 	arg->err = writer_flush_block(arg->w);
 	if (arg->err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
 	if (arg->err == 0) {
-		goto exit;
+		goto done;
 	}
 	obj_rec.offset_len = 0;
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
@@ -450,7 +450,7 @@ static void write_object_record(void *void_arg, void *key)
 	/* Should be able to write into a fresh block. */
 	assert(arg->err == 0);
 
-exit:;
+done:;
 }
 
 static void object_record_free(void *void_arg, void *key)
@@ -522,7 +522,7 @@ int reftable_writer_close(struct reftable_writer *w)
 	int err = writer_finish_public_section(w);
 	int empty_table = w->next == 0;
 	if (err != 0) {
-		goto exit;
+		goto done;
 	}
 	w->pending_padding = 0;
 	if (empty_table) {
@@ -531,7 +531,7 @@ int reftable_writer_close(struct reftable_writer *w)
 		int n = writer_write_header(w, header);
 		err = padded_write(w, header, n, 0);
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 	}
 
@@ -553,15 +553,15 @@ int reftable_writer_close(struct reftable_writer *w)
 
 	err = padded_write(w, footer, footer_size(writer_version(w)), 0);
 	if (err < 0) {
-		goto exit;
+		goto done;
 	}
 
 	if (empty_table) {
 		err = REFTABLE_EMPTY_TABLE_ERROR;
-		goto exit;
+		goto done;
 	}
 
-exit:
+done:
 	/* free up memory. */
 	block_writer_clear(&w->block_writer_data);
 	writer_clear_index(w);

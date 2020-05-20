@@ -80,18 +80,18 @@ int modification_has_ref_with_prefix(struct modification *mod,
 		int idx = binsearch(mod->add_len, find_name, &arg);
 		if (idx < mod->add_len &&
 		    !strncmp(prefix, mod->add[idx], strlen(prefix))) {
-			goto exit;
+			goto done;
 		}
 	}
 	err = reftable_table_seek_ref(&mod->tab, &it, prefix);
 	if (err) {
-		goto exit;
+		goto done;
 	}
 
 	while (true) {
 		err = reftable_iterator_next_ref(&it, &ref);
 		if (err) {
-			goto exit;
+			goto done;
 		}
 
 		if (mod->del_len > 0) {
@@ -108,13 +108,13 @@ int modification_has_ref_with_prefix(struct modification *mod,
 
 		if (strncmp(ref.ref_name, prefix, strlen(prefix))) {
 			err = 1;
-			goto exit;
+			goto done;
 		}
 		err = 0;
-		goto exit;
+		goto done;
 	}
 
-exit:
+done:
 	reftable_ref_record_clear(&ref);
 	reftable_iterator_destroy(&it);
 	return err;
@@ -179,7 +179,7 @@ int modification_validate(struct modification *mod)
 	for (; i < mod->add_len; i++) {
 		err = validate_ref_name(mod->add[i]);
 		if (err) {
-			goto exit;
+			goto done;
 		}
 		slice_set_string(&slashed, mod->add[i]);
 		slice_addstr(&slashed, "/");
@@ -188,10 +188,10 @@ int modification_validate(struct modification *mod)
 			mod, slice_as_string(&slashed));
 		if (err == 0) {
 			err = REFTABLE_NAME_CONFLICT;
-			goto exit;
+			goto done;
 		}
 		if (err < 0) {
-			goto exit;
+			goto done;
 		}
 
 		slice_set_string(&slashed, mod->add[i]);
@@ -201,15 +201,15 @@ int modification_validate(struct modification *mod)
 						   slice_as_string(&slashed));
 			if (err == 0) {
 				err = REFTABLE_NAME_CONFLICT;
-				goto exit;
+				goto done;
 			}
 			if (err < 0) {
-				goto exit;
+				goto done;
 			}
 		}
 	}
 	err = 0;
-exit:
+done:
 	slice_release(&slashed);
 	return err;
 }
