@@ -79,20 +79,17 @@ int modification_has_ref_with_prefix(struct modification *mod,
 		};
 		int idx = binsearch(mod->add_len, find_name, &arg);
 		if (idx < mod->add_len &&
-		    !strncmp(prefix, mod->add[idx], strlen(prefix))) {
+		    !strncmp(prefix, mod->add[idx], strlen(prefix)))
 			goto done;
-		}
 	}
 	err = reftable_table_seek_ref(&mod->tab, &it, prefix);
-	if (err) {
+	if (err)
 		goto done;
-	}
 
 	while (true) {
 		err = reftable_iterator_next_ref(&it, &ref);
-		if (err) {
+		if (err)
 			goto done;
-		}
 
 		if (mod->del_len > 0) {
 			struct find_arg arg = {
@@ -178,9 +175,8 @@ int modification_validate(struct modification *mod)
 	int i = 0;
 	for (; i < mod->add_len; i++) {
 		err = validate_ref_name(mod->add[i]);
-		if (err) {
+		if (err)
 			goto done;
-		}
 		slice_set_string(&slashed, mod->add[i]);
 		slice_addstr(&slashed, "/");
 
@@ -190,9 +186,8 @@ int modification_validate(struct modification *mod)
 			err = REFTABLE_NAME_CONFLICT;
 			goto done;
 		}
-		if (err < 0) {
+		if (err < 0)
 			goto done;
-		}
 
 		slice_set_string(&slashed, mod->add[i]);
 		while (slashed.len) {
@@ -203,9 +198,8 @@ int modification_validate(struct modification *mod)
 				err = REFTABLE_NAME_CONFLICT;
 				goto done;
 			}
-			if (err < 0) {
+			if (err < 0)
 				goto done;
-			}
 		}
 	}
 	err = 0;

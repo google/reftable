@@ -60,9 +60,8 @@ static int merged_iter_advance_nonnull_subiter(struct merged_iter *mi,
 		.index = idx,
 	};
 	int err = iterator_next(&mi->stack[idx], &rec);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	if (err > 0) {
 		reftable_iterator_destroy(&mi->stack[idx]);
@@ -76,9 +75,8 @@ static int merged_iter_advance_nonnull_subiter(struct merged_iter *mi,
 
 static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 {
-	if (iterator_is_null(&mi->stack[idx])) {
+	if (iterator_is_null(&mi->stack[idx]))
 		return 0;
-	}
 	return merged_iter_advance_nonnull_subiter(mi, idx);
 }
 
@@ -89,15 +87,13 @@ static int merged_iter_next_entry(struct merged_iter *mi,
 	struct pq_entry entry = { 0 };
 	int err = 0;
 
-	if (merged_iter_pqueue_is_empty(mi->pq)) {
+	if (merged_iter_pqueue_is_empty(mi->pq))
 		return 1;
-	}
 
 	entry = merged_iter_pqueue_remove(&mi->pq);
 	err = merged_iter_advance_subiter(mi, entry.index);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	/*
 	  One can also use reftable as datacenter-local storage, where the ref
@@ -152,9 +148,8 @@ static int merged_iter_next(struct merged_iter *mi, struct reftable_record *rec)
 static int merged_iter_next_void(void *p, struct reftable_record *rec)
 {
 	struct merged_iter *mi = (struct merged_iter *)p;
-	if (merged_iter_pqueue_is_empty(mi->pq)) {
+	if (merged_iter_pqueue_is_empty(mi->pq))
 		return 1;
-	}
 
 	return merged_iter_next(mi, rec);
 }

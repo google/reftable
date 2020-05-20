@@ -70,14 +70,12 @@ int reftable_table_read_ref(struct reftable_table *tab, const char *name,
 {
 	struct reftable_iterator it = { 0 };
 	int err = reftable_table_seek_ref(tab, &it, name);
-	if (err) {
+	if (err)
 		goto done;
-	}
 
 	err = reftable_iterator_next_ref(&it, ref);
-	if (err) {
+	if (err)
 		goto done;
-	}
 
 	if (strcmp(ref->ref_name, name) ||
 	    reftable_ref_record_is_deletion(ref)) {

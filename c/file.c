@@ -47,9 +47,8 @@ static int file_read_block(void *v, struct reftable_block *dest, uint64_t off,
 	struct file_block_source *b = (struct file_block_source *)v;
 	assert(off + size <= b->size);
 	dest->data = reftable_malloc(size);
-	if (pread(b->fd, dest->data, size, off) != size) {
+	if (pread(b->fd, dest->data, size, off) != size)
 		return -1;
-	}
 	dest->len = size;
 	return size;
 }
@@ -76,9 +75,8 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 	}
 
 	err = fstat(fd, &st);
-	if (err < 0) {
+	if (err < 0)
 		return -1;
-	}
 
 	p = reftable_calloc(sizeof(struct file_block_source));
 	p->size = st.st_size;

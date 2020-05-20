@@ -42,9 +42,8 @@ static int padded_write(struct reftable_writer *w, byte *data, size_t len,
 	if (w->pending_padding > 0) {
 		byte *zeroed = reftable_calloc(w->pending_padding);
 		int n = w->write(w->write_arg, zeroed, w->pending_padding);
-		if (n < 0) {
+		if (n < 0)
 			return n;
-		}
 
 		w->pending_padding = 0;
 		reftable_free(zeroed);
@@ -52,9 +51,8 @@ static int padded_write(struct reftable_writer *w, byte *data, size_t len,
 
 	w->pending_padding = padding;
 	n = w->write(w->write_arg, data, len);
-	if (n < 0) {
+	if (n < 0)
 		return n;
-	}
 	n += padding;
 	return 0;
 }
@@ -191,9 +189,8 @@ static int writer_add_record(struct reftable_writer *w,
 	struct slice key = { 0 };
 	int err = 0;
 	reftable_record_key(rec, &key);
-	if (slice_cmp(w->last_key, key) >= 0) {
+	if (slice_cmp(w->last_key, key) >= 0)
 		goto done;
-	}
 
 	slice_copy(&w->last_key, key);
 	if (w->block_writer == NULL) {
@@ -233,20 +230,17 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 	struct reftable_ref_record copy = *ref;
 	int err = 0;
 
-	if (ref->ref_name == NULL) {
+	if (ref->ref_name == NULL)
 		return REFTABLE_API_ERROR;
-	}
 	if (ref->update_index < w->min_update_index ||
-	    ref->update_index > w->max_update_index) {
+	    ref->update_index > w->max_update_index)
 		return REFTABLE_API_ERROR;
-	}
 
 	reftable_record_from_ref(&rec, &copy);
 	copy.update_index -= w->min_update_index;
 	err = writer_add_record(w, &rec);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	if (!w->opts.skip_index_objects && ref->value != NULL) {
 		struct slice h = {
@@ -283,16 +277,14 @@ int reftable_writer_add_log(struct reftable_writer *w,
 {
 	struct reftable_record rec = { 0 };
 	int err;
-	if (log->ref_name == NULL) {
+	if (log->ref_name == NULL)
 		return REFTABLE_API_ERROR;
-	}
 
 	if (w->block_writer != NULL &&
 	    block_writer_type(w->block_writer) == BLOCK_TYPE_REF) {
 		int err = writer_finish_public_section(w);
-		if (err < 0) {
+		if (err < 0)
 			return err;
-		}
 	}
 
 	w->next -= w->pending_padding;
@@ -325,9 +317,8 @@ static int writer_finish_section(struct reftable_writer *w)
 	int err = writer_flush_block(w);
 	int i = 0;
 	struct reftable_block_stats *bstats = NULL;
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	while (w->index_len > threshold) {
 		struct reftable_index_record *idx = NULL;
@@ -352,9 +343,8 @@ static int writer_finish_section(struct reftable_writer *w)
 
 			{
 				int err = writer_flush_block(w);
-				if (err < 0) {
+				if (err < 0)
 					return err;
-				}
 			}
 
 			writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
@@ -375,9 +365,8 @@ static int writer_finish_section(struct reftable_writer *w)
 	writer_clear_index(w);
 
 	err = writer_flush_block(w);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	bstats = writer_reftable_block_stats(w, typ);
 	bstats->index_blocks = w->stats.idx_stats.blocks - before_blocks;
@@ -424,26 +413,22 @@ static void write_object_record(void *void_arg, void *key)
 		.offset_len = entry->offset_len,
 	};
 	struct reftable_record rec = { 0 };
-	if (arg->err < 0) {
+	if (arg->err < 0)
 		goto done;
-	}
 
 	reftable_record_from_obj(&rec, &obj_rec);
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
-	if (arg->err == 0) {
+	if (arg->err == 0)
 		goto done;
-	}
 
 	arg->err = writer_flush_block(arg->w);
-	if (arg->err < 0) {
+	if (arg->err < 0)
 		goto done;
-	}
 
 	writer_reinit_block_writer(arg->w, BLOCK_TYPE_OBJ);
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
-	if (arg->err == 0) {
+	if (arg->err == 0)
 		goto done;
-	}
 	obj_rec.offset_len = 0;
 	arg->err = block_writer_add(arg->w->block_writer, &rec);
 
@@ -477,9 +462,8 @@ static int writer_dump_object_index(struct reftable_writer *w)
 		infix_walk(w->obj_index_tree, &write_object_record, &closure);
 	}
 
-	if (closure.err < 0) {
+	if (closure.err < 0)
 		return closure.err;
-	}
 	return writer_finish_section(w);
 }
 
@@ -488,21 +472,18 @@ int writer_finish_public_section(struct reftable_writer *w)
 	byte typ = 0;
 	int err = 0;
 
-	if (w->block_writer == NULL) {
+	if (w->block_writer == NULL)
 		return 0;
-	}
 
 	typ = block_writer_type(w->block_writer);
 	err = writer_finish_section(w);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 	if (typ == BLOCK_TYPE_REF && !w->opts.skip_index_objects &&
 	    w->stats.ref_stats.index_blocks > 0) {
 		err = writer_dump_object_index(w);
-		if (err < 0) {
+		if (err < 0)
 			return err;
-		}
 	}
 
 	if (w->obj_index_tree != NULL) {
@@ -521,18 +502,16 @@ int reftable_writer_close(struct reftable_writer *w)
 	byte *p = footer;
 	int err = writer_finish_public_section(w);
 	int empty_table = w->next == 0;
-	if (err != 0) {
+	if (err != 0)
 		goto done;
-	}
 	w->pending_padding = 0;
 	if (empty_table) {
 		/* Empty tables need a header anyway. */
 		byte header[28];
 		int n = writer_write_header(w, header);
 		err = padded_write(w, header, n, 0);
-		if (err < 0) {
+		if (err < 0)
 			goto done;
-		}
 	}
 
 	p += writer_write_header(w, footer);
@@ -552,9 +531,8 @@ int reftable_writer_close(struct reftable_writer *w)
 	p += 4;
 
 	err = padded_write(w, footer, footer_size(writer_version(w)), 0);
-	if (err < 0) {
+	if (err < 0)
 		goto done;
-	}
 
 	if (empty_table) {
 		err = REFTABLE_EMPTY_TABLE_ERROR;
@@ -593,9 +571,8 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	int padding = 0;
 	int err = 0;
 	struct reftable_index_record ir = { 0 };
-	if (raw_bytes < 0) {
+	if (raw_bytes < 0)
 		return raw_bytes;
-	}
 
 	if (!w->opts.unpadded && typ != BLOCK_TYPE_LOG) {
 		padding = w->opts.block_size - raw_bytes;
@@ -621,9 +598,8 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	}
 
 	err = padded_write(w, w->block, raw_bytes, padding);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	if (w->index_cap == w->index_len) {
 		w->index_cap = 2 * w->index_cap + 1;
@@ -644,12 +620,10 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 
 int writer_flush_block(struct reftable_writer *w)
 {
-	if (w->block_writer == NULL) {
+	if (w->block_writer == NULL)
 		return 0;
-	}
-	if (w->block_writer->entries == 0) {
+	if (w->block_writer->entries == 0)
 		return 0;
-	}
 	return writer_flush_nonempty_block(w);
 }
 

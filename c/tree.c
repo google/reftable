@@ -29,11 +29,10 @@ struct tree_node *tree_search(void *key, struct tree_node **rootp,
 	}
 
 	res = compare(key, (*rootp)->key);
-	if (res < 0) {
+	if (res < 0)
 		return tree_search(key, &(*rootp)->left, compare, insert);
-	} else if (res > 0) {
+	else if (res > 0)
 		return tree_search(key, &(*rootp)->right, compare, insert);
-	}
 	return *rootp;
 }
 

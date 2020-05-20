@@ -23,9 +23,8 @@ int pq_less(struct pq_entry a, struct pq_entry b)
 	slice_release(&ak);
 	slice_release(&bk);
 
-	if (cmp == 0) {
+	if (cmp == 0)
 		return a.index > b.index;
-	}
 
 	return cmp < 0;
 }

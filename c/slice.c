@@ -108,9 +108,8 @@ char *slice_to_string(struct slice in)
 
 bool slice_equal(struct slice a, struct slice b)
 {
-	if (a.len != b.len) {
+	if (a.len != b.len)
 		return 0;
-	}
 	return memcmp(a.buf, b.buf, a.len) == 0;
 }
 
@@ -118,16 +117,14 @@ int slice_cmp(struct slice a, struct slice b)
 {
 	int min = a.len < b.len ? a.len : b.len;
 	int res = memcmp(a.buf, b.buf, min);
-	if (res != 0) {
+	if (res != 0)
 		return res;
-	}
-	if (a.len < b.len) {
+	if (a.len < b.len)
 		return -1;
-	} else if (a.len > b.len) {
+	else if (a.len > b.len)
 		return 1;
-	} else {
+	else
 		return 0;
-	}
 }
 
 int slice_add(struct slice *b, byte *data, size_t sz)

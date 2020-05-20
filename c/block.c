@@ -81,21 +81,18 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	reftable_record_key(rec, &key);
 	n = reftable_encode_key(&restart, out, last, key,
 				reftable_record_val_type(rec));
-	if (n < 0) {
+	if (n < 0)
 		goto done;
-	}
 	slice_consume(&out, n);
 
 	n = reftable_record_encode(rec, out, w->hash_size);
-	if (n < 0) {
+	if (n < 0)
 		goto done;
-	}
 	slice_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
-					  key) < 0) {
+					  key) < 0)
 		goto done;
-	}
 
 	slice_release(&key);
 	return 0;
@@ -116,9 +113,8 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 	if (restart) {
 		rlen++;
 	}
-	if (2 + 3 * rlen + n > w->block_size - w->next) {
+	if (2 + 3 * rlen + n > w->block_size - w->next)
 		return -1;
-	}
 	if (restart) {
 		if (w->restart_len == w->restart_cap) {
 			w->restart_cap = w->restart_cap * 2 + 1;
@@ -193,9 +189,8 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 	byte typ = block->data[header_off];
 	uint32_t sz = get_be24(block->data + header_off + 1);
 
-	if (!reftable_is_block_type(typ)) {
+	if (!reftable_is_block_type(typ))
 		return REFTABLE_FORMAT_ERROR;
-	}
 
 	if (typ == BLOCK_TYPE_LOG) {
 		struct slice uncompressed = { 0 };
@@ -220,9 +215,8 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 			return REFTABLE_ZLIB_ERROR;
 		}
 
-		if (dst_len + block_header_skip != sz) {
+		if (dst_len + block_header_skip != sz)
 			return REFTABLE_FORMAT_ERROR;
-		}
 
 		/* We're done with the input data. */
 		reftable_block_done(block);
@@ -325,20 +319,17 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 	byte extra = 0;
 	int n = 0;
 
-	if (it->next_off >= it->br->block_len) {
+	if (it->next_off >= it->br->block_len)
 		return 1;
-	}
 
 	n = reftable_decode_key(&key, &extra, it->last_key, in);
-	if (n < 0) {
+	if (n < 0)
 		return -1;
-	}
 
 	slice_consume(&in, n);
 	n = reftable_record_decode(rec, key, extra, in, it->br->hash_size);
-	if (n < 0) {
+	if (n < 0)
 		return -1;
-	}
 	slice_consume(&in, n);
 
 	slice_copy(&it->last_key, key);
@@ -358,9 +349,9 @@ int block_reader_first_key(struct block_reader *br, struct slice *key)
 
 	byte extra = 0;
 	int n = reftable_decode_key(key, &extra, empty, in);
-	if (n < 0) {
+	if (n < 0)
 		return n;
-	}
+
 	return 0;
 }
 
@@ -406,9 +397,8 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	while (true) {
 		block_iter_copy_from(&next, it);
 		err = block_iter_next(&next, &rec);
-		if (err < 0) {
+		if (err < 0)
 			goto done;
-		}
 
 		reftable_record_key(&rec, &key);
 		if (err > 0 || slice_cmp(key, want) >= 0) {

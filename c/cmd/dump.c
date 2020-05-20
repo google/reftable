@@ -20,15 +20,13 @@ static int dump_table(const char *tablename)
 {
 	struct reftable_block_source src = { 0 };
 	int err = reftable_block_source_from_file(&src, tablename);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	struct reftable_reader *r = NULL;
 	err = reftable_new_reader(&r, src, tablename);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	{
 		struct reftable_iterator it = { 0 };
@@ -83,14 +81,12 @@ static int compact_stack(const char *stackdir)
 	struct reftable_write_options cfg = {};
 
 	int err = reftable_new_stack(&stack, stackdir, cfg);
-	if (err < 0) {
+	if (err < 0)
 		goto done;
-	}
 
 	err = reftable_stack_compact_all(stack, NULL);
-	if (err < 0) {
+	if (err < 0)
 		goto done;
-	}
 done:
 	if (stack != NULL) {
 		reftable_stack_destroy(stack);
@@ -104,9 +100,8 @@ static int dump_stack(const char *stackdir)
 	struct reftable_write_options cfg = {};
 
 	int err = reftable_new_stack(&stack, stackdir, cfg);
-	if (err < 0) {
+	if (err < 0)
 		return err;
-	}
 
 	struct reftable_merged_table *merged =
 		reftable_stack_merged_table(stack);
