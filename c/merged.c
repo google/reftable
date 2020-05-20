@@ -277,9 +277,7 @@ int merged_table_seek_record(struct reftable_merged_table *mt,
 	if (err < 0) {
 		merged_iter_close(&merged);
 		return err;
-	}
-
-	{
+	} else {
 		struct merged_iter *p =
 			reftable_malloc(sizeof(struct merged_iter));
 		*p = merged;

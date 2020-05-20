@@ -824,6 +824,8 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	for (i = first, j = 0; i <= last; i++) {
 		struct slice subtab_file_name = { 0 };
 		struct slice subtab_lock = { 0 };
+		int sublock_file_fd = -1;
+
 		slice_set_string(&subtab_file_name, st->reftable_dir);
 		slice_addstr(&subtab_file_name, "/");
 		slice_addstr(&subtab_file_name,
@@ -832,18 +834,15 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		slice_copy(&subtab_lock, subtab_file_name);
 		slice_addstr(&subtab_lock, ".lock");
 
-		{
-			int sublock_file_fd =
-				open(slice_as_string(&subtab_lock),
-				     O_EXCL | O_CREAT | O_WRONLY, 0644);
-			if (sublock_file_fd > 0) {
-				close(sublock_file_fd);
-			} else if (sublock_file_fd < 0) {
-				if (errno == EEXIST) {
-					err = 1;
-				} else {
-					err = REFTABLE_IO_ERROR;
-				}
+		sublock_file_fd = open(slice_as_string(&subtab_lock),
+				       O_EXCL | O_CREAT | O_WRONLY, 0644);
+		if (sublock_file_fd > 0) {
+			close(sublock_file_fd);
+		} else if (sublock_file_fd < 0) {
+			if (errno == EEXIST) {
+				err = 1;
+			} else {
+				err = REFTABLE_IO_ERROR;
 			}
 		}
 

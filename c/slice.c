@@ -14,18 +14,17 @@ https://developers.google.com/open-source/licenses/bsd
 
 void slice_set_string(struct slice *s, const char *str)
 {
+	int l;
 	if (str == NULL) {
 		s->len = 0;
 		return;
 	}
 
-	{
-		int l = strlen(str);
-		l++; /* \0 */
-		slice_resize(s, l);
-		memcpy(s->buf, str, l);
-		s->len = l - 1;
-	}
+	l = strlen(str);
+	l++; /* \0 */
+	slice_resize(s, l);
+	memcpy(s->buf, str, l);
+	s->len = l - 1;
 }
 
 void slice_resize(struct slice *s, int l)

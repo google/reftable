@@ -329,8 +329,7 @@ static int table_iter_next_block(struct table_iter *dest,
 	}
 	if (err != 0)
 		return err;
-
-	{
+	else {
 		struct block_reader *brp =
 			reftable_malloc(sizeof(struct block_reader));
 		*brp = br;
@@ -440,6 +439,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 	struct slice got_key = { 0 };
 	struct table_iter next = { 0 };
 	int err = -1;
+
 	reftable_record_key(want, &want_key);
 
 	while (true) {
@@ -454,12 +454,10 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 		err = block_reader_first_key(next.bi.br, &got_key);
 		if (err < 0)
 			goto done;
-		{
-			int cmp = slice_cmp(got_key, want_key);
-			if (cmp > 0) {
-				table_iter_block_done(&next);
-				break;
-			}
+
+		if (slice_cmp(got_key, want_key) > 0) {
+			table_iter_block_done(&next);
+			break;
 		}
 
 		table_iter_block_done(ti);
@@ -559,8 +557,7 @@ static int reader_seek_internal(struct reftable_reader *r,
 	err = reader_seek_linear(r, &ti, rec);
 	if (err < 0)
 		return err;
-
-	{
+	else {
 		struct table_iter *p =
 			reftable_malloc(sizeof(struct table_iter));
 		*p = ti;

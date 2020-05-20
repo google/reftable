@@ -20,6 +20,10 @@ static int dump_table(const char *tablename)
 {
 	struct reftable_block_source src = { 0 };
 	int err = reftable_block_source_from_file(&src, tablename);
+	struct reftable_iterator it = { 0 };
+	struct reftable_ref_record ref = { 0 };
+	struct reftable_log_record log = { 0 };
+
 	if (err < 0)
 		return err;
 
@@ -28,48 +32,40 @@ static int dump_table(const char *tablename)
 	if (err < 0)
 		return err;
 
-	{
-		struct reftable_iterator it = { 0 };
-		err = reftable_reader_seek_ref(r, &it, "");
+	err = reftable_reader_seek_ref(r, &it, "");
+	if (err < 0) {
+		return err;
+	}
+
+	while (1) {
+		err = reftable_iterator_next_ref(it, &ref);
+		if (err > 0) {
+			break;
+		}
 		if (err < 0) {
 			return err;
 		}
-
-		struct reftable_ref_record ref = { 0 };
-		while (1) {
-			err = reftable_iterator_next_ref(it, &ref);
-			if (err > 0) {
-				break;
-			}
-			if (err < 0) {
-				return err;
-			}
-			reftable_ref_record_print(&ref, hash_id);
-		}
-		reftable_iterator_destroy(&it);
-		reftable_ref_record_clear(&ref);
+		reftable_ref_record_print(&ref, hash_id);
 	}
+	reftable_iterator_destroy(&it);
+	reftable_ref_record_clear(&ref);
 
-	{
-		struct reftable_iterator it = { 0 };
-		err = reftable_reader_seek_log(r, &it, "");
+	err = reftable_reader_seek_log(r, &it, "");
+	if (err < 0) {
+		return err;
+	}
+	while (1) {
+		err = reftable_iterator_next_log(it, &log);
+		if (err > 0) {
+			break;
+		}
 		if (err < 0) {
 			return err;
 		}
-		struct reftable_log_record log = { 0 };
-		while (1) {
-			err = reftable_iterator_next_log(it, &log);
-			if (err > 0) {
-				break;
-			}
-			if (err < 0) {
-				return err;
-			}
-			reftable_log_record_print(&log, hash_id);
-		}
-		reftable_iterator_destroy(&it);
-		reftable_log_record_clear(&log);
+		reftable_log_record_print(&log, hash_id);
 	}
+	reftable_iterator_destroy(&it);
+	reftable_log_record_clear(&log);
 
 	reftable_reader_free(r);
 	return 0;
@@ -98,6 +94,9 @@ static int dump_stack(const char *stackdir)
 {
 	struct reftable_stack *stack = NULL;
 	struct reftable_write_options cfg = {};
+	struct reftable_iterator it = { 0 };
+	struct reftable_ref_record ref = { 0 };
+	struct reftable_log_record log = { 0 };
 
 	int err = reftable_new_stack(&stack, stackdir, cfg);
 	if (err < 0)
@@ -106,48 +105,40 @@ static int dump_stack(const char *stackdir)
 	struct reftable_merged_table *merged =
 		reftable_stack_merged_table(stack);
 
-	{
-		struct reftable_iterator it = { 0 };
-		err = reftable_merged_table_seek_ref(merged, &it, "");
+	err = reftable_merged_table_seek_ref(merged, &it, "");
+	if (err < 0) {
+		return err;
+	}
+
+	while (1) {
+		err = reftable_iterator_next_ref(it, &ref);
+		if (err > 0) {
+			break;
+		}
 		if (err < 0) {
 			return err;
 		}
-
-		struct reftable_ref_record ref = { 0 };
-		while (1) {
-			err = reftable_iterator_next_ref(it, &ref);
-			if (err > 0) {
-				break;
-			}
-			if (err < 0) {
-				return err;
-			}
-			reftable_ref_record_print(&ref, hash_id);
-		}
-		reftable_iterator_destroy(&it);
-		reftable_ref_record_clear(&ref);
+		reftable_ref_record_print(&ref, hash_id);
 	}
+	reftable_iterator_destroy(&it);
+	reftable_ref_record_clear(&ref);
 
-	{
-		struct reftable_iterator it = { 0 };
-		err = reftable_merged_table_seek_log(merged, &it, "");
+	err = reftable_merged_table_seek_log(merged, &it, "");
+	if (err < 0) {
+		return err;
+	}
+	while (1) {
+		err = reftable_iterator_next_log(it, &log);
+		if (err > 0) {
+			break;
+		}
 		if (err < 0) {
 			return err;
 		}
-		struct reftable_log_record log = { 0 };
-		while (1) {
-			err = reftable_iterator_next_log(it, &log);
-			if (err > 0) {
-				break;
-			}
-			if (err < 0) {
-				return err;
-			}
-			reftable_log_record_print(&log, hash_id);
-		}
-		reftable_iterator_destroy(&it);
-		reftable_log_record_clear(&log);
+		reftable_log_record_print(&log, hash_id);
 	}
+	reftable_iterator_destroy(&it);
+	reftable_log_record_clear(&log);
 
 	reftable_stack_destroy(stack);
 	return 0;

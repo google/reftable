@@ -149,6 +149,8 @@ static void indexed_table_ref_iter_close(void *p)
 
 static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 {
+	uint64_t off;
+	int err = 0;
 	if (it->offset_idx == it->offset_len) {
 		it->finished = true;
 		return 1;
@@ -156,17 +158,15 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 
 	reftable_block_done(&it->block_reader.block);
 
-	{
-		uint64_t off = it->offsets[it->offset_idx++];
-		int err = reader_init_block_reader(it->r, &it->block_reader,
-						   off, BLOCK_TYPE_REF);
-		if (err < 0) {
-			return err;
-		}
-		if (err > 0) {
-			/* indexed block does not exist. */
-			return REFTABLE_FORMAT_ERROR;
-		}
+	off = it->offsets[it->offset_idx++];
+	err = reader_init_block_reader(it->r, &it->block_reader, off,
+				       BLOCK_TYPE_REF);
+	if (err < 0) {
+		return err;
+	}
+	if (err > 0) {
+		/* indexed block does not exist. */
+		return REFTABLE_FORMAT_ERROR;
 	}
 	block_reader_start(&it->block_reader, &it->cur);
 	return 0;

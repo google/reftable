@@ -341,11 +341,9 @@ static int writer_finish_section(struct reftable_writer *w)
 				continue;
 			}
 
-			{
-				int err = writer_flush_block(w);
-				if (err < 0)
-					return err;
-			}
+			err = writer_flush_block(w);
+			if (err < 0)
+				return err;
 
 			writer_reinit_block_writer(w, BLOCK_TYPE_INDEX);
 

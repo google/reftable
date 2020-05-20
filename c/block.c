@@ -189,6 +189,10 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 	byte typ = block->data[header_off];
 	uint32_t sz = get_be24(block->data + header_off + 1);
 
+	uint16_t restart_count = 0;
+	uint32_t restart_start = 0;
+	byte *restart_bytes = NULL;
+
 	if (!reftable_is_block_type(typ))
 		return REFTABLE_FORMAT_ERROR;
 
@@ -234,24 +238,21 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		full_block_size = sz;
 	}
 
-	{
-		uint16_t restart_count = get_be16(block->data + sz - 2);
-		uint32_t restart_start = sz - 2 - 3 * restart_count;
+	restart_count = get_be16(block->data + sz - 2);
+	restart_start = sz - 2 - 3 * restart_count;
+	restart_bytes = block->data + restart_start;
 
-		byte *restart_bytes = block->data + restart_start;
+	/* transfer ownership. */
+	br->block = *block;
+	block->data = NULL;
+	block->len = 0;
 
-		/* transfer ownership. */
-		br->block = *block;
-		block->data = NULL;
-		block->len = 0;
-
-		br->hash_size = hash_size;
-		br->block_len = restart_start;
-		br->full_block_size = full_block_size;
-		br->header_off = header_off;
-		br->restart_count = restart_count;
-		br->restart_bytes = restart_bytes;
-	}
+	br->hash_size = hash_size;
+	br->block_len = restart_start;
+	br->full_block_size = full_block_size;
+	br->header_off = header_off;
+	br->restart_count = restart_count;
+	br->restart_bytes = restart_bytes;
 
 	return 0;
 }
@@ -289,16 +290,15 @@ static int restart_key_less(size_t idx, void *args)
 	struct slice last_key = { 0 };
 	byte unused_extra;
 	int n = reftable_decode_key(&rkey, &unused_extra, last_key, in);
+	int result;
 	if (n < 0) {
 		a->error = 1;
 		return -1;
 	}
 
-	{
-		int result = slice_cmp(a->key, rkey);
-		slice_release(&rkey);
-		return result;
-	}
+	result = slice_cmp(a->key, rkey);
+	slice_release(&rkey);
+	return result;
 }
 
 void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
