@@ -82,6 +82,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -91,6 +94,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -99,7 +105,10 @@ cc_test(
     deps = [
         ":reftable",
         ":testlib",
-    ],
+    ] ,
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -109,6 +118,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -118,6 +130,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -127,6 +142,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -136,6 +154,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 cc_test(
@@ -145,6 +166,9 @@ cc_test(
         ":reftable",
         ":testlib",
     ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
 )
 
 [sh_test(

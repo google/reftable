@@ -15,13 +15,14 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "test_framework.h"
 
-void test_slice(void)
+static void test_slice(void)
 {
 	struct slice s = { 0 };
+	struct slice t = { 0 };
+
 	slice_set_string(&s, "abc");
 	assert(0 == strcmp("abc", slice_as_string(&s)));
 
-	struct slice t = { 0 };
 	slice_set_string(&t, "pqr");
 
 	slice_addbuf(&s, t);

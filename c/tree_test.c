@@ -15,14 +15,14 @@ https://developers.google.com/open-source/licenses/bsd
 
 static int test_compare(const void *a, const void *b)
 {
-	return a - b;
+	return (char *)a - (char *)b;
 }
 
 struct curry {
 	void *last;
 };
 
-void check_increasing(void *arg, void *key)
+static void check_increasing(void *arg, void *key)
 {
 	struct curry *c = (struct curry *)arg;
 	if (c->last != NULL) {
@@ -31,13 +31,14 @@ void check_increasing(void *arg, void *key)
 	c->last = key;
 }
 
-void test_tree()
+static void test_tree(void)
 {
 	struct tree_node *root = NULL;
 
 	void *values[11] = { 0 };
 	struct tree_node *nodes[11] = { 0 };
 	int i = 1;
+	struct curry c = { 0 };
 	do {
 		nodes[i] = tree_search(values + i, &root, &test_compare, 1);
 		i = (i * 7) % 11;
@@ -49,7 +50,6 @@ void test_tree()
 		       tree_search(values + i, &root, &test_compare, 0));
 	}
 
-	struct curry c = { 0 };
 	infix_walk(root, check_increasing, &c);
 	tree_free(root);
 }

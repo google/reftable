@@ -28,7 +28,7 @@ static int binsearch_func(size_t i, void *void_args)
 	return args->key < args->arr[i];
 }
 
-void test_binsearch()
+static void test_binsearch(void)
 {
 	int arr[] = { 2, 4, 6, 8, 10 };
 	size_t sz = ARRAY_SIZE(arr);
@@ -38,8 +38,9 @@ void test_binsearch()
 
 	int i = 0;
 	for (i = 1; i < 11; i++) {
+		int res;
 		args.key = i;
-		int res = binsearch(sz, &binsearch_func, &args);
+		res = binsearch(sz, &binsearch_func, &args);
 
 		if (res < sz) {
 			assert(args.key < arr[res]);
@@ -52,53 +53,54 @@ void test_binsearch()
 	}
 }
 
-void test_block_read_write()
+static void test_block_read_write(void)
 {
 	const int header_off = 21; /* random */
-	const int N = 30;
-	char *names[N];
+	char *names[30];
+	const int N = ARRAY_SIZE(names);
 	const int block_size = 1024;
 	struct reftable_block block = { 0 };
+	struct block_writer bw = { 0 };
+	struct reftable_ref_record ref = { 0 };
+	struct reftable_record rec = { 0 };
+	int i = 0;
+	int n;
+	struct block_reader br = { 0 };
+	struct block_iter it = { 0 };
+	int j = 0;
+	struct slice want = { 0 };
+
 	block.data = reftable_calloc(block_size);
 	block.len = block_size;
 	block.source = malloc_block_source();
-
-	struct block_writer bw = { 0 };
 	block_writer_init(&bw, BLOCK_TYPE_REF, block.data, block_size,
 			  header_off, hash_size(SHA1_ID));
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_record rec = { 0 };
 	reftable_record_from_ref(&rec, &ref);
 
-	int i = 0;
 	for (i = 0; i < N; i++) {
 		char name[100];
-		snprintf(name, sizeof(name), "branch%02d", i);
-
 		byte hash[SHA1_SIZE];
+		snprintf(name, sizeof(name), "branch%02d", i);
 		memset(hash, i, sizeof(hash));
 
 		ref.ref_name = name;
 		ref.value = hash;
 		names[i] = xstrdup(name);
-		int n = block_writer_add(&bw, &rec);
+		n = block_writer_add(&bw, &rec);
 		ref.ref_name = NULL;
 		ref.value = NULL;
 		assert(n == 0);
 	}
 
-	int n = block_writer_finish(&bw);
+	n = block_writer_finish(&bw);
 	assert(n > 0);
 
 	block_writer_clear(&bw);
 
-	struct block_reader br = { 0 };
 	block_reader_init(&br, &block, header_off, block_size, SHA1_SIZE);
 
-	struct block_iter it = { 0 };
 	block_reader_start(&br, &it);
 
-	int j = 0;
 	while (true) {
 		int r = block_iter_next(&it, &rec);
 		assert(r >= 0);
@@ -112,12 +114,11 @@ void test_block_read_write()
 	reftable_record_clear(&rec);
 	block_iter_close(&it);
 
-	struct slice want = { 0 };
 	for (i = 0; i < N; i++) {
+		struct block_iter it = { 0 };
 		slice_set_string(&want, names[i]);
 
-		struct block_iter it = { 0 };
-		int n = block_reader_seek(&br, &it, want);
+		n = block_reader_seek(&br, &it, want);
 		assert(n == 0);
 
 		n = block_iter_next(&it, &rec);

@@ -24,37 +24,22 @@ struct testcase {
 	int error_code;
 };
 
-void test_conflict(void)
+static void test_conflict(void)
 {
 	struct reftable_write_options opts = { 0 };
 	struct slice buf = { 0 };
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
-	reftable_writer_set_limits(w, 1, 1);
-
 	struct reftable_ref_record rec = {
 		.ref_name = "a/b",
 		.target = "destination", /* make sure it's not a symref. */
 		.update_index = 1,
 	};
-
-	int err = reftable_writer_add_ref(w, &rec);
-	assert_err(err);
-
-	err = reftable_writer_close(w);
-	assert_err(err);
-	reftable_writer_free(w);
-
+	int err;
+	int i;
 	struct reftable_block_source source = { 0 };
-	block_source_from_slice(&source, &buf);
-
 	struct reftable_reader *rd = NULL;
-	err = reftable_new_reader(&rd, &source, "filename");
-	assert_err(err);
-
 	struct reftable_table tab = { NULL };
-	reftable_table_from_reader(&tab, rd);
-
 	struct testcase cases[] = {
 		{ "a/b/c", NULL, REFTABLE_NAME_CONFLICT },
 		{ "b", NULL, 0 },
@@ -69,7 +54,22 @@ void test_conflict(void)
 		{ "a/b/c", "a/b", 0 },
 		{ NULL, "a//b", 0 },
 	};
-	for (int i = 0; i < ARRAY_SIZE(cases); i++) {
+	reftable_writer_set_limits(w, 1, 1);
+
+	err = reftable_writer_add_ref(w, &rec);
+	assert_err(err);
+
+	err = reftable_writer_close(w);
+	assert_err(err);
+	reftable_writer_free(w);
+
+	block_source_from_slice(&source, &buf);
+	err = reftable_new_reader(&rd, &source, "filename");
+	assert_err(err);
+
+	reftable_table_from_reader(&tab, rd);
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
 		struct modification mod = {
 			.tab = tab,
 		};
@@ -83,7 +83,7 @@ void test_conflict(void)
 			mod.del_len = 1;
 		}
 
-		int err = modification_validate(&mod);
+		err = modification_validate(&mod);
 		assert(err == cases[i].error_code);
 	}
 
