@@ -300,8 +300,8 @@ static void test_table_read_write_sequential(void)
 	struct reftable_iterator it = { 0 };
 	struct reftable_block_source source = { 0 };
 	struct reftable_reader rd = { 0 };
-	int err;
-	int j;
+	int err = 0;
+	int j = 0;
 
 	write_table(&names, &buf, N, 256, SHA1_ID);
 
