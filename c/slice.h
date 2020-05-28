@@ -20,7 +20,14 @@ struct slice {
 	int len;
 	int cap;
 	byte *buf;
+	byte canary;
 };
+#define SLICE_CANARY 0x42
+#define SLICE_INIT                       \
+	{                                \
+		0, 0, NULL, SLICE_CANARY \
+	}
+extern struct slice reftable_empty_slice;
 
 void slice_set_string(struct slice *dest, const char *src);
 void slice_addstr(struct slice *dest, const char *src);
@@ -30,6 +37,9 @@ void slice_release(struct slice *slice);
 
 /* Return a malloced string for `src` */
 char *slice_to_string(struct slice src);
+
+/* Initializes a slice. Accepts a slice with random garbage. */
+void slice_init(struct slice *slice);
 
 /* Ensure that `buf` is \0 terminated. */
 const char *slice_as_string(struct slice *src);

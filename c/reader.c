@@ -220,6 +220,10 @@ struct table_iter {
 	struct block_iter bi;
 	bool finished;
 };
+#define TABLE_ITER_INIT                         \
+	{                                       \
+		.bi = {.last_key = SLICE_INIT } \
+	}
 
 static void table_iter_copy_from(struct table_iter *dest,
 				 struct table_iter *src)
@@ -346,7 +350,7 @@ static int table_iter_next(struct table_iter *ti, struct reftable_record *rec)
 		return REFTABLE_API_ERROR;
 
 	while (true) {
-		struct table_iter next = { 0 };
+		struct table_iter next = TABLE_ITER_INIT;
 		int err = 0;
 		if (ti->finished) {
 			return 1;
@@ -435,9 +439,9 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 {
 	struct reftable_record rec =
 		reftable_new_record(reftable_record_type(want));
-	struct slice want_key = { 0 };
-	struct slice got_key = { 0 };
-	struct table_iter next = { 0 };
+	struct slice want_key = SLICE_INIT;
+	struct slice got_key = SLICE_INIT;
+	struct table_iter next = TABLE_ITER_INIT;
 	int err = -1;
 
 	reftable_record_key(want, &want_key);
@@ -481,12 +485,12 @@ static int reader_seek_indexed(struct reftable_reader *r,
 			       struct reftable_iterator *it,
 			       struct reftable_record *rec)
 {
-	struct reftable_index_record want_index = { 0 };
+	struct reftable_index_record want_index = { .last_key = SLICE_INIT };
 	struct reftable_record want_index_rec = { 0 };
-	struct reftable_index_record index_result = { 0 };
+	struct reftable_index_record index_result = { .last_key = SLICE_INIT };
 	struct reftable_record index_result_rec = { 0 };
-	struct table_iter index_iter = { 0 };
-	struct table_iter next = { 0 };
+	struct table_iter index_iter = TABLE_ITER_INIT;
+	struct table_iter next = TABLE_ITER_INIT;
 	int err = 0;
 
 	reftable_record_key(rec, &want_index.last_key);
@@ -526,8 +530,10 @@ static int reader_seek_indexed(struct reftable_reader *r,
 	}
 
 	if (err == 0) {
+		struct table_iter empty = TABLE_ITER_INIT;
 		struct table_iter *malloced =
 			reftable_calloc(sizeof(struct table_iter));
+		*malloced = empty;
 		table_iter_copy_from(malloced, &next);
 		iterator_from_table_iter(it, malloced);
 	}
@@ -546,7 +552,7 @@ static int reader_seek_internal(struct reftable_reader *r,
 	struct reftable_reader_offsets *offs =
 		reader_offsets_for(r, reftable_record_type(rec));
 	uint64_t idx = offs->index_offset;
-	struct table_iter ti = { 0 };
+	struct table_iter ti = TABLE_ITER_INIT;
 	int err = 0;
 	if (idx > 0)
 		return reader_seek_indexed(r, it, rec);
@@ -691,16 +697,22 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 					      struct reftable_iterator *it,
 					      byte *oid)
 {
+	struct table_iter ti_empty = TABLE_ITER_INIT;
 	struct table_iter *ti = reftable_calloc(sizeof(struct table_iter));
 	struct filtering_ref_iterator *filter = NULL;
+	struct filtering_ref_iterator empty = FILTERING_REF_ITERATOR_INIT;
 	int oid_len = hash_size(r->hash_id);
-	int err = reader_start(r, ti, BLOCK_TYPE_REF, false);
+	int err;
+
+	*ti = ti_empty;
+	err = reader_start(r, ti, BLOCK_TYPE_REF, false);
 	if (err < 0) {
 		reftable_free(ti);
 		return err;
 	}
 
-	filter = reftable_calloc(sizeof(struct filtering_ref_iterator));
+	filter = reftable_malloc(sizeof(struct filtering_ref_iterator));
+	*filter = empty;
 	slice_resize(&filter->oid, oid_len);
 	memcpy(filter->oid.buf, oid, oid_len);
 	reftable_table_from_reader(&filter->tab, r);

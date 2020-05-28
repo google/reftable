@@ -98,6 +98,7 @@ static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
 		block_start = header_size(writer_version(w));
 	}
 
+	slice_release(&w->last_key);
 	block_writer_init(&w->block_writer_data, typ, w->block,
 			  w->opts.block_size, block_start,
 			  hash_size(w->opts.hash_id));
@@ -111,11 +112,13 @@ reftable_new_writer(int (*writer_func)(void *, byte *, size_t),
 {
 	struct reftable_writer *wp =
 		reftable_calloc(sizeof(struct reftable_writer));
+	slice_init(&wp->block_writer_data.last_key);
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
 		/* TODO - error return? */
 		abort();
 	}
+	wp->last_key = reftable_empty_slice;
 	wp->block = reftable_calloc(opts->block_size);
 	wp->write = writer_func;
 	wp->write_arg = writer_arg;
@@ -144,6 +147,10 @@ struct obj_index_tree_node {
 	int offset_len;
 	int offset_cap;
 };
+#define OBJ_INDEX_TREE_NODE_INIT   \
+	{                          \
+		.hash = SLICE_INIT \
+	}
 
 static int obj_index_tree_node_compare(const void *a, const void *b)
 {
@@ -161,7 +168,10 @@ static void writer_index_hash(struct reftable_writer *w, struct slice hash)
 					     &obj_index_tree_node_compare, 0);
 	struct obj_index_tree_node *key = NULL;
 	if (node == NULL) {
-		key = reftable_calloc(sizeof(struct obj_index_tree_node));
+		struct obj_index_tree_node empty = OBJ_INDEX_TREE_NODE_INIT;
+		key = reftable_malloc(sizeof(struct obj_index_tree_node));
+		*key = empty;
+
 		slice_copy(&key->hash, hash);
 		tree_search((void *)key, &w->obj_index_tree,
 			    &obj_index_tree_node_compare, 1);
@@ -186,7 +196,7 @@ static int writer_add_record(struct reftable_writer *w,
 			     struct reftable_record *rec)
 {
 	int result = -1;
-	struct slice key = { 0 };
+	struct slice key = SLICE_INIT;
 	int err = 0;
 	reftable_record_key(rec, &key);
 	if (slice_cmp(w->last_key, key) >= 0)
@@ -246,14 +256,17 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 		struct slice h = {
 			.buf = ref->value,
 			.len = hash_size(w->opts.hash_id),
+			.canary = SLICE_CANARY,
 		};
 
 		writer_index_hash(w, h);
 	}
+
 	if (!w->opts.skip_index_objects && ref->target_value != NULL) {
 		struct slice h = {
 			.buf = ref->target_value,
 			.len = hash_size(w->opts.hash_id),
+			.canary = SLICE_CANARY,
 		};
 		writer_index_hash(w, h);
 	}
@@ -568,7 +581,7 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	int raw_bytes = block_writer_finish(w->block_writer);
 	int padding = 0;
 	int err = 0;
-	struct reftable_index_record ir = { 0 };
+	struct reftable_index_record ir = { .last_key = SLICE_INIT };
 	if (raw_bytes < 0)
 		return raw_bytes;
 

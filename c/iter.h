@@ -32,6 +32,10 @@ struct filtering_ref_iterator {
 	struct slice oid;
 	struct reftable_iterator it;
 };
+#define FILTERING_REF_ITERATOR_INIT \
+	{                           \
+		.oid = SLICE_INIT   \
+	}
 
 void iterator_from_filtering_ref_iterator(struct reftable_iterator *,
 					  struct filtering_ref_iterator *);
@@ -53,6 +57,11 @@ struct indexed_table_ref_iter {
 	struct block_iter cur;
 	bool finished;
 };
+
+#define INDEXED_TABLE_REF_ITER_INIT                                   \
+	{                                                             \
+		.cur = { .last_key = SLICE_INIT }, .oid = SLICE_INIT, \
+	}
 
 void iterator_from_indexed_table_ref_iter(struct reftable_iterator *it,
 					  struct indexed_table_ref_iter *itr);

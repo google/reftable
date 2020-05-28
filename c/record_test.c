@@ -80,8 +80,8 @@ static void test_common_prefix(void)
 
 	int i = 0;
 	for (i = 0; i < ARRAY_SIZE(cases); i++) {
-		struct slice a = { 0 };
-		struct slice b = { 0 };
+		struct slice a = SLICE_INIT;
+		struct slice b = SLICE_INIT;
 		slice_set_string(&a, cases[i].a);
 		slice_set_string(&b, cases[i].b);
 
@@ -113,9 +113,9 @@ static void test_reftable_ref_record_roundtrip(void)
 			.target = xstrdup("old value"),
 		};
 		struct reftable_record rec_out = { 0 };
-		struct slice key = { 0 };
+		struct slice key = SLICE_INIT;
 		struct reftable_record rec = { 0 };
-		struct slice dest = { 0 };
+		struct slice dest = SLICE_INIT;
 		int n, m;
 
 		switch (i) {
@@ -207,8 +207,8 @@ static void test_reftable_log_record_roundtrip(void)
 	set_test_hash(in[0].old_hash, 2);
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
 		struct reftable_record rec = { 0 };
-		struct slice key = { 0 };
-		struct slice dest = { 0 };
+		struct slice key = SLICE_INIT;
+		struct slice dest = SLICE_INIT;
 		/* populate out, to check for leaks. */
 		struct reftable_log_record out = {
 			.ref_name = xstrdup("old name"),
@@ -257,8 +257,10 @@ static void test_u24_roundtrip(void)
 
 static void test_key_roundtrip(void)
 {
-	struct slice dest = { 0 }, last_key = { 0 }, key = { 0 },
-		     roundtrip = { 0 };
+	struct slice dest = SLICE_INIT;
+	struct slice last_key = SLICE_INIT;
+	struct slice key = SLICE_INIT;
+	struct slice roundtrip = SLICE_INIT;
 	bool restart;
 	byte extra;
 	int n, m;
@@ -307,9 +309,9 @@ static void test_reftable_obj_record_roundtrip(void)
 	int i = 0;
 	for (i = 0; i < ARRAY_SIZE(recs); i++) {
 		struct reftable_obj_record in = recs[i];
-		struct slice dest = { 0 };
+		struct slice dest = SLICE_INIT;
 		struct reftable_record rec = { 0 };
-		struct slice key = { 0 };
+		struct slice key = SLICE_INIT;
 		struct reftable_obj_record out = { 0 };
 		struct reftable_record rec_out = { 0 };
 		int n, m;
@@ -342,11 +344,14 @@ static void test_reftable_obj_record_roundtrip(void)
 
 static void test_reftable_index_record_roundtrip(void)
 {
-	struct reftable_index_record in = { .offset = 42 };
-	struct slice dest = { 0 };
-	struct slice key = { 0 };
+	struct reftable_index_record in = {
+		.offset = 42,
+		.last_key = SLICE_INIT,
+	};
+	struct slice dest = SLICE_INIT;
+	struct slice key = SLICE_INIT;
 	struct reftable_record rec = { 0 };
-	struct reftable_index_record out = { 0 };
+	struct reftable_index_record out = { .last_key = SLICE_INIT };
 	struct reftable_record out_rec = { NULL };
 	int n, m;
 	byte extra;

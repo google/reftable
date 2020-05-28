@@ -207,10 +207,12 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 			       struct reftable_reader *r, byte *oid,
 			       int oid_len, uint64_t *offsets, int offset_len)
 {
+	struct indexed_table_ref_iter empty = INDEXED_TABLE_REF_ITER_INIT;
 	struct indexed_table_ref_iter *itr =
 		reftable_calloc(sizeof(struct indexed_table_ref_iter));
 	int err = 0;
 
+	*itr = empty;
 	itr->r = r;
 	slice_resize(&itr->oid, oid_len);
 	memcpy(itr->oid.buf, oid, oid_len);

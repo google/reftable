@@ -20,7 +20,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 {
 	struct reftable_stack *p =
 		reftable_calloc(sizeof(struct reftable_stack));
-	struct slice list_file_name = { 0 };
+	struct slice list_file_name = SLICE_INIT;
 	int err = 0;
 
 	if (config.hash_id == 0) {
@@ -135,7 +135,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	int new_tables_len = 0;
 	struct reftable_merged_table *new_merged = NULL;
 	int i;
-	struct slice table_path = { 0 };
+	struct slice table_path = SLICE_INIT;
 
 	while (*names) {
 		struct reftable_reader *rd = NULL;
@@ -363,6 +363,11 @@ struct reftable_addition {
 	uint64_t next_update_index;
 };
 
+#define REFTABLE_ADDITION_INIT               \
+	{                                    \
+		.lock_file_name = SLICE_INIT \
+	}
+
 static int reftable_stack_init_addition(struct reftable_addition *add,
 					struct reftable_stack *st)
 {
@@ -402,7 +407,7 @@ done:
 void reftable_addition_close(struct reftable_addition *add)
 {
 	int i = 0;
-	struct slice nm = { 0 };
+	struct slice nm = SLICE_INIT;
 	for (i = 0; i < add->new_tables_len; i++) {
 		slice_set_string(&nm, add->stack->list_file);
 		slice_addstr(&nm, "/");
@@ -440,7 +445,7 @@ void reftable_addition_destroy(struct reftable_addition *add)
 
 int reftable_addition_commit(struct reftable_addition *add)
 {
-	struct slice table_list = { 0 };
+	struct slice table_list = SLICE_INIT;
 	int i = 0;
 	int err = 0;
 	if (add->new_tables_len == 0)
@@ -487,7 +492,9 @@ int reftable_stack_new_addition(struct reftable_addition **dest,
 				struct reftable_stack *st)
 {
 	int err = 0;
+	struct reftable_addition empty = REFTABLE_ADDITION_INIT;
 	*dest = reftable_calloc(sizeof(**dest));
+	**dest = empty;
 	err = reftable_stack_init_addition(*dest, st);
 	if (err) {
 		reftable_free(*dest);
@@ -500,7 +507,7 @@ int stack_try_add(struct reftable_stack *st,
 		  int (*write_table)(struct reftable_writer *wr, void *arg),
 		  void *arg)
 {
-	struct reftable_addition add = { 0 };
+	struct reftable_addition add = REFTABLE_ADDITION_INIT;
 	int err = reftable_stack_init_addition(&add, st);
 	if (err < 0)
 		goto done;
@@ -524,9 +531,9 @@ int reftable_addition_add(struct reftable_addition *add,
 					     void *arg),
 			  void *arg)
 {
-	struct slice temp_tab_file_name = { 0 };
-	struct slice tab_file_name = { 0 };
-	struct slice next_name = { 0 };
+	struct slice temp_tab_file_name = SLICE_INIT;
+	struct slice tab_file_name = SLICE_INIT;
+	struct slice next_name = SLICE_INIT;
 	struct reftable_writer *wr = NULL;
 	int err = 0;
 	int tab_fd = 0;
@@ -626,7 +633,7 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 				struct slice *temp_tab,
 				struct reftable_log_expiry_config *config)
 {
-	struct slice next_name = { 0 };
+	struct slice next_name = SLICE_INIT;
 	int tab_fd = -1;
 	struct reftable_writer *wr = NULL;
 	int err = 0;
@@ -774,11 +781,11 @@ done:
 static int stack_compact_range(struct reftable_stack *st, int first, int last,
 			       struct reftable_log_expiry_config *expiry)
 {
-	struct slice temp_tab_file_name = { 0 };
-	struct slice new_table_name = { 0 };
-	struct slice lock_file_name = { 0 };
-	struct slice ref_list_contents = { 0 };
-	struct slice new_table_path = { 0 };
+	struct slice temp_tab_file_name = SLICE_INIT;
+	struct slice new_table_name = SLICE_INIT;
+	struct slice lock_file_name = SLICE_INIT;
+	struct slice ref_list_contents = SLICE_INIT;
+	struct slice new_table_path = SLICE_INIT;
 	int err = 0;
 	bool have_lock = false;
 	int lock_file_fd = 0;
@@ -822,8 +829,8 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		goto done;
 
 	for (i = first, j = 0; i <= last; i++) {
-		struct slice subtab_file_name = { 0 };
-		struct slice subtab_lock = { 0 };
+		struct slice subtab_file_name = SLICE_INIT;
+		struct slice subtab_lock = SLICE_INIT;
 		int sublock_file_fd = -1;
 
 		slice_set_string(&subtab_file_name, st->reftable_dir);

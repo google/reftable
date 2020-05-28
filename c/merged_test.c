@@ -146,7 +146,7 @@ static void test_merged_between(void)
 
 	struct reftable_ref_record *refs[] = { r1, r2 };
 	int sizes[] = { 1, 1 };
-	struct slice bufs[2] = { 0 };
+	struct slice bufs[2] = { SLICE_INIT, SLICE_INIT };
 	struct reftable_block_source *bs = NULL;
 	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, &bs, sizes, bufs, 2);
@@ -215,7 +215,7 @@ static void test_merged(void)
 
 	struct reftable_ref_record *refs[] = { r1, r2, r3 };
 	int sizes[3] = { 3, 1, 2 };
-	struct slice bufs[3] = { 0 };
+	struct slice bufs[3] = { SLICE_INIT, SLICE_INIT, SLICE_INIT };
 	struct reftable_block_source *bs = NULL;
 
 	struct reftable_merged_table *mt =

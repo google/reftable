@@ -53,6 +53,7 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 	bw->entries = 0;
 	bw->restart_len = 0;
 	bw->last_key.len = 0;
+	bw->last_key.canary = SLICE_CANARY;
 }
 
 byte block_writer_type(struct block_writer *bw)
@@ -64,18 +65,19 @@ byte block_writer_type(struct block_writer *bw)
    success */
 int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 {
-	struct slice empty = { 0 };
+	struct slice empty = SLICE_INIT;
 	struct slice last = w->entries % w->restart_interval == 0 ? empty :
 								    w->last_key;
 	struct slice out = {
 		.buf = w->buf + w->next,
 		.len = w->block_size - w->next,
+		.canary = SLICE_CANARY,
 	};
 
 	struct slice start = out;
 
 	bool restart = false;
-	struct slice key = { 0 };
+	struct slice key = SLICE_INIT;
 	int n = 0;
 
 	reftable_record_key(rec, &key);
@@ -126,6 +128,7 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 	}
 
 	w->next += n;
+
 	slice_copy(&w->last_key, key);
 	w->entries++;
 	return 0;
@@ -145,7 +148,7 @@ int block_writer_finish(struct block_writer *w)
 
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
-		struct slice compressed = { 0 };
+		struct slice compressed = SLICE_INIT;
 		int zresult = 0;
 		uLongf src_len = w->next - block_header_skip;
 		slice_resize(&compressed, src_len);
@@ -197,7 +200,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		return REFTABLE_FORMAT_ERROR;
 
 	if (typ == BLOCK_TYPE_LOG) {
-		struct slice uncompressed = { 0 };
+		struct slice uncompressed = SLICE_INIT;
 		int block_header_skip = 4 + header_off;
 		uLongf dst_len = sz - block_header_skip; /* total size of dest
 							    buffer. */
@@ -282,12 +285,13 @@ static int restart_key_less(size_t idx, void *args)
 	struct slice in = {
 		.buf = a->r->block.data + off,
 		.len = a->r->block_len - off,
+		.canary = SLICE_CANARY,
 	};
 
 	/* the restart key is verbatim in the block, so this could avoid the
 	   alloc for decoding the key */
-	struct slice rkey = { 0 };
-	struct slice last_key = { 0 };
+	struct slice rkey = SLICE_INIT;
+	struct slice last_key = SLICE_INIT;
 	byte unused_extra;
 	int n = reftable_decode_key(&rkey, &unused_extra, last_key, in);
 	int result;
@@ -313,9 +317,10 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 	struct slice in = {
 		.buf = it->br->block.data + it->next_off,
 		.len = it->br->block_len - it->next_off,
+		.canary = SLICE_CANARY,
 	};
 	struct slice start = in;
-	struct slice key = { 0 };
+	struct slice key = SLICE_INIT;
 	byte extra = 0;
 	int n = 0;
 
@@ -340,11 +345,12 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 
 int block_reader_first_key(struct block_reader *br, struct slice *key)
 {
-	struct slice empty = { 0 };
+	struct slice empty = SLICE_INIT;
 	int off = br->header_off + 4;
 	struct slice in = {
 		.buf = br->block.data + off,
 		.len = br->block_len - off,
+		.canary = SLICE_CANARY,
 	};
 
 	byte extra = 0;
@@ -373,9 +379,11 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		.r = br,
 	};
 	struct reftable_record rec = reftable_new_record(block_reader_type(br));
-	struct slice key = { 0 };
+	struct slice key = SLICE_INIT;
 	int err = 0;
-	struct block_iter next = { 0 };
+	struct block_iter next = {
+		.last_key = SLICE_INIT,
+	};
 
 	int i = binsearch(br->restart_count, &restart_key_less, &args);
 	if (args.error) {

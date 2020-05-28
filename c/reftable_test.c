@@ -21,7 +21,7 @@ static const int update_index = 5;
 
 static void test_buffer(void)
 {
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_block_source source = { NULL };
 	struct reftable_block out = { 0 };
 	int n;
@@ -46,7 +46,7 @@ static void test_buffer(void)
 static void test_default_write_opts(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
 
@@ -157,7 +157,7 @@ static void write_table(char ***names, struct slice *buf, int N, int block_size,
 
 static void test_log_buffer_size(void)
 {
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_write_options opts = {
 		.block_size = 4096,
 	};
@@ -208,7 +208,7 @@ static void test_log_write_read(void)
 	struct reftable_iterator it = { 0 };
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
 	const struct reftable_stats *stats = NULL;
@@ -295,7 +295,7 @@ static void test_log_write_read(void)
 static void test_table_read_write_sequential(void)
 {
 	char **names;
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	int N = 50;
 	struct reftable_iterator it = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -337,7 +337,7 @@ static void test_table_read_write_sequential(void)
 static void test_table_write_small_table(void)
 {
 	char **names;
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
@@ -348,7 +348,7 @@ static void test_table_write_small_table(void)
 static void test_table_read_api(void)
 {
 	char **names;
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	int N = 50;
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -383,7 +383,7 @@ static void test_table_read_api(void)
 static void test_table_read_write_seek(bool index, int hash_id)
 {
 	char **names;
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	int N = 50;
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -391,7 +391,7 @@ static void test_table_read_write_seek(bool index, int hash_id)
 	int i = 0;
 
 	struct reftable_iterator it = { 0 };
-	struct slice pastLast = { 0 };
+	struct slice pastLast = SLICE_INIT;
 	struct reftable_ref_record ref = { 0 };
 
 	write_table(&names, &buf, N, 256, hash_id);
@@ -475,7 +475,7 @@ static void test_table_refs_for(bool indexed)
 	struct reftable_reader rd;
 	struct reftable_block_source source = { 0 };
 
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
 
@@ -571,7 +571,7 @@ static void test_table_refs_for_obj_index(void)
 static void test_table_empty(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
 	struct reftable_block_source source = { 0 };

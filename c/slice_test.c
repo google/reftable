@@ -17,8 +17,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 static void test_slice(void)
 {
-	struct slice s = { 0 };
-	struct slice t = { 0 };
+	struct slice s = SLICE_INIT;
+	struct slice t = SLICE_INIT;
 
 	slice_set_string(&s, "abc");
 	assert(0 == strcmp("abc", slice_as_string(&s)));

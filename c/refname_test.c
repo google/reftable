@@ -27,7 +27,7 @@ struct testcase {
 static void test_conflict(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = { 0 };
+	struct slice buf = SLICE_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&slice_add_void, &buf, &opts);
 	struct reftable_ref_record rec = {

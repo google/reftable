@@ -60,15 +60,17 @@ static void test_block_read_write(void)
 	const int N = ARRAY_SIZE(names);
 	const int block_size = 1024;
 	struct reftable_block block = { 0 };
-	struct block_writer bw = { 0 };
+	struct block_writer bw = {
+		.last_key = SLICE_INIT,
+	};
 	struct reftable_ref_record ref = { 0 };
 	struct reftable_record rec = { 0 };
 	int i = 0;
 	int n;
 	struct block_reader br = { 0 };
-	struct block_iter it = { 0 };
+	struct block_iter it = { .last_key = SLICE_INIT };
 	int j = 0;
-	struct slice want = { 0 };
+	struct slice want = SLICE_INIT;
 
 	block.data = reftable_calloc(block_size);
 	block.len = block_size;
@@ -115,7 +117,7 @@ static void test_block_read_write(void)
 	block_iter_close(&it);
 
 	for (i = 0; i < N; i++) {
-		struct block_iter it = { 0 };
+		struct block_iter it = { .last_key = SLICE_INIT };
 		slice_set_string(&want, names[i]);
 
 		n = block_reader_seek(&br, &it, want);

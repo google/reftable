@@ -12,8 +12,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 int pq_less(struct pq_entry a, struct pq_entry b)
 {
-	struct slice ak = { 0 };
-	struct slice bk = { 0 };
+	struct slice ak = SLICE_INIT;
+	struct slice bk = SLICE_INIT;
 	int cmp = 0;
 	reftable_record_key(&a.rec, &ak);
 	reftable_record_key(&b.rec, &bk);

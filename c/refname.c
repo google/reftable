@@ -170,7 +170,7 @@ static void slice_trim_component(struct slice *sl)
 
 int modification_validate(struct modification *mod)
 {
-	struct slice slashed = { 0 };
+	struct slice slashed = SLICE_INIT;
 	int err = 0;
 	int i = 0;
 	for (; i < mod->add_len; i++) {

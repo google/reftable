@@ -356,7 +356,7 @@ static int reftable_ref_record_decode(void *rec, struct slice key,
 		slice_consume(&in, hash_size);
 		break;
 	case 3: {
-		struct slice dest = { 0 };
+		struct slice dest = SLICE_INIT;
 		int n = decode_string(&dest, in);
 		if (n < 0) {
 			return -1;
@@ -697,7 +697,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	struct reftable_log_record *r = (struct reftable_log_record *)rec;
 	uint64_t max = 0;
 	uint64_t ts = 0;
-	struct slice dest = { 0 };
+	struct slice dest = SLICE_INIT;
 	int n;
 
 	if (key.len <= 9 || key.buf[key.len - 9] != 0)
@@ -853,8 +853,10 @@ struct reftable_record reftable_new_record(byte typ)
 		return rec;
 	}
 	case BLOCK_TYPE_INDEX: {
+		struct reftable_index_record empty = { .last_key = SLICE_INIT };
 		struct reftable_index_record *r =
 			reftable_calloc(sizeof(struct reftable_index_record));
+		*r = empty;
 		reftable_record_from_index(&rec, r);
 		return rec;
 	}
