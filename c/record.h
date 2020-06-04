@@ -14,8 +14,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 /* utilities for de/encoding varints */
 
-int get_var_int(uint64_t *dest, struct slice in);
-int put_var_int(struct slice dest, uint64_t val);
+int get_var_int(uint64_t *dest, struct slice *in);
+int put_var_int(struct slice *dest, uint64_t val);
 
 /* Methods for records. */
 struct reftable_record_vtable {

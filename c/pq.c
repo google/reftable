@@ -18,7 +18,7 @@ int pq_less(struct pq_entry a, struct pq_entry b)
 	reftable_record_key(&a.rec, &ak);
 	reftable_record_key(&b.rec, &bk);
 
-	cmp = slice_cmp(ak, bk);
+	cmp = slice_cmp(&ak, &bk);
 
 	slice_release(&ak);
 	slice_release(&bk);

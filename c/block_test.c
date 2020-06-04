@@ -120,7 +120,7 @@ static void test_block_read_write(void)
 		struct block_iter it = { .last_key = SLICE_INIT };
 		slice_set_string(&want, names[i]);
 
-		n = block_reader_seek(&br, &it, want);
+		n = block_reader_seek(&br, &it, &want);
 		assert(n == 0);
 
 		n = block_iter_next(&it, &rec);
@@ -129,7 +129,7 @@ static void test_block_read_write(void)
 		assert_streq(names[i], ref.ref_name);
 
 		want.len--;
-		n = block_reader_seek(&br, &it, want);
+		n = block_reader_seek(&br, &it, &want);
 		assert(n == 0);
 
 		n = block_iter_next(&it, &rec);

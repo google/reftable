@@ -15,28 +15,28 @@ https://developers.google.com/open-source/licenses/bsd
 #include "constants.h"
 #include "reftable.h"
 
-int get_var_int(uint64_t *dest, struct slice in)
+int get_var_int(uint64_t *dest, struct slice *in)
 {
 	int ptr = 0;
 	uint64_t val;
 
-	if (in.len == 0)
+	if (in->len == 0)
 		return -1;
-	val = in.buf[ptr] & 0x7f;
+	val = in->buf[ptr] & 0x7f;
 
-	while (in.buf[ptr] & 0x80) {
+	while (in->buf[ptr] & 0x80) {
 		ptr++;
-		if (ptr > in.len) {
+		if (ptr > in->len) {
 			return -1;
 		}
-		val = (val + 1) << 7 | (uint64_t)(in.buf[ptr] & 0x7f);
+		val = (val + 1) << 7 | (uint64_t)(in->buf[ptr] & 0x7f);
 	}
 
 	*dest = val;
 	return ptr + 1;
 }
 
-int put_var_int(struct slice dest, uint64_t val)
+int put_var_int(struct slice *dest, uint64_t val)
 {
 	byte buf[10] = { 0 };
 	int i = 9;
@@ -54,9 +54,9 @@ int put_var_int(struct slice dest, uint64_t val)
 	}
 
 	n = sizeof(buf) - i - 1;
-	if (dest.len < n)
+	if (dest->len < n)
 		return -1;
-	memcpy(dest.buf, &buf[i + 1], n);
+	memcpy(dest->buf, &buf[i + 1], n);
 	return n;
 }
 
@@ -76,7 +76,7 @@ static int decode_string(struct slice *dest, struct slice in)
 {
 	int start_len = in.len;
 	uint64_t tsize = 0;
-	int n = get_var_int(&tsize, in);
+	int n = get_var_int(&tsize, &in);
 	if (n <= 0)
 		return -1;
 	slice_consume(&in, n);
@@ -95,7 +95,7 @@ static int encode_string(char *str, struct slice s)
 {
 	struct slice start = s;
 	int l = strlen(str);
-	int n = put_var_int(s, l);
+	int n = put_var_int(&s, l);
 	if (n < 0)
 		return -1;
 	slice_consume(&s, n);
@@ -111,16 +111,16 @@ int reftable_encode_key(bool *restart, struct slice dest, struct slice prev_key,
 			struct slice key, byte extra)
 {
 	struct slice start = dest;
-	int prefix_len = common_prefix_size(prev_key, key);
+	int prefix_len = common_prefix_size(&prev_key, &key);
 	uint64_t suffix_len = key.len - prefix_len;
-	int n = put_var_int(dest, (uint64_t)prefix_len);
+	int n = put_var_int(&dest, (uint64_t)prefix_len);
 	if (n < 0)
 		return -1;
 	slice_consume(&dest, n);
 
 	*restart = (prefix_len == 0);
 
-	n = put_var_int(dest, suffix_len << 3 | (uint64_t)extra);
+	n = put_var_int(&dest, suffix_len << 3 | (uint64_t)extra);
 	if (n < 0)
 		return -1;
 	slice_consume(&dest, n);
@@ -139,7 +139,7 @@ int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
 	int start_len = in.len;
 	uint64_t prefix_len = 0;
 	uint64_t suffix_len = 0;
-	int n = get_var_int(&prefix_len, in);
+	int n = get_var_int(&prefix_len, &in);
 	if (n < 0)
 		return -1;
 	slice_consume(&in, n);
@@ -147,7 +147,7 @@ int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
 	if (prefix_len > last_key.len)
 		return -1;
 
-	n = get_var_int(&suffix_len, in);
+	n = get_var_int(&suffix_len, &in);
 	if (n <= 0)
 		return -1;
 	slice_consume(&in, n);
@@ -278,7 +278,7 @@ static int reftable_ref_record_encode(const void *rec, struct slice s,
 	const struct reftable_ref_record *r =
 		(const struct reftable_ref_record *)rec;
 	struct slice start = s;
-	int n = put_var_int(s, r->update_index);
+	int n = put_var_int(&s, r->update_index);
 	assert(hash_size > 0);
 	if (n < 0)
 		return -1;
@@ -321,7 +321,7 @@ static int reftable_ref_record_decode(void *rec, struct slice key,
 	bool seen_target_value = false;
 	bool seen_target = false;
 
-	int n = get_var_int(&r->update_index, in);
+	int n = get_var_int(&r->update_index, &in);
 	if (n < 0)
 		return n;
 	assert(hash_size > 0);
@@ -457,7 +457,7 @@ static int reftable_obj_record_encode(const void *rec, struct slice s,
 	int n = 0;
 	uint64_t last = 0;
 	if (r->offset_len == 0 || r->offset_len >= 8) {
-		n = put_var_int(s, r->offset_len);
+		n = put_var_int(&s, r->offset_len);
 		if (n < 0) {
 			return -1;
 		}
@@ -465,14 +465,14 @@ static int reftable_obj_record_encode(const void *rec, struct slice s,
 	}
 	if (r->offset_len == 0)
 		return start.len - s.len;
-	n = put_var_int(s, r->offsets[0]);
+	n = put_var_int(&s, r->offsets[0]);
 	if (n < 0)
 		return -1;
 	slice_consume(&s, n);
 
 	last = r->offsets[0];
 	for (i = 1; i < r->offset_len; i++) {
-		int n = put_var_int(s, r->offsets[i] - last);
+		int n = put_var_int(&s, r->offsets[i] - last);
 		if (n < 0) {
 			return -1;
 		}
@@ -497,7 +497,7 @@ static int reftable_obj_record_decode(void *rec, struct slice key,
 	r->hash_prefix_len = key.len;
 
 	if (val_type == 0) {
-		n = get_var_int(&count, in);
+		n = get_var_int(&count, &in);
 		if (n < 0) {
 			return n;
 		}
@@ -513,7 +513,7 @@ static int reftable_obj_record_decode(void *rec, struct slice key,
 	r->offsets = reftable_malloc(count * sizeof(uint64_t));
 	r->offset_len = count;
 
-	n = get_var_int(&r->offsets[0], in);
+	n = get_var_int(&r->offsets[0], &in);
 	if (n < 0)
 		return n;
 	slice_consume(&in, n);
@@ -522,7 +522,7 @@ static int reftable_obj_record_decode(void *rec, struct slice key,
 	j = 1;
 	while (j < count) {
 		uint64_t delta = 0;
-		int n = get_var_int(&delta, in);
+		int n = get_var_int(&delta, &in);
 		if (n < 0) {
 			return n;
 		}
@@ -670,7 +670,7 @@ static int reftable_log_record_encode(const void *rec, struct slice s,
 		return -1;
 	slice_consume(&s, n);
 
-	n = put_var_int(s, r->time);
+	n = put_var_int(&s, r->time);
 	if (n < 0)
 		return -1;
 	slice_consume(&s, n);
@@ -749,7 +749,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	r->email[dest.len] = 0;
 
 	ts = 0;
-	n = get_var_int(&ts, in);
+	n = get_var_int(&ts, &in);
 	if (n < 0)
 		goto done;
 	slice_consume(&in, n);
@@ -881,7 +881,7 @@ void reftable_record_destroy(struct reftable_record *rec)
 static void reftable_index_record_key(const void *r, struct slice *dest)
 {
 	struct reftable_index_record *rec = (struct reftable_index_record *)r;
-	slice_copy(dest, rec->last_key);
+	slice_copy(dest, &rec->last_key);
 }
 
 static void reftable_index_record_copy_from(void *rec, const void *src_rec,
@@ -891,7 +891,7 @@ static void reftable_index_record_copy_from(void *rec, const void *src_rec,
 	struct reftable_index_record *src =
 		(struct reftable_index_record *)src_rec;
 
-	slice_copy(&dst->last_key, src->last_key);
+	slice_copy(&dst->last_key, &src->last_key);
 	dst->offset = src->offset;
 }
 
@@ -913,7 +913,7 @@ static int reftable_index_record_encode(const void *rec, struct slice out,
 		(const struct reftable_index_record *)rec;
 	struct slice start = out;
 
-	int n = put_var_int(out, r->offset);
+	int n = put_var_int(&out, r->offset);
 	if (n < 0)
 		return n;
 
@@ -930,9 +930,9 @@ static int reftable_index_record_decode(void *rec, struct slice key,
 	struct reftable_index_record *r = (struct reftable_index_record *)rec;
 	int n = 0;
 
-	slice_copy(&r->last_key, key);
+	slice_copy(&r->last_key, &key);
 
-	n = get_var_int(&r->offset, in);
+	n = get_var_int(&r->offset, &in);
 	if (n < 0)
 		return n;
 

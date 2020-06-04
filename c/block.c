@@ -38,7 +38,7 @@ int footer_size(int version)
 }
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
-				  struct slice key);
+				  struct slice *key);
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
@@ -93,7 +93,7 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	slice_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
-					  key) < 0)
+					  &key) < 0)
 		goto done;
 
 	slice_release(&key);
@@ -105,7 +105,7 @@ done:
 }
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
-				  struct slice key)
+				  struct slice *key)
 {
 	int rlen = w->restart_len;
 	if (rlen >= MAX_RESTARTS) {
@@ -300,7 +300,7 @@ static int restart_key_less(size_t idx, void *args)
 		return -1;
 	}
 
-	result = slice_cmp(a->key, rkey);
+	result = slice_cmp(&a->key, &rkey);
 	slice_release(&rkey);
 	return result;
 }
@@ -309,7 +309,7 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 {
 	dest->br = src->br;
 	dest->next_off = src->next_off;
-	slice_copy(&dest->last_key, src->last_key);
+	slice_copy(&dest->last_key, &src->last_key);
 }
 
 int block_iter_next(struct block_iter *it, struct reftable_record *rec)
@@ -337,7 +337,7 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 		return -1;
 	slice_consume(&in, n);
 
-	slice_copy(&it->last_key, key);
+	slice_copy(&it->last_key, &key);
 	it->next_off += start.len - in.len;
 	slice_release(&key);
 	return 0;
@@ -361,7 +361,7 @@ int block_reader_first_key(struct block_reader *br, struct slice *key)
 	return 0;
 }
 
-int block_iter_seek(struct block_iter *it, struct slice want)
+int block_iter_seek(struct block_iter *it, struct slice *want)
 {
 	return block_reader_seek(it->br, it, want);
 }
@@ -372,10 +372,10 @@ void block_iter_close(struct block_iter *it)
 }
 
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
-		      struct slice want)
+		      struct slice *want)
 {
 	struct restart_find_args args = {
-		.key = want,
+		.key = *want,
 		.r = br,
 	};
 	struct reftable_record rec = reftable_new_record(block_reader_type(br));
@@ -409,7 +409,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 			goto done;
 
 		reftable_record_key(&rec, &key);
-		if (err > 0 || slice_cmp(key, want) >= 0) {
+		if (err > 0 || slice_cmp(&key, want) >= 0) {
 			err = 0;
 			goto done;
 		}

@@ -54,12 +54,12 @@ static void test_varint_roundtrip(void)
 		struct slice out = { .buf = dest, .len = 10, .cap = 10 };
 
 		uint64_t in = inputs[i];
-		int n = put_var_int(out, in);
+		int n = put_var_int(&out, in);
 		uint64_t got = 0;
 
 		assert(n > 0);
 		out.len = n;
-		n = get_var_int(&got, out);
+		n = get_var_int(&got, &out);
 		assert(n > 0);
 
 		assert(got == in);
@@ -85,7 +85,7 @@ static void test_common_prefix(void)
 		slice_set_string(&a, cases[i].a);
 		slice_set_string(&b, cases[i].b);
 
-		assert(common_prefix_size(a, b) == cases[i].want);
+		assert(common_prefix_size(&a, &b) == cases[i].want);
 
 		slice_release(&a);
 		slice_release(&b);
@@ -277,7 +277,7 @@ static void test_key_roundtrip(void)
 
 	m = reftable_decode_key(&roundtrip, &rt_extra, last_key, dest);
 	assert(n == m);
-	assert(slice_equal(key, roundtrip));
+	assert(slice_equal(&key, &roundtrip));
 	assert(rt_extra == extra);
 
 	slice_release(&last_key);
@@ -361,7 +361,7 @@ static void test_reftable_index_record_roundtrip(void)
 	reftable_record_key(&rec, &key);
 	test_copy(&rec);
 
-	assert(0 == slice_cmp(key, in.last_key));
+	assert(0 == slice_cmp(&key, &in.last_key));
 	slice_resize(&dest, 1024);
 	n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 	assert(n > 0);

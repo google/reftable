@@ -60,12 +60,12 @@ void slice_addstr(struct slice *d, const char *s)
 	memcpy(d->buf + l1, s, l2);
 }
 
-void slice_addbuf(struct slice *s, struct slice a)
+void slice_addbuf(struct slice *s, struct slice *a)
 {
 	int end = s->len;
 	assert(s->canary == SLICE_CANARY);
-	slice_resize(s, s->len + a.len);
-	memcpy(s->buf + end, a.buf, a.len);
+	slice_resize(s, s->len + a->len);
+	memcpy(s->buf + end, a->buf, a->len);
 }
 
 void slice_consume(struct slice *s, int n)
@@ -91,12 +91,12 @@ void slice_release(struct slice *s)
 	reftable_free(slice_detach(s));
 }
 
-void slice_copy(struct slice *dest, struct slice src)
+void slice_copy(struct slice *dest, struct slice *src)
 {
 	assert(dest->canary == SLICE_CANARY);
-	assert(src.canary == SLICE_CANARY);
-	slice_resize(dest, src.len);
-	memcpy(dest->buf, src.buf, src.len);
+	assert(src->canary == SLICE_CANARY);
+	slice_resize(dest, src->len);
+	memcpy(dest->buf, src->buf, src->len);
 }
 
 /* return the underlying data as char*. len is left unchanged, but
@@ -114,36 +114,36 @@ const char *slice_as_string(struct slice *s)
 }
 
 /* return a newly malloced string for this slice */
-char *slice_to_string(struct slice in)
+char *slice_to_string(struct slice *in)
 {
 	struct slice s = SLICE_INIT;
-	assert(in.canary == SLICE_CANARY);
-	slice_resize(&s, in.len + 1);
-	s.buf[in.len] = 0;
-	memcpy(s.buf, in.buf, in.len);
+	assert(in->canary == SLICE_CANARY);
+	slice_resize(&s, in->len + 1);
+	s.buf[in->len] = 0;
+	memcpy(s.buf, in->buf, in->len);
 	return (char *)slice_detach(&s);
 }
 
-bool slice_equal(struct slice a, struct slice b)
+bool slice_equal(struct slice *a, struct slice *b)
 {
-	assert(a.canary == SLICE_CANARY);
-	assert(b.canary == SLICE_CANARY);
-	if (a.len != b.len)
+	assert(a->canary == SLICE_CANARY);
+	assert(b->canary == SLICE_CANARY);
+	if (a->len != b->len)
 		return 0;
-	return memcmp(a.buf, b.buf, a.len) == 0;
+	return memcmp(a->buf, b->buf, a->len) == 0;
 }
 
-int slice_cmp(struct slice a, struct slice b)
+int slice_cmp(const struct slice *a, const struct slice *b)
 {
-	int min = a.len < b.len ? a.len : b.len;
-	int res = memcmp(a.buf, b.buf, min);
-	assert(a.canary == SLICE_CANARY);
-	assert(b.canary == SLICE_CANARY);
+	int min = a->len < b->len ? a->len : b->len;
+	int res = memcmp(a->buf, b->buf, min);
+	assert(a->canary == SLICE_CANARY);
+	assert(b->canary == SLICE_CANARY);
 	if (res != 0)
 		return res;
-	if (a.len < b.len)
+	if (a->len < b->len)
 		return -1;
-	else if (a.len > b.len)
+	else if (a->len > b->len)
 		return 1;
 	else
 		return 0;
@@ -231,13 +231,13 @@ struct reftable_block_source malloc_block_source(void)
 	return malloc_block_source_instance;
 }
 
-int common_prefix_size(struct slice a, struct slice b)
+int common_prefix_size(struct slice *a, struct slice *b)
 {
 	int p = 0;
-	assert(a.canary == SLICE_CANARY);
-	assert(b.canary == SLICE_CANARY);
-	while (p < a.len && p < b.len) {
-		if (a.buf[p] != b.buf[p]) {
+	assert(a->canary == SLICE_CANARY);
+	assert(b->canary == SLICE_CANARY);
+	while (p < a->len && p < b->len) {
+		if (a->buf[p] != b->buf[p]) {
 			break;
 		}
 		p++;

@@ -25,7 +25,7 @@ static void test_slice(void)
 
 	slice_set_string(&t, "pqr");
 
-	slice_addbuf(&s, t);
+	slice_addbuf(&s, &t);
 	assert(0 == strcmp("abcpqr", slice_as_string(&s)));
 
 	slice_release(&s);

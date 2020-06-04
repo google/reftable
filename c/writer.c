@@ -154,15 +154,15 @@ struct obj_index_tree_node {
 
 static int obj_index_tree_node_compare(const void *a, const void *b)
 {
-	return slice_cmp(((const struct obj_index_tree_node *)a)->hash,
-			 ((const struct obj_index_tree_node *)b)->hash);
+	return slice_cmp(&((const struct obj_index_tree_node *)a)->hash,
+			 &((const struct obj_index_tree_node *)b)->hash);
 }
 
-static void writer_index_hash(struct reftable_writer *w, struct slice hash)
+static void writer_index_hash(struct reftable_writer *w, struct slice *hash)
 {
 	uint64_t off = w->next;
 
-	struct obj_index_tree_node want = { .hash = hash };
+	struct obj_index_tree_node want = { .hash = *hash };
 
 	struct tree_node *node = tree_search(&want, &w->obj_index_tree,
 					     &obj_index_tree_node_compare, 0);
@@ -199,10 +199,10 @@ static int writer_add_record(struct reftable_writer *w,
 	struct slice key = SLICE_INIT;
 	int err = 0;
 	reftable_record_key(rec, &key);
-	if (slice_cmp(w->last_key, key) >= 0)
+	if (slice_cmp(&w->last_key, &key) >= 0)
 		goto done;
 
-	slice_copy(&w->last_key, key);
+	slice_copy(&w->last_key, &key);
 	if (w->block_writer == NULL) {
 		writer_reinit_block_writer(w, reftable_record_type(rec));
 	}
@@ -259,7 +259,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 			.canary = SLICE_CANARY,
 		};
 
-		writer_index_hash(w, h);
+		writer_index_hash(w, &h);
 	}
 
 	if (!w->opts.skip_index_objects && ref->target_value != NULL) {
@@ -268,7 +268,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 			.len = hash_size(w->opts.hash_id),
 			.canary = SLICE_CANARY,
 		};
-		writer_index_hash(w, h);
+		writer_index_hash(w, &h);
 	}
 	return 0;
 }
@@ -400,7 +400,7 @@ static void update_common(void *void_arg, void *key)
 	struct common_prefix_arg *arg = (struct common_prefix_arg *)void_arg;
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 	if (arg->last != NULL) {
-		int n = common_prefix_size(entry->hash, *arg->last);
+		int n = common_prefix_size(&entry->hash, arg->last);
 		if (n > arg->max) {
 			arg->max = n;
 		}
@@ -620,7 +620,7 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	}
 
 	ir.offset = w->next;
-	slice_copy(&ir.last_key, w->block_writer->last_key);
+	slice_copy(&ir.last_key, &w->block_writer->last_key);
 	w->index[w->index_len] = ir;
 
 	w->index_len++;

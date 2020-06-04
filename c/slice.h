@@ -36,7 +36,7 @@ void slice_addstr(struct slice *dest, const char *src);
 void slice_release(struct slice *slice);
 
 /* Return a malloced string for `src` */
-char *slice_to_string(struct slice src);
+char *slice_to_string(struct slice *src);
 
 /* Initializes a slice. Accepts a slice with random garbage. */
 void slice_init(struct slice *slice);
@@ -45,13 +45,13 @@ void slice_init(struct slice *slice);
 const char *slice_as_string(struct slice *src);
 
 /* Compare slices */
-bool slice_equal(struct slice a, struct slice b);
+bool slice_equal(struct slice *a, struct slice *b);
 
 /* Return `buf`, clearing out `s` */
 byte *slice_detach(struct slice *s);
 
 /* Copy bytes */
-void slice_copy(struct slice *dest, struct slice src);
+void slice_copy(struct slice *dest, struct slice *src);
 
 /* Advance `buf` by `n`, and decrease length. A copy of the slice
    should be kept for deallocating the slice. */
@@ -61,20 +61,20 @@ void slice_consume(struct slice *s, int n);
 void slice_resize(struct slice *s, int l);
 
 /* Signed comparison */
-int slice_cmp(struct slice a, struct slice b);
+int slice_cmp(const struct slice *a, const struct slice *b);
 
 /* Append `data` to the `dest` slice.  */
 int slice_add(struct slice *dest, byte *data, size_t sz);
 
 /* Append `add` to `dest. */
-void slice_addbuf(struct slice *dest, struct slice add);
+void slice_addbuf(struct slice *dest, struct slice *add);
 
 /* Like slice_add, but suitable for passing to reftable_new_writer
  */
 int slice_add_void(void *b, byte *data, size_t sz);
 
 /* Find the longest shared prefix size of `a` and `b` */
-int common_prefix_size(struct slice a, struct slice b);
+int common_prefix_size(struct slice *a, struct slice *b);
 
 struct reftable_block_source;
 

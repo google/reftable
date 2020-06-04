@@ -459,7 +459,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 		if (err < 0)
 			goto done;
 
-		if (slice_cmp(got_key, want_key) > 0) {
+		if (slice_cmp(&got_key, &want_key) > 0) {
 			table_iter_block_done(&next);
 			break;
 		}
@@ -468,7 +468,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 		table_iter_copy_from(ti, &next);
 	}
 
-	err = block_iter_seek(&ti->bi, want_key);
+	err = block_iter_seek(&ti->bi, &want_key);
 	if (err < 0)
 		goto done;
 	err = 0;
@@ -512,7 +512,7 @@ static int reader_seek_indexed(struct reftable_reader *r,
 		if (err != 0)
 			goto done;
 
-		err = block_iter_seek(&next.bi, want_index.last_key);
+		err = block_iter_seek(&next.bi, &want_index.last_key);
 		if (err < 0)
 			goto done;
 
