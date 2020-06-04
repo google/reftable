@@ -126,11 +126,7 @@ char *slice_to_string(struct slice *in)
 
 bool slice_equal(struct slice *a, struct slice *b)
 {
-	assert(a->canary == SLICE_CANARY);
-	assert(b->canary == SLICE_CANARY);
-	if (a->len != b->len)
-		return 0;
-	return memcmp(a->buf, b->buf, a->len) == 0;
+	return slice_cmp(a, b) == 0;
 }
 
 int slice_cmp(const struct slice *a, const struct slice *b)
