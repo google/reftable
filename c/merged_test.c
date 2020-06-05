@@ -18,6 +18,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 static void test_pq(void)
 {
@@ -263,10 +264,10 @@ static void test_merged(void)
 
 /* XXX test refs_for(oid) */
 
-int main(int argc, char *argv[])
+int merged_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_merged_between", &test_merged_between);
 	add_test_case("test_pq", &test_pq);
 	add_test_case("test_merged", &test_merged);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

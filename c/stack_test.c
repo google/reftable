@@ -16,6 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -702,7 +703,7 @@ static void test_reftable_stack_auto_compaction(void)
 	clear_dir(dir);
 }
 
-int main(int argc, char *argv[])
+int stack_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_reftable_stack_uptodate",
 		      &test_reftable_stack_uptodate);
@@ -738,5 +739,5 @@ int main(int argc, char *argv[])
 	add_test_case("test_read_file", &test_read_file);
 	add_test_case("test_names_equal", &test_names_equal);
 	add_test_case("test_reftable_stack_add", &test_reftable_stack_add);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

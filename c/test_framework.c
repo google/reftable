@@ -37,7 +37,7 @@ struct test_case *add_test_case(const char *name, void (*testfunc)())
 	return tc;
 }
 
-void test_main(int argc, char *argv[])
+int test_main(int argc, const char *argv[])
 {
 	const char *filter = NULL;
 	if (argc > 1) {
@@ -57,6 +57,7 @@ void test_main(int argc, char *argv[])
 		reftable_free(test_cases[i]);
 	}
 	reftable_free(test_cases);
+	return 0;
 }
 
 void set_test_hash(byte *p, int i)

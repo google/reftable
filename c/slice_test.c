@@ -14,6 +14,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 static void test_slice(void)
 {
@@ -32,8 +33,8 @@ static void test_slice(void)
 	slice_release(&t);
 }
 
-int main(int argc, char *argv[])
+int slice_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_slice", &test_slice);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

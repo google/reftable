@@ -71,7 +71,9 @@ cc_library(
 cc_library(
     name = "testlib",
     srcs = ["test_framework.c"],
-    hdrs = ["test_framework.h"],
+    hdrs = ["test_framework.h",
+            "include/reftable-tests.h",
+    ],
     deps = [":reftable"],
 )
 
@@ -83,6 +85,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Drecord_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -95,6 +98,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Dreftable_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -107,6 +111,7 @@ cc_test(
         ":testlib",
     ] ,
     copts = [
+        "-Dslice_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -119,6 +124,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Dstack_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -131,6 +137,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Dtree_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -143,6 +150,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Dblock_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -155,6 +163,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Drefname_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -167,6 +176,7 @@ cc_test(
         ":testlib",
     ],
     copts = [
+        "-Dmerged_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )

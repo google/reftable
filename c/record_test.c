@@ -13,6 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "constants.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 static void test_copy(struct reftable_record *rec)
 {
@@ -379,7 +380,7 @@ static void test_reftable_index_record_roundtrip(void)
 	slice_release(&dest);
 }
 
-int main(int argc, char *argv[])
+int record_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_reftable_log_record_equal",
 		      &test_reftable_log_record_equal);
@@ -395,5 +396,5 @@ int main(int argc, char *argv[])
 	add_test_case("test_reftable_index_record_roundtrip",
 		      &test_reftable_index_record_roundtrip);
 	add_test_case("test_u24_roundtrip", &test_u24_roundtrip);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

@@ -16,6 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 #include "record.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 static const int update_index = 5;
 
@@ -604,7 +605,7 @@ static void test_table_empty(void)
 	slice_release(&buf);
 }
 
-int main(int argc, char *argv[])
+int reftable_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_default_write_opts", test_default_write_opts);
 	add_test_case("test_log_write_read", test_log_write_read);
@@ -626,5 +627,5 @@ int main(int argc, char *argv[])
 	add_test_case("test_table_read_write_refs_for_obj_index",
 		      &test_table_refs_for_obj_index);
 	add_test_case("test_table_empty", &test_table_empty);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

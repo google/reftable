@@ -17,6 +17,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 struct testcase {
 	char *add;
@@ -91,8 +92,8 @@ static void test_conflict(void)
 	slice_release(&buf);
 }
 
-int main(int argc, char *argv[])
+int refname_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_conflict", &test_conflict);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

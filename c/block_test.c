@@ -15,6 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 struct binsearch_args {
 	int key;
@@ -147,9 +148,9 @@ static void test_block_read_write(void)
 	}
 }
 
-int main(int argc, char *argv[])
+int block_test_main(int argc, const char *argv[])
 {
 	add_test_case("binsearch", &test_binsearch);
 	add_test_case("block_read_write", &test_block_read_write);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }

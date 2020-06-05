@@ -12,6 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "reftable.h"
 #include "test_framework.h"
+#include "reftable-tests.h"
 
 static int test_compare(const void *a, const void *b)
 {
@@ -54,8 +55,8 @@ static void test_tree(void)
 	tree_free(root);
 }
 
-int main(int argc, char *argv[])
+int tree_test_main(int argc, const char *argv[])
 {
 	add_test_case("test_tree", &test_tree);
-	test_main(argc, argv);
+	return test_main(argc, argv);
 }
