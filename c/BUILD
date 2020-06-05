@@ -74,6 +74,7 @@ cc_library(
     hdrs = ["test_framework.h",
             "include/reftable-tests.h",
     ],
+    copts = GIT_COPTS,
     deps = [":reftable"],
 )
 

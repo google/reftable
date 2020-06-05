@@ -16,7 +16,7 @@ struct test_case **test_cases;
 int test_case_len;
 int test_case_cap;
 
-struct test_case *new_test_case(const char *name, void (*testfunc)())
+struct test_case *new_test_case(const char *name, void (*testfunc)(void))
 {
 	struct test_case *tc = reftable_malloc(sizeof(struct test_case));
 	tc->name = name;
@@ -24,7 +24,7 @@ struct test_case *new_test_case(const char *name, void (*testfunc)())
 	return tc;
 }
 
-struct test_case *add_test_case(const char *name, void (*testfunc)())
+struct test_case *add_test_case(const char *name, void (*testfunc)(void))
 {
 	struct test_case *tc = new_test_case(name, testfunc);
 	if (test_case_len == test_case_cap) {
@@ -40,11 +40,11 @@ struct test_case *add_test_case(const char *name, void (*testfunc)())
 int test_main(int argc, const char *argv[])
 {
 	const char *filter = NULL;
+	int i = 0;
 	if (argc > 1) {
 		filter = argv[1];
 	}
 
-	int i = 0;
 	for (i = 0; i < test_case_len; i++) {
 		const char *name = test_cases[i]->name;
 		if (filter == NULL || strstr(name, filter) != NULL) {
@@ -57,6 +57,9 @@ int test_main(int argc, const char *argv[])
 		reftable_free(test_cases[i]);
 	}
 	reftable_free(test_cases);
+	test_cases = 0;
+	test_case_len = 0;
+	test_case_cap = 0;
 	return 0;
 }
 
@@ -65,17 +68,3 @@ void set_test_hash(byte *p, int i)
 	memset(p, (byte)i, hash_size(SHA1_ID));
 }
 
-void print_names(char **a)
-{
-	if (a == NULL || *a == NULL) {
-		puts("[]");
-		return;
-	}
-	puts("[");
-	char **p = a;
-	while (*p) {
-		puts(*p);
-		p++;
-	}
-	puts("]");
-}
