@@ -189,8 +189,9 @@ func testTableRoundTrip(t *testing.T, hashID HashID) {
 	}}
 
 	_, reader := constructTestTable(t, refs, logs, Config{
-		BlockSize: 512,
-		HashID:    hashID,
+		BlockSize:       512,
+		HashID:          hashID,
+		ExactLogMessage: true,
 	})
 
 	iter, err := reader.SeekRef("")

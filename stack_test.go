@@ -424,3 +424,77 @@ func TestNameCheck(t *testing.T) {
 		t.Fatalf("should have failed to add dir/file conflict")
 	}
 }
+
+func TestLogLine(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(dir+"/reftable", 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := Config{
+		ExactLogMessage: false,
+	}
+
+	st, err := NewStack(dir, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.Add(func(w *Writer) error {
+		next := st.NextUpdateIndex()
+		l := LogRecord{
+			RefName:     "branch",
+			UpdateIndex: next,
+			New:         testHash(1),
+			Old:         testHash(2),
+			Message:     "a\nb",
+		}
+
+		w.SetLimits(next, next)
+		if err := w.AddLog(&l); err != nil {
+			return err
+		}
+		return nil
+	}); err == nil {
+		t.Fatalf("should have failed adding multiline log message")
+	}
+
+	updateIndex := uint64(42)
+	if err := st.Add(func(w *Writer) error {
+		next := st.NextUpdateIndex()
+		l := LogRecord{
+			RefName:     "branch",
+			UpdateIndex: updateIndex,
+			New:         testHash(1),
+			Old:         testHash(2),
+			Message:     "message",
+		}
+
+		w.SetLimits(next, next)
+		if err := w.AddLog(&l); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("Add: %v", err)
+	}
+
+	m := st.Merged()
+	it, err := m.SeekLog("branch", updateIndex)
+	if err != nil {
+		t.Errorf("SeekLog: %v", err)
+	}
+
+	var log LogRecord
+	ok, err := it.NextLog(&log)
+	if !ok || err != nil {
+		t.Errorf("SeekLog: %v %v", ok, err)
+	}
+
+	if got, want := log.Message, "message\n"; got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}

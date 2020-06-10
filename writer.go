@@ -17,6 +17,7 @@ import (
 	"io"
 	"log"
 	"sort"
+	"strings"
 )
 
 type paddedWriter struct {
@@ -209,6 +210,14 @@ func (w *Writer) AddRef(r *RefRecord) error {
 func (w *Writer) AddLog(l *LogRecord) error {
 	if l.RefName == "" {
 		return fmt.Errorf("reftable: must specify RefName")
+	}
+
+	if !w.cfg.ExactLogMessage {
+		l.Message = strings.TrimSpace(l.Message)
+		if strings.Contains(l.Message, "\n") {
+			return fmt.Errorf("reftable: log messages must be single line.")
+		}
+		l.Message += "\n"
 	}
 
 	if w.blockWriter != nil && w.blockWriter.getType() == blockTypeRef {

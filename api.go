@@ -83,6 +83,10 @@ type Config struct {
 
 	// Allow dir/file conflicts and illegal refnames
 	SkipNameCheck bool
+
+	// If set, store reflog messages exactly. If unset, only allow
+	// a single line, and a trailing '\n' is added if it is missing.
+	ExactLogMessage bool
 }
 
 // RefRecord is a Record from the ref database.
