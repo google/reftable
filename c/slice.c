@@ -75,10 +75,11 @@ void slice_consume(struct slice *s, int n)
 	s->len -= n;
 }
 
-byte *slice_detach(struct slice *s)
+char *slice_detach(struct slice *s)
 {
-	byte *p = s->buf;
-	assert(s->canary == SLICE_CANARY);
+	char *p = NULL;
+	slice_as_string(s);
+	p = (char *)s->buf;
 	s->buf = NULL;
 	s->cap = 0;
 	s->len = 0;
@@ -87,8 +88,12 @@ byte *slice_detach(struct slice *s)
 
 void slice_release(struct slice *s)
 {
+	byte *ptr = s->buf;
 	assert(s->canary == SLICE_CANARY);
-	reftable_free(slice_detach(s));
+	s->buf = NULL;
+	s->cap = 0;
+	s->len = 0;
+	reftable_free(ptr);
 }
 
 void slice_copy(struct slice *dest, struct slice *src)
@@ -111,17 +116,6 @@ const char *slice_as_string(struct slice *s)
 	}
 	s->buf[s->len] = 0;
 	return (const char *)s->buf;
-}
-
-/* return a newly malloced string for this slice */
-char *slice_to_string(struct slice *in)
-{
-	struct slice s = SLICE_INIT;
-	assert(in->canary == SLICE_CANARY);
-	slice_resize(&s, in->len + 1);
-	s.buf[in->len] = 0;
-	memcpy(s.buf, in->buf, in->len);
-	return (char *)slice_detach(&s);
 }
 
 bool slice_equal(struct slice *a, struct slice *b)

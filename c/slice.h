@@ -13,13 +13,15 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 
 /*
-  provides bounds-checked byte ranges.
-  To use, initialize as "slice x = {0};"
+  Provides a bounds-checked, growable byte ranges. To use, initialize as "slice
+  x = SLICE_INIT;"
  */
 struct slice {
 	int len;
 	int cap;
 	byte *buf;
+
+	/* Used to enforce initialization with SLICE_INIT */
 	byte canary;
 };
 #define SLICE_CANARY 0x42
@@ -29,14 +31,10 @@ struct slice {
 	}
 extern struct slice reftable_empty_slice;
 
-void slice_set_string(struct slice *dest, const char *src);
 void slice_addstr(struct slice *dest, const char *src);
 
 /* Deallocate and clear slice */
 void slice_release(struct slice *slice);
-
-/* Return a malloced string for `src` */
-char *slice_to_string(struct slice *src);
 
 /* Initializes a slice. Accepts a slice with random garbage. */
 void slice_init(struct slice *slice);
@@ -48,7 +46,7 @@ const char *slice_as_string(struct slice *src);
 bool slice_equal(struct slice *a, struct slice *b);
 
 /* Return `buf`, clearing out `s` */
-byte *slice_detach(struct slice *s);
+char *slice_detach(struct slice *s);
 
 /* Copy bytes */
 void slice_copy(struct slice *dest, struct slice *src);
@@ -83,5 +81,7 @@ void block_source_from_slice(struct reftable_block_source *bs,
 			     struct slice *buf);
 
 struct reftable_block_source malloc_block_source(void);
+
+void slice_set_string(struct slice *dest, const char *src);
 
 #endif
