@@ -157,10 +157,9 @@ int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
 	if (in.len < suffix_len)
 		return -1;
 
-	slice_resize(key, suffix_len + prefix_len);
-	memcpy(key->buf, last_key.buf, prefix_len);
-
-	memcpy(key->buf + prefix_len, in.buf, suffix_len);
+	slice_reset(key);
+	slice_add(key, last_key.buf, prefix_len);
+	slice_add(key, in.buf, suffix_len);
 	slice_consume(&in, suffix_len);
 
 	return start_len - in.len;
@@ -410,8 +409,8 @@ static void reftable_obj_record_key(const void *r, struct slice *dest)
 {
 	const struct reftable_obj_record *rec =
 		(const struct reftable_obj_record *)r;
-	slice_resize(dest, rec->hash_prefix_len);
-	memcpy(dest->buf, rec->hash_prefix, rec->hash_prefix_len);
+	slice_reset(dest);
+	slice_add(dest, rec->hash_prefix, rec->hash_prefix_len);
 }
 
 static void reftable_obj_record_clear(void *rec)
@@ -569,11 +568,14 @@ static void reftable_log_record_key(const void *r, struct slice *dest)
 	const struct reftable_log_record *rec =
 		(const struct reftable_log_record *)r;
 	int len = strlen(rec->ref_name);
+	byte i64[8];
 	uint64_t ts = 0;
-	slice_resize(dest, len + 9);
-	memcpy(dest->buf, rec->ref_name, len + 1);
+	slice_reset(dest);
+	slice_add(dest, (byte *)rec->ref_name, len + 1);
+
 	ts = (~ts) - rec->update_index;
-	put_be64(dest->buf + 1 + len, ts);
+	put_be64(i64, ts);
+	slice_add(dest, i64, sizeof(i64));
 }
 
 static void reftable_log_record_copy_from(void *rec, const void *src_rec,

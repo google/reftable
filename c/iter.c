@@ -214,8 +214,7 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 
 	*itr = empty;
 	itr->r = r;
-	slice_resize(&itr->oid, oid_len);
-	memcpy(itr->oid.buf, oid, oid_len);
+	slice_add(&itr->oid, oid, oid_len);
 
 	itr->offsets = offsets;
 	itr->offset_len = offset_len;
