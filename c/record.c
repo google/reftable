@@ -574,7 +574,7 @@ static void reftable_log_record_key(const void *r, struct slice *dest)
 	slice_add(dest, (byte *)rec->ref_name, len + 1);
 
 	ts = (~ts) - rec->update_index;
-	put_be64(i64, ts);
+	put_be64(&i64[0], ts);
 	slice_add(dest, i64, sizeof(i64));
 }
 

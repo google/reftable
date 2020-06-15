@@ -17,6 +17,7 @@ GIT_COPTS = [
     "-Wno-empty-body",
     "-Wno-missing-field-initializers",
     "-Wno-sign-compare",
+    "-Werror=strict-aliasing",
     "-Wno-unused-parameter",
 ]
 
