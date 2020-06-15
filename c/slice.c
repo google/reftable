@@ -20,7 +20,16 @@ void slice_init(struct slice *s)
 	*s = empty;
 }
 
-void slice_resize(struct slice *s, int l)
+void slice_grow(struct slice *s, size_t extra)
+{
+	size_t newcap = s->len + extra;
+	if (newcap > s->cap) {
+		s->buf = reftable_realloc(s->buf, newcap);
+		s->cap = newcap;
+	}
+}
+
+static void slice_resize(struct slice *s, int l)
 {
 	assert(s->canary == SLICE_CANARY);
 	if (s->cap < l) {
@@ -31,6 +40,12 @@ void slice_resize(struct slice *s, int l)
 		s->cap = c;
 		s->buf = reftable_realloc(s->buf, s->cap);
 	}
+	s->len = l;
+}
+
+void slice_setlen(struct slice *s, size_t l)
+{
+	assert(s->cap >= l);
 	s->len = l;
 }
 

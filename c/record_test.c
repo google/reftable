@@ -143,7 +143,8 @@ static void test_reftable_ref_record_roundtrip(void)
 		assert(reftable_record_val_type(&rec) == i);
 
 		reftable_record_key(&rec, &key);
-		slice_resize(&dest, 1024);
+		slice_grow(&dest, 1024);
+		slice_setlen(&dest, 1024);
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
 
@@ -227,7 +228,8 @@ static void test_reftable_log_record_roundtrip(void)
 
 		reftable_record_key(&rec, &key);
 
-		slice_resize(&dest, 1024);
+		slice_grow(&dest, 1024);
+		slice_setlen(&dest, 1024);
 
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n >= 0);
@@ -266,7 +268,8 @@ static void test_key_roundtrip(void)
 	int n, m;
 	byte rt_extra;
 
-	slice_resize(&dest, 1024);
+	slice_grow(&dest, 1024);
+	slice_setlen(&dest, 1024);
 	slice_addstr(&last_key, "refs/heads/master");
 	slice_addstr(&key, "refs/tags/bla");
 	extra = 6;
@@ -319,7 +322,8 @@ static void test_reftable_obj_record_roundtrip(void)
 		reftable_record_from_obj(&rec, &in);
 		test_copy(&rec);
 		reftable_record_key(&rec, &key);
-		slice_resize(&dest, 1024);
+		slice_grow(&dest, 1024);
+		slice_setlen(&dest, 1024);
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
 		extra = reftable_record_val_type(&rec);
@@ -361,7 +365,8 @@ static void test_reftable_index_record_roundtrip(void)
 	test_copy(&rec);
 
 	assert(0 == slice_cmp(&key, &in.last_key));
-	slice_resize(&dest, 1024);
+	slice_grow(&dest, 1024);
+	slice_setlen(&dest, 1024);
 	n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 	assert(n > 0);
 

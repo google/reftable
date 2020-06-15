@@ -48,12 +48,11 @@ const char *slice_as_string(struct slice *src);
 /* Return `buf`, clearing out `s` */
 char *slice_detach(struct slice *s);
 
-/* Advance `buf` by `n`, and decrease length. A copy of the slice
-   should be kept for deallocating the slice. */
-void slice_consume(struct slice *s, int n);
+/* Set length of the slace to `l`, but don't reallocated. */
+void slice_setlen(struct slice *s, size_t l);
 
-/* Set length of the slice to `l` */
-void slice_resize(struct slice *s, int l);
+/* Ensure `l` bytes beyond current length are available */
+void slice_grow(struct slice *s, size_t l);
 
 /* Signed comparison */
 int slice_cmp(const struct slice *a, const struct slice *b);
@@ -78,5 +77,9 @@ void block_source_from_slice(struct reftable_block_source *bs,
 			     struct slice *buf);
 
 struct reftable_block_source malloc_block_source(void);
+
+/* Advance `buf` by `n`, and decrease length. A copy of the slice
+   should be kept for deallocating the slice. */
+void slice_consume(struct slice *s, int n);
 
 #endif
