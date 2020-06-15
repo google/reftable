@@ -9,9 +9,10 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef COMPAT_H
 #define COMPAT_H
 
-#include <stdint.h>
+#ifndef REFTABLE_IN_GITCORE
 
 /* functions that git-core provides, for standalone compilation */
+#include <stdint.h>
 
 uint64_t get_be64(uint8_t *in);
 void put_be64(void *out, uint64_t i);
@@ -41,4 +42,5 @@ char *xstrdup(const char *s);
 
 void sleep_millisec(int millisecs);
 
+#endif
 #endif
