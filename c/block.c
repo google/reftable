@@ -149,31 +149,34 @@ int block_writer_finish(struct block_writer *w)
 
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
-		struct slice compressed = SLICE_INIT;
+		byte *compressed = NULL;
 		int zresult = 0;
 		uLongf src_len = w->next - block_header_skip;
-		slice_resize(&compressed, src_len);
+		size_t dest_cap = src_len;
 
+		compressed = reftable_malloc(dest_cap);
 		while (1) {
-			uLongf dest_len = compressed.len;
+			uLongf out_dest_len = dest_cap;
 
-			zresult = compress2(compressed.buf, &dest_len,
+			zresult = compress2(compressed, &out_dest_len,
 					    w->buf + block_header_skip, src_len,
 					    9);
 			if (zresult == Z_BUF_ERROR) {
-				slice_resize(&compressed, 2 * compressed.len);
+				dest_cap *= 2;
+				compressed =
+					reftable_realloc(compressed, dest_cap);
 				continue;
 			}
 
 			if (Z_OK != zresult) {
-				slice_release(&compressed);
+				reftable_free(compressed);
 				return REFTABLE_ZLIB_ERROR;
 			}
 
-			memcpy(w->buf + block_header_skip, compressed.buf,
-			       dest_len);
-			w->next = dest_len + block_header_skip;
-			slice_release(&compressed);
+			memcpy(w->buf + block_header_skip, compressed,
+			       out_dest_len);
+			w->next = out_dest_len + block_header_skip;
+			reftable_free(compressed);
 			break;
 		}
 	}
@@ -201,25 +204,23 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		return REFTABLE_FORMAT_ERROR;
 
 	if (typ == BLOCK_TYPE_LOG) {
-		struct slice uncompressed = SLICE_INIT;
 		int block_header_skip = 4 + header_off;
 		uLongf dst_len = sz - block_header_skip; /* total size of dest
 							    buffer. */
 		uLongf src_len = block->len - block_header_skip;
-
 		/* Log blocks specify the *uncompressed* size in their header.
 		 */
-		slice_resize(&uncompressed, sz);
+		byte *uncompressed = reftable_malloc(sz);
 
 		/* Copy over the block header verbatim. It's not compressed. */
-		memcpy(uncompressed.buf, block->data, block_header_skip);
+		memcpy(uncompressed, block->data, block_header_skip);
 
 		/* Uncompress */
 		if (Z_OK != uncompress_return_consumed(
-				    uncompressed.buf + block_header_skip,
-				    &dst_len, block->data + block_header_skip,
+				    uncompressed + block_header_skip, &dst_len,
+				    block->data + block_header_skip,
 				    &src_len)) {
-			slice_release(&uncompressed);
+			reftable_free(uncompressed);
 			return REFTABLE_ZLIB_ERROR;
 		}
 
@@ -228,7 +229,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 
 		/* We're done with the input data. */
 		reftable_block_done(block);
-		block->data = uncompressed.buf;
+		block->data = uncompressed;
 		block->len = sz;
 		block->source = malloc_block_source();
 		full_block_size = src_len + block_header_skip;
