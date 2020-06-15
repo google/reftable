@@ -70,12 +70,16 @@ cc_library(
 
 cc_library(
     name = "testlib",
-    srcs = ["test_framework.c"],
+    srcs = [
+        "test_framework.c",
+        "dump.c",
+    ],
     hdrs = ["test_framework.h",
             "include/reftable-tests.h",
     ],
     copts = GIT_COPTS,
     deps = [":reftable"],
+    visibility = ["//visibility:public"]
 )
 
 cc_test(
