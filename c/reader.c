@@ -713,8 +713,8 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 
 	filter = reftable_malloc(sizeof(struct filtering_ref_iterator));
 	*filter = empty;
-	slice_resize(&filter->oid, oid_len);
-	memcpy(filter->oid.buf, oid, oid_len);
+
+	slice_add(&filter->oid, oid, oid_len);
 	reftable_table_from_reader(&filter->tab, r);
 	filter->double_check = false;
 	iterator_from_table_iter(&filter->it, ti);

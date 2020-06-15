@@ -83,9 +83,8 @@ static int decode_string(struct slice *dest, struct slice in)
 	if (in.len < tsize)
 		return -1;
 
-	slice_resize(dest, tsize + 1);
-	dest->buf[tsize] = 0;
-	memcpy(dest->buf, in.buf, tsize);
+	slice_reset(dest);
+	slice_add(dest, in.buf, tsize);
 	slice_consume(&in, tsize);
 
 	return start_len - in.len;
