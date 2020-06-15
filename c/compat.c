@@ -12,6 +12,10 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 #include "basics.h"
 
+#ifndef REFTABLE_IN_GITCORE
+
+#include <dirent.h>
+
 void put_be32(uint8_t *out, uint32_t i)
 {
 	out[0] = (uint8_t)((i >> 24) & 0xff);
@@ -62,3 +66,29 @@ void sleep_millisec(int millisecs)
 {
 	usleep(millisecs * 1000);
 }
+
+void reftable_clear_dir(const char *dirname)
+{
+	DIR *dir = opendir(dirname);
+	struct dirent *ent = NULL;
+	assert(dir);
+	while ((ent = readdir(dir)) != NULL) {
+		unlinkat(dirfd(dir), ent->d_name, 0);
+	}
+	closedir(dir);
+	rmdir(dirname);
+}
+
+#else
+
+#include "../dir.h"
+
+void reftable_clear_dir(const char *dirname)
+{
+	struct strbuf path = STRBUF_INIT;
+	strbuf_addstr(&path, dirname);
+	remove_dir_recursively(&path, 0);
+	strbuf_release(&path);
+}
+
+#endif

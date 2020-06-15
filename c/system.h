@@ -10,6 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 #define SYSTEM_H
 
 #if REFTABLE_IN_GITCORE
+#define REFTABLE_IN_GITCORE
 
 #include "git-compat-util.h"
 #include "cache.h"
@@ -35,6 +36,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 #endif /* REFTABLE_IN_GITCORE */
 
+void reftable_clear_dir(const char *dirname);
+
 #define SHA1_ID 0x73686131
 #define SHA256_ID 0x73323536
 #define SHA1_SIZE 20
@@ -44,8 +47,6 @@ typedef uint8_t byte;
 typedef int bool;
 
 /* This is uncompress2, which is only available in zlib as of 2017.
- *
- * TODO: in git-core, this should fallback to uncompress2 if it is available.
  */
 int uncompress_return_consumed(Bytef *dest, uLongf *destLen,
 			       const Bytef *source, uLong *sourceLen);
