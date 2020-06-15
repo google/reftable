@@ -107,11 +107,6 @@ const char *slice_as_string(struct slice *s)
 	return (const char *)s->buf;
 }
 
-bool slice_equal(struct slice *a, struct slice *b)
-{
-	return slice_cmp(a, b) == 0;
-}
-
 int slice_cmp(const struct slice *a, const struct slice *b)
 {
 	int min = a->len < b->len ? a->len : b->len;

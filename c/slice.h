@@ -45,9 +45,6 @@ void slice_init(struct slice *slice);
 /* Ensure that `buf` is \0 terminated. */
 const char *slice_as_string(struct slice *src);
 
-/* Compare slices */
-bool slice_equal(struct slice *a, struct slice *b);
-
 /* Return `buf`, clearing out `s` */
 char *slice_detach(struct slice *s);
 

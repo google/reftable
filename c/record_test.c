@@ -276,7 +276,7 @@ static void test_key_roundtrip(void)
 
 	m = reftable_decode_key(&roundtrip, &rt_extra, last_key, dest);
 	assert(n == m);
-	assert(slice_equal(&key, &roundtrip));
+	assert(0 == slice_cmp(&key, &roundtrip));
 	assert(rt_extra == extra);
 
 	slice_release(&last_key);
