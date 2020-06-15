@@ -16,8 +16,10 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include <dirent.h>
 
-void put_be32(uint8_t *out, uint32_t i)
+void put_be32(void *p, uint32_t i)
 {
+	byte *out = (byte *)p;
+
 	out[0] = (uint8_t)((i >> 24) & 0xff);
 	out[1] = (uint8_t)((i >> 16) & 0xff);
 	out[2] = (uint8_t)((i >> 8) & 0xff);
@@ -30,8 +32,9 @@ uint32_t get_be32(uint8_t *in)
 	       (uint32_t)(in[2]) << 8 | (uint32_t)(in[3]);
 }
 
-void put_be64(uint8_t *out, uint64_t v)
+void put_be64(void *p, uint64_t v)
 {
+	byte *out = (byte *)p;
 	int i = sizeof(uint64_t);
 	while (i--) {
 		out[i] = (uint8_t)(v & 0xff);

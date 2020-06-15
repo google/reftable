@@ -14,9 +14,9 @@ https://developers.google.com/open-source/licenses/bsd
 /* functions that git-core provides, for standalone compilation */
 
 uint64_t get_be64(uint8_t *in);
-void put_be64(uint8_t *out, uint64_t i);
+void put_be64(void *out, uint64_t i);
 
-void put_be32(uint8_t *out, uint32_t i);
+void put_be32(void *out, uint32_t i);
 uint32_t get_be32(uint8_t *in);
 
 uint16_t get_be16(uint8_t *in);
