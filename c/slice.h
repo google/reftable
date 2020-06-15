@@ -59,7 +59,7 @@ void slice_resize(struct slice *s, int l);
 int slice_cmp(const struct slice *a, const struct slice *b);
 
 /* Append `data` to the `dest` slice.  */
-int slice_add(struct slice *dest, byte *data, size_t sz);
+int slice_add(struct slice *dest, const byte *data, size_t sz);
 
 /* Append `add` to `dest. */
 void slice_addbuf(struct slice *dest, struct slice *add);

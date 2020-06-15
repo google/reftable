@@ -115,7 +115,7 @@ int slice_cmp(const struct slice *a, const struct slice *b)
 		return 0;
 }
 
-int slice_add(struct slice *b, byte *data, size_t sz)
+int slice_add(struct slice *b, const byte *data, size_t sz)
 {
 	assert(b->canary == SLICE_CANARY);
 	if (b->len + sz > b->cap) {
