@@ -21,11 +21,10 @@ static void test_slice(void)
 	struct slice s = SLICE_INIT;
 	struct slice t = SLICE_INIT;
 
-	slice_set_string(&s, "abc");
+	slice_addstr(&s, "abc");
 	assert(0 == strcmp("abc", slice_as_string(&s)));
 
-	slice_set_string(&t, "pqr");
-
+	slice_addstr(&t, "pqr");
 	slice_addbuf(&s, &t);
 	assert(0 == strcmp("abcpqr", slice_as_string(&s)));
 

@@ -36,6 +36,9 @@ void slice_addstr(struct slice *dest, const char *src);
 /* Deallocate and clear slice */
 void slice_release(struct slice *slice);
 
+/* Set slice to 0 length, but retain buffer. */
+void slice_reset(struct slice *slice);
+
 /* Initializes a slice. Accepts a slice with random garbage. */
 void slice_init(struct slice *slice);
 
@@ -81,7 +84,5 @@ void block_source_from_slice(struct reftable_block_source *bs,
 			     struct slice *buf);
 
 struct reftable_block_source malloc_block_source(void);
-
-void slice_set_string(struct slice *dest, const char *src);
 
 #endif

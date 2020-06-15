@@ -83,9 +83,8 @@ static void test_common_prefix(void)
 	for (i = 0; i < ARRAY_SIZE(cases); i++) {
 		struct slice a = SLICE_INIT;
 		struct slice b = SLICE_INIT;
-		slice_set_string(&a, cases[i].a);
-		slice_set_string(&b, cases[i].b);
-
+		slice_addstr(&a, cases[i].a);
+		slice_addstr(&b, cases[i].b);
 		assert(common_prefix_size(&a, &b) == cases[i].want);
 
 		slice_release(&a);
@@ -268,9 +267,8 @@ static void test_key_roundtrip(void)
 	byte rt_extra;
 
 	slice_resize(&dest, 1024);
-	slice_set_string(&last_key, "refs/heads/master");
-	slice_set_string(&key, "refs/tags/bla");
-
+	slice_addstr(&last_key, "refs/heads/master");
+	slice_addstr(&key, "refs/tags/bla");
 	extra = 6;
 	n = reftable_encode_key(&restart, dest, last_key, key, extra);
 	assert(!restart);
@@ -357,7 +355,7 @@ static void test_reftable_index_record_roundtrip(void)
 	int n, m;
 	byte extra;
 
-	slice_set_string(&in.last_key, "refs/heads/master");
+	slice_addstr(&in.last_key, "refs/heads/master");
 	reftable_record_from_index(&rec, &in);
 	reftable_record_key(&rec, &key);
 	test_copy(&rec);

@@ -171,7 +171,8 @@ static void reftable_ref_record_key(const void *r, struct slice *dest)
 {
 	const struct reftable_ref_record *rec =
 		(const struct reftable_ref_record *)r;
-	slice_set_string(dest, rec->ref_name);
+	slice_reset(dest);
+	slice_addstr(dest, rec->ref_name);
 }
 
 static void reftable_ref_record_copy_from(void *rec, const void *src_rec,

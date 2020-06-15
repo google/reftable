@@ -303,8 +303,7 @@ int reftable_writer_add_log(struct reftable_writer *w,
 	}
 
 	if (!w->opts.exact_log_message && log->message != NULL) {
-		slice_set_string(&cleaned_message, log->message);
-
+		slice_addstr(&cleaned_message, log->message);
 		while (cleaned_message.len &&
 		       cleaned_message.buf[cleaned_message.len - 1] == '\n')
 			cleaned_message.len--;

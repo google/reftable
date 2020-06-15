@@ -14,22 +14,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 struct slice reftable_empty_slice = SLICE_INIT;
 
-void slice_set_string(struct slice *s, const char *str)
-{
-	int l;
-	if (str == NULL) {
-		s->len = 0;
-		return;
-	}
-	assert(s->canary == SLICE_CANARY);
-
-	l = strlen(str);
-	l++; /* \0 */
-	slice_resize(s, l);
-	memcpy(s->buf, str, l);
-	s->len = l - 1;
-}
-
 void slice_init(struct slice *s)
 {
 	struct slice empty = SLICE_INIT;
@@ -48,6 +32,11 @@ void slice_resize(struct slice *s, int l)
 		s->buf = reftable_realloc(s->buf, s->cap);
 	}
 	s->len = l;
+}
+
+void slice_reset(struct slice *s)
+{
+	slice_resize(s, 0);
 }
 
 void slice_addstr(struct slice *d, const char *s)

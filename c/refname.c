@@ -177,7 +177,8 @@ int modification_validate(struct modification *mod)
 		err = validate_ref_name(mod->add[i]);
 		if (err)
 			goto done;
-		slice_set_string(&slashed, mod->add[i]);
+		slice_reset(&slashed);
+		slice_addstr(&slashed, mod->add[i]);
 		slice_addstr(&slashed, "/");
 
 		err = modification_has_ref_with_prefix(
@@ -189,7 +190,8 @@ int modification_validate(struct modification *mod)
 		if (err < 0)
 			goto done;
 
-		slice_set_string(&slashed, mod->add[i]);
+		slice_reset(&slashed);
+		slice_addstr(&slashed, mod->add[i]);
 		while (slashed.len) {
 			slice_trim_component(&slashed);
 			err = modification_has_ref(mod,

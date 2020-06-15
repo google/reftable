@@ -119,7 +119,8 @@ static void test_block_read_write(void)
 
 	for (i = 0; i < N; i++) {
 		struct block_iter it = { .last_key = SLICE_INIT };
-		slice_set_string(&want, names[i]);
+		slice_reset(&want);
+		slice_addstr(&want, names[i]);
 
 		n = block_reader_seek(&br, &it, &want);
 		assert(n == 0);
