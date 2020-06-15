@@ -255,21 +255,15 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 		return err;
 
 	if (!w->opts.skip_index_objects && ref->value != NULL) {
-		struct slice h = {
-			.buf = ref->value,
-			.len = hash_size(w->opts.hash_id),
-			.canary = SLICE_CANARY,
-		};
-
+		struct slice h = SLICE_INIT;
+		slice_add(&h, ref->value, hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
+		slice_release(&h);
 	}
 
 	if (!w->opts.skip_index_objects && ref->target_value != NULL) {
-		struct slice h = {
-			.buf = ref->target_value,
-			.len = hash_size(w->opts.hash_id),
-			.canary = SLICE_CANARY,
-		};
+		struct slice h = SLICE_INIT;
+		slice_add(&h, ref->target_value, hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
 	}
 	return 0;
