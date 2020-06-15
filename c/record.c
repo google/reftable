@@ -740,7 +740,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	memcpy(r->name, dest.buf, dest.len);
 	r->name[dest.len] = 0;
 
-	slice_resize(&dest, 0);
+	slice_reset(&dest);
 	n = decode_string(&dest, in);
 	if (n < 0)
 		goto done;
@@ -762,7 +762,7 @@ static int reftable_log_record_decode(void *rec, struct slice key,
 	r->tz_offset = get_be16(in.buf);
 	slice_consume(&in, 2);
 
-	slice_resize(&dest, 0);
+	slice_reset(&dest);
 	n = decode_string(&dest, in);
 	if (n < 0)
 		goto done;

@@ -269,7 +269,7 @@ static uint32_t block_reader_restart_offset(struct block_reader *br, int i)
 void block_reader_start(struct block_reader *br, struct block_iter *it)
 {
 	it->br = br;
-	slice_resize(&it->last_key, 0);
+	slice_reset(&it->last_key);
 	it->next_off = br->header_off + 4;
 }
 

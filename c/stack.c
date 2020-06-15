@@ -542,7 +542,7 @@ int reftable_addition_add(struct reftable_addition *add,
 	int err = 0;
 	int tab_fd = 0;
 
-	slice_resize(&next_name, 0);
+	slice_reset(&next_name);
 	format_name(&next_name, add->next_update_index, add->next_update_index);
 
 	slice_addstr(&temp_tab_file_name, add->stack->reftable_dir);
