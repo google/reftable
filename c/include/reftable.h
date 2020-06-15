@@ -101,6 +101,8 @@ enum reftable_error {
 	   - on writing a record with NULL ref_name.
 	   - on writing a reftable_ref_record outside the table limits
 	   - on writing a ref or log record before the stack's next_update_index
+	   - on writing a log record with multiline message with
+	   exact_log_message unset
 	   - on reading a reftable_ref_record from log iterator, or vice versa.
 	*/
 	REFTABLE_API_ERROR = -6,
@@ -155,6 +157,11 @@ struct reftable_write_options {
 	/* boolean: do not check ref names for validity or dir/file conflicts.
 	 */
 	int skip_name_check;
+
+	/* boolean: copy log messages exactly. If unset, check that the message
+	 *   is a single line, and add '\n' if missing.
+	 */
+	int exact_log_message;
 };
 
 /* reftable_block_stats holds statistics for a single block type */

@@ -310,7 +310,9 @@ static void test_reftable_stack_add(void)
 {
 	int i = 0;
 	int err = 0;
-	struct reftable_write_options cfg = { 0 };
+	struct reftable_write_options cfg = {
+		.exact_log_message = true,
+	};
 	struct reftable_stack *st = NULL;
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 	struct reftable_ref_record refs[2] = { { 0 } };
@@ -377,6 +379,61 @@ static void test_reftable_stack_add(void)
 		reftable_ref_record_clear(&refs[i]);
 		reftable_log_record_clear(&logs[i]);
 	}
+	clear_dir(dir);
+}
+
+static void test_reftable_stack_log_normalize(void)
+{
+	int err = 0;
+	struct reftable_write_options cfg = {
+		0,
+	};
+	struct reftable_stack *st = NULL;
+	char dir[256] = "/tmp/stack_test.XXXXXX";
+
+	byte h1[SHA1_SIZE] = { 0x01 }, h2[SHA1_SIZE] = { 0x02 };
+
+	struct reftable_log_record input = {
+		.ref_name = "branch",
+		.update_index = 1,
+		.new_hash = h1,
+		.old_hash = h2,
+	};
+	struct reftable_log_record dest = {
+		.update_index = 0,
+	};
+	struct write_log_arg arg = {
+		.log = &input,
+		.update_index = 1,
+	};
+
+	assert(mkdtemp(dir));
+	err = reftable_new_stack(&st, dir, cfg);
+	assert_err(err);
+
+	input.message = "one\ntwo";
+	err = reftable_stack_add(st, &write_test_log, &arg);
+	assert(err == REFTABLE_API_ERROR);
+
+	input.message = "one";
+	err = reftable_stack_add(st, &write_test_log, &arg);
+	assert_err(err);
+
+	err = reftable_stack_read_log(st, input.ref_name, &dest);
+	assert_err(err);
+	assert(0 == strcmp(dest.message, "one\n"));
+
+	input.message = "two\n";
+	arg.update_index = 2;
+	err = reftable_stack_add(st, &write_test_log, &arg);
+	assert_err(err);
+	err = reftable_stack_read_log(st, input.ref_name, &dest);
+	assert_err(err);
+	assert(0 == strcmp(dest.message, "two\n"));
+
+	/* cleanup */
+	reftable_stack_destroy(st);
+	reftable_log_record_clear(&dest);
 	clear_dir(dir);
 }
 
@@ -718,6 +775,8 @@ int stack_test_main(int argc, const char *argv[])
 		      &test_reftable_stack_update_index_check);
 	add_test_case("test_reftable_stack_lock_failure",
 		      &test_reftable_stack_lock_failure);
+	add_test_case("test_reftable_stack_log_normalize",
+		      &test_reftable_stack_log_normalize);
 	add_test_case("test_reftable_stack_tombstone",
 		      &test_reftable_stack_tombstone);
 	add_test_case("test_reftable_stack_add_one",

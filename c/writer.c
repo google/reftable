@@ -289,6 +289,8 @@ int reftable_writer_add_log(struct reftable_writer *w,
 			    struct reftable_log_record *log)
 {
 	struct reftable_record rec = { 0 };
+	char *input_log_message = log->message;
+	struct slice cleaned_message = SLICE_INIT;
 	int err;
 	if (log->ref_name == NULL)
 		return REFTABLE_API_ERROR;
@@ -300,11 +302,30 @@ int reftable_writer_add_log(struct reftable_writer *w,
 			return err;
 	}
 
+	if (!w->opts.exact_log_message && log->message != NULL) {
+		slice_set_string(&cleaned_message, log->message);
+
+		while (cleaned_message.len &&
+		       cleaned_message.buf[cleaned_message.len - 1] == '\n')
+			cleaned_message.len--;
+		if (strchr(slice_as_string(&cleaned_message), '\n')) {
+			// multiple lines not allowed.
+			err = REFTABLE_API_ERROR;
+			goto done;
+		}
+		slice_addstr(&cleaned_message, "\n");
+		log->message = (char *)slice_as_string(&cleaned_message);
+	}
+
 	w->next -= w->pending_padding;
 	w->pending_padding = 0;
 
 	reftable_record_from_log(&rec, log);
 	err = writer_add_record(w, &rec);
+
+done:
+	log->message = input_log_message;
+	slice_release(&cleaned_message);
 	return err;
 }
 
