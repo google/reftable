@@ -172,7 +172,8 @@ static void writer_index_hash(struct reftable_writer *w, struct slice *hash)
 		key = reftable_malloc(sizeof(struct obj_index_tree_node));
 		*key = empty;
 
-		slice_copy(&key->hash, hash);
+		slice_reset(&key->hash);
+		slice_addbuf(&key->hash, hash);
 		tree_search((void *)key, &w->obj_index_tree,
 			    &obj_index_tree_node_compare, 1);
 	} else {
@@ -202,7 +203,8 @@ static int writer_add_record(struct reftable_writer *w,
 	if (slice_cmp(&w->last_key, &key) >= 0)
 		goto done;
 
-	slice_copy(&w->last_key, &key);
+	slice_reset(&w->last_key);
+	slice_addbuf(&w->last_key, &key);
 	if (w->block_writer == NULL) {
 		writer_reinit_block_writer(w, reftable_record_type(rec));
 	}
@@ -640,7 +642,8 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	}
 
 	ir.offset = w->next;
-	slice_copy(&ir.last_key, &w->block_writer->last_key);
+	slice_reset(&ir.last_key);
+	slice_addbuf(&ir.last_key, &w->block_writer->last_key);
 	w->index[w->index_len] = ir;
 
 	w->index_len++;

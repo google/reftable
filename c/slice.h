@@ -48,9 +48,6 @@ const char *slice_as_string(struct slice *src);
 /* Return `buf`, clearing out `s` */
 char *slice_detach(struct slice *s);
 
-/* Copy bytes */
-void slice_copy(struct slice *dest, struct slice *src);
-
 /* Advance `buf` by `n`, and decrease length. A copy of the slice
    should be kept for deallocating the slice. */
 void slice_consume(struct slice *s, int n);

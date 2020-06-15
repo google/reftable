@@ -882,7 +882,8 @@ void reftable_record_destroy(struct reftable_record *rec)
 static void reftable_index_record_key(const void *r, struct slice *dest)
 {
 	struct reftable_index_record *rec = (struct reftable_index_record *)r;
-	slice_copy(dest, &rec->last_key);
+	slice_reset(dest);
+	slice_addbuf(dest, &rec->last_key);
 }
 
 static void reftable_index_record_copy_from(void *rec, const void *src_rec,
@@ -892,7 +893,8 @@ static void reftable_index_record_copy_from(void *rec, const void *src_rec,
 	struct reftable_index_record *src =
 		(struct reftable_index_record *)src_rec;
 
-	slice_copy(&dst->last_key, &src->last_key);
+	slice_reset(&dst->last_key);
+	slice_addbuf(&dst->last_key, &src->last_key);
 	dst->offset = src->offset;
 }
 
@@ -931,7 +933,8 @@ static int reftable_index_record_decode(void *rec, struct slice key,
 	struct reftable_index_record *r = (struct reftable_index_record *)rec;
 	int n = 0;
 
-	slice_copy(&r->last_key, &key);
+	slice_reset(&r->last_key);
+	slice_addbuf(&r->last_key, &key);
 
 	n = get_var_int(&r->offset, &in);
 	if (n < 0)

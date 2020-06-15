@@ -85,14 +85,6 @@ void slice_release(struct slice *s)
 	reftable_free(ptr);
 }
 
-void slice_copy(struct slice *dest, struct slice *src)
-{
-	assert(dest->canary == SLICE_CANARY);
-	assert(src->canary == SLICE_CANARY);
-	slice_resize(dest, src->len);
-	memcpy(dest->buf, src->buf, src->len);
-}
-
 /* return the underlying data as char*. len is left unchanged, but
    a \0 is added at the end. */
 const char *slice_as_string(struct slice *s)

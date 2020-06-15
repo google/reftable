@@ -844,7 +844,8 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		slice_addstr(&subtab_file_name,
 			     reader_name(st->merged->stack[i]));
 
-		slice_copy(&subtab_lock, &subtab_file_name);
+		slice_reset(&subtab_lock);
+		slice_addbuf(&subtab_lock, &subtab_file_name);
 		slice_addstr(&subtab_lock, ".lock");
 
 		sublock_file_fd = open(slice_as_string(&subtab_lock),

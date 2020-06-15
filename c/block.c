@@ -129,7 +129,8 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 
 	w->next += n;
 
-	slice_copy(&w->last_key, key);
+	slice_reset(&w->last_key);
+	slice_addbuf(&w->last_key, key);
 	w->entries++;
 	return 0;
 }
@@ -309,7 +310,8 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 {
 	dest->br = src->br;
 	dest->next_off = src->next_off;
-	slice_copy(&dest->last_key, &src->last_key);
+	slice_reset(&dest->last_key);
+	slice_addbuf(&dest->last_key, &src->last_key);
 }
 
 int block_iter_next(struct block_iter *it, struct reftable_record *rec)
@@ -337,7 +339,8 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 		return -1;
 	slice_consume(&in, n);
 
-	slice_copy(&it->last_key, &key);
+	slice_reset(&it->last_key);
+	slice_addbuf(&it->last_key, &key);
 	it->next_off += start.len - in.len;
 	slice_release(&key);
 	return 0;
