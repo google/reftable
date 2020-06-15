@@ -162,7 +162,7 @@ static void slice_trim_component(struct slice *sl)
 {
 	while (sl->len > 0) {
 		bool is_slash = (sl->buf[sl->len - 1] == '/');
-		sl->len--;
+		slice_setlen(sl, sl->len - 1);
 		if (is_slash)
 			break;
 	}

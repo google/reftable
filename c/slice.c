@@ -22,7 +22,7 @@ void slice_init(struct slice *s)
 
 void slice_grow(struct slice *s, size_t extra)
 {
-	size_t newcap = s->len + extra;
+	size_t newcap = s->len + extra + 1;
 	if (newcap > s->cap) {
 		s->buf = reftable_realloc(s->buf, newcap);
 		s->cap = newcap;
@@ -31,22 +31,25 @@ void slice_grow(struct slice *s, size_t extra)
 
 static void slice_resize(struct slice *s, int l)
 {
+	int zl = l + 1; /* one byte for 0 termination. */
 	assert(s->canary == SLICE_CANARY);
-	if (s->cap < l) {
+	if (s->cap < zl) {
 		int c = s->cap * 2;
-		if (c < l) {
-			c = l;
+		if (c < zl) {
+			c = zl;
 		}
 		s->cap = c;
 		s->buf = reftable_realloc(s->buf, s->cap);
 	}
 	s->len = l;
+	s->buf[l] = 0;
 }
 
 void slice_setlen(struct slice *s, size_t l)
 {
-	assert(s->cap >= l);
+	assert(s->cap >= l + 1);
 	s->len = l;
+	s->buf[l] = 0;
 }
 
 void slice_reset(struct slice *s)
@@ -104,13 +107,6 @@ void slice_release(struct slice *s)
    a \0 is added at the end. */
 const char *slice_as_string(struct slice *s)
 {
-	assert(s->canary == SLICE_CANARY);
-	if (s->cap == s->len) {
-		int l = s->len;
-		slice_resize(s, l + 1);
-		s->len = l;
-	}
-	s->buf[s->len] = 0;
 	return (const char *)s->buf;
 }
 
@@ -133,17 +129,10 @@ int slice_cmp(const struct slice *a, const struct slice *b)
 int slice_add(struct slice *b, const byte *data, size_t sz)
 {
 	assert(b->canary == SLICE_CANARY);
-	if (b->len + sz > b->cap) {
-		int newcap = 2 * b->cap + 1;
-		if (newcap < b->len + sz) {
-			newcap = (b->len + sz);
-		}
-		b->buf = reftable_realloc(b->buf, newcap);
-		b->cap = newcap;
-	}
-
+	slice_grow(b, sz);
 	memcpy(b->buf + b->len, data, sz);
 	b->len += sz;
+	b->buf[b->len] = 0;
 	return sz;
 }
 

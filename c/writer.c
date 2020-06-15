@@ -308,7 +308,7 @@ int reftable_writer_add_log(struct reftable_writer *w,
 		slice_addstr(&cleaned_message, log->message);
 		while (cleaned_message.len &&
 		       cleaned_message.buf[cleaned_message.len - 1] == '\n')
-			cleaned_message.len--;
+			slice_setlen(&cleaned_message, cleaned_message.len - 1);
 		if (strchr(slice_as_string(&cleaned_message), '\n')) {
 			// multiple lines not allowed.
 			err = REFTABLE_API_ERROR;
