@@ -9,6 +9,8 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef COMPAT_H
 #define COMPAT_H
 
+#include "system.h"
+
 #ifndef REFTABLE_IN_GITCORE
 
 /* functions that git-core provides, for standalone compilation */
