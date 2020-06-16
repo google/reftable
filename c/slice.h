@@ -78,8 +78,4 @@ void block_source_from_slice(struct reftable_block_source *bs,
 
 struct reftable_block_source malloc_block_source(void);
 
-/* Advance `buf` by `n`, and decrease length. A copy of the slice
-   should be kept for deallocating the slice. */
-void slice_consume(struct slice *s, int n);
-
 #endif

@@ -52,8 +52,10 @@ static void test_varint_roundtrip(void)
 	for (i = 0; i < ARRAY_SIZE(inputs); i++) {
 		byte dest[10];
 
-		struct slice out = { .buf = dest, .len = 10, .cap = 10 };
-
+		struct string_view out = {
+			.buf = dest,
+			.len = sizeof(dest),
+		};
 		uint64_t in = inputs[i];
 		int n = put_var_int(&out, in);
 		uint64_t got = 0;
@@ -115,7 +117,12 @@ static void test_reftable_ref_record_roundtrip(void)
 		struct reftable_record rec_out = { 0 };
 		struct slice key = SLICE_INIT;
 		struct reftable_record rec = { 0 };
-		struct slice dest = SLICE_INIT;
+		byte buffer[1024] = { 0 };
+		struct string_view dest = {
+			.buf = buffer,
+			.len = sizeof(buffer),
+		};
+
 		int n, m;
 
 		switch (i) {
@@ -143,8 +150,6 @@ static void test_reftable_ref_record_roundtrip(void)
 		assert(reftable_record_val_type(&rec) == i);
 
 		reftable_record_key(&rec, &key);
-		slice_grow(&dest, 1024);
-		slice_setlen(&dest, 1024);
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
 
@@ -160,7 +165,6 @@ static void test_reftable_ref_record_roundtrip(void)
 		reftable_record_clear(&rec_out);
 
 		slice_release(&key);
-		slice_release(&dest);
 		reftable_ref_record_clear(&in);
 	}
 }
@@ -209,7 +213,11 @@ static void test_reftable_log_record_roundtrip(void)
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
 		struct reftable_record rec = { 0 };
 		struct slice key = SLICE_INIT;
-		struct slice dest = SLICE_INIT;
+		byte buffer[1024] = { 0 };
+		struct string_view dest = {
+			.buf = buffer,
+			.len = sizeof(buffer),
+		};
 		/* populate out, to check for leaks. */
 		struct reftable_log_record out = {
 			.ref_name = xstrdup("old name"),
@@ -228,9 +236,6 @@ static void test_reftable_log_record_roundtrip(void)
 
 		reftable_record_key(&rec, &key);
 
-		slice_grow(&dest, 1024);
-		slice_setlen(&dest, 1024);
-
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n >= 0);
 		reftable_record_from_log(&rec_out, &out);
@@ -242,7 +247,6 @@ static void test_reftable_log_record_roundtrip(void)
 		assert(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
 		reftable_log_record_clear(&in[i]);
 		slice_release(&key);
-		slice_release(&dest);
 		reftable_record_clear(&rec_out);
 	}
 }
@@ -259,7 +263,11 @@ static void test_u24_roundtrip(void)
 
 static void test_key_roundtrip(void)
 {
-	struct slice dest = SLICE_INIT;
+	byte buffer[1024] = { 0 };
+	struct string_view dest = {
+		.buf = buffer,
+		.len = sizeof(buffer),
+	};
 	struct slice last_key = SLICE_INIT;
 	struct slice key = SLICE_INIT;
 	struct slice roundtrip = SLICE_INIT;
@@ -268,8 +276,6 @@ static void test_key_roundtrip(void)
 	int n, m;
 	byte rt_extra;
 
-	slice_grow(&dest, 1024);
-	slice_setlen(&dest, 1024);
 	slice_addstr(&last_key, "refs/heads/master");
 	slice_addstr(&key, "refs/tags/bla");
 	extra = 6;
@@ -284,7 +290,6 @@ static void test_key_roundtrip(void)
 
 	slice_release(&last_key);
 	slice_release(&key);
-	slice_release(&dest);
 	slice_release(&roundtrip);
 }
 
@@ -311,7 +316,11 @@ static void test_reftable_obj_record_roundtrip(void)
 	int i = 0;
 	for (i = 0; i < ARRAY_SIZE(recs); i++) {
 		struct reftable_obj_record in = recs[i];
-		struct slice dest = SLICE_INIT;
+		byte buffer[1024] = { 0 };
+		struct string_view dest = {
+			.buf = buffer,
+			.len = sizeof(buffer),
+		};
 		struct reftable_record rec = { 0 };
 		struct slice key = SLICE_INIT;
 		struct reftable_obj_record out = { 0 };
@@ -322,8 +331,6 @@ static void test_reftable_obj_record_roundtrip(void)
 		reftable_record_from_obj(&rec, &in);
 		test_copy(&rec);
 		reftable_record_key(&rec, &key);
-		slice_grow(&dest, 1024);
-		slice_setlen(&dest, 1024);
 		n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 		assert(n > 0);
 		extra = reftable_record_val_type(&rec);
@@ -340,7 +347,6 @@ static void test_reftable_obj_record_roundtrip(void)
 		assert(0 == memcmp(in.offsets, out.offsets,
 				   sizeof(uint64_t) * in.offset_len));
 		slice_release(&key);
-		slice_release(&dest);
 		reftable_record_clear(&rec_out);
 	}
 }
@@ -351,7 +357,11 @@ static void test_reftable_index_record_roundtrip(void)
 		.offset = 42,
 		.last_key = SLICE_INIT,
 	};
-	struct slice dest = SLICE_INIT;
+	byte buffer[1024] = { 0 };
+	struct string_view dest = {
+		.buf = buffer,
+		.len = sizeof(buffer),
+	};
 	struct slice key = SLICE_INIT;
 	struct reftable_record rec = { 0 };
 	struct reftable_index_record out = { .last_key = SLICE_INIT };
@@ -365,8 +375,6 @@ static void test_reftable_index_record_roundtrip(void)
 	test_copy(&rec);
 
 	assert(0 == slice_cmp(&key, &in.last_key));
-	slice_grow(&dest, 1024);
-	slice_setlen(&dest, 1024);
 	n = reftable_record_encode(&rec, dest, SHA1_SIZE);
 	assert(n > 0);
 
@@ -380,7 +388,6 @@ static void test_reftable_index_record_roundtrip(void)
 	reftable_record_clear(&out_rec);
 	slice_release(&key);
 	slice_release(&in.last_key);
-	slice_release(&dest);
 }
 
 int record_test_main(int argc, const char *argv[])

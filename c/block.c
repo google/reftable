@@ -68,13 +68,12 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	struct slice empty = SLICE_INIT;
 	struct slice last = w->entries % w->restart_interval == 0 ? empty :
 								    w->last_key;
-	struct slice out = {
+	struct string_view out = {
 		.buf = w->buf + w->next,
 		.len = w->block_size - w->next,
-		.canary = SLICE_CANARY,
 	};
 
-	struct slice start = out;
+	struct string_view start = out;
 
 	bool restart = false;
 	struct slice key = SLICE_INIT;
@@ -85,12 +84,12 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 				reftable_record_val_type(rec));
 	if (n < 0)
 		goto done;
-	slice_consume(&out, n);
+	string_view_consume(&out, n);
 
 	n = reftable_record_encode(rec, out, w->hash_size);
 	if (n < 0)
 		goto done;
-	slice_consume(&out, n);
+	string_view_consume(&out, n);
 
 	if (block_writer_register_restart(w, start.len - out.len, restart,
 					  &key) < 0)
@@ -284,10 +283,9 @@ static int restart_key_less(size_t idx, void *args)
 {
 	struct restart_find_args *a = (struct restart_find_args *)args;
 	uint32_t off = block_reader_restart_offset(a->r, idx);
-	struct slice in = {
+	struct string_view in = {
 		.buf = a->r->block.data + off,
 		.len = a->r->block_len - off,
-		.canary = SLICE_CANARY,
 	};
 
 	/* the restart key is verbatim in the block, so this could avoid the
@@ -317,12 +315,11 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 
 int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 {
-	struct slice in = {
+	struct string_view in = {
 		.buf = it->br->block.data + it->next_off,
 		.len = it->br->block_len - it->next_off,
-		.canary = SLICE_CANARY,
 	};
-	struct slice start = in;
+	struct string_view start = in;
 	struct slice key = SLICE_INIT;
 	byte extra = 0;
 	int n = 0;
@@ -334,11 +331,11 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 	if (n < 0)
 		return -1;
 
-	slice_consume(&in, n);
+	string_view_consume(&in, n);
 	n = reftable_record_decode(rec, key, extra, in, it->br->hash_size);
 	if (n < 0)
 		return -1;
-	slice_consume(&in, n);
+	string_view_consume(&in, n);
 
 	slice_reset(&it->last_key);
 	slice_addbuf(&it->last_key, &key);
@@ -351,10 +348,9 @@ int block_reader_first_key(struct block_reader *br, struct slice *key)
 {
 	struct slice empty = SLICE_INIT;
 	int off = br->header_off + 4;
-	struct slice in = {
+	struct string_view in = {
 		.buf = br->block.data + off,
 		.len = br->block_len - off,
-		.canary = SLICE_CANARY,
 	};
 
 	byte extra = 0;

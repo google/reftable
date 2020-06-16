@@ -75,13 +75,6 @@ void slice_addbuf(struct slice *s, struct slice *a)
 	memcpy(s->buf + end, a->buf, a->len);
 }
 
-void slice_consume(struct slice *s, int n)
-{
-	assert(s->canary == SLICE_CANARY);
-	s->buf += n;
-	s->len -= n;
-}
-
 char *slice_detach(struct slice *s)
 {
 	char *p = NULL;

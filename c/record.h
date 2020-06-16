@@ -12,10 +12,22 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "slice.h"
 
+/*
+  A substring of existing string data. This structure takes no responsibility
+  for the lifetime of the data it points to.
+*/
+struct string_view {
+	byte *buf;
+	int len;
+};
+
+/* Advance `s.buf` by `n`, and decrease length. */
+void string_view_consume(struct string_view *s, int n);
+
 /* utilities for de/encoding varints */
 
-int get_var_int(uint64_t *dest, struct slice *in);
-int put_var_int(struct slice *dest, uint64_t val);
+int get_var_int(uint64_t *dest, struct string_view *in);
+int put_var_int(struct string_view *dest, uint64_t val);
 
 /* Methods for records. */
 struct reftable_record_vtable {
@@ -32,11 +44,11 @@ struct reftable_record_vtable {
 	byte (*val_type)(const void *rec);
 
 	/* encodes rec into dest, returning how much space was used. */
-	int (*encode)(const void *rec, struct slice dest, int hash_size);
+	int (*encode)(const void *rec, struct string_view dest, int hash_size);
 
 	/* decode data from `src` into the record. */
-	int (*decode)(void *rec, struct slice key, byte extra, struct slice src,
-		      int hash_size);
+	int (*decode)(void *rec, struct slice key, byte extra,
+		      struct string_view src, int hash_size);
 
 	/* deallocate and null the record. */
 	void (*clear)(void *rec);
@@ -61,12 +73,12 @@ extern struct reftable_record_vtable reftable_ref_record_vtable;
 
 /* Encode `key` into `dest`. Sets `restart` to indicate a restart. Returns
    number of bytes written. */
-int reftable_encode_key(bool *restart, struct slice dest, struct slice prev_key,
-			struct slice key, byte extra);
+int reftable_encode_key(bool *restart, struct string_view dest,
+			struct slice prev_key, struct slice key, byte extra);
 
 /* Decode into `key` and `extra` from `in` */
 int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
-			struct slice in);
+			struct string_view in);
 
 /* reftable_index_record are used internally to speed up lookups. */
 struct reftable_index_record {
@@ -90,10 +102,10 @@ byte reftable_record_type(struct reftable_record *rec);
 void reftable_record_copy_from(struct reftable_record *rec,
 			       struct reftable_record *src, int hash_size);
 byte reftable_record_val_type(struct reftable_record *rec);
-int reftable_record_encode(struct reftable_record *rec, struct slice dest,
+int reftable_record_encode(struct reftable_record *rec, struct string_view dest,
 			   int hash_size);
 int reftable_record_decode(struct reftable_record *rec, struct slice key,
-			   byte extra, struct slice src, int hash_size);
+			   byte extra, struct string_view src, int hash_size);
 bool reftable_record_is_deletion(struct reftable_record *rec);
 
 /* zeroes out the embedded record */
