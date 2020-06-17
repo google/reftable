@@ -107,7 +107,7 @@ static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
 }
 
 struct reftable_writer *
-reftable_new_writer(int (*writer_func)(void *, byte *, size_t),
+reftable_new_writer(int (*writer_func)(void *, const void *, size_t),
 		    void *writer_arg, struct reftable_write_options *opts)
 {
 	struct reftable_writer *wp =
@@ -256,7 +256,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 
 	if (!w->opts.skip_index_objects && ref->value != NULL) {
 		struct slice h = SLICE_INIT;
-		slice_add(&h, ref->value, hash_size(w->opts.hash_id));
+		slice_add(&h, (char *)ref->value, hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
 		slice_release(&h);
 	}
@@ -434,7 +434,7 @@ static void write_object_record(void *void_arg, void *key)
 	struct write_record_arg *arg = (struct write_record_arg *)void_arg;
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 	struct reftable_obj_record obj_rec = {
-		.hash_prefix = entry->hash.buf,
+		.hash_prefix = (byte *)entry->hash.buf,
 		.hash_prefix_len = arg->w->stats.object_id_len,
 		.offsets = entry->offsets,
 		.offset_len = entry->offset_len,

@@ -19,7 +19,7 @@ https://developers.google.com/open-source/licenses/bsd
 struct slice {
 	int len;
 	int cap;
-	byte *buf;
+	char *buf;
 
 	/* Used to enforce initialization with SLICE_INIT */
 	byte canary;
@@ -58,14 +58,14 @@ void slice_grow(struct slice *s, size_t l);
 int slice_cmp(const struct slice *a, const struct slice *b);
 
 /* Append `data` to the `dest` slice.  */
-int slice_add(struct slice *dest, const byte *data, size_t sz);
+int slice_add(struct slice *dest, const void *data, size_t sz);
 
 /* Append `add` to `dest. */
 void slice_addbuf(struct slice *dest, struct slice *add);
 
 /* Like slice_add, but suitable for passing to reftable_new_writer
  */
-int slice_add_void(void *b, byte *data, size_t sz);
+int slice_add_void(void *b, const void *data, size_t sz);
 
 /* Find the longest shared prefix size of `a` and `b` */
 int common_prefix_size(struct slice *a, struct slice *b);

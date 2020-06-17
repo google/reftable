@@ -42,12 +42,13 @@ void put_be64(void *p, uint64_t v)
 	}
 }
 
-uint64_t get_be64(uint8_t *out)
+uint64_t get_be64(void *out)
 {
+	uint8_t *bytes = (uint8_t *)out;
 	uint64_t v = 0;
 	int i = 0;
 	for (i = 0; i < sizeof(uint64_t); i++) {
-		v = (v << 8) | (uint8_t)(out[i] & 0xff);
+		v = (v << 8) | (uint8_t)(bytes[i] & 0xff);
 	}
 	return v;
 }

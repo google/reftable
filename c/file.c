@@ -88,7 +88,7 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 	return 0;
 }
 
-int reftable_fd_write(void *arg, byte *data, size_t sz)
+int reftable_fd_write(void *arg, const void *data, size_t sz)
 {
 	int *fdp = (int *)arg;
 	return write(*fdp, data, sz);

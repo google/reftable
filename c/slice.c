@@ -88,12 +88,11 @@ char *slice_detach(struct slice *s)
 
 void slice_release(struct slice *s)
 {
-	byte *ptr = s->buf;
 	assert(s->canary == SLICE_CANARY);
-	s->buf = NULL;
 	s->cap = 0;
 	s->len = 0;
-	reftable_free(ptr);
+	reftable_free(s->buf);
+	s->buf = NULL;
 }
 
 /* return the underlying data as char*. len is left unchanged, but
@@ -119,7 +118,7 @@ int slice_cmp(const struct slice *a, const struct slice *b)
 		return 0;
 }
 
-int slice_add(struct slice *b, const byte *data, size_t sz)
+int slice_add(struct slice *b, const void *data, size_t sz)
 {
 	assert(b->canary == SLICE_CANARY);
 	slice_grow(b, sz);
@@ -129,7 +128,7 @@ int slice_add(struct slice *b, const byte *data, size_t sz)
 	return sz;
 }
 
-int slice_add_void(void *b, byte *data, size_t sz)
+int slice_add_void(void *b, const void *data, size_t sz)
 {
 	return slice_add((struct slice *)b, data, sz);
 }
