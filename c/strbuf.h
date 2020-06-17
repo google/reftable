@@ -9,6 +9,8 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef SLICE_H
 #define SLICE_H
 
+#ifdef REFTABLE_STANDALONE
+
 #include "basics.h"
 #include "reftable.h"
 
@@ -59,6 +61,12 @@ int strbuf_add(struct strbuf *dest, const void *data, size_t sz);
 
 /* Append `add` to `dest. */
 void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
+
+#else
+
+#include "../strbuf.h"
+
+#endif
 
 /* Like strbuf_add, but suitable for passing to reftable_new_writer
  */

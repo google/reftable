@@ -12,6 +12,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable.h"
 
+#ifdef REFTABLE_STANDALONE
+
 struct strbuf reftable_empty_strbuf = STRBUF_INIT;
 
 void strbuf_init(struct strbuf *s)
@@ -120,14 +122,16 @@ int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 	return sz;
 }
 
-int strbuf_add_void(void *b, const void *data, size_t sz)
-{
-	return strbuf_add((struct strbuf *)b, data, sz);
-}
-
 static uint64_t strbuf_size(void *b)
 {
 	return ((struct strbuf *)b)->len;
+}
+
+#endif
+
+int strbuf_add_void(void *b, const void *data, size_t sz)
+{
+	return strbuf_add((struct strbuf *)b, data, sz);
 }
 
 static void strbuf_return_block(void *b, struct reftable_block *dest)
