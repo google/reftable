@@ -44,8 +44,8 @@ void strbuf_reset(struct strbuf *strbuf);
 /* Initializes a strbuf. Accepts a strbuf with random garbage. */
 void strbuf_init(struct strbuf *strbuf);
 
-/* Return `buf`, clearing out `s` */
-char *strbuf_detach(struct strbuf *s);
+/* Return `buf`, clearing out `s`. Optionally return len (not cap) in `sz`.  */
+char *strbuf_detach(struct strbuf *s, size_t *sz);
 
 /* Set length of the slace to `l`, but don't reallocated. */
 void strbuf_setlen(struct strbuf *s, size_t l);

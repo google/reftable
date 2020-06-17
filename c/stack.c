@@ -33,7 +33,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	strbuf_addstr(&list_file_name, dir);
 	strbuf_addstr(&list_file_name, "/tables.list");
 
-	p->list_file = strbuf_detach(&list_file_name);
+	p->list_file = strbuf_detach(&list_file_name, NULL);
 	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 
@@ -602,7 +602,7 @@ int reftable_addition_add(struct reftable_addition *add,
 	add->new_tables = reftable_realloc(add->new_tables,
 					   sizeof(*add->new_tables) *
 						   (add->new_tables_len + 1));
-	add->new_tables[add->new_tables_len] = strbuf_detach(&next_name);
+	add->new_tables[add->new_tables_len] = strbuf_detach(&next_name, NULL);
 	add->new_tables_len++;
 done:
 	if (tab_fd > 0) {

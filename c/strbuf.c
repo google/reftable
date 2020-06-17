@@ -77,10 +77,12 @@ void strbuf_addbuf(struct strbuf *s, struct strbuf *a)
 	memcpy(s->buf + end, a->buf, a->len);
 }
 
-char *strbuf_detach(struct strbuf *s)
+char *strbuf_detach(struct strbuf *s, size_t *sz)
 {
 	char *p = NULL;
 	p = (char *)s->buf;
+	if (sz)
+		*sz = s->len;
 	s->buf = NULL;
 	s->cap = 0;
 	s->len = 0;
