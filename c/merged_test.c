@@ -70,7 +70,7 @@ static void test_pq(void)
 	merged_iter_pqueue_clear(&pq);
 }
 
-static void write_test_table(struct slice *buf,
+static void write_test_table(struct strbuf *buf,
 			     struct reftable_ref_record refs[], int n)
 {
 	int min = 0xffffffff;
@@ -92,7 +92,7 @@ static void write_test_table(struct slice *buf,
 		}
 	}
 
-	w = reftable_new_writer(&slice_add_void, buf, &opts);
+	w = reftable_new_writer(&strbuf_add_void, buf, &opts);
 	reftable_writer_set_limits(w, min, max);
 
 	for (i = 0; i < n; i++) {
@@ -111,7 +111,7 @@ static void write_test_table(struct slice *buf,
 static struct reftable_merged_table *
 merged_table_from_records(struct reftable_ref_record **refs,
 			  struct reftable_block_source **source, int *sizes,
-			  struct slice *buf, int n)
+			  struct strbuf *buf, int n)
 {
 	struct reftable_reader **rd = reftable_calloc(n * sizeof(*rd));
 	int i = 0;
@@ -120,7 +120,7 @@ merged_table_from_records(struct reftable_ref_record **refs,
 	*source = reftable_calloc(n * sizeof(**source));
 	for (i = 0; i < n; i++) {
 		write_test_table(&buf[i], refs[i], sizes[i]);
-		block_source_from_slice(&(*source)[i], &buf[i]);
+		block_source_from_strbuf(&(*source)[i], &buf[i]);
 
 		err = reftable_new_reader(&rd[i], &(*source)[i], "name");
 		assert_err(err);
@@ -147,7 +147,7 @@ static void test_merged_between(void)
 
 	struct reftable_ref_record *refs[] = { r1, r2 };
 	int sizes[] = { 1, 1 };
-	struct slice bufs[2] = { SLICE_INIT, SLICE_INIT };
+	struct strbuf bufs[2] = { STRBUF_INIT, STRBUF_INIT };
 	struct reftable_block_source *bs = NULL;
 	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, &bs, sizes, bufs, 2);
@@ -166,7 +166,7 @@ static void test_merged_between(void)
 	reftable_merged_table_close(mt);
 	reftable_merged_table_free(mt);
 	for (i = 0; i < ARRAY_SIZE(bufs); i++) {
-		slice_release(&bufs[i]);
+		strbuf_release(&bufs[i]);
 	}
 	reftable_free(bs);
 }
@@ -216,7 +216,7 @@ static void test_merged(void)
 
 	struct reftable_ref_record *refs[] = { r1, r2, r3 };
 	int sizes[3] = { 3, 1, 2 };
-	struct slice bufs[3] = { SLICE_INIT, SLICE_INIT, SLICE_INIT };
+	struct strbuf bufs[3] = { STRBUF_INIT, STRBUF_INIT, STRBUF_INIT };
 	struct reftable_block_source *bs = NULL;
 
 	struct reftable_merged_table *mt =
@@ -255,7 +255,7 @@ static void test_merged(void)
 	reftable_free(out);
 
 	for (i = 0; i < 3; i++) {
-		slice_release(&bufs[i]);
+		strbuf_release(&bufs[i]);
 	}
 	reftable_merged_table_close(mt);
 	reftable_merged_table_free(mt);

@@ -11,7 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "block.h"
 #include "record.h"
-#include "slice.h"
+#include "strbuf.h"
 
 struct reftable_iterator_vtable {
 	int (*next)(void *iter_arg, struct reftable_record *rec);
@@ -29,12 +29,12 @@ bool iterator_is_null(struct reftable_iterator *it);
 struct filtering_ref_iterator {
 	bool double_check;
 	struct reftable_table tab;
-	struct slice oid;
+	struct strbuf oid;
 	struct reftable_iterator it;
 };
 #define FILTERING_REF_ITERATOR_INIT \
 	{                           \
-		.oid = SLICE_INIT   \
+		.oid = STRBUF_INIT  \
 	}
 
 void iterator_from_filtering_ref_iterator(struct reftable_iterator *,
@@ -45,7 +45,7 @@ void iterator_from_filtering_ref_iterator(struct reftable_iterator *,
  */
 struct indexed_table_ref_iter {
 	struct reftable_reader *r;
-	struct slice oid;
+	struct strbuf oid;
 
 	/* mutable */
 	uint64_t *offsets;
@@ -58,9 +58,9 @@ struct indexed_table_ref_iter {
 	bool finished;
 };
 
-#define INDEXED_TABLE_REF_ITER_INIT                                   \
-	{                                                             \
-		.cur = { .last_key = SLICE_INIT }, .oid = SLICE_INIT, \
+#define INDEXED_TABLE_REF_ITER_INIT                                     \
+	{                                                               \
+		.cur = { .last_key = STRBUF_INIT }, .oid = STRBUF_INIT, \
 	}
 
 void iterator_from_indexed_table_ref_iter(struct reftable_iterator *it,

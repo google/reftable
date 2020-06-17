@@ -83,7 +83,7 @@ static int merged_iter_advance_subiter(struct merged_iter *mi, size_t idx)
 static int merged_iter_next_entry(struct merged_iter *mi,
 				  struct reftable_record *rec)
 {
-	struct slice entry_key = SLICE_INIT;
+	struct strbuf entry_key = STRBUF_INIT;
 	struct pq_entry entry = { 0 };
 	int err = 0;
 
@@ -106,13 +106,13 @@ static int merged_iter_next_entry(struct merged_iter *mi,
 	reftable_record_key(&entry.rec, &entry_key);
 	while (!merged_iter_pqueue_is_empty(mi->pq)) {
 		struct pq_entry top = merged_iter_pqueue_top(mi->pq);
-		struct slice k = SLICE_INIT;
+		struct strbuf k = STRBUF_INIT;
 		int err = 0, cmp = 0;
 
 		reftable_record_key(&top.rec, &k);
 
-		cmp = slice_cmp(&k, &entry_key);
-		slice_release(&k);
+		cmp = strbuf_cmp(&k, &entry_key);
+		strbuf_release(&k);
 
 		if (cmp > 0) {
 			break;
@@ -128,7 +128,7 @@ static int merged_iter_next_entry(struct merged_iter *mi,
 
 	reftable_record_copy_from(rec, &entry.rec, hash_size(mi->hash_id));
 	reftable_record_destroy(&entry.rec);
-	slice_release(&entry_key);
+	strbuf_release(&entry_key);
 	return 0;
 }
 

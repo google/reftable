@@ -6,21 +6,21 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "slice.h"
+#include "strbuf.h"
 
 #include "system.h"
 
 #include "reftable.h"
 
-struct slice reftable_empty_slice = SLICE_INIT;
+struct strbuf reftable_empty_strbuf = STRBUF_INIT;
 
-void slice_init(struct slice *s)
+void strbuf_init(struct strbuf *s)
 {
-	struct slice empty = SLICE_INIT;
+	struct strbuf empty = STRBUF_INIT;
 	*s = empty;
 }
 
-void slice_grow(struct slice *s, size_t extra)
+void strbuf_grow(struct strbuf *s, size_t extra)
 {
 	size_t newcap = s->len + extra + 1;
 	if (newcap > s->cap) {
@@ -29,10 +29,10 @@ void slice_grow(struct slice *s, size_t extra)
 	}
 }
 
-static void slice_resize(struct slice *s, int l)
+static void strbuf_resize(struct strbuf *s, int l)
 {
 	int zl = l + 1; /* one byte for 0 termination. */
-	assert(s->canary == SLICE_CANARY);
+	assert(s->canary == STRBUF_CANARY);
 	if (s->cap < zl) {
 		int c = s->cap * 2;
 		if (c < zl) {
@@ -45,37 +45,37 @@ static void slice_resize(struct slice *s, int l)
 	s->buf[l] = 0;
 }
 
-void slice_setlen(struct slice *s, size_t l)
+void strbuf_setlen(struct strbuf *s, size_t l)
 {
 	assert(s->cap >= l + 1);
 	s->len = l;
 	s->buf[l] = 0;
 }
 
-void slice_reset(struct slice *s)
+void strbuf_reset(struct strbuf *s)
 {
-	slice_resize(s, 0);
+	strbuf_resize(s, 0);
 }
 
-void slice_addstr(struct slice *d, const char *s)
+void strbuf_addstr(struct strbuf *d, const char *s)
 {
 	int l1 = d->len;
 	int l2 = strlen(s);
-	assert(d->canary == SLICE_CANARY);
+	assert(d->canary == STRBUF_CANARY);
 
-	slice_resize(d, l2 + l1);
+	strbuf_resize(d, l2 + l1);
 	memcpy(d->buf + l1, s, l2);
 }
 
-void slice_addbuf(struct slice *s, struct slice *a)
+void strbuf_addbuf(struct strbuf *s, struct strbuf *a)
 {
 	int end = s->len;
-	assert(s->canary == SLICE_CANARY);
-	slice_resize(s, s->len + a->len);
+	assert(s->canary == STRBUF_CANARY);
+	strbuf_resize(s, s->len + a->len);
 	memcpy(s->buf + end, a->buf, a->len);
 }
 
-char *slice_detach(struct slice *s)
+char *strbuf_detach(struct strbuf *s)
 {
 	char *p = NULL;
 	p = (char *)s->buf;
@@ -85,21 +85,21 @@ char *slice_detach(struct slice *s)
 	return p;
 }
 
-void slice_release(struct slice *s)
+void strbuf_release(struct strbuf *s)
 {
-	assert(s->canary == SLICE_CANARY);
+	assert(s->canary == STRBUF_CANARY);
 	s->cap = 0;
 	s->len = 0;
 	reftable_free(s->buf);
 	s->buf = NULL;
 }
 
-int slice_cmp(const struct slice *a, const struct slice *b)
+int strbuf_cmp(const struct strbuf *a, const struct strbuf *b)
 {
 	int min = a->len < b->len ? a->len : b->len;
 	int res = memcmp(a->buf, b->buf, min);
-	assert(a->canary == SLICE_CANARY);
-	assert(b->canary == SLICE_CANARY);
+	assert(a->canary == STRBUF_CANARY);
+	assert(b->canary == STRBUF_CANARY);
 	if (res != 0)
 		return res;
 	if (a->len < b->len)
@@ -110,40 +110,40 @@ int slice_cmp(const struct slice *a, const struct slice *b)
 		return 0;
 }
 
-int slice_add(struct slice *b, const void *data, size_t sz)
+int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 {
-	assert(b->canary == SLICE_CANARY);
-	slice_grow(b, sz);
+	assert(b->canary == STRBUF_CANARY);
+	strbuf_grow(b, sz);
 	memcpy(b->buf + b->len, data, sz);
 	b->len += sz;
 	b->buf[b->len] = 0;
 	return sz;
 }
 
-int slice_add_void(void *b, const void *data, size_t sz)
+int strbuf_add_void(void *b, const void *data, size_t sz)
 {
-	return slice_add((struct slice *)b, data, sz);
+	return strbuf_add((struct strbuf *)b, data, sz);
 }
 
-static uint64_t slice_size(void *b)
+static uint64_t strbuf_size(void *b)
 {
-	return ((struct slice *)b)->len;
+	return ((struct strbuf *)b)->len;
 }
 
-static void slice_return_block(void *b, struct reftable_block *dest)
+static void strbuf_return_block(void *b, struct reftable_block *dest)
 {
 	memset(dest->data, 0xff, dest->len);
 	reftable_free(dest->data);
 }
 
-static void slice_close(void *b)
+static void strbuf_close(void *b)
 {
 }
 
-static int slice_read_block(void *v, struct reftable_block *dest, uint64_t off,
-			    uint32_t size)
+static int strbuf_read_block(void *v, struct reftable_block *dest, uint64_t off,
+			     uint32_t size)
 {
-	struct slice *b = (struct slice *)v;
+	struct strbuf *b = (struct strbuf *)v;
 	assert(off + size <= b->len);
 	dest->data = reftable_calloc(size);
 	memcpy(dest->data, b->buf + off, size);
@@ -151,18 +151,18 @@ static int slice_read_block(void *v, struct reftable_block *dest, uint64_t off,
 	return size;
 }
 
-struct reftable_block_source_vtable slice_vtable = {
-	.size = &slice_size,
-	.read_block = &slice_read_block,
-	.return_block = &slice_return_block,
-	.close = &slice_close,
+struct reftable_block_source_vtable strbuf_vtable = {
+	.size = &strbuf_size,
+	.read_block = &strbuf_read_block,
+	.return_block = &strbuf_return_block,
+	.close = &strbuf_close,
 };
 
-void block_source_from_slice(struct reftable_block_source *bs,
-			     struct slice *buf)
+void block_source_from_strbuf(struct reftable_block_source *bs,
+			      struct strbuf *buf)
 {
 	assert(bs->ops == NULL);
-	bs->ops = &slice_vtable;
+	bs->ops = &strbuf_vtable;
 	bs->arg = buf;
 }
 
@@ -185,11 +185,11 @@ struct reftable_block_source malloc_block_source(void)
 	return malloc_block_source_instance;
 }
 
-int common_prefix_size(struct slice *a, struct slice *b)
+int common_prefix_size(struct strbuf *a, struct strbuf *b)
 {
 	int p = 0;
-	assert(a->canary == SLICE_CANARY);
-	assert(b->canary == SLICE_CANARY);
+	assert(a->canary == STRBUF_CANARY);
+	assert(b->canary == STRBUF_CANARY);
 	while (p < a->len && p < b->len) {
 		if (a->buf[p] != b->buf[p]) {
 			break;

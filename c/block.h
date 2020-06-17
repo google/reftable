@@ -34,7 +34,7 @@ struct block_writer {
 	uint32_t restart_len;
 	uint32_t restart_cap;
 
-	struct slice last_key;
+	struct strbuf last_key;
 	int entries;
 };
 
@@ -85,7 +85,7 @@ struct block_iter {
 	struct block_reader *br;
 
 	/* key for last entry we read. */
-	struct slice last_key;
+	struct strbuf last_key;
 };
 
 /* initializes a block reader. */
@@ -98,13 +98,13 @@ void block_reader_start(struct block_reader *br, struct block_iter *it);
 
 /* Position `it` to the `want` key in the block */
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
-		      struct slice *want);
+		      struct strbuf *want);
 
 /* Returns the block type (eg. 'r' for refs) */
 byte block_reader_type(struct block_reader *r);
 
 /* Decodes the first key in the block */
-int block_reader_first_key(struct block_reader *br, struct slice *key);
+int block_reader_first_key(struct block_reader *br, struct strbuf *key);
 
 void block_iter_copy_from(struct block_iter *dest, struct block_iter *src);
 
@@ -112,7 +112,7 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src);
 int block_iter_next(struct block_iter *it, struct reftable_record *rec);
 
 /* Seek to `want` with in the block pointed to by `it` */
-int block_iter_seek(struct block_iter *it, struct slice *want);
+int block_iter_seek(struct block_iter *it, struct strbuf *want);
 
 /* deallocate memory for `it`. The block reader and its block is left intact. */
 void block_iter_close(struct block_iter *it);

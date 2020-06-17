@@ -28,9 +28,9 @@ struct testcase {
 static void test_conflict(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 	struct reftable_ref_record rec = {
 		.ref_name = "a/b",
 		.target = "destination", /* make sure it's not a symref. */
@@ -64,7 +64,7 @@ static void test_conflict(void)
 	assert_err(err);
 	reftable_writer_free(w);
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
 
@@ -89,7 +89,7 @@ static void test_conflict(void)
 	}
 
 	reftable_reader_free(rd);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
 int refname_test_main(int argc, const char *argv[])

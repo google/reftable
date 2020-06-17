@@ -220,9 +220,9 @@ struct table_iter {
 	struct block_iter bi;
 	bool finished;
 };
-#define TABLE_ITER_INIT                         \
-	{                                       \
-		.bi = {.last_key = SLICE_INIT } \
+#define TABLE_ITER_INIT                          \
+	{                                        \
+		.bi = {.last_key = STRBUF_INIT } \
 	}
 
 static void table_iter_copy_from(struct table_iter *dest,
@@ -439,8 +439,8 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 {
 	struct reftable_record rec =
 		reftable_new_record(reftable_record_type(want));
-	struct slice want_key = SLICE_INIT;
-	struct slice got_key = SLICE_INIT;
+	struct strbuf want_key = STRBUF_INIT;
+	struct strbuf got_key = STRBUF_INIT;
 	struct table_iter next = TABLE_ITER_INIT;
 	int err = -1;
 
@@ -459,7 +459,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 		if (err < 0)
 			goto done;
 
-		if (slice_cmp(&got_key, &want_key) > 0) {
+		if (strbuf_cmp(&got_key, &want_key) > 0) {
 			table_iter_block_done(&next);
 			break;
 		}
@@ -476,8 +476,8 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 done:
 	block_iter_close(&next.bi);
 	reftable_record_destroy(&rec);
-	slice_release(&want_key);
-	slice_release(&got_key);
+	strbuf_release(&want_key);
+	strbuf_release(&got_key);
 	return err;
 }
 
@@ -485,9 +485,9 @@ static int reader_seek_indexed(struct reftable_reader *r,
 			       struct reftable_iterator *it,
 			       struct reftable_record *rec)
 {
-	struct reftable_index_record want_index = { .last_key = SLICE_INIT };
+	struct reftable_index_record want_index = { .last_key = STRBUF_INIT };
 	struct reftable_record want_index_rec = { 0 };
-	struct reftable_index_record index_result = { .last_key = SLICE_INIT };
+	struct reftable_index_record index_result = { .last_key = STRBUF_INIT };
 	struct reftable_record index_result_rec = { 0 };
 	struct table_iter index_iter = TABLE_ITER_INIT;
 	struct table_iter next = TABLE_ITER_INIT;
@@ -714,7 +714,7 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 	filter = reftable_malloc(sizeof(struct filtering_ref_iterator));
 	*filter = empty;
 
-	slice_add(&filter->oid, oid, oid_len);
+	strbuf_add(&filter->oid, oid, oid_len);
 	reftable_table_from_reader(&filter->tab, r);
 	filter->double_check = false;
 	iterator_from_table_iter(&filter->it, ti);

@@ -38,7 +38,7 @@ int footer_size(int version)
 }
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
-				  struct slice *key);
+				  struct strbuf *key);
 
 void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
@@ -53,7 +53,7 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 	bw->entries = 0;
 	bw->restart_len = 0;
 	bw->last_key.len = 0;
-	bw->last_key.canary = SLICE_CANARY;
+	bw->last_key.canary = STRBUF_CANARY;
 }
 
 byte block_writer_type(struct block_writer *bw)
@@ -65,9 +65,9 @@ byte block_writer_type(struct block_writer *bw)
    success */
 int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 {
-	struct slice empty = SLICE_INIT;
-	struct slice last = w->entries % w->restart_interval == 0 ? empty :
-								    w->last_key;
+	struct strbuf empty = STRBUF_INIT;
+	struct strbuf last =
+		w->entries % w->restart_interval == 0 ? empty : w->last_key;
 	struct string_view out = {
 		.buf = w->buf + w->next,
 		.len = w->block_size - w->next,
@@ -76,7 +76,7 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 	struct string_view start = out;
 
 	bool restart = false;
-	struct slice key = SLICE_INIT;
+	struct strbuf key = STRBUF_INIT;
 	int n = 0;
 
 	reftable_record_key(rec, &key);
@@ -95,16 +95,16 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 					  &key) < 0)
 		goto done;
 
-	slice_release(&key);
+	strbuf_release(&key);
 	return 0;
 
 done:
-	slice_release(&key);
+	strbuf_release(&key);
 	return -1;
 }
 
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
-				  struct slice *key)
+				  struct strbuf *key)
 {
 	int rlen = w->restart_len;
 	if (rlen >= MAX_RESTARTS) {
@@ -128,8 +128,8 @@ int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 
 	w->next += n;
 
-	slice_reset(&w->last_key);
-	slice_addbuf(&w->last_key, key);
+	strbuf_reset(&w->last_key);
+	strbuf_addbuf(&w->last_key, key);
 	w->entries++;
 	return 0;
 }
@@ -269,13 +269,13 @@ static uint32_t block_reader_restart_offset(struct block_reader *br, int i)
 void block_reader_start(struct block_reader *br, struct block_iter *it)
 {
 	it->br = br;
-	slice_reset(&it->last_key);
+	strbuf_reset(&it->last_key);
 	it->next_off = br->header_off + 4;
 }
 
 struct restart_find_args {
 	int error;
-	struct slice key;
+	struct strbuf key;
 	struct block_reader *r;
 };
 
@@ -290,8 +290,8 @@ static int restart_key_less(size_t idx, void *args)
 
 	/* the restart key is verbatim in the block, so this could avoid the
 	   alloc for decoding the key */
-	struct slice rkey = SLICE_INIT;
-	struct slice last_key = SLICE_INIT;
+	struct strbuf rkey = STRBUF_INIT;
+	struct strbuf last_key = STRBUF_INIT;
 	byte unused_extra;
 	int n = reftable_decode_key(&rkey, &unused_extra, last_key, in);
 	int result;
@@ -300,8 +300,8 @@ static int restart_key_less(size_t idx, void *args)
 		return -1;
 	}
 
-	result = slice_cmp(&a->key, &rkey);
-	slice_release(&rkey);
+	result = strbuf_cmp(&a->key, &rkey);
+	strbuf_release(&rkey);
 	return result;
 }
 
@@ -309,8 +309,8 @@ void block_iter_copy_from(struct block_iter *dest, struct block_iter *src)
 {
 	dest->br = src->br;
 	dest->next_off = src->next_off;
-	slice_reset(&dest->last_key);
-	slice_addbuf(&dest->last_key, &src->last_key);
+	strbuf_reset(&dest->last_key);
+	strbuf_addbuf(&dest->last_key, &src->last_key);
 }
 
 int block_iter_next(struct block_iter *it, struct reftable_record *rec)
@@ -320,7 +320,7 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 		.len = it->br->block_len - it->next_off,
 	};
 	struct string_view start = in;
-	struct slice key = SLICE_INIT;
+	struct strbuf key = STRBUF_INIT;
 	byte extra = 0;
 	int n = 0;
 
@@ -337,16 +337,16 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 		return -1;
 	string_view_consume(&in, n);
 
-	slice_reset(&it->last_key);
-	slice_addbuf(&it->last_key, &key);
+	strbuf_reset(&it->last_key);
+	strbuf_addbuf(&it->last_key, &key);
 	it->next_off += start.len - in.len;
-	slice_release(&key);
+	strbuf_release(&key);
 	return 0;
 }
 
-int block_reader_first_key(struct block_reader *br, struct slice *key)
+int block_reader_first_key(struct block_reader *br, struct strbuf *key)
 {
-	struct slice empty = SLICE_INIT;
+	struct strbuf empty = STRBUF_INIT;
 	int off = br->header_off + 4;
 	struct string_view in = {
 		.buf = br->block.data + off,
@@ -361,28 +361,28 @@ int block_reader_first_key(struct block_reader *br, struct slice *key)
 	return 0;
 }
 
-int block_iter_seek(struct block_iter *it, struct slice *want)
+int block_iter_seek(struct block_iter *it, struct strbuf *want)
 {
 	return block_reader_seek(it->br, it, want);
 }
 
 void block_iter_close(struct block_iter *it)
 {
-	slice_release(&it->last_key);
+	strbuf_release(&it->last_key);
 }
 
 int block_reader_seek(struct block_reader *br, struct block_iter *it,
-		      struct slice *want)
+		      struct strbuf *want)
 {
 	struct restart_find_args args = {
 		.key = *want,
 		.r = br,
 	};
 	struct reftable_record rec = reftable_new_record(block_reader_type(br));
-	struct slice key = SLICE_INIT;
+	struct strbuf key = STRBUF_INIT;
 	int err = 0;
 	struct block_iter next = {
-		.last_key = SLICE_INIT,
+		.last_key = STRBUF_INIT,
 	};
 
 	int i = binsearch(br->restart_count, &restart_key_less, &args);
@@ -409,7 +409,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 			goto done;
 
 		reftable_record_key(&rec, &key);
-		if (err > 0 || slice_cmp(&key, want) >= 0) {
+		if (err > 0 || strbuf_cmp(&key, want) >= 0) {
 			err = 0;
 			goto done;
 		}
@@ -418,8 +418,8 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	}
 
 done:
-	slice_release(&key);
-	slice_release(&next.last_key);
+	strbuf_release(&key);
+	strbuf_release(&next.last_key);
 	reftable_record_destroy(&rec);
 
 	return err;
@@ -428,6 +428,6 @@ done:
 void block_writer_clear(struct block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
-	slice_release(&bw->last_key);
+	strbuf_release(&bw->last_key);
 	/* the block is not owned. */
 }

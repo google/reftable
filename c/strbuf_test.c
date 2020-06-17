@@ -6,7 +6,7 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "slice.h"
+#include "strbuf.h"
 
 #include "system.h"
 
@@ -16,24 +16,24 @@ https://developers.google.com/open-source/licenses/bsd
 #include "test_framework.h"
 #include "reftable-tests.h"
 
-static void test_slice(void)
+static void test_strbuf(void)
 {
-	struct slice s = SLICE_INIT;
-	struct slice t = SLICE_INIT;
+	struct strbuf s = STRBUF_INIT;
+	struct strbuf t = STRBUF_INIT;
 
-	slice_addstr(&s, "abc");
+	strbuf_addstr(&s, "abc");
 	assert(0 == strcmp("abc", s.buf));
 
-	slice_addstr(&t, "pqr");
-	slice_addbuf(&s, &t);
+	strbuf_addstr(&t, "pqr");
+	strbuf_addbuf(&s, &t);
 	assert(0 == strcmp("abcpqr", s.buf));
 
-	slice_release(&s);
-	slice_release(&t);
+	strbuf_release(&s);
+	strbuf_release(&t);
 }
 
-int slice_test_main(int argc, const char *argv[])
+int strbuf_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_slice", &test_slice);
+	add_test_case("test_strbuf", &test_strbuf);
 	return test_main(argc, argv);
 }

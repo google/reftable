@@ -12,16 +12,16 @@ https://developers.google.com/open-source/licenses/bsd
 
 int pq_less(struct pq_entry a, struct pq_entry b)
 {
-	struct slice ak = SLICE_INIT;
-	struct slice bk = SLICE_INIT;
+	struct strbuf ak = STRBUF_INIT;
+	struct strbuf bk = STRBUF_INIT;
 	int cmp = 0;
 	reftable_record_key(&a.rec, &ak);
 	reftable_record_key(&b.rec, &bk);
 
-	cmp = slice_cmp(&ak, &bk);
+	cmp = strbuf_cmp(&ak, &bk);
 
-	slice_release(&ak);
-	slice_release(&bk);
+	strbuf_release(&ak);
+	strbuf_release(&bk);
 
 	if (cmp == 0)
 		return a.index > b.index;

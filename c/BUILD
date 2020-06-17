@@ -36,7 +36,7 @@ cc_library(
         "record.c",
         "refname.c",
         "reftable.c",
-        "slice.c",
+        "strbuf.c",
         "stack.c",
         "tree.c",
         "writer.c",
@@ -51,7 +51,7 @@ cc_library(
         "reader.h",
         "refname.h",
         "record.h",
-        "slice.h",
+        "strbuf.h",
         "stack.h",
         "system.h",
         "tree.h",
@@ -111,14 +111,14 @@ cc_test(
 )
 
 cc_test(
-    name = "slice_test",
-    srcs = ["slice_test.c"],
+    name = "strbuf_test",
+    srcs = ["strbuf_test.c"],
     deps = [
         ":reftable",
         ":testlib",
     ] ,
     copts = [
-        "-Dslice_test_main=main",
+        "-Dstrbuf_test_main=main",
         "-fvisibility=protected",
     ] + GIT_COPTS,
 )
@@ -198,5 +198,5 @@ cc_test(
            "refname_test",
            "tree_test",
            "block_test",
-           "slice_test",
+           "strbuf_test",
            "stack_test"]]

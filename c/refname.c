@@ -10,7 +10,7 @@
 #include "reftable.h"
 #include "basics.h"
 #include "refname.h"
-#include "slice.h"
+#include "strbuf.h"
 
 struct find_arg {
 	char **names;
@@ -158,11 +158,11 @@ int validate_ref_record_addition(struct reftable_table tab,
 	return err;
 }
 
-static void slice_trim_component(struct slice *sl)
+static void strbuf_trim_component(struct strbuf *sl)
 {
 	while (sl->len > 0) {
 		bool is_slash = (sl->buf[sl->len - 1] == '/');
-		slice_setlen(sl, sl->len - 1);
+		strbuf_setlen(sl, sl->len - 1);
 		if (is_slash)
 			break;
 	}
@@ -170,16 +170,16 @@ static void slice_trim_component(struct slice *sl)
 
 int modification_validate(struct modification *mod)
 {
-	struct slice slashed = SLICE_INIT;
+	struct strbuf slashed = STRBUF_INIT;
 	int err = 0;
 	int i = 0;
 	for (; i < mod->add_len; i++) {
 		err = validate_ref_name(mod->add[i]);
 		if (err)
 			goto done;
-		slice_reset(&slashed);
-		slice_addstr(&slashed, mod->add[i]);
-		slice_addstr(&slashed, "/");
+		strbuf_reset(&slashed);
+		strbuf_addstr(&slashed, mod->add[i]);
+		strbuf_addstr(&slashed, "/");
 
 		err = modification_has_ref_with_prefix(mod, slashed.buf);
 		if (err == 0) {
@@ -189,10 +189,10 @@ int modification_validate(struct modification *mod)
 		if (err < 0)
 			goto done;
 
-		slice_reset(&slashed);
-		slice_addstr(&slashed, mod->add[i]);
+		strbuf_reset(&slashed);
+		strbuf_addstr(&slashed, mod->add[i]);
 		while (slashed.len) {
-			slice_trim_component(&slashed);
+			strbuf_trim_component(&slashed);
 			err = modification_has_ref(mod, slashed.buf);
 			if (err == 0) {
 				err = REFTABLE_NAME_CONFLICT;
@@ -204,6 +204,6 @@ int modification_validate(struct modification *mod)
 	}
 	err = 0;
 done:
-	slice_release(&slashed);
+	strbuf_release(&slashed);
 	return err;
 }

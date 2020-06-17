@@ -12,14 +12,14 @@ https://developers.google.com/open-source/licenses/bsd
 #include "basics.h"
 #include "block.h"
 #include "reftable.h"
-#include "slice.h"
+#include "strbuf.h"
 #include "tree.h"
 
 struct reftable_writer {
 	int (*write)(void *, const void *, size_t);
 	void *write_arg;
 	int pending_padding;
-	struct slice last_key;
+	struct strbuf last_key;
 
 	/* offset of next block to write. */
 	uint64_t next;

@@ -22,13 +22,13 @@ static const int update_index = 5;
 
 static void test_buffer(void)
 {
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_block_source source = { NULL };
 	struct reftable_block out = { 0 };
 	int n;
 	byte in[] = "hello";
-	slice_add(&buf, in, sizeof(in));
-	block_source_from_slice(&source, &buf);
+	strbuf_add(&buf, in, sizeof(in));
+	block_source_from_strbuf(&source, &buf);
 	assert(block_source_size(&source) == 6);
 	n = block_source_read_block(&source, &out, 0, sizeof(in));
 	assert(n == sizeof(in));
@@ -41,15 +41,15 @@ static void test_buffer(void)
 
 	reftable_block_done(&out);
 	block_source_close(&source);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
 static void test_default_write_opts(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 
 	struct reftable_ref_record rec = {
 		.ref_name = "master",
@@ -71,7 +71,7 @@ static void test_default_write_opts(void)
 	assert_err(err);
 	reftable_writer_free(w);
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
@@ -86,18 +86,18 @@ static void test_default_write_opts(void)
 
 	reftable_merged_table_close(merged);
 	reftable_merged_table_free(merged);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
-static void write_table(char ***names, struct slice *buf, int N, int block_size,
-			uint32_t hash_id)
+static void write_table(char ***names, struct strbuf *buf, int N,
+			int block_size, uint32_t hash_id)
 {
 	struct reftable_write_options opts = {
 		.block_size = block_size,
 		.hash_id = hash_id,
 	};
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, buf, &opts);
+		reftable_new_writer(&strbuf_add_void, buf, &opts);
 	struct reftable_ref_record ref = { 0 };
 	int i = 0, n;
 	struct reftable_log_record log = { 0 };
@@ -158,7 +158,7 @@ static void write_table(char ***names, struct slice *buf, int N, int block_size,
 
 static void test_log_buffer_size(void)
 {
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_write_options opts = {
 		.block_size = 4096,
 	};
@@ -173,7 +173,7 @@ static void test_log_buffer_size(void)
 		.message = "commit: 9\n",
 	};
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 
 	/* This tests buffer extension for log compression. Must use a random
 	   hash, to ensure that the compressed part is larger than the original.
@@ -191,7 +191,7 @@ static void test_log_buffer_size(void)
 	err = reftable_writer_close(w);
 	assert_err(err);
 	reftable_writer_free(w);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
 static void test_log_write_read(void)
@@ -209,9 +209,9 @@ static void test_log_write_read(void)
 	struct reftable_iterator it = { 0 };
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 	const struct reftable_stats *stats = NULL;
 	reftable_writer_set_limits(w, 0, N);
 	for (i = 0; i < N; i++) {
@@ -249,7 +249,7 @@ static void test_log_write_read(void)
 	reftable_writer_free(w);
 	w = NULL;
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = init_reader(&rd, &source, "file.log");
 	assert_err(err);
@@ -288,7 +288,7 @@ static void test_log_write_read(void)
 	reftable_iterator_destroy(&it);
 
 	/* cleanup. */
-	slice_release(&buf);
+	strbuf_release(&buf);
 	free_names(names);
 	reader_close(&rd);
 }
@@ -296,7 +296,7 @@ static void test_log_write_read(void)
 static void test_table_read_write_sequential(void)
 {
 	char **names;
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
 	struct reftable_iterator it = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -306,7 +306,7 @@ static void test_table_read_write_sequential(void)
 
 	write_table(&names, &buf, N, 256, SHA1_ID);
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
@@ -329,7 +329,7 @@ static void test_table_read_write_sequential(void)
 	}
 	assert(j == N);
 	reftable_iterator_destroy(&it);
-	slice_release(&buf);
+	strbuf_release(&buf);
 	free_names(names);
 
 	reader_close(&rd);
@@ -338,18 +338,18 @@ static void test_table_read_write_sequential(void)
 static void test_table_write_small_table(void)
 {
 	char **names;
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	int N = 1;
 	write_table(&names, &buf, N, 4096, SHA1_ID);
 	assert(buf.len < 200);
-	slice_release(&buf);
+	strbuf_release(&buf);
 	free_names(names);
 }
 
 static void test_table_read_api(void)
 {
 	char **names;
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -360,7 +360,7 @@ static void test_table_read_api(void)
 
 	write_table(&names, &buf, N, 256, SHA1_ID);
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
@@ -371,20 +371,20 @@ static void test_table_read_api(void)
 	err = reftable_iterator_next_log(&it, &log);
 	assert(err == REFTABLE_API_ERROR);
 
-	slice_release(&buf);
+	strbuf_release(&buf);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}
 	reftable_iterator_destroy(&it);
 	reftable_free(names);
 	reader_close(&rd);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
 static void test_table_read_write_seek(bool index, int hash_id)
 {
 	char **names;
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
 	struct reftable_reader rd = { 0 };
 	struct reftable_block_source source = { 0 };
@@ -392,12 +392,12 @@ static void test_table_read_write_seek(bool index, int hash_id)
 	int i = 0;
 
 	struct reftable_iterator it = { 0 };
-	struct slice pastLast = SLICE_INIT;
+	struct strbuf pastLast = STRBUF_INIT;
 	struct reftable_ref_record ref = { 0 };
 
 	write_table(&names, &buf, N, 256, hash_id);
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
@@ -421,8 +421,8 @@ static void test_table_read_write_seek(bool index, int hash_id)
 		reftable_iterator_destroy(&it);
 	}
 
-	slice_addstr(&pastLast, names[N - 1]);
-	slice_addstr(&pastLast, "/");
+	strbuf_addstr(&pastLast, names[N - 1]);
+	strbuf_addstr(&pastLast, "/");
 
 	err = reftable_reader_seek_ref(&rd, &it, pastLast.buf);
 	if (err == 0) {
@@ -433,10 +433,10 @@ static void test_table_read_write_seek(bool index, int hash_id)
 		assert(err > 0);
 	}
 
-	slice_release(&pastLast);
+	strbuf_release(&pastLast);
 	reftable_iterator_destroy(&it);
 
-	slice_release(&buf);
+	strbuf_release(&buf);
 	for (i = 0; i < N; i++) {
 		reftable_free(names[i]);
 	}
@@ -476,9 +476,9 @@ static void test_table_refs_for(bool indexed)
 	struct reftable_reader rd;
 	struct reftable_block_source source = { 0 };
 
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 
 	struct reftable_iterator it = { 0 };
 	int j;
@@ -523,7 +523,7 @@ static void test_table_refs_for(bool indexed)
 	reftable_writer_free(w);
 	w = NULL;
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
@@ -553,7 +553,7 @@ static void test_table_refs_for(bool indexed)
 	}
 	assert(j == want_names_len);
 
-	slice_release(&buf);
+	strbuf_release(&buf);
 	free_names(want_names);
 	reftable_iterator_destroy(&it);
 	reader_close(&rd);
@@ -572,9 +572,9 @@ static void test_table_refs_for_obj_index(void)
 static void test_table_empty(void)
 {
 	struct reftable_write_options opts = { 0 };
-	struct slice buf = SLICE_INIT;
+	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
-		reftable_new_writer(&slice_add_void, &buf, &opts);
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 	struct reftable_block_source source = { 0 };
 	struct reftable_reader *rd = NULL;
 	struct reftable_ref_record rec = { 0 };
@@ -589,7 +589,7 @@ static void test_table_empty(void)
 
 	assert(buf.len == header_size(1) + footer_size(1));
 
-	block_source_from_slice(&source, &buf);
+	block_source_from_strbuf(&source, &buf);
 
 	err = reftable_new_reader(&rd, &source, "filename");
 	assert_err(err);
@@ -602,7 +602,7 @@ static void test_table_empty(void)
 
 	reftable_iterator_destroy(&it);
 	reftable_reader_free(rd);
-	slice_release(&buf);
+	strbuf_release(&buf);
 }
 
 int reftable_test_main(int argc, const char *argv[])

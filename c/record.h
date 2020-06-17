@@ -10,7 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 #define RECORD_H
 
 #include "reftable.h"
-#include "slice.h"
+#include "strbuf.h"
 
 /*
   A substring of existing string data. This structure takes no responsibility
@@ -31,8 +31,8 @@ int put_var_int(struct string_view *dest, uint64_t val);
 
 /* Methods for records. */
 struct reftable_record_vtable {
-	/* encode the key of to a byte slice. */
-	void (*key)(const void *rec, struct slice *dest);
+	/* encode the key of to a byte strbuf. */
+	void (*key)(const void *rec, struct strbuf *dest);
 
 	/* The record type of ('r' for ref). */
 	byte type;
@@ -47,7 +47,7 @@ struct reftable_record_vtable {
 	int (*encode)(const void *rec, struct string_view dest, int hash_size);
 
 	/* decode data from `src` into the record. */
-	int (*decode)(void *rec, struct slice key, byte extra,
+	int (*decode)(void *rec, struct strbuf key, byte extra,
 		      struct string_view src, int hash_size);
 
 	/* deallocate and null the record. */
@@ -74,16 +74,16 @@ extern struct reftable_record_vtable reftable_ref_record_vtable;
 /* Encode `key` into `dest`. Sets `restart` to indicate a restart. Returns
    number of bytes written. */
 int reftable_encode_key(bool *restart, struct string_view dest,
-			struct slice prev_key, struct slice key, byte extra);
+			struct strbuf prev_key, struct strbuf key, byte extra);
 
 /* Decode into `key` and `extra` from `in` */
-int reftable_decode_key(struct slice *key, byte *extra, struct slice last_key,
+int reftable_decode_key(struct strbuf *key, byte *extra, struct strbuf last_key,
 			struct string_view in);
 
 /* reftable_index_record are used internally to speed up lookups. */
 struct reftable_index_record {
 	uint64_t offset; /* Offset of block */
-	struct slice last_key; /* Last key of the block. */
+	struct strbuf last_key; /* Last key of the block. */
 };
 
 /* reftable_obj_record stores an object ID => ref mapping. */
@@ -97,14 +97,14 @@ struct reftable_obj_record {
 
 /* see struct record_vtable */
 
-void reftable_record_key(struct reftable_record *rec, struct slice *dest);
+void reftable_record_key(struct reftable_record *rec, struct strbuf *dest);
 byte reftable_record_type(struct reftable_record *rec);
 void reftable_record_copy_from(struct reftable_record *rec,
 			       struct reftable_record *src, int hash_size);
 byte reftable_record_val_type(struct reftable_record *rec);
 int reftable_record_encode(struct reftable_record *rec, struct string_view dest,
 			   int hash_size);
-int reftable_record_decode(struct reftable_record *rec, struct slice key,
+int reftable_record_decode(struct reftable_record *rec, struct strbuf key,
 			   byte extra, struct string_view src, int hash_size);
 bool reftable_record_is_deletion(struct reftable_record *rec);
 
