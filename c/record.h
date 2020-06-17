@@ -11,6 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable.h"
 #include "strbuf.h"
+#include "system.h"
 
 /*
   A substring of existing string data. This structure takes no responsibility

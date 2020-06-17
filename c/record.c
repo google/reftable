@@ -11,9 +11,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 
 #include "system.h"
-
 #include "constants.h"
 #include "reftable.h"
+#include "basics.h"
 
 int get_var_int(uint64_t *dest, struct string_view *in)
 {

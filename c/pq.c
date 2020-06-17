@@ -8,7 +8,9 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "pq.h"
 
+#include "reftable.h"
 #include "system.h"
+#include "basics.h"
 
 int pq_less(struct pq_entry a, struct pq_entry b)
 {

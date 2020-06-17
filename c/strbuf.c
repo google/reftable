@@ -9,12 +9,10 @@ https://developers.google.com/open-source/licenses/bsd
 #include "strbuf.h"
 
 #include "system.h"
-
 #include "reftable.h"
+#include "basics.h"
 
 #ifdef REFTABLE_STANDALONE
-
-struct strbuf reftable_empty_strbuf = STRBUF_INIT;
 
 void strbuf_init(struct strbuf *s, size_t alloc)
 {
@@ -124,16 +122,18 @@ int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 	return sz;
 }
 
+#endif
+
 static uint64_t strbuf_size(void *b)
 {
 	return ((struct strbuf *)b)->len;
 }
 
-#endif
 
 int strbuf_add_void(void *b, const void *data, size_t sz)
 {
-	return strbuf_add((struct strbuf *)b, data, sz);
+	strbuf_add((struct strbuf *)b, data, sz);
+	return sz;
 }
 
 static void strbuf_return_block(void *b, struct reftable_block *dest)
@@ -194,8 +194,6 @@ struct reftable_block_source malloc_block_source(void)
 int common_prefix_size(struct strbuf *a, struct strbuf *b)
 {
 	int p = 0;
-	assert(a->canary == STRBUF_CANARY);
-	assert(b->canary == STRBUF_CANARY);
 	while (p < a->len && p < b->len) {
 		if (a->buf[p] != b->buf[p]) {
 			break;
@@ -205,3 +203,5 @@ int common_prefix_size(struct strbuf *a, struct strbuf *b)
 
 	return p;
 }
+
+struct strbuf reftable_empty_strbuf = STRBUF_INIT;

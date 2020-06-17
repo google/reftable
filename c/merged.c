@@ -14,6 +14,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "iter.h"
 #include "pq.h"
 #include "reader.h"
+#include "record.h"
 
 static int merged_iter_init(struct merged_iter *mi)
 {

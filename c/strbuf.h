@@ -63,6 +63,7 @@ void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
 
 #else
 
+#include "../git-compat-util.h"
 #include "../strbuf.h"
 
 #endif
