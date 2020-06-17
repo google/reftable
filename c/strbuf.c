@@ -16,7 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 struct strbuf reftable_empty_strbuf = STRBUF_INIT;
 
-void strbuf_init(struct strbuf *s)
+void strbuf_init(struct strbuf *s, size_t alloc)
 {
 	struct strbuf empty = STRBUF_INIT;
 	*s = empty;

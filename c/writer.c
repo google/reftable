@@ -112,7 +112,7 @@ reftable_new_writer(int (*writer_func)(void *, const void *, size_t),
 {
 	struct reftable_writer *wp =
 		reftable_calloc(sizeof(struct reftable_writer));
-	strbuf_init(&wp->block_writer_data.last_key);
+	strbuf_init(&wp->block_writer_data.last_key, 0);
 	options_set_defaults(opts);
 	if (opts->block_size >= (1 << 24)) {
 		/* TODO - error return? */

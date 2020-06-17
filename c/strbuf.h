@@ -31,7 +31,6 @@ struct strbuf {
 	{                                 \
 		0, 0, NULL, STRBUF_CANARY \
 	}
-extern struct strbuf reftable_empty_strbuf;
 
 void strbuf_addstr(struct strbuf *dest, const char *src);
 
@@ -42,7 +41,7 @@ void strbuf_release(struct strbuf *strbuf);
 void strbuf_reset(struct strbuf *strbuf);
 
 /* Initializes a strbuf. Accepts a strbuf with random garbage. */
-void strbuf_init(struct strbuf *strbuf);
+void strbuf_init(struct strbuf *strbuf, size_t alloc);
 
 /* Return `buf`, clearing out `s`. Optionally return len (not cap) in `sz`.  */
 char *strbuf_detach(struct strbuf *s, size_t *sz);
@@ -67,6 +66,8 @@ void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
 #include "../strbuf.h"
 
 #endif
+
+extern struct strbuf reftable_empty_strbuf;
 
 /* Like strbuf_add, but suitable for passing to reftable_new_writer
  */
