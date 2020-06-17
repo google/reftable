@@ -12,7 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 #include "basics.h"
 
-#ifndef REFTABLE_IN_GITCORE
+#ifdef REFTABLE_STANDALONE
 
 #include <dirent.h>
 

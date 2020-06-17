@@ -9,8 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#if REFTABLE_IN_GITCORE
-#define REFTABLE_IN_GITCORE
+#ifndef REFTABLE_STANDALONE
 
 #include "git-compat-util.h"
 #include "cache.h"
@@ -34,7 +33,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "compat.h"
 
-#endif /* REFTABLE_IN_GITCORE */
+#endif /* REFTABLE_STANDALONE */
 
 void reftable_clear_dir(const char *dirname);
 

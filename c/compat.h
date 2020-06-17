@@ -11,7 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#ifndef REFTABLE_IN_GITCORE
+#ifdef REFTABLE_STANDALONE
 
 /* functions that git-core provides, for standalone compilation */
 #include <stdint.h>
