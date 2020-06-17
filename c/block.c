@@ -53,7 +53,6 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 	bw->entries = 0;
 	bw->restart_len = 0;
 	bw->last_key.len = 0;
-	bw->last_key.canary = STRBUF_CANARY;
 }
 
 byte block_writer_type(struct block_writer *bw)
