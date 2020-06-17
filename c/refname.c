@@ -181,8 +181,7 @@ int modification_validate(struct modification *mod)
 		slice_addstr(&slashed, mod->add[i]);
 		slice_addstr(&slashed, "/");
 
-		err = modification_has_ref_with_prefix(
-			mod, slice_as_string(&slashed));
+		err = modification_has_ref_with_prefix(mod, slashed.buf);
 		if (err == 0) {
 			err = REFTABLE_NAME_CONFLICT;
 			goto done;
@@ -194,8 +193,7 @@ int modification_validate(struct modification *mod)
 		slice_addstr(&slashed, mod->add[i]);
 		while (slashed.len) {
 			slice_trim_component(&slashed);
-			err = modification_has_ref(mod,
-						   slice_as_string(&slashed));
+			err = modification_has_ref(mod, slashed.buf);
 			if (err == 0) {
 				err = REFTABLE_NAME_CONFLICT;
 				goto done;

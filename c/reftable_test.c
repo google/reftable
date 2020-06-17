@@ -424,7 +424,7 @@ static void test_table_read_write_seek(bool index, int hash_id)
 	slice_addstr(&pastLast, names[N - 1]);
 	slice_addstr(&pastLast, "/");
 
-	err = reftable_reader_seek_ref(&rd, &it, slice_as_string(&pastLast));
+	err = reftable_reader_seek_ref(&rd, &it, pastLast.buf);
 	if (err == 0) {
 		struct reftable_ref_record ref = { 0 };
 		int err = reftable_iterator_next_ref(&it, &ref);

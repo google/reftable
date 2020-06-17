@@ -78,7 +78,6 @@ void slice_addbuf(struct slice *s, struct slice *a)
 char *slice_detach(struct slice *s)
 {
 	char *p = NULL;
-	slice_as_string(s);
 	p = (char *)s->buf;
 	s->buf = NULL;
 	s->cap = 0;
@@ -93,13 +92,6 @@ void slice_release(struct slice *s)
 	s->len = 0;
 	reftable_free(s->buf);
 	s->buf = NULL;
-}
-
-/* return the underlying data as char*. len is left unchanged, but
-   a \0 is added at the end. */
-const char *slice_as_string(struct slice *s)
-{
-	return (const char *)s->buf;
 }
 
 int slice_cmp(const struct slice *a, const struct slice *b)

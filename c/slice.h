@@ -42,9 +42,6 @@ void slice_reset(struct slice *slice);
 /* Initializes a slice. Accepts a slice with random garbage. */
 void slice_init(struct slice *slice);
 
-/* Ensure that `buf` is \0 terminated. */
-const char *slice_as_string(struct slice *src);
-
 /* Return `buf`, clearing out `s` */
 char *slice_detach(struct slice *s);
 

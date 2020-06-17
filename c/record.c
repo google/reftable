@@ -365,7 +365,7 @@ static int reftable_ref_record_decode(void *rec, struct slice key,
 		if (r->target != NULL) {
 			reftable_free(r->target);
 		}
-		r->target = (char *)slice_as_string(&dest);
+		r->target = dest.buf;
 	} break;
 
 	case 0:
