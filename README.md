@@ -63,18 +63,6 @@ recent addition to the API. zlib is licensed as follows:
 ```
 
 
-# Open questions
-
-*   How to deal with HASH_SIZE != 20 ? Will repos exist in dual config, if so
-    what is the plan for ref transactions?
-
-*   What is a good strategy for pruning reflogs?
-
-# git-core integration notes
-
-See https://github.com/hanwen/git/tree/reftable.
-
-
 # Background reading
 
 * Spec: https://github.com/eclipse/jgit/blob/master/Documentation/technical/reftable.md
