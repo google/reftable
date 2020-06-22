@@ -59,6 +59,6 @@ struct test_case *new_test_case(const char *name, void (*testfunc)(void));
 struct test_case *add_test_case(const char *name, void (*testfunc)(void));
 int test_main(int argc, const char *argv[]);
 
-void set_test_hash(byte *p, int i);
+void set_test_hash(uint8_t *p, int i);
 
 #endif

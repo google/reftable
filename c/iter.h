@@ -66,7 +66,7 @@ struct indexed_table_ref_iter {
 void iterator_from_indexed_table_ref_iter(struct reftable_iterator *it,
 					  struct indexed_table_ref_iter *itr);
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-			       struct reftable_reader *r, byte *oid,
+			       struct reftable_reader *r, uint8_t *oid,
 			       int oid_len, uint64_t *offsets, int offset_len);
 
 #endif

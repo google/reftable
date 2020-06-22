@@ -24,7 +24,7 @@ struct strbuf {
 	char *buf;
 
 	/* Used to enforce initialization with STRBUF_INIT */
-	byte canary;
+	uint8_t canary;
 };
 #define STRBUF_CANARY 0x42
 #define STRBUF_INIT                       \

@@ -31,7 +31,7 @@ void strbuf_grow(struct strbuf *s, size_t extra)
 
 static void strbuf_resize(struct strbuf *s, int l)
 {
-	int zl = l + 1; /* one byte for 0 termination. */
+	int zl = l + 1; /* one uint8_t for 0 termination. */
 	assert(s->canary == STRBUF_CANARY);
 	if (s->cap < zl) {
 		int c = s->cap * 2;

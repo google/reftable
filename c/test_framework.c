@@ -63,8 +63,8 @@ int test_main(int argc, const char *argv[])
 	return 0;
 }
 
-void set_test_hash(byte *p, int i)
+void set_test_hash(uint8_t *p, int i)
 {
-	memset(p, (byte)i, hash_size(SHA1_ID));
+	memset(p, (uint8_t)i, hash_size(SHA1_ID));
 }
 

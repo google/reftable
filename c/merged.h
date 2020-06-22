@@ -26,7 +26,7 @@ struct merged_iter {
 	struct reftable_iterator *stack;
 	uint32_t hash_id;
 	int stack_len;
-	byte typ;
+	uint8_t typ;
 	bool suppress_deletions;
 	struct merged_iter_pqueue pq;
 };

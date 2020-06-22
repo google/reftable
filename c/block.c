@@ -40,7 +40,7 @@ int footer_size(int version)
 int block_writer_register_restart(struct block_writer *w, int n, bool restart,
 				  struct strbuf *key);
 
-void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
+void block_writer_init(struct block_writer *bw, uint8_t typ, uint8_t *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
 {
 	bw->buf = buf;
@@ -55,7 +55,7 @@ void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
 	bw->last_key.len = 0;
 }
 
-byte block_writer_type(struct block_writer *bw)
+uint8_t block_writer_type(struct block_writer *bw)
 {
 	return bw->buf[bw->header_off];
 }
@@ -147,7 +147,7 @@ int block_writer_finish(struct block_writer *w)
 
 	if (block_writer_type(w) == BLOCK_TYPE_LOG) {
 		int block_header_skip = 4 + w->header_off;
-		byte *compressed = NULL;
+		uint8_t *compressed = NULL;
 		int zresult = 0;
 		uLongf src_len = w->next - block_header_skip;
 		size_t dest_cap = src_len;
@@ -181,7 +181,7 @@ int block_writer_finish(struct block_writer *w)
 	return w->next;
 }
 
-byte block_reader_type(struct block_reader *r)
+uint8_t block_reader_type(struct block_reader *r)
 {
 	return r->block.data[r->header_off];
 }
@@ -191,12 +191,12 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		      int hash_size)
 {
 	uint32_t full_block_size = table_block_size;
-	byte typ = block->data[header_off];
+	uint8_t typ = block->data[header_off];
 	uint32_t sz = get_be24(block->data + header_off + 1);
 
 	uint16_t restart_count = 0;
 	uint32_t restart_start = 0;
-	byte *restart_bytes = NULL;
+	uint8_t *restart_bytes = NULL;
 
 	if (!reftable_is_block_type(typ))
 		return REFTABLE_FORMAT_ERROR;
@@ -208,7 +208,7 @@ int block_reader_init(struct block_reader *br, struct reftable_block *block,
 		uLongf src_len = block->len - block_header_skip;
 		/* Log blocks specify the *uncompressed* size in their header.
 		 */
-		byte *uncompressed = reftable_malloc(sz);
+		uint8_t *uncompressed = reftable_malloc(sz);
 
 		/* Copy over the block header verbatim. It's not compressed. */
 		memcpy(uncompressed, block->data, block_header_skip);
@@ -291,7 +291,7 @@ static int restart_key_less(size_t idx, void *args)
 	   alloc for decoding the key */
 	struct strbuf rkey = STRBUF_INIT;
 	struct strbuf last_key = STRBUF_INIT;
-	byte unused_extra;
+	uint8_t unused_extra;
 	int n = reftable_decode_key(&rkey, &unused_extra, last_key, in);
 	int result;
 	if (n < 0) {
@@ -320,7 +320,7 @@ int block_iter_next(struct block_iter *it, struct reftable_record *rec)
 	};
 	struct string_view start = in;
 	struct strbuf key = STRBUF_INIT;
-	byte extra = 0;
+	uint8_t extra = 0;
 	int n = 0;
 
 	if (it->next_off >= it->br->block_len)
@@ -352,7 +352,7 @@ int block_reader_first_key(struct block_reader *br, struct strbuf *key)
 		.len = br->block_len - off,
 	};
 
-	byte extra = 0;
+	uint8_t extra = 0;
 	int n = reftable_decode_key(key, &extra, empty, in);
 	if (n < 0)
 		return n;

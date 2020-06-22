@@ -82,7 +82,7 @@ static void test_block_read_write(void)
 
 	for (i = 0; i < N; i++) {
 		char name[100];
-		byte hash[SHA1_SIZE];
+		uint8_t hash[SHA1_SIZE];
 		snprintf(name, sizeof(name), "branch%02d", i);
 		memset(hash, i, sizeof(hash));
 

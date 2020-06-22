@@ -42,7 +42,6 @@ void reftable_clear_dir(const char *dirname);
 #define SHA1_SIZE 20
 #define SHA256_SIZE 32
 
-typedef uint8_t byte;
 typedef int bool;
 
 /* This is uncompress2, which is only available in zlib as of 2017.

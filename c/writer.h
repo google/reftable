@@ -27,7 +27,7 @@ struct reftable_writer {
 	struct reftable_write_options opts;
 
 	/* memory buffer for writing */
-	byte *block;
+	uint8_t *block;
 
 	/* writer for the current section. NULL or points to
 	 * block_writer_data */

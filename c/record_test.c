@@ -50,7 +50,7 @@ static void test_varint_roundtrip(void)
 			      ((uint64_t)1 << 63) + ((uint64_t)1 << 63) - 1 };
 	int i = 0;
 	for (i = 0; i < ARRAY_SIZE(inputs); i++) {
-		byte dest[10];
+		uint8_t dest[10];
 
 		struct string_view out = {
 			.buf = dest,
@@ -94,7 +94,7 @@ static void test_common_prefix(void)
 	}
 }
 
-static void set_hash(byte *h, int j)
+static void set_hash(uint8_t *h, int j)
 {
 	int i = 0;
 	for (i = 0; i < hash_size(SHA1_ID); i++) {
@@ -117,7 +117,7 @@ static void test_reftable_ref_record_roundtrip(void)
 		struct reftable_record rec_out = { 0 };
 		struct strbuf key = STRBUF_INIT;
 		struct reftable_record rec = { 0 };
-		byte buffer[1024] = { 0 };
+		uint8_t buffer[1024] = { 0 };
 		struct string_view dest = {
 			.buf = buffer,
 			.len = sizeof(buffer),
@@ -213,7 +213,7 @@ static void test_reftable_log_record_roundtrip(void)
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
 		struct reftable_record rec = { 0 };
 		struct strbuf key = STRBUF_INIT;
-		byte buffer[1024] = { 0 };
+		uint8_t buffer[1024] = { 0 };
 		struct string_view dest = {
 			.buf = buffer,
 			.len = sizeof(buffer),
@@ -254,7 +254,7 @@ static void test_reftable_log_record_roundtrip(void)
 static void test_u24_roundtrip(void)
 {
 	uint32_t in = 0x112233;
-	byte dest[3];
+	uint8_t dest[3];
 	uint32_t out;
 	put_be24(dest, in);
 	out = get_be24(dest);
@@ -263,7 +263,7 @@ static void test_u24_roundtrip(void)
 
 static void test_key_roundtrip(void)
 {
-	byte buffer[1024] = { 0 };
+	uint8_t buffer[1024] = { 0 };
 	struct string_view dest = {
 		.buf = buffer,
 		.len = sizeof(buffer),
@@ -272,9 +272,9 @@ static void test_key_roundtrip(void)
 	struct strbuf key = STRBUF_INIT;
 	struct strbuf roundtrip = STRBUF_INIT;
 	bool restart;
-	byte extra;
+	uint8_t extra;
 	int n, m;
-	byte rt_extra;
+	uint8_t rt_extra;
 
 	strbuf_addstr(&last_key, "refs/heads/master");
 	strbuf_addstr(&key, "refs/tags/bla");
@@ -295,7 +295,7 @@ static void test_key_roundtrip(void)
 
 static void test_reftable_obj_record_roundtrip(void)
 {
-	byte testHash1[SHA1_SIZE] = { 1, 2, 3, 4, 0 };
+	uint8_t testHash1[SHA1_SIZE] = { 1, 2, 3, 4, 0 };
 	uint64_t till9[] = { 1, 2, 3, 4, 500, 600, 700, 800, 9000 };
 	struct reftable_obj_record recs[3] = { {
 						       .hash_prefix = testHash1,
@@ -316,7 +316,7 @@ static void test_reftable_obj_record_roundtrip(void)
 	int i = 0;
 	for (i = 0; i < ARRAY_SIZE(recs); i++) {
 		struct reftable_obj_record in = recs[i];
-		byte buffer[1024] = { 0 };
+		uint8_t buffer[1024] = { 0 };
 		struct string_view dest = {
 			.buf = buffer,
 			.len = sizeof(buffer),
@@ -326,7 +326,7 @@ static void test_reftable_obj_record_roundtrip(void)
 		struct reftable_obj_record out = { 0 };
 		struct reftable_record rec_out = { 0 };
 		int n, m;
-		byte extra;
+		uint8_t extra;
 
 		reftable_record_from_obj(&rec, &in);
 		test_copy(&rec);
@@ -357,7 +357,7 @@ static void test_reftable_index_record_roundtrip(void)
 		.offset = 42,
 		.last_key = STRBUF_INIT,
 	};
-	byte buffer[1024] = { 0 };
+	uint8_t buffer[1024] = { 0 };
 	struct string_view dest = {
 		.buf = buffer,
 		.len = sizeof(buffer),
@@ -367,7 +367,7 @@ static void test_reftable_index_record_roundtrip(void)
 	struct reftable_index_record out = { .last_key = STRBUF_INIT };
 	struct reftable_record out_rec = { NULL };
 	int n, m;
-	byte extra;
+	uint8_t extra;
 
 	strbuf_addstr(&in.last_key, "refs/heads/master");
 	reftable_record_from_index(&rec, &in);

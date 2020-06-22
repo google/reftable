@@ -17,7 +17,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "tree.h"
 
 static struct reftable_block_stats *
-writer_reftable_block_stats(struct reftable_writer *w, byte typ)
+writer_reftable_block_stats(struct reftable_writer *w, uint8_t typ)
 {
 	switch (typ) {
 	case 'r':
@@ -35,12 +35,12 @@ writer_reftable_block_stats(struct reftable_writer *w, byte typ)
 
 /* write data, queuing the padding for the next write. Returns negative for
  * error. */
-static int padded_write(struct reftable_writer *w, byte *data, size_t len,
+static int padded_write(struct reftable_writer *w, uint8_t *data, size_t len,
 			int padding)
 {
 	int n = 0;
 	if (w->pending_padding > 0) {
-		byte *zeroed = reftable_calloc(w->pending_padding);
+		uint8_t *zeroed = reftable_calloc(w->pending_padding);
 		int n = w->write(w->write_arg, zeroed, w->pending_padding);
 		if (n < 0)
 			return n;
@@ -76,7 +76,7 @@ static int writer_version(struct reftable_writer *w)
 	return (w->opts.hash_id == 0 || w->opts.hash_id == SHA1_ID) ? 1 : 2;
 }
 
-static int writer_write_header(struct reftable_writer *w, byte *dest)
+static int writer_write_header(struct reftable_writer *w, uint8_t *dest)
 {
 	memcpy((char *)dest, "REFT", 4);
 
@@ -91,7 +91,7 @@ static int writer_write_header(struct reftable_writer *w, byte *dest)
 	return header_size(writer_version(w));
 }
 
-static void writer_reinit_block_writer(struct reftable_writer *w, byte typ)
+static void writer_reinit_block_writer(struct reftable_writer *w, uint8_t typ)
 {
 	int block_start = 0;
 	if (w->next == 0) {
@@ -339,7 +339,7 @@ int reftable_writer_add_logs(struct reftable_writer *w,
 
 static int writer_finish_section(struct reftable_writer *w)
 {
-	byte typ = block_writer_type(w->block_writer);
+	uint8_t typ = block_writer_type(w->block_writer);
 	uint64_t index_start = 0;
 	int max_level = 0;
 	int threshold = w->opts.unpadded ? 1 : 3;
@@ -435,7 +435,7 @@ static void write_object_record(void *void_arg, void *key)
 	struct write_record_arg *arg = (struct write_record_arg *)void_arg;
 	struct obj_index_tree_node *entry = (struct obj_index_tree_node *)key;
 	struct reftable_obj_record obj_rec = {
-		.hash_prefix = (byte *)entry->hash.buf,
+		.hash_prefix = (uint8_t *)entry->hash.buf,
 		.hash_prefix_len = arg->w->stats.object_id_len,
 		.offsets = entry->offsets,
 		.offset_len = entry->offset_len,
@@ -497,7 +497,7 @@ static int writer_dump_object_index(struct reftable_writer *w)
 
 int writer_finish_public_section(struct reftable_writer *w)
 {
-	byte typ = 0;
+	uint8_t typ = 0;
 	int err = 0;
 
 	if (w->block_writer == NULL)
@@ -526,8 +526,8 @@ int writer_finish_public_section(struct reftable_writer *w)
 
 int reftable_writer_close(struct reftable_writer *w)
 {
-	byte footer[72];
-	byte *p = footer;
+	uint8_t footer[72];
+	uint8_t *p = footer;
 	int err = writer_finish_public_section(w);
 	int empty_table = w->next == 0;
 	if (err != 0)
@@ -535,7 +535,7 @@ int reftable_writer_close(struct reftable_writer *w)
 	w->pending_padding = 0;
 	if (empty_table) {
 		/* Empty tables need a header anyway. */
-		byte header[28];
+		uint8_t header[28];
 		int n = writer_write_header(w, header);
 		err = padded_write(w, header, n, 0);
 		if (err < 0)
@@ -591,7 +591,7 @@ const int debug = 0;
 
 static int writer_flush_nonempty_block(struct reftable_writer *w)
 {
-	byte typ = block_writer_type(w->block_writer);
+	uint8_t typ = block_writer_type(w->block_writer);
 	struct reftable_block_stats *bstats =
 		writer_reftable_block_stats(w, typ);
 	uint64_t block_typ_off = (bstats->blocks == 0) ? w->next : 0;

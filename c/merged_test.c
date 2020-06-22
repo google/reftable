@@ -133,7 +133,7 @@ merged_table_from_records(struct reftable_ref_record **refs,
 
 static void test_merged_between(void)
 {
-	byte hash1[SHA1_SIZE] = { 1, 2, 3, 0 };
+	uint8_t hash1[SHA1_SIZE] = { 1, 2, 3, 0 };
 
 	struct reftable_ref_record r1[] = { {
 		.ref_name = "b",
@@ -173,8 +173,8 @@ static void test_merged_between(void)
 
 static void test_merged(void)
 {
-	byte hash1[SHA1_SIZE] = { 1 };
-	byte hash2[SHA1_SIZE] = { 2 };
+	uint8_t hash1[SHA1_SIZE] = { 1 };
+	uint8_t hash2[SHA1_SIZE] = { 2 };
 	struct reftable_ref_record r1[] = { {
 						    .ref_name = "a",
 						    .update_index = 1,

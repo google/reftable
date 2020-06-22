@@ -204,7 +204,7 @@ static int indexed_table_ref_iter_next(void *p, struct reftable_record *rec)
 }
 
 int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
-			       struct reftable_reader *r, byte *oid,
+			       struct reftable_reader *r, uint8_t *oid,
 			       int oid_len, uint64_t *offsets, int offset_len)
 {
 	struct indexed_table_ref_iter empty = INDEXED_TABLE_REF_ITER_INIT;

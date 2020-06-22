@@ -26,7 +26,7 @@ static void test_buffer(void)
 	struct reftable_block_source source = { NULL };
 	struct reftable_block out = { 0 };
 	int n;
-	byte in[] = "hello";
+	uint8_t in[] = "hello";
 	strbuf_add(&buf, in, sizeof(in));
 	block_source_from_strbuf(&source, &buf);
 	assert(block_source_size(&source) == 6);
@@ -105,7 +105,7 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 	*names = reftable_calloc(sizeof(char *) * (N + 1));
 	reftable_writer_set_limits(w, update_index, update_index);
 	for (i = 0; i < N; i++) {
-		byte hash[SHA256_SIZE] = { 0 };
+		uint8_t hash[SHA256_SIZE] = { 0 };
 		char name[100];
 		int n;
 
@@ -123,7 +123,7 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 	}
 
 	for (i = 0; i < N; i++) {
-		byte hash[SHA256_SIZE] = { 0 };
+		uint8_t hash[SHA256_SIZE] = { 0 };
 		char name[100];
 		int n;
 
@@ -178,10 +178,10 @@ static void test_log_buffer_size(void)
 	/* This tests buffer extension for log compression. Must use a random
 	   hash, to ensure that the compressed part is larger than the original.
 	*/
-	byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
+	uint8_t hash1[SHA1_SIZE], hash2[SHA1_SIZE];
 	for (int i = 0; i < SHA1_SIZE; i++) {
-		hash1[i] = (byte)(rand() % 256);
-		hash2[i] = (byte)(rand() % 256);
+		hash1[i] = (uint8_t)(rand() % 256);
+		hash2[i] = (uint8_t)(rand() % 256);
 	}
 	log.old_hash = hash1;
 	log.new_hash = hash2;
@@ -227,7 +227,7 @@ static void test_log_write_read(void)
 		assert_err(err);
 	}
 	for (i = 0; i < N; i++) {
-		byte hash1[SHA1_SIZE], hash2[SHA1_SIZE];
+		uint8_t hash1[SHA1_SIZE], hash2[SHA1_SIZE];
 		struct reftable_log_record log = { 0 };
 		set_test_hash(hash1, i);
 		set_test_hash(hash2, i + 1);
@@ -464,7 +464,7 @@ static void test_table_refs_for(bool indexed)
 	int N = 50;
 	char **want_names = reftable_calloc(sizeof(char *) * (N + 1));
 	int want_names_len = 0;
-	byte want_hash[SHA1_SIZE];
+	uint8_t want_hash[SHA1_SIZE];
 
 	struct reftable_write_options opts = {
 		.block_size = 256,
@@ -486,11 +486,11 @@ static void test_table_refs_for(bool indexed)
 	set_test_hash(want_hash, 4);
 
 	for (i = 0; i < N; i++) {
-		byte hash[SHA1_SIZE];
+		uint8_t hash[SHA1_SIZE];
 		char fill[51] = { 0 };
 		char name[100];
-		byte hash1[SHA1_SIZE];
-		byte hash2[SHA1_SIZE];
+		uint8_t hash1[SHA1_SIZE];
+		uint8_t hash2[SHA1_SIZE];
 		struct reftable_ref_record ref = { 0 };
 
 		memset(hash, i, sizeof(hash));

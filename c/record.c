@@ -38,10 +38,10 @@ int get_var_int(uint64_t *dest, struct string_view *in)
 
 int put_var_int(struct string_view *dest, uint64_t val)
 {
-	byte buf[10] = { 0 };
+	uint8_t buf[10] = { 0 };
 	int i = 9;
 	int n = 0;
-	buf[i] = (byte)(val & 0x7f);
+	buf[i] = (uint8_t)(val & 0x7f);
 	i--;
 	while (true) {
 		val >>= 7;
@@ -49,7 +49,7 @@ int put_var_int(struct string_view *dest, uint64_t val)
 			break;
 		}
 		val--;
-		buf[i] = 0x80 | (byte)(val & 0x7f);
+		buf[i] = 0x80 | (uint8_t)(val & 0x7f);
 		i--;
 	}
 
@@ -60,7 +60,7 @@ int put_var_int(struct string_view *dest, uint64_t val)
 	return n;
 }
 
-int reftable_is_block_type(byte typ)
+int reftable_is_block_type(uint8_t typ)
 {
 	switch (typ) {
 	case BLOCK_TYPE_REF:
@@ -107,7 +107,8 @@ static int encode_string(char *str, struct string_view s)
 }
 
 int reftable_encode_key(bool *restart, struct string_view dest,
-			struct strbuf prev_key, struct strbuf key, byte extra)
+			struct strbuf prev_key, struct strbuf key,
+			uint8_t extra)
 {
 	struct string_view start = dest;
 	int prefix_len = common_prefix_size(&prev_key, &key);
@@ -132,8 +133,8 @@ int reftable_encode_key(bool *restart, struct string_view dest,
 	return start.len - dest.len;
 }
 
-int reftable_decode_key(struct strbuf *key, byte *extra, struct strbuf last_key,
-			struct string_view in)
+int reftable_decode_key(struct strbuf *key, uint8_t *extra,
+			struct strbuf last_key, struct string_view in)
 {
 	int start_len = in.len;
 	uint64_t prefix_len = 0;
@@ -151,7 +152,7 @@ int reftable_decode_key(struct strbuf *key, byte *extra, struct strbuf last_key,
 		return -1;
 	string_view_consume(&in, n);
 
-	*extra = (byte)(suffix_len & 0x7);
+	*extra = (uint8_t)(suffix_len & 0x7);
 	suffix_len >>= 3;
 
 	if (in.len < suffix_len)
@@ -210,7 +211,7 @@ static char hexdigit(int c)
 	return 'a' + (c - 10);
 }
 
-static void hex_format(char *dest, byte *src, int hash_size)
+static void hex_format(char *dest, uint8_t *src, int hash_size)
 {
 	assert(hash_size > 0);
 	if (src != NULL) {
@@ -256,7 +257,7 @@ void reftable_ref_record_clear(struct reftable_ref_record *ref)
 	memset(ref, 0, sizeof(struct reftable_ref_record));
 }
 
-static byte reftable_ref_record_val_type(const void *rec)
+static uint8_t reftable_ref_record_val_type(const void *rec)
 {
 	const struct reftable_ref_record *r =
 		(const struct reftable_ref_record *)rec;
@@ -311,7 +312,7 @@ static int reftable_ref_record_encode(const void *rec, struct string_view s,
 }
 
 static int reftable_ref_record_decode(void *rec, struct strbuf key,
-				      byte val_type, struct string_view in,
+				      uint8_t val_type, struct string_view in,
 				      int hash_size)
 {
 	struct reftable_ref_record *r = (struct reftable_ref_record *)rec;
@@ -439,7 +440,7 @@ static void reftable_obj_record_copy_from(void *rec, const void *src_rec,
 	memcpy(obj->offsets, src->offsets, olen);
 }
 
-static byte reftable_obj_record_val_type(const void *rec)
+static uint8_t reftable_obj_record_val_type(const void *rec)
 {
 	struct reftable_obj_record *r = (struct reftable_obj_record *)rec;
 	if (r->offset_len > 0 && r->offset_len < 8)
@@ -482,7 +483,7 @@ static int reftable_obj_record_encode(const void *rec, struct string_view s,
 }
 
 static int reftable_obj_record_decode(void *rec, struct strbuf key,
-				      byte val_type, struct string_view in,
+				      uint8_t val_type, struct string_view in,
 				      int hash_size)
 {
 	struct string_view start = in;
@@ -568,10 +569,10 @@ static void reftable_log_record_key(const void *r, struct strbuf *dest)
 	const struct reftable_log_record *rec =
 		(const struct reftable_log_record *)r;
 	int len = strlen(rec->ref_name);
-	byte i64[8];
+	uint8_t i64[8];
 	uint64_t ts = 0;
 	strbuf_reset(dest);
-	strbuf_add(dest, (byte *)rec->ref_name, len + 1);
+	strbuf_add(dest, (uint8_t *)rec->ref_name, len + 1);
 
 	ts = (~ts) - rec->update_index;
 	put_be64(&i64[0], ts);
@@ -627,7 +628,7 @@ void reftable_log_record_clear(struct reftable_log_record *r)
 	memset(r, 0, sizeof(struct reftable_log_record));
 }
 
-static byte reftable_log_record_val_type(const void *rec)
+static uint8_t reftable_log_record_val_type(const void *rec)
 {
 	const struct reftable_log_record *log =
 		(const struct reftable_log_record *)rec;
@@ -635,7 +636,7 @@ static byte reftable_log_record_val_type(const void *rec)
 	return reftable_log_record_is_deletion(log) ? 0 : 1;
 }
 
-static byte zero[SHA256_SIZE] = { 0 };
+static uint8_t zero[SHA256_SIZE] = { 0 };
 
 static int reftable_log_record_encode(const void *rec, struct string_view s,
 				      int hash_size)
@@ -643,8 +644,8 @@ static int reftable_log_record_encode(const void *rec, struct string_view s,
 	struct reftable_log_record *r = (struct reftable_log_record *)rec;
 	struct string_view start = s;
 	int n = 0;
-	byte *oldh = r->old_hash;
-	byte *newh = r->new_hash;
+	uint8_t *oldh = r->old_hash;
+	uint8_t *newh = r->new_hash;
 	if (reftable_log_record_is_deletion(r))
 		return 0;
 
@@ -692,7 +693,7 @@ static int reftable_log_record_encode(const void *rec, struct string_view s,
 }
 
 static int reftable_log_record_decode(void *rec, struct strbuf key,
-				      byte val_type, struct string_view in,
+				      uint8_t val_type, struct string_view in,
 				      int hash_size)
 {
 	struct string_view start = in;
@@ -792,7 +793,7 @@ static bool null_streq(char *a, char *b)
 	return 0 == strcmp(a, b);
 }
 
-static bool zero_hash_eq(byte *a, byte *b, int sz)
+static bool zero_hash_eq(uint8_t *a, uint8_t *b, int sz)
 {
 	if (a == NULL)
 		a = zero;
@@ -831,7 +832,7 @@ struct reftable_record_vtable reftable_log_record_vtable = {
 	.is_deletion = &reftable_log_record_is_deletion_void,
 };
 
-struct reftable_record reftable_new_record(byte typ)
+struct reftable_record reftable_new_record(uint8_t typ)
 {
 	struct reftable_record rec = { NULL };
 	switch (typ) {
@@ -906,7 +907,7 @@ static void reftable_index_record_clear(void *rec)
 	strbuf_release(&idx->last_key);
 }
 
-static byte reftable_index_record_val_type(const void *rec)
+static uint8_t reftable_index_record_val_type(const void *rec)
 {
 	return 0;
 }
@@ -928,7 +929,7 @@ static int reftable_index_record_encode(const void *rec, struct string_view out,
 }
 
 static int reftable_index_record_decode(void *rec, struct strbuf key,
-					byte val_type, struct string_view in,
+					uint8_t val_type, struct string_view in,
 					int hash_size)
 {
 	struct string_view start = in;
@@ -962,7 +963,7 @@ void reftable_record_key(struct reftable_record *rec, struct strbuf *dest)
 	rec->ops->key(rec->data, dest);
 }
 
-byte reftable_record_type(struct reftable_record *rec)
+uint8_t reftable_record_type(struct reftable_record *rec)
 {
 	return rec->ops->type;
 }
@@ -981,13 +982,13 @@ void reftable_record_copy_from(struct reftable_record *rec,
 	rec->ops->copy_from(rec->data, src->data, hash_size);
 }
 
-byte reftable_record_val_type(struct reftable_record *rec)
+uint8_t reftable_record_val_type(struct reftable_record *rec)
 {
 	return rec->ops->val_type(rec->data);
 }
 
 int reftable_record_decode(struct reftable_record *rec, struct strbuf key,
-			   byte extra, struct string_view src, int hash_size)
+			   uint8_t extra, struct string_view src, int hash_size)
 {
 	return rec->ops->decode(rec->data, key, extra, src, hash_size);
 }
@@ -1046,7 +1047,7 @@ struct reftable_log_record *reftable_record_as_log(struct reftable_record *rec)
 	return (struct reftable_log_record *)rec->data;
 }
 
-static bool hash_equal(byte *a, byte *b, int hash_size)
+static bool hash_equal(uint8_t *a, uint8_t *b, int hash_size)
 {
 	if (a != NULL && b != NULL)
 		return !memcmp(a, b, hash_size);

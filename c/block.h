@@ -18,7 +18,7 @@ https://developers.google.com/open-source/licenses/bsd
   allocation overhead.
 */
 struct block_writer {
-	byte *buf;
+	uint8_t *buf;
 	uint32_t block_size;
 
 	/* Offset ofof the global header. Nonzero in the first block only. */
@@ -28,7 +28,7 @@ struct block_writer {
 	int restart_interval;
 	int hash_size;
 
-	/* Offset of next byte to write. */
+	/* Offset of next uint8_t to write. */
 	uint32_t next;
 	uint32_t *restarts;
 	uint32_t restart_len;
@@ -41,13 +41,13 @@ struct block_writer {
 /*
   initializes the blockwriter to write `typ` entries, using `buf` as temporary
   storage. `buf` is not owned by the block_writer. */
-void block_writer_init(struct block_writer *bw, byte typ, byte *buf,
+void block_writer_init(struct block_writer *bw, uint8_t typ, uint8_t *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size);
 
 /*
   returns the block type (eg. 'r' for ref records.
 */
-byte block_writer_type(struct block_writer *bw);
+uint8_t block_writer_type(struct block_writer *bw);
 
 /* appends the record, or -1 if it doesn't fit. */
 int block_writer_add(struct block_writer *w, struct reftable_record *rec);
@@ -70,7 +70,7 @@ struct block_reader {
 
 	/* size of the data, excluding restart data. */
 	uint32_t block_len;
-	byte *restart_bytes;
+	uint8_t *restart_bytes;
 	uint16_t restart_count;
 
 	/* size of the data in the file. For log blocks, this is the compressed
@@ -101,7 +101,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 		      struct strbuf *want);
 
 /* Returns the block type (eg. 'r' for refs) */
-byte block_reader_type(struct block_reader *r);
+uint8_t block_reader_type(struct block_reader *r);
 
 /* Decodes the first key in the block */
 int block_reader_first_key(struct block_reader *br, struct strbuf *key);

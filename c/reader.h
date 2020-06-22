@@ -60,6 +60,6 @@ const char *reader_name(struct reftable_reader *r);
 
 /* initialize a block reader to read from `r` */
 int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
-			     uint64_t next_off, byte want_typ);
+			     uint64_t next_off, uint8_t want_typ);
 
 #endif

@@ -10,14 +10,14 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-void put_be24(byte *out, uint32_t i)
+void put_be24(uint8_t *out, uint32_t i)
 {
-	out[0] = (byte)((i >> 16) & 0xff);
-	out[1] = (byte)((i >> 8) & 0xff);
-	out[2] = (byte)(i & 0xff);
+	out[0] = (uint8_t)((i >> 16) & 0xff);
+	out[1] = (uint8_t)((i >> 8) & 0xff);
+	out[2] = (uint8_t)(i & 0xff);
 }
 
-uint32_t get_be24(byte *in)
+uint32_t get_be24(uint8_t *in)
 {
 	return (uint32_t)(in[0]) << 16 | (uint32_t)(in[1]) << 8 |
 	       (uint32_t)(in[2]);

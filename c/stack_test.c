@@ -379,7 +379,7 @@ static void test_reftable_stack_log_normalize(void)
 	struct reftable_stack *st = NULL;
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 
-	byte h1[SHA1_SIZE] = { 0x01 }, h2[SHA1_SIZE] = { 0x02 };
+	uint8_t h1[SHA1_SIZE] = { 0x01 }, h2[SHA1_SIZE] = { 0x02 };
 
 	struct reftable_log_record input = {
 		.ref_name = "branch",
