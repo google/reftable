@@ -144,9 +144,10 @@ void reftable_writer_free(struct reftable_writer *w)
 struct obj_index_tree_node {
 	struct strbuf hash;
 	uint64_t *offsets;
-	int offset_len;
-	int offset_cap;
+	size_t offset_len;
+	size_t offset_cap;
 };
+
 #define OBJ_INDEX_TREE_NODE_INIT    \
 	{                           \
 		.hash = STRBUF_INIT \

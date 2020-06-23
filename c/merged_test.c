@@ -225,8 +225,8 @@ static void test_merged(void)
 	struct reftable_iterator it = { 0 };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
 	struct reftable_ref_record *out = NULL;
-	int len = 0;
-	int cap = 0;
+	size_t len = 0;
+	size_t cap = 0;
 	int i = 0;
 
 	assert_err(err);

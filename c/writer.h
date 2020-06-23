@@ -37,8 +37,8 @@ struct reftable_writer {
 
 	/* pending index records for the current section */
 	struct reftable_index_record *index;
-	int index_len;
-	int index_cap;
+	size_t index_len;
+	size_t index_cap;
 
 	/*
 	  tree for use with tsearch; used to populate the 'o' inverse OID

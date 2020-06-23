@@ -86,8 +86,8 @@ int names_length(char **names)
 void parse_names(char *buf, int size, char ***namesp)
 {
 	char **names = NULL;
-	int names_cap = 0;
-	int names_len = 0;
+	size_t names_cap = 0;
+	size_t names_len = 0;
 
 	char *p = buf;
 	char *end = buf + size;
