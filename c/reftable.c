@@ -42,7 +42,7 @@ int reftable_table_seek_ref(struct reftable_table *tab,
 			    struct reftable_iterator *it, const char *name)
 {
 	struct reftable_ref_record ref = {
-		.ref_name = (char *)name,
+		.refname = (char *)name,
 	};
 	struct reftable_record rec = { 0 };
 	reftable_record_from_ref(&rec, &ref);
@@ -77,7 +77,7 @@ int reftable_table_read_ref(struct reftable_table *tab, const char *name,
 	if (err)
 		goto done;
 
-	if (strcmp(ref->ref_name, name) ||
+	if (strcmp(ref->refname, name) ||
 	    reftable_ref_record_is_deletion(ref)) {
 		reftable_ref_record_clear(ref);
 		err = 1;

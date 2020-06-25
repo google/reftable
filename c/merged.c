@@ -292,7 +292,7 @@ int reftable_merged_table_seek_ref(struct reftable_merged_table *mt,
 				   const char *name)
 {
 	struct reftable_ref_record ref = {
-		.ref_name = (char *)name,
+		.refname = (char *)name,
 	};
 	struct reftable_record rec = { 0 };
 	reftable_record_from_ref(&rec, &ref);
@@ -304,7 +304,7 @@ int reftable_merged_table_seek_log_at(struct reftable_merged_table *mt,
 				      const char *name, uint64_t update_index)
 {
 	struct reftable_log_record log = {
-		.ref_name = (char *)name,
+		.refname = (char *)name,
 		.update_index = update_index,
 	};
 	struct reftable_record rec = { 0 };

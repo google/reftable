@@ -94,16 +94,16 @@ int modification_has_ref_with_prefix(struct modification *mod,
 		if (mod->del_len > 0) {
 			struct find_arg arg = {
 				.names = mod->del,
-				.want = ref.ref_name,
+				.want = ref.refname,
 			};
 			int idx = binsearch(mod->del_len, find_name, &arg);
 			if (idx < mod->del_len &&
-			    !strcmp(ref.ref_name, mod->del[idx])) {
+			    !strcmp(ref.refname, mod->del[idx])) {
 				continue;
 			}
 		}
 
-		if (strncmp(ref.ref_name, prefix, strlen(prefix))) {
+		if (strncmp(ref.refname, prefix, strlen(prefix))) {
 			err = 1;
 			goto done;
 		}
@@ -117,7 +117,7 @@ done:
 	return err;
 }
 
-int validate_ref_name(const char *name)
+int validate_refname(const char *name)
 {
 	while (true) {
 		char *next = strchr(name, '/');
@@ -147,9 +147,9 @@ int validate_ref_record_addition(struct reftable_table tab,
 	int err = 0;
 	for (; i < sz; i++) {
 		if (reftable_ref_record_is_deletion(&recs[i])) {
-			mod.del[mod.del_len++] = recs[i].ref_name;
+			mod.del[mod.del_len++] = recs[i].refname;
 		} else {
-			mod.add[mod.add_len++] = recs[i].ref_name;
+			mod.add[mod.add_len++] = recs[i].refname;
 		}
 	}
 
@@ -174,7 +174,7 @@ int modification_validate(struct modification *mod)
 	int err = 0;
 	int i = 0;
 	for (; i < mod->add_len; i++) {
-		err = validate_ref_name(mod->add[i]);
+		err = validate_refname(mod->add[i]);
 		if (err)
 			goto done;
 		strbuf_reset(&slashed);

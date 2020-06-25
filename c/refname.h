@@ -28,7 +28,7 @@ int modification_has_ref_with_prefix(struct modification *mod,
 				     const char *prefix);
 
 // 0 = OK.
-int validate_ref_name(const char *name);
+int validate_refname(const char *name);
 
 int validate_ref_record_addition(struct reftable_table tab,
 				 struct reftable_ref_record *recs, size_t sz);

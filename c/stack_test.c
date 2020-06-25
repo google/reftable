@@ -97,7 +97,7 @@ static void test_reftable_stack_add_one(void)
 	struct reftable_stack *st = NULL;
 	int err;
 	struct reftable_ref_record ref = {
-		.ref_name = "HEAD",
+		.refname = "HEAD",
 		.update_index = 1,
 		.target = "master",
 	};
@@ -111,7 +111,7 @@ static void test_reftable_stack_add_one(void)
 	err = reftable_stack_add(st, &write_test_ref, &ref);
 	assert_err(err);
 
-	err = reftable_stack_read_ref(st, ref.ref_name, &dest);
+	err = reftable_stack_read_ref(st, ref.refname, &dest);
 	assert_err(err);
 	assert(0 == strcmp("master", dest.target));
 
@@ -128,12 +128,12 @@ static void test_reftable_stack_uptodate(void)
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 	int err;
 	struct reftable_ref_record ref1 = {
-		.ref_name = "HEAD",
+		.refname = "HEAD",
 		.update_index = 1,
 		.target = "master",
 	};
 	struct reftable_ref_record ref2 = {
-		.ref_name = "branch2",
+		.refname = "branch2",
 		.update_index = 2,
 		.target = "master",
 	};
@@ -171,7 +171,7 @@ static void test_reftable_stack_transaction_api(void)
 	struct reftable_addition *add = NULL;
 
 	struct reftable_ref_record ref = {
-		.ref_name = "HEAD",
+		.refname = "HEAD",
 		.update_index = 1,
 		.target = "master",
 	};
@@ -195,7 +195,7 @@ static void test_reftable_stack_transaction_api(void)
 
 	reftable_addition_destroy(add);
 
-	err = reftable_stack_read_ref(st, ref.ref_name, &dest);
+	err = reftable_stack_read_ref(st, ref.refname, &dest);
 	assert_err(err);
 	assert(0 == strcmp("master", dest.target));
 
@@ -212,7 +212,7 @@ static void test_reftable_stack_validate_refname(void)
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 	int i;
 	struct reftable_ref_record ref = {
-		.ref_name = "a/b",
+		.refname = "a/b",
 		.update_index = 1,
 		.target = "master",
 	};
@@ -227,7 +227,7 @@ static void test_reftable_stack_validate_refname(void)
 
 	for (i = 0; i < ARRAY_SIZE(additions); i++) {
 		struct reftable_ref_record ref = {
-			.ref_name = additions[i],
+			.refname = additions[i],
 			.update_index = 1,
 			.target = "master",
 		};
@@ -252,12 +252,12 @@ static void test_reftable_stack_update_index_check(void)
 	struct reftable_stack *st = NULL;
 	int err;
 	struct reftable_ref_record ref1 = {
-		.ref_name = "name1",
+		.refname = "name1",
 		.update_index = 1,
 		.target = "master",
 	};
 	struct reftable_ref_record ref2 = {
-		.ref_name = "name2",
+		.refname = "name2",
 		.update_index = 1,
 		.target = "master",
 	};
@@ -316,12 +316,12 @@ static void test_reftable_stack_add(void)
 	for (i = 0; i < N; i++) {
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
-		refs[i].ref_name = xstrdup(buf);
+		refs[i].refname = xstrdup(buf);
 		refs[i].value = reftable_malloc(SHA1_SIZE);
 		refs[i].update_index = i + 1;
 		set_test_hash(refs[i].value, i);
 
-		logs[i].ref_name = xstrdup(buf);
+		logs[i].refname = xstrdup(buf);
 		logs[i].update_index = N + i + 1;
 		logs[i].new_hash = reftable_malloc(SHA1_SIZE);
 		logs[i].email = xstrdup("identity@invalid");
@@ -347,7 +347,7 @@ static void test_reftable_stack_add(void)
 
 	for (i = 0; i < N; i++) {
 		struct reftable_ref_record dest = { 0 };
-		int err = reftable_stack_read_ref(st, refs[i].ref_name, &dest);
+		int err = reftable_stack_read_ref(st, refs[i].refname, &dest);
 		assert_err(err);
 		assert(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
 		reftable_ref_record_clear(&dest);
@@ -355,7 +355,7 @@ static void test_reftable_stack_add(void)
 
 	for (i = 0; i < N; i++) {
 		struct reftable_log_record dest = { 0 };
-		int err = reftable_stack_read_log(st, refs[i].ref_name, &dest);
+		int err = reftable_stack_read_log(st, refs[i].refname, &dest);
 		assert_err(err);
 		assert(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
 		reftable_log_record_clear(&dest);
@@ -382,7 +382,7 @@ static void test_reftable_stack_log_normalize(void)
 	uint8_t h1[SHA1_SIZE] = { 0x01 }, h2[SHA1_SIZE] = { 0x02 };
 
 	struct reftable_log_record input = {
-		.ref_name = "branch",
+		.refname = "branch",
 		.update_index = 1,
 		.new_hash = h1,
 		.old_hash = h2,
@@ -407,7 +407,7 @@ static void test_reftable_stack_log_normalize(void)
 	err = reftable_stack_add(st, &write_test_log, &arg);
 	assert_err(err);
 
-	err = reftable_stack_read_log(st, input.ref_name, &dest);
+	err = reftable_stack_read_log(st, input.refname, &dest);
 	assert_err(err);
 	assert(0 == strcmp(dest.message, "one\n"));
 
@@ -415,7 +415,7 @@ static void test_reftable_stack_log_normalize(void)
 	arg.update_index = 2;
 	err = reftable_stack_add(st, &write_test_log, &arg);
 	assert_err(err);
-	err = reftable_stack_read_log(st, input.ref_name, &dest);
+	err = reftable_stack_read_log(st, input.refname, &dest);
 	assert_err(err);
 	assert(0 == strcmp(dest.message, "two\n"));
 
@@ -445,13 +445,13 @@ static void test_reftable_stack_tombstone(void)
 
 	for (i = 0; i < N; i++) {
 		const char *buf = "branch";
-		refs[i].ref_name = xstrdup(buf);
+		refs[i].refname = xstrdup(buf);
 		refs[i].update_index = i + 1;
 		if (i % 2 == 0) {
 			refs[i].value = reftable_malloc(SHA1_SIZE);
 			set_test_hash(refs[i].value, i);
 		}
-		logs[i].ref_name = xstrdup(buf);
+		logs[i].refname = xstrdup(buf);
 		/* update_index is part of the key. */
 		logs[i].update_index = 42;
 		if (i % 2 == 0) {
@@ -509,7 +509,7 @@ static void test_reftable_stack_hash_id(void)
 	int err;
 
 	struct reftable_ref_record ref = {
-		.ref_name = "master",
+		.refname = "master",
 		.target = "target",
 		.update_index = 1,
 	};
@@ -634,7 +634,7 @@ static void test_reflog_expire(void)
 		char buf[256];
 		snprintf(buf, sizeof(buf), "branch%02d", i);
 
-		logs[i].ref_name = xstrdup(buf);
+		logs[i].refname = xstrdup(buf);
 		logs[i].update_index = i;
 		logs[i].time = i;
 		logs[i].new_hash = reftable_malloc(SHA1_SIZE);
@@ -657,20 +657,20 @@ static void test_reflog_expire(void)
 	err = reftable_stack_compact_all(st, &expiry);
 	assert_err(err);
 
-	err = reftable_stack_read_log(st, logs[9].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[9].refname, &log);
 	assert(err == 1);
 
-	err = reftable_stack_read_log(st, logs[11].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[11].refname, &log);
 	assert_err(err);
 
 	expiry.min_update_index = 15;
 	err = reftable_stack_compact_all(st, &expiry);
 	assert_err(err);
 
-	err = reftable_stack_read_log(st, logs[14].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[14].refname, &log);
 	assert(err == 1);
 
-	err = reftable_stack_read_log(st, logs[16].ref_name, &log);
+	err = reftable_stack_read_log(st, logs[16].refname, &log);
 	assert_err(err);
 
 	/* cleanup */
@@ -726,7 +726,7 @@ static void test_reftable_stack_auto_compaction(void)
 	for (i = 0; i < N; i++) {
 		char name[100];
 		struct reftable_ref_record ref = {
-			.ref_name = name,
+			.refname = name,
 			.update_index = reftable_stack_next_update_index(st),
 			.target = "master",
 		};

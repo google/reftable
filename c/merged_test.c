@@ -41,7 +41,7 @@ static void test_pq(void)
 			reftable_new_record(BLOCK_TYPE_REF);
 		struct pq_entry e = { 0 };
 
-		reftable_record_as_ref(&rec)->ref_name = names[i];
+		reftable_record_as_ref(&rec)->refname = names[i];
 		e.rec = rec;
 		merged_iter_pqueue_add(&pq, e);
 		merged_iter_pqueue_check(pq);
@@ -56,10 +56,10 @@ static void test_pq(void)
 		merged_iter_pqueue_check(pq);
 
 		if (last != NULL) {
-			assert(strcmp(last, ref->ref_name) < 0);
+			assert(strcmp(last, ref->refname) < 0);
 		}
-		last = ref->ref_name;
-		ref->ref_name = NULL;
+		last = ref->refname;
+		ref->refname = NULL;
 		reftable_free(ref);
 	}
 
@@ -136,12 +136,12 @@ static void test_merged_between(void)
 	uint8_t hash1[SHA1_SIZE] = { 1, 2, 3, 0 };
 
 	struct reftable_ref_record r1[] = { {
-		.ref_name = "b",
+		.refname = "b",
 		.update_index = 1,
 		.value = hash1,
 	} };
 	struct reftable_ref_record r2[] = { {
-		.ref_name = "a",
+		.refname = "a",
 		.update_index = 2,
 	} };
 
@@ -176,32 +176,32 @@ static void test_merged(void)
 	uint8_t hash1[SHA1_SIZE] = { 1 };
 	uint8_t hash2[SHA1_SIZE] = { 2 };
 	struct reftable_ref_record r1[] = { {
-						    .ref_name = "a",
+						    .refname = "a",
 						    .update_index = 1,
 						    .value = hash1,
 					    },
 					    {
-						    .ref_name = "b",
+						    .refname = "b",
 						    .update_index = 1,
 						    .value = hash1,
 					    },
 					    {
-						    .ref_name = "c",
+						    .refname = "c",
 						    .update_index = 1,
 						    .value = hash1,
 					    } };
 	struct reftable_ref_record r2[] = { {
-		.ref_name = "a",
+		.refname = "a",
 		.update_index = 2,
 	} };
 	struct reftable_ref_record r3[] = {
 		{
-			.ref_name = "c",
+			.refname = "c",
 			.update_index = 3,
 			.value = hash2,
 		},
 		{
-			.ref_name = "d",
+			.refname = "d",
 			.update_index = 3,
 			.value = hash1,
 		},

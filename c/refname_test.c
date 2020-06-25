@@ -32,7 +32,7 @@ static void test_conflict(void)
 	struct reftable_writer *w =
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 	struct reftable_ref_record rec = {
-		.ref_name = "a/b",
+		.refname = "a/b",
 		.target = "destination", /* make sure it's not a symref. */
 		.update_index = 1,
 	};

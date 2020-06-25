@@ -86,11 +86,11 @@ static void test_block_read_write(void)
 		snprintf(name, sizeof(name), "branch%02d", i);
 		memset(hash, i, sizeof(hash));
 
-		ref.ref_name = name;
+		ref.refname = name;
 		ref.value = hash;
 		names[i] = xstrdup(name);
 		n = block_writer_add(&bw, &rec);
-		ref.ref_name = NULL;
+		ref.refname = NULL;
 		ref.value = NULL;
 		assert(n == 0);
 	}
@@ -110,7 +110,7 @@ static void test_block_read_write(void)
 		if (r > 0) {
 			break;
 		}
-		assert_streq(names[j], ref.ref_name);
+		assert_streq(names[j], ref.refname);
 		j++;
 	}
 
@@ -128,7 +128,7 @@ static void test_block_read_write(void)
 		n = block_iter_next(&it, &rec);
 		assert(n == 0);
 
-		assert_streq(names[i], ref.ref_name);
+		assert_streq(names[i], ref.refname);
 
 		want.len--;
 		n = block_reader_seek(&br, &it, &want);
@@ -136,7 +136,7 @@ static void test_block_read_write(void)
 
 		n = block_iter_next(&it, &rec);
 		assert(n == 0);
-		assert_streq(names[10 * (i / 10)], ref.ref_name);
+		assert_streq(names[10 * (i / 10)], ref.refname);
 
 		block_iter_close(&it);
 	}

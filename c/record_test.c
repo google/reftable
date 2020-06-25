@@ -109,7 +109,7 @@ static void test_reftable_ref_record_roundtrip(void)
 	for (i = 0; i <= 3; i++) {
 		struct reftable_ref_record in = { 0 };
 		struct reftable_ref_record out = {
-			.ref_name = xstrdup("old name"),
+			.refname = xstrdup("old name"),
 			.value = reftable_calloc(SHA1_SIZE),
 			.target_value = reftable_calloc(SHA1_SIZE),
 			.target = xstrdup("old value"),
@@ -142,7 +142,7 @@ static void test_reftable_ref_record_roundtrip(void)
 			in.target = xstrdup("target");
 			break;
 		}
-		in.ref_name = xstrdup("refs/heads/master");
+		in.refname = xstrdup("refs/heads/master");
 
 		reftable_record_from_ref(&rec, &in);
 		test_copy(&rec);
@@ -173,11 +173,11 @@ static void test_reftable_log_record_equal(void)
 {
 	struct reftable_log_record in[2] = {
 		{
-			.ref_name = xstrdup("refs/heads/master"),
+			.refname = xstrdup("refs/heads/master"),
 			.update_index = 42,
 		},
 		{
-			.ref_name = xstrdup("refs/heads/master"),
+			.refname = xstrdup("refs/heads/master"),
 			.update_index = 22,
 		}
 	};
@@ -193,7 +193,7 @@ static void test_reftable_log_record_roundtrip(void)
 {
 	struct reftable_log_record in[2] = {
 		{
-			.ref_name = xstrdup("refs/heads/master"),
+			.refname = xstrdup("refs/heads/master"),
 			.old_hash = reftable_malloc(SHA1_SIZE),
 			.new_hash = reftable_malloc(SHA1_SIZE),
 			.name = xstrdup("han-wen"),
@@ -204,7 +204,7 @@ static void test_reftable_log_record_roundtrip(void)
 			.tz_offset = 100,
 		},
 		{
-			.ref_name = xstrdup("refs/heads/master"),
+			.refname = xstrdup("refs/heads/master"),
 			.update_index = 22,
 		}
 	};
@@ -220,7 +220,7 @@ static void test_reftable_log_record_roundtrip(void)
 		};
 		/* populate out, to check for leaks. */
 		struct reftable_log_record out = {
-			.ref_name = xstrdup("old name"),
+			.refname = xstrdup("old name"),
 			.new_hash = reftable_calloc(SHA1_SIZE),
 			.old_hash = reftable_calloc(SHA1_SIZE),
 			.name = xstrdup("old name"),

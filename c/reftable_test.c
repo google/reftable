@@ -52,7 +52,7 @@ static void test_default_write_opts(void)
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 
 	struct reftable_ref_record rec = {
-		.ref_name = "master",
+		.refname = "master",
 		.update_index = 1,
 	};
 	int err;
@@ -113,7 +113,7 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 
 		snprintf(name, sizeof(name), "refs/heads/branch%02d", i);
 
-		ref.ref_name = name;
+		ref.refname = name;
 		ref.value = hash;
 		ref.update_index = update_index;
 		(*names)[i] = xstrdup(name);
@@ -131,7 +131,7 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 
 		snprintf(name, sizeof(name), "refs/heads/branch%02d", i);
 
-		log.ref_name = name;
+		log.refname = name;
 		log.new_hash = hash;
 		log.update_index = update_index;
 		log.message = "message";
@@ -164,7 +164,7 @@ static void test_log_buffer_size(void)
 	};
 	int err;
 	struct reftable_log_record log = {
-		.ref_name = "refs/heads/master",
+		.refname = "refs/heads/master",
 		.name = "Han-Wen Nienhuys",
 		.email = "hanwen@google.com",
 		.tz_offset = 100,
@@ -220,7 +220,7 @@ static void test_log_write_read(void)
 		snprintf(name, sizeof(name), "b%02d%0*d", i, 130, 7);
 		names[i] = xstrdup(name);
 		puts(name);
-		ref.ref_name = name;
+		ref.refname = name;
 		ref.update_index = i;
 
 		err = reftable_writer_add_ref(w, &ref);
@@ -232,7 +232,7 @@ static void test_log_write_read(void)
 		set_test_hash(hash1, i);
 		set_test_hash(hash2, i + 1);
 
-		log.ref_name = names[i];
+		log.refname = names[i];
 		log.update_index = i;
 		log.old_hash = hash1;
 		log.new_hash = hash2;
@@ -278,7 +278,7 @@ static void test_log_write_read(void)
 		}
 
 		assert_err(err);
-		assert_streq(names[i], log.ref_name);
+		assert_streq(names[i], log.refname);
 		assert(i == log.update_index);
 		i++;
 		reftable_log_record_clear(&log);
@@ -321,7 +321,7 @@ static void test_table_read_write_sequential(void)
 		if (r > 0) {
 			break;
 		}
-		assert(0 == strcmp(names[j], ref.ref_name));
+		assert(0 == strcmp(names[j], ref.refname));
 		assert(update_index == ref.update_index);
 
 		j++;
@@ -414,7 +414,7 @@ static void test_table_read_write_seek(bool index, int hash_id)
 		assert_err(err);
 		err = reftable_iterator_next_ref(&it, &ref);
 		assert_err(err);
-		assert(0 == strcmp(names[i], ref.ref_name));
+		assert(0 == strcmp(names[i], ref.refname));
 		assert(i == ref.value[0]);
 
 		reftable_ref_record_clear(&ref);
@@ -498,7 +498,7 @@ static void test_table_refs_for(bool indexed)
 		/* Put the variable part in the start */
 		snprintf(name, sizeof(name), "br%02d%s", i, fill);
 		name[40] = 0;
-		ref.ref_name = name;
+		ref.refname = name;
 
 		set_test_hash(hash1, i / 4);
 		set_test_hash(hash2, 3 + i / 4);
@@ -547,7 +547,7 @@ static void test_table_refs_for(bool indexed)
 		}
 
 		assert(j < want_names_len);
-		assert(0 == strcmp(ref.ref_name, want_names[j]));
+		assert(0 == strcmp(ref.refname, want_names[j]));
 		j++;
 		reftable_ref_record_clear(&ref);
 	}

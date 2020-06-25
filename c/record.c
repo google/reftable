@@ -171,7 +171,7 @@ static void reftable_ref_record_key(const void *r, struct strbuf *dest)
 	const struct reftable_ref_record *rec =
 		(const struct reftable_ref_record *)r;
 	strbuf_reset(dest);
-	strbuf_addstr(dest, rec->ref_name);
+	strbuf_addstr(dest, rec->refname);
 }
 
 static void reftable_ref_record_copy_from(void *rec, const void *src_rec,
@@ -184,8 +184,8 @@ static void reftable_ref_record_copy_from(void *rec, const void *src_rec,
 	/* This is simple and correct, but we could probably reuse the hash
 	   fields. */
 	reftable_ref_record_clear(ref);
-	if (src->ref_name != NULL) {
-		ref->ref_name = xstrdup(src->ref_name);
+	if (src->refname != NULL) {
+		ref->refname = xstrdup(src->refname);
 	}
 
 	if (src->target != NULL) {
@@ -228,7 +228,7 @@ void reftable_ref_record_print(struct reftable_ref_record *ref,
 			       uint32_t hash_id)
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
-	printf("ref{%s(%" PRIu64 ") ", ref->ref_name, ref->update_index);
+	printf("ref{%s(%" PRIu64 ") ", ref->refname, ref->update_index);
 	if (ref->value != NULL) {
 		hex_format(hex, ref->value, hash_size(hash_id));
 		printf("%s", hex);
@@ -250,7 +250,7 @@ static void reftable_ref_record_clear_void(void *rec)
 
 void reftable_ref_record_clear(struct reftable_ref_record *ref)
 {
-	reftable_free(ref->ref_name);
+	reftable_free(ref->refname);
 	reftable_free(ref->target);
 	reftable_free(ref->target_value);
 	reftable_free(ref->value);
@@ -328,9 +328,9 @@ static int reftable_ref_record_decode(void *rec, struct strbuf key,
 
 	string_view_consume(&in, n);
 
-	r->ref_name = reftable_realloc(r->ref_name, key.len + 1);
-	memcpy(r->ref_name, key.buf, key.len);
-	r->ref_name[key.len] = 0;
+	r->refname = reftable_realloc(r->refname, key.len + 1);
+	memcpy(r->refname, key.buf, key.len);
+	r->refname[key.len] = 0;
 
 	switch (val_type) {
 	case 1:
@@ -555,7 +555,7 @@ void reftable_log_record_print(struct reftable_log_record *log,
 {
 	char hex[SHA256_SIZE + 1] = { 0 };
 
-	printf("log{%s(%" PRIu64 ") %s <%s> %" PRIu64 " %04d\n", log->ref_name,
+	printf("log{%s(%" PRIu64 ") %s <%s> %" PRIu64 " %04d\n", log->refname,
 	       log->update_index, log->name, log->email, log->time,
 	       log->tz_offset);
 	hex_format(hex, log->old_hash, hash_size(hash_id));
@@ -568,11 +568,11 @@ static void reftable_log_record_key(const void *r, struct strbuf *dest)
 {
 	const struct reftable_log_record *rec =
 		(const struct reftable_log_record *)r;
-	int len = strlen(rec->ref_name);
+	int len = strlen(rec->refname);
 	uint8_t i64[8];
 	uint64_t ts = 0;
 	strbuf_reset(dest);
-	strbuf_add(dest, (uint8_t *)rec->ref_name, len + 1);
+	strbuf_add(dest, (uint8_t *)rec->refname, len + 1);
 
 	ts = (~ts) - rec->update_index;
 	put_be64(&i64[0], ts);
@@ -588,8 +588,8 @@ static void reftable_log_record_copy_from(void *rec, const void *src_rec,
 
 	reftable_log_record_clear(dst);
 	*dst = *src;
-	if (dst->ref_name != NULL) {
-		dst->ref_name = xstrdup(dst->ref_name);
+	if (dst->refname != NULL) {
+		dst->refname = xstrdup(dst->refname);
 	}
 	if (dst->email != NULL) {
 		dst->email = xstrdup(dst->email);
@@ -619,7 +619,7 @@ static void reftable_log_record_clear_void(void *rec)
 
 void reftable_log_record_clear(struct reftable_log_record *r)
 {
-	reftable_free(r->ref_name);
+	reftable_free(r->refname);
 	reftable_free(r->new_hash);
 	reftable_free(r->old_hash);
 	reftable_free(r->name);
@@ -706,8 +706,8 @@ static int reftable_log_record_decode(void *rec, struct strbuf key,
 	if (key.len <= 9 || key.buf[key.len - 9] != 0)
 		return REFTABLE_FORMAT_ERROR;
 
-	r->ref_name = reftable_realloc(r->ref_name, key.len - 8);
-	memcpy(r->ref_name, key.buf, key.len - 8);
+	r->refname = reftable_realloc(r->refname, key.len - 8);
+	memcpy(r->refname, key.buf, key.len - 8);
 	ts = get_be64(key.buf + key.len - 8);
 
 	r->update_index = (~max) - ts;
@@ -1067,7 +1067,7 @@ bool reftable_ref_record_equal(struct reftable_ref_record *a,
 			       struct reftable_ref_record *b, int hash_size)
 {
 	assert(hash_size > 0);
-	return 0 == strcmp(a->ref_name, b->ref_name) &&
+	return 0 == strcmp(a->refname, b->refname) &&
 	       a->update_index == b->update_index &&
 	       hash_equal(a->value, b->value, hash_size) &&
 	       hash_equal(a->target_value, b->target_value, hash_size) &&
@@ -1076,8 +1076,8 @@ bool reftable_ref_record_equal(struct reftable_ref_record *a,
 
 int reftable_ref_record_compare_name(const void *a, const void *b)
 {
-	return strcmp(((struct reftable_ref_record *)a)->ref_name,
-		      ((struct reftable_ref_record *)b)->ref_name);
+	return strcmp(((struct reftable_ref_record *)a)->refname,
+		      ((struct reftable_ref_record *)b)->refname);
 }
 
 bool reftable_ref_record_is_deletion(const struct reftable_ref_record *ref)
@@ -1091,7 +1091,7 @@ int reftable_log_record_compare_key(const void *a, const void *b)
 	struct reftable_log_record *la = (struct reftable_log_record *)a;
 	struct reftable_log_record *lb = (struct reftable_log_record *)b;
 
-	int cmp = strcmp(la->ref_name, lb->ref_name);
+	int cmp = strcmp(la->refname, lb->refname);
 	if (cmp)
 		return cmp;
 	if (la->update_index > lb->update_index)

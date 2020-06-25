@@ -24,7 +24,7 @@ void reftable_set_alloc(void *(*malloc)(size_t),
 
 /* reftable_ref_record holds a ref database entry target_value */
 struct reftable_ref_record {
-	char *ref_name; /* Name of the ref, malloced. */
+	char *refname; /* Name of the ref, malloced. */
 	uint64_t update_index; /* Logical timestamp at which this value is
 				  written */
 	uint8_t *value; /* SHA1, or NULL. malloced. */
@@ -48,7 +48,7 @@ int reftable_ref_record_equal(struct reftable_ref_record *a,
 
 /* reftable_log_record holds a reflog entry */
 struct reftable_log_record {
-	char *ref_name;
+	char *refname;
 	uint64_t update_index; /* logical timestamp of a transactional update.
 				*/
 	uint8_t *new_hash;
@@ -98,7 +98,7 @@ enum reftable_error {
 	REFTABLE_LOCK_ERROR = -5,
 
 	/* Misuse of the API:
-	   - on writing a record with NULL ref_name.
+	   - on writing a record with NULL refname.
 	   - on writing a reftable_ref_record outside the table limits
 	   - on writing a ref or log record before the stack's next_update_index
 	   - on writing a log record with multiline message with

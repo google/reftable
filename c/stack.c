@@ -1131,7 +1131,7 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 	if (err)
 		goto done;
 
-	if (strcmp(log->ref_name, refname) ||
+	if (strcmp(log->refname, refname) ||
 	    reftable_log_record_is_deletion(log)) {
 		err = 1;
 		goto done;

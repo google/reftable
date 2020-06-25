@@ -243,7 +243,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 	struct reftable_ref_record copy = *ref;
 	int err = 0;
 
-	if (ref->ref_name == NULL)
+	if (ref->refname == NULL)
 		return REFTABLE_API_ERROR;
 	if (ref->update_index < w->min_update_index ||
 	    ref->update_index > w->max_update_index)
@@ -289,7 +289,7 @@ int reftable_writer_add_log(struct reftable_writer *w,
 	char *input_log_message = log->message;
 	struct strbuf cleaned_message = STRBUF_INIT;
 	int err;
-	if (log->ref_name == NULL)
+	if (log->refname == NULL)
 		return REFTABLE_API_ERROR;
 
 	if (w->block_writer != NULL &&

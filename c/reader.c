@@ -593,7 +593,7 @@ int reftable_reader_seek_ref(struct reftable_reader *r,
 			     struct reftable_iterator *it, const char *name)
 {
 	struct reftable_ref_record ref = {
-		.ref_name = (char *)name,
+		.refname = (char *)name,
 	};
 	struct reftable_record rec = { 0 };
 	reftable_record_from_ref(&rec, &ref);
@@ -605,7 +605,7 @@ int reftable_reader_seek_log_at(struct reftable_reader *r,
 				uint64_t update_index)
 {
 	struct reftable_log_record log = {
-		.ref_name = (char *)name,
+		.refname = (char *)name,
 		.update_index = update_index,
 	};
 	struct reftable_record rec = { 0 };
