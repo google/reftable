@@ -280,7 +280,7 @@ int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
 			     uint64_t next_off, uint8_t want_typ)
 {
 	int32_t guess_block_size = r->block_size ? r->block_size :
-						   DEFAULT_BLOCK_SIZE;
+							 DEFAULT_BLOCK_SIZE;
 	struct reftable_block block = { 0 };
 	uint8_t block_typ = 0;
 	int err = 0;

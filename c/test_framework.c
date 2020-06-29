@@ -67,4 +67,3 @@ void set_test_hash(uint8_t *p, int i)
 {
 	memset(p, (uint8_t)i, hash_size(SHA1_ID));
 }
-

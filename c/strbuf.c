@@ -129,7 +129,6 @@ static uint64_t strbuf_size(void *b)
 	return ((struct strbuf *)b)->len;
 }
 
-
 int strbuf_add_void(void *b, const void *data, size_t sz)
 {
 	strbuf_add((struct strbuf *)b, data, sz);
