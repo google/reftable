@@ -177,18 +177,18 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 	uint64_t first_min = 0;
 	int i = 0;
 	for (i = 0; i < n; i++) {
+		uint64_t min = reftable_table_min_update_index(&stack[i]);
+		uint64_t max = reftable_table_max_update_index(&stack[i]);
+
 		if (reftable_table_hash_id(&stack[i]) != hash_id) {
 			return REFTABLE_FORMAT_ERROR;
 		}
-		if (i > 0 &&
-		    last_max >= reftable_table_min_update_index(&stack[i])) {
-			return REFTABLE_FORMAT_ERROR;
+		if (i == 0 || min < first_min) {
+			first_min = min;
 		}
-		if (i == 0) {
-			first_min = reftable_table_min_update_index(&stack[i]);
+		if (i == 0 || max > last_max) {
+			last_max = max;
 		}
-
-		last_max = reftable_table_max_update_index(&stack[i]);
 	}
 
 	m = (struct reftable_merged_table *)reftable_calloc(
