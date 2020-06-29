@@ -50,7 +50,7 @@ func TestPQ(t *testing.T) {
 }
 
 func constructMergedRefTestTable(t *testing.T, recs ...[]RefRecord) *Merged {
-	var tabs []*Reader
+	var tabs []Table
 	for _, rec := range recs {
 		opts := Config{}
 

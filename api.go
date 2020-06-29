@@ -49,12 +49,17 @@ func (i HashID) Size() int {
 
 // Table is a read interface for reftables, either file reftables or merged reftables.
 type Table interface {
+	// seekRecord returns an iterator pointed to just before the
+	// key specified by the record
+	seekRecord(rec record) (iterator, error)
+
 	MaxUpdateIndex() uint64
 	MinUpdateIndex() uint64
 	HashID() HashID
 	SeekRef(refName string) (*Iterator, error)
 	SeekLog(refName string, updateIndex uint64) (*Iterator, error)
 	RefsFor(oid []byte) (*Iterator, error)
+	Name() string
 }
 
 // iterator is an iterator over reftable

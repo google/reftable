@@ -183,7 +183,7 @@ func (st *Stack) reload(reuseOpen bool) error {
 		delay = time.Millisecond*time.Duration(1+rand.Intn(1)) + 2*delay
 	}
 
-	var tabs []*Reader
+	var tabs []Table
 	for _, r := range st.stack {
 		tabs = append(tabs, r)
 	}
@@ -469,7 +469,7 @@ func (st *Stack) writeCompact(wr *Writer, first, last int, expiration *LogExpira
 	wr.SetLimits(st.stack[first].MinUpdateIndex(),
 		st.stack[last].MaxUpdateIndex())
 
-	var subtabs []*Reader
+	var subtabs []Table
 	for i := first; i <= last; i++ {
 		subtabs = append(subtabs, st.stack[i])
 	}

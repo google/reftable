@@ -101,7 +101,7 @@ func (pq *mergedIterPQueue) add(e pqEntry) {
 
 // Merged is a stack of reftables.
 type Merged struct {
-	stack  []*Reader
+	stack  []Table
 	hashID HashID
 
 	suppressDeletions bool
@@ -112,7 +112,7 @@ func (m *Merged) HashID() HashID {
 }
 
 // NewMerged creates a reader for a merged reftable.
-func NewMerged(tabs []*Reader, hashID [4]byte) (*Merged, error) {
+func NewMerged(tabs []Table, hashID [4]byte) (*Merged, error) {
 	var last Table
 	for i, t := range tabs {
 		if last != nil && last.MaxUpdateIndex() >= t.MinUpdateIndex() {
@@ -165,13 +165,22 @@ func (m *Merged) RefsFor(oid []byte) (*Iterator, error) {
 	}}, nil
 }
 
+func (m *Merged) Name() string {
+	var ss []string
+	for _, t := range m.stack {
+		ss = append(ss, t.Name())
+	}
+
+	return fmt.Sprintf("%s", ss)
+}
+
 // Seek returns an iterator positioned before the wanted record.
 func (m *Merged) SeekLog(refname string, updateIndex uint64) (*Iterator, error) {
 	log := LogRecord{
 		RefName:     refname,
 		UpdateIndex: updateIndex,
 	}
-	impl, err := m.seek(&log)
+	impl, err := m.seekRecord(&log)
 	if err != nil {
 		return nil, err
 	}
@@ -182,14 +191,14 @@ func (m *Merged) SeekRef(name string) (*Iterator, error) {
 	ref := RefRecord{
 		RefName: name,
 	}
-	impl, err := m.seek(&ref)
+	impl, err := m.seekRecord(&ref)
 	if err != nil {
 		return nil, err
 	}
 	return &Iterator{impl}, nil
 }
 
-func (m *Merged) seek(rec record) (iterator, error) {
+func (m *Merged) seekRecord(rec record) (iterator, error) {
 	var its []iterator
 	var names []string
 	for _, t := range m.stack {
