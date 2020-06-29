@@ -14,7 +14,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 struct reftable_merged_table {
 	struct reftable_table *stack;
-	int stack_len;
+	size_t stack_len;
 	uint32_t hash_id;
 	bool suppress_deletions;
 
@@ -25,7 +25,7 @@ struct reftable_merged_table {
 struct merged_iter {
 	struct reftable_iterator *stack;
 	uint32_t hash_id;
-	int stack_len;
+	size_t stack_len;
 	uint8_t typ;
 	bool suppress_deletions;
 	struct merged_iter_pqueue pq;

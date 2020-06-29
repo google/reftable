@@ -19,7 +19,7 @@ https://developers.google.com/open-source/licenses/bsd
 */
 struct string_view {
 	uint8_t *buf;
-	int len;
+	size_t len;
 };
 
 /* Advance `s.buf` by `n`, and decrease length. */

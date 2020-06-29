@@ -19,8 +19,8 @@ https://developers.google.com/open-source/licenses/bsd
   x = STRBUF_INIT;"
  */
 struct strbuf {
-	int len;
-	int cap;
+	size_t len;
+	size_t cap;
 	char *buf;
 
 	/* Used to enforce initialization with STRBUF_INIT */
