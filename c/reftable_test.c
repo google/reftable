@@ -58,8 +58,8 @@ static void test_default_write_opts(void)
 	int err;
 	struct reftable_block_source source = { 0 };
 	struct reftable_reader **readers =
-		reftable_malloc(sizeof(*readers) * 1);
-	struct reftable_table *tab = reftable_malloc(sizeof(*tab) * 1);
+		reftable_calloc(sizeof(*readers) * 1);
+	struct reftable_table *tab = reftable_calloc(sizeof(*tab) * 1);
 	uint32_t hash_id;
 	struct reftable_reader *rd = NULL;
 	struct reftable_merged_table *merged = NULL;
