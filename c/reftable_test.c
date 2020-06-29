@@ -57,7 +57,9 @@ static void test_default_write_opts(void)
 	};
 	int err;
 	struct reftable_block_source source = { 0 };
-	struct reftable_reader **readers = malloc(sizeof(*readers) * 1);
+	struct reftable_reader **readers =
+		reftable_malloc(sizeof(*readers) * 1);
+	struct reftable_table *tab = reftable_malloc(sizeof(*tab) * 1);
 	uint32_t hash_id;
 	struct reftable_reader *rd = NULL;
 	struct reftable_merged_table *merged = NULL;
@@ -79,12 +81,11 @@ static void test_default_write_opts(void)
 	hash_id = reftable_reader_hash_id(rd);
 	assert(hash_id == SHA1_ID);
 
-	readers[0] = rd;
-
-	err = reftable_new_merged_table(&merged, readers, 1, SHA1_ID);
+	reftable_table_from_reader(&tab[0], rd);
+	err = reftable_new_merged_table(&merged, tab, 1, SHA1_ID);
 	assert_err(err);
 
-	reftable_merged_table_close(merged);
+	reader_close(rd);
 	reftable_merged_table_free(merged);
 	strbuf_release(&buf);
 }

@@ -406,11 +406,14 @@ uint64_t reftable_reader_min_update_index(struct reftable_reader *r);
 /* A merged table is implements seeking/iterating over a stack of tables. */
 struct reftable_merged_table;
 
+/* A generic reftable; see below. */
+struct reftable_table;
+
 /* reftable_new_merged_table creates a new merged table. It takes ownership of
    the stack array.
 */
 int reftable_new_merged_table(struct reftable_merged_table **dest,
-			      struct reftable_reader **stack, int n,
+			      struct reftable_table *stack, int n,
 			      uint32_t hash_id);
 
 /* returns an iterator positioned just before 'name' */
@@ -436,11 +439,11 @@ reftable_merged_table_max_update_index(struct reftable_merged_table *mt);
 uint64_t
 reftable_merged_table_min_update_index(struct reftable_merged_table *mt);
 
-/* closes readers for the merged tables */
-void reftable_merged_table_close(struct reftable_merged_table *mt);
-
 /* releases memory for the merged_table */
 void reftable_merged_table_free(struct reftable_merged_table *m);
+
+/* return the hash ID of the merged table. */
+uint32_t reftable_merged_table_hash_id(struct reftable_merged_table *m);
 
 /****************************************************************
  Generic tables
@@ -458,8 +461,19 @@ int reftable_table_seek_ref(struct reftable_table *tab,
 
 void reftable_table_from_reader(struct reftable_table *tab,
 				struct reftable_reader *reader);
+
+/* returns the hash ID from a generic reftable_table */
+uint32_t reftable_table_hash_id(struct reftable_table *tab);
+
+/* create a generic table from reftable_merged_table */
 void reftable_table_from_merged_table(struct reftable_table *tab,
 				      struct reftable_merged_table *table);
+
+/* returns the max update_index covered by this table. */
+uint64_t reftable_table_max_update_index(struct reftable_table *tab);
+
+/* returns the min update_index covered by this table. */
+uint64_t reftable_table_min_update_index(struct reftable_table *tab);
 
 /* convenience function to read a single ref. Returns < 0 for error, 0
    for success, and 1 if ref not found. */

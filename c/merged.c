@@ -169,7 +169,7 @@ static void iterator_from_merged_iter(struct reftable_iterator *it,
 }
 
 int reftable_new_merged_table(struct reftable_merged_table **dest,
-			      struct reftable_reader **stack, int n,
+			      struct reftable_table *stack, int n,
 			      uint32_t hash_id)
 {
 	struct reftable_merged_table *m = NULL;
@@ -177,18 +177,18 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 	uint64_t first_min = 0;
 	int i = 0;
 	for (i = 0; i < n; i++) {
-		struct reftable_reader *r = stack[i];
-		if (r->hash_id != hash_id) {
+		if (reftable_table_hash_id(&stack[i]) != hash_id) {
 			return REFTABLE_FORMAT_ERROR;
 		}
-		if (i > 0 && last_max >= reftable_reader_min_update_index(r)) {
+		if (i > 0 &&
+		    last_max >= reftable_table_min_update_index(&stack[i])) {
 			return REFTABLE_FORMAT_ERROR;
 		}
 		if (i == 0) {
-			first_min = reftable_reader_min_update_index(r);
+			first_min = reftable_table_min_update_index(&stack[i]);
 		}
 
-		last_max = reftable_reader_max_update_index(r);
+		last_max = reftable_table_max_update_index(&stack[i]);
 	}
 
 	m = (struct reftable_merged_table *)reftable_calloc(
@@ -200,16 +200,6 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 	m->hash_id = hash_id;
 	*dest = m;
 	return 0;
-}
-
-void reftable_merged_table_close(struct reftable_merged_table *mt)
-{
-	int i = 0;
-	for (i = 0; i < mt->stack_len; i++) {
-		reftable_reader_free(mt->stack[i]);
-	}
-	FREE_AND_NULL(mt->stack);
-	mt->stack_len = 0;
 }
 
 /* clears the list of subtable, without affecting the readers themselves. */
@@ -256,7 +246,8 @@ int merged_table_seek_record(struct reftable_merged_table *mt,
 	int err = 0;
 	int i = 0;
 	for (i = 0; i < mt->stack_len && err == 0; i++) {
-		int e = reader_seek(mt->stack[i], &iters[n], rec);
+		int e = reftable_table_seek_record(&mt->stack[i], &iters[n],
+						   rec);
 		if (e < 0) {
 			err = e;
 		}
@@ -318,4 +309,9 @@ int reftable_merged_table_seek_log(struct reftable_merged_table *mt,
 {
 	uint64_t max = ~((uint64_t)0);
 	return reftable_merged_table_seek_log_at(mt, it, name, max);
+}
+
+uint32_t reftable_merged_table_hash_id(struct reftable_merged_table *mt)
+{
+	return mt->hash_id;
 }

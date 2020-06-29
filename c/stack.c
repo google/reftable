@@ -102,9 +102,17 @@ reftable_stack_merged_table(struct reftable_stack *st)
 void reftable_stack_destroy(struct reftable_stack *st)
 {
 	if (st->merged != NULL) {
-		reftable_merged_table_close(st->merged);
 		reftable_merged_table_free(st->merged);
 		st->merged = NULL;
+	}
+
+	if (st->readers != NULL) {
+		int i = 0;
+		for (i = 0; i < st->readers_len; i++) {
+			reftable_reader_free(st->readers[i]);
+		}
+		st->readers_len = 0;
+		FREE_AND_NULL(st->readers);
 	}
 	FREE_AND_NULL(st->list_file);
 	FREE_AND_NULL(st->reftable_dir);
@@ -118,7 +126,7 @@ static struct reftable_reader **stack_copy_readers(struct reftable_stack *st,
 		reftable_calloc(sizeof(struct reftable_reader *) * cur_len);
 	int i = 0;
 	for (i = 0; i < cur_len; i++) {
-		cur[i] = st->merged->stack[i];
+		cur[i] = st->readers[i];
 	}
 	return cur;
 }
@@ -130,9 +138,11 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	struct reftable_reader **cur = stack_copy_readers(st, cur_len);
 	int err = 0;
 	int names_len = names_length(names);
-	struct reftable_reader **new_tables =
-		reftable_malloc(sizeof(struct reftable_reader *) * names_len);
-	int new_tables_len = 0;
+	struct reftable_reader **new_readers =
+		reftable_calloc(sizeof(struct reftable_reader *) * names_len);
+	struct reftable_table *new_tables =
+		reftable_calloc(sizeof(struct reftable_table) * names_len);
+	int new_readers_len = 0;
 	struct reftable_merged_table *new_merged = NULL;
 	int i;
 
@@ -170,24 +180,32 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 				goto done;
 		}
 
-		new_tables[new_tables_len++] = rd;
+		new_readers[new_readers_len] = rd;
+		reftable_table_from_reader(&new_tables[new_readers_len], rd);
+		new_readers_len++;
 	}
 
 	/* success! */
-	err = reftable_new_merged_table(&new_merged, new_tables, new_tables_len,
-					st->config.hash_id);
+	err = reftable_new_merged_table(&new_merged, new_tables,
+					new_readers_len, st->config.hash_id);
 	if (err < 0)
 		goto done;
 
 	new_tables = NULL;
-	new_tables_len = 0;
+	st->readers_len = new_readers_len;
 	if (st->merged != NULL) {
 		merged_table_clear(st->merged);
 		reftable_merged_table_free(st->merged);
 	}
+	if (st->readers != NULL) {
+		reftable_free(st->readers);
+	}
+	st->readers = new_readers;
+	new_readers = NULL;
+	new_readers_len = 0;
+
 	new_merged->suppress_deletions = true;
 	st->merged = new_merged;
-
 	for (i = 0; i < cur_len; i++) {
 		if (cur[i] != NULL) {
 			reader_close(cur[i]);
@@ -196,10 +214,11 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	}
 
 done:
-	for (i = 0; i < new_tables_len; i++) {
-		reader_close(new_tables[i]);
-		reftable_reader_free(new_tables[i]);
+	for (i = 0; i < new_readers_len; i++) {
+		reader_close(new_readers[i]);
+		reftable_reader_free(new_readers[i]);
 	}
+	reftable_free(new_readers);
 	reftable_free(new_tables);
 	reftable_free(cur);
 	return err;
@@ -296,13 +315,13 @@ static int stack_uptodate(struct reftable_stack *st)
 	if (err < 0)
 		return err;
 
-	for (i = 0; i < st->merged->stack_len; i++) {
+	for (i = 0; i < st->readers_len; i++) {
 		if (names[i] == NULL) {
 			err = 1;
 			goto done;
 		}
 
-		if (strcmp(st->merged->stack[i]->name, names[i])) {
+		if (strcmp(st->readers[i]->name, names[i])) {
 			err = 1;
 			goto done;
 		}
@@ -456,7 +475,7 @@ int reftable_addition_commit(struct reftable_addition *add)
 		goto done;
 
 	for (i = 0; i < add->stack->merged->stack_len; i++) {
-		strbuf_addstr(&table_list, add->stack->merged->stack[i]->name);
+		strbuf_addstr(&table_list, add->stack->readers[i]->name);
 		strbuf_addstr(&table_list, "\n");
 	}
 	for (i = 0; i < add->new_tables_len; i++) {
@@ -624,8 +643,7 @@ uint64_t reftable_stack_next_update_index(struct reftable_stack *st)
 {
 	int sz = st->merged->stack_len;
 	if (sz > 0)
-		return reftable_reader_max_update_index(
-			       st->merged->stack[sz - 1]) +
+		return reftable_reader_max_update_index(st->readers[sz - 1]) +
 		       1;
 	return 1;
 }
@@ -640,8 +658,8 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 	int err = 0;
 
 	format_name(&next_name,
-		    reftable_reader_min_update_index(st->merged->stack[first]),
-		    reftable_reader_max_update_index(st->merged->stack[first]));
+		    reftable_reader_min_update_index(st->readers[first]),
+		    reftable_reader_max_update_index(st->readers[first]));
 
 	strbuf_reset(temp_tab);
 	strbuf_addstr(temp_tab, st->reftable_dir);
@@ -681,8 +699,8 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 			struct reftable_log_expiry_config *config)
 {
 	int subtabs_len = last - first + 1;
-	struct reftable_reader **subtabs = reftable_calloc(
-		sizeof(struct reftable_reader *) * (last - first + 1));
+	struct reftable_table *subtabs = reftable_calloc(
+		sizeof(struct reftable_table) * (last - first + 1));
 	struct reftable_merged_table *mt = NULL;
 	int err = 0;
 	struct reftable_iterator it = { 0 };
@@ -693,13 +711,12 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 
 	int i = 0, j = 0;
 	for (i = first, j = 0; i <= last; i++) {
-		struct reftable_reader *t = st->merged->stack[i];
-		subtabs[j++] = t;
+		struct reftable_reader *t = st->readers[i];
+		reftable_table_from_reader(&subtabs[j++], t);
 		st->stats.bytes += t->size;
 	}
-	reftable_writer_set_limits(wr,
-				   st->merged->stack[first]->min_update_index,
-				   st->merged->stack[last]->max_update_index);
+	reftable_writer_set_limits(wr, st->readers[first]->min_update_index,
+				   st->readers[last]->max_update_index);
 
 	err = reftable_new_merged_table(&mt, subtabs, subtabs_len,
 					st->config.hash_id);
@@ -838,8 +855,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 
 		strbuf_addstr(&subtab_file_name, st->reftable_dir);
 		strbuf_addstr(&subtab_file_name, "/");
-		strbuf_addstr(&subtab_file_name,
-			      reader_name(st->merged->stack[i]));
+		strbuf_addstr(&subtab_file_name, reader_name(st->readers[i]));
 
 		strbuf_reset(&subtab_lock);
 		strbuf_addbuf(&subtab_lock, &subtab_file_name);
@@ -893,8 +909,8 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	}
 	have_lock = true;
 
-	format_name(&new_table_name, st->merged->stack[first]->min_update_index,
-		    st->merged->stack[last]->max_update_index);
+	format_name(&new_table_name, st->readers[first]->min_update_index,
+		    st->readers[last]->max_update_index);
 	strbuf_addstr(&new_table_name, ".ref");
 
 	strbuf_reset(&new_table_path);
@@ -911,7 +927,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	}
 
 	for (i = 0; i < first; i++) {
-		strbuf_addstr(&ref_list_contents, st->merged->stack[i]->name);
+		strbuf_addstr(&ref_list_contents, st->readers[i]->name);
 		strbuf_addstr(&ref_list_contents, "\n");
 	}
 	if (!is_empty_table) {
@@ -919,7 +935,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		strbuf_addstr(&ref_list_contents, "\n");
 	}
 	for (i = last + 1; i < st->merged->stack_len; i++) {
-		strbuf_addstr(&ref_list_contents, st->merged->stack[i]->name);
+		strbuf_addstr(&ref_list_contents, st->readers[i]->name);
 		strbuf_addstr(&ref_list_contents, "\n");
 	}
 
@@ -1086,7 +1102,7 @@ static uint64_t *stack_table_sizes_for_compaction(struct reftable_stack *st)
 	int overhead = header_size(version) - 1;
 	int i = 0;
 	for (i = 0; i < st->merged->stack_len; i++) {
-		sizes[i] = st->merged->stack[i]->size - overhead;
+		sizes[i] = st->readers[i]->size - overhead;
 	}
 	return sizes;
 }
