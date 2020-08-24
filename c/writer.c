@@ -266,6 +266,7 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 		struct strbuf h = STRBUF_INIT;
 		strbuf_add(&h, ref->target_value, hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
+		strbuf_release(&h);
 	}
 	return 0;
 }
