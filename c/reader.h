@@ -22,7 +22,7 @@ void block_source_close(struct reftable_block_source *source);
 
 /* metadata for a block type */
 struct reftable_reader_offsets {
-	bool present;
+	int is_present;
 	uint64_t offset;
 	uint64_t index_offset;
 };

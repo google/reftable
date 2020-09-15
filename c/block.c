@@ -37,7 +37,7 @@ int footer_size(int version)
 	abort();
 }
 
-int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+int block_writer_register_restart(struct block_writer *w, int n, int restart,
 				  struct strbuf *key);
 
 void block_writer_init(struct block_writer *bw, uint8_t typ, uint8_t *buf,
@@ -74,12 +74,12 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 
 	struct string_view start = out;
 
-	bool restart = false;
+	int is_restart = 0;
 	struct strbuf key = STRBUF_INIT;
 	int n = 0;
 
 	reftable_record_key(rec, &key);
-	n = reftable_encode_key(&restart, out, last, key,
+	n = reftable_encode_key(&is_restart, out, last, key,
 				reftable_record_val_type(rec));
 	if (n < 0)
 		goto done;
@@ -90,7 +90,7 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec)
 		goto done;
 	string_view_consume(&out, n);
 
-	if (block_writer_register_restart(w, start.len - out.len, restart,
+	if (block_writer_register_restart(w, start.len - out.len, is_restart,
 					  &key) < 0)
 		goto done;
 
@@ -102,20 +102,20 @@ done:
 	return -1;
 }
 
-int block_writer_register_restart(struct block_writer *w, int n, bool restart,
+int block_writer_register_restart(struct block_writer *w, int n, int is_restart,
 				  struct strbuf *key)
 {
 	int rlen = w->restart_len;
 	if (rlen >= MAX_RESTARTS) {
-		restart = false;
+		is_restart = 0;
 	}
 
-	if (restart) {
+	if (is_restart) {
 		rlen++;
 	}
 	if (2 + 3 * rlen + n > w->block_size - w->next)
 		return -1;
-	if (restart) {
+	if (is_restart) {
 		if (w->restart_len == w->restart_cap) {
 			w->restart_cap = w->restart_cap * 2 + 1;
 			w->restarts = reftable_realloc(
@@ -401,7 +401,7 @@ int block_reader_seek(struct block_reader *br, struct block_iter *it,
 	/* We're looking for the last entry less/equal than the wanted key, so
 	   we have to go one entry too far and then back up.
 	*/
-	while (true) {
+	while (1) {
 		block_iter_copy_from(&next, it);
 		err = block_iter_next(&next, &rec);
 		if (err < 0)

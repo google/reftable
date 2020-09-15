@@ -55,7 +55,7 @@ struct reftable_record_vtable {
 	void (*clear)(void *rec);
 
 	/* is this a tombstone? */
-	bool (*is_deletion)(const void *rec);
+	int (*is_deletion)(const void *rec);
 };
 
 /* record is a generic wrapper for different types of records. */
@@ -72,9 +72,9 @@ struct reftable_record reftable_new_record(uint8_t typ);
 
 extern struct reftable_record_vtable reftable_ref_record_vtable;
 
-/* Encode `key` into `dest`. Sets `restart` to indicate a restart. Returns
+/* Encode `key` into `dest`. Sets `is_restart` to indicate a restart. Returns
    number of bytes written. */
-int reftable_encode_key(bool *restart, struct string_view dest,
+int reftable_encode_key(int *is_restart, struct string_view dest,
 			struct strbuf prev_key, struct strbuf key,
 			uint8_t extra);
 
@@ -109,7 +109,7 @@ int reftable_record_encode(struct reftable_record *rec, struct string_view dest,
 int reftable_record_decode(struct reftable_record *rec, struct strbuf key,
 			   uint8_t extra, struct string_view src,
 			   int hash_size);
-bool reftable_record_is_deletion(struct reftable_record *rec);
+int reftable_record_is_deletion(struct reftable_record *rec);
 
 /* zeroes out the embedded record */
 void reftable_record_clear(struct reftable_record *rec);

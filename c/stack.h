@@ -15,7 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 struct reftable_stack {
 	char *list_file;
 	char *reftable_dir;
-	bool disable_auto_compact;
+	int disable_auto_compact;
 
 	struct reftable_write_options config;
 
@@ -36,7 +36,7 @@ int fastlog2(uint64_t sz);
 int stack_check_addition(struct reftable_stack *st, const char *new_tab_name);
 void reftable_addition_close(struct reftable_addition *add);
 int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
-				      bool reuse_open);
+				      int reuse_open);
 
 struct segment {
 	int start, end;

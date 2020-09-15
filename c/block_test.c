@@ -105,7 +105,7 @@ static void test_block_read_write(void)
 
 	block_reader_start(&br, &it);
 
-	while (true) {
+	while (1) {
 		int r = block_iter_next(&it, &rec);
 		assert(r >= 0);
 		if (r > 0) {

@@ -23,11 +23,11 @@ int iterator_next(struct reftable_iterator *it, struct reftable_record *rec);
 
 /* Returns true for a zeroed out iterator, such as the one returned from
    iterator_destroy. */
-bool iterator_is_null(struct reftable_iterator *it);
+int iterator_is_null(struct reftable_iterator *it);
 
 /* iterator that produces only ref records that point to `oid` */
 struct filtering_ref_iterator {
-	bool double_check;
+	int double_check;
 	struct reftable_table tab;
 	struct strbuf oid;
 	struct reftable_iterator it;
@@ -55,7 +55,7 @@ struct indexed_table_ref_iter {
 	int offset_len;
 	struct block_reader block_reader;
 	struct block_iter cur;
-	bool finished;
+	int is_finished;
 };
 
 #define INDEXED_TABLE_REF_ITER_INIT                                     \

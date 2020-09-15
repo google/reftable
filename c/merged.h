@@ -16,7 +16,7 @@ struct reftable_merged_table {
 	struct reftable_table *stack;
 	size_t stack_len;
 	uint32_t hash_id;
-	bool suppress_deletions;
+	int suppress_deletions;
 
 	uint64_t min;
 	uint64_t max;
@@ -27,7 +27,7 @@ struct merged_iter {
 	uint32_t hash_id;
 	size_t stack_len;
 	uint8_t typ;
-	bool suppress_deletions;
+	int suppress_deletions;
 	struct merged_iter_pqueue pq;
 };
 

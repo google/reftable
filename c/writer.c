@@ -29,7 +29,7 @@ writer_reftable_block_stats(struct reftable_writer *w, uint8_t typ)
 	case 'g':
 		return &w->stats.log_stats;
 	}
-	assert(false);
+	abort();
 	return NULL;
 }
 

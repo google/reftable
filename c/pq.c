@@ -36,7 +36,7 @@ struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq)
 	return pq.heap[0];
 }
 
-bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq)
+int merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq)
 {
 	return pq.len == 0;
 }

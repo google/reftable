@@ -273,7 +273,7 @@ static void test_log_write_read(void)
 	assert_err(err);
 
 	i = 0;
-	while (true) {
+	while (1) {
 		int err = reftable_iterator_next_log(&it, &log);
 		if (err > 0) {
 			break;
@@ -316,7 +316,7 @@ static void test_table_read_write_sequential(void)
 	err = reftable_reader_seek_ref(&rd, &it, "");
 	assert_err(err);
 
-	while (true) {
+	while (1) {
 		struct reftable_ref_record ref = { 0 };
 		int r = reftable_iterator_next_ref(&it, &ref);
 		assert(r >= 0);
@@ -383,7 +383,7 @@ static void test_table_read_api(void)
 	strbuf_release(&buf);
 }
 
-static void test_table_read_write_seek(bool index, int hash_id)
+static void test_table_read_write_seek(int index, int hash_id)
 {
 	char **names;
 	struct strbuf buf = STRBUF_INIT;
@@ -448,20 +448,20 @@ static void test_table_read_write_seek(bool index, int hash_id)
 
 static void test_table_read_write_seek_linear(void)
 {
-	test_table_read_write_seek(false, SHA1_ID);
+	test_table_read_write_seek(0, SHA1_ID);
 }
 
 static void test_table_read_write_seek_linear_sha256(void)
 {
-	test_table_read_write_seek(false, SHA256_ID);
+	test_table_read_write_seek(0, SHA256_ID);
 }
 
 static void test_table_read_write_seek_index(void)
 {
-	test_table_read_write_seek(true, SHA1_ID);
+	test_table_read_write_seek(1, SHA1_ID);
 }
 
-static void test_table_refs_for(bool indexed)
+static void test_table_refs_for(int indexed)
 {
 	int N = 50;
 	char **want_names = reftable_calloc(sizeof(char *) * (N + 1));
@@ -530,7 +530,7 @@ static void test_table_refs_for(bool indexed)
 	err = init_reader(&rd, &source, "file.ref");
 	assert_err(err);
 	if (!indexed) {
-		rd.obj_offsets.present = 0;
+		rd.obj_offsets.is_present = 0;
 	}
 
 	err = reftable_reader_seek_ref(&rd, &it, "");
@@ -541,7 +541,7 @@ static void test_table_refs_for(bool indexed)
 	assert_err(err);
 
 	j = 0;
-	while (true) {
+	while (1) {
 		int err = reftable_iterator_next_ref(&it, &ref);
 		assert(err >= 0);
 		if (err > 0) {
@@ -563,12 +563,12 @@ static void test_table_refs_for(bool indexed)
 
 static void test_table_refs_for_no_index(void)
 {
-	test_table_refs_for(false);
+	test_table_refs_for(0);
 }
 
 static void test_table_refs_for_obj_index(void)
 {
-	test_table_refs_for(true);
+	test_table_refs_for(1);
 }
 
 static void test_table_empty(void)

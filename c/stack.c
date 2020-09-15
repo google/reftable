@@ -37,7 +37,7 @@ int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 	p->reftable_dir = xstrdup(dir);
 	p->config = config;
 
-	err = reftable_stack_reload_maybe_reuse(p, true);
+	err = reftable_stack_reload_maybe_reuse(p, 1);
 	if (err < 0) {
 		reftable_stack_destroy(p);
 	} else {
@@ -132,7 +132,7 @@ static struct reftable_reader **stack_copy_readers(struct reftable_stack *st,
 }
 
 static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
-				      bool reuse_open)
+				      int reuse_open)
 {
 	int cur_len = st->merged == NULL ? 0 : st->merged->stack_len;
 	struct reftable_reader **cur = stack_copy_readers(st, cur_len);
@@ -204,7 +204,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	new_readers = NULL;
 	new_readers_len = 0;
 
-	new_merged->suppress_deletions = true;
+	new_merged->suppress_deletions = 1;
 	st->merged = new_merged;
 	for (i = 0; i < cur_len; i++) {
 		if (cur[i] != NULL) {
@@ -236,8 +236,7 @@ static int tv_cmp(struct timeval *a, struct timeval *b)
 	return udiff;
 }
 
-int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
-				      bool reuse_open)
+int reftable_stack_reload_maybe_reuse(struct reftable_stack *st, int reuse_open)
 {
 	struct timeval deadline = { 0 };
 	int err = gettimeofday(&deadline, NULL);
@@ -247,7 +246,7 @@ int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
 		return err;
 
 	deadline.tv_sec += 3;
-	while (true) {
+	while (1) {
 		char **names = NULL;
 		char **names_after = NULL;
 		struct timeval now = { 0 };
@@ -341,7 +340,7 @@ int reftable_stack_reload(struct reftable_stack *st)
 {
 	int err = stack_uptodate(st);
 	if (err > 0)
-		return reftable_stack_reload_maybe_reuse(st, true);
+		return reftable_stack_reload_maybe_reuse(st, 1);
 	return err;
 }
 
@@ -729,7 +728,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	if (err < 0)
 		goto done;
 
-	while (true) {
+	while (1) {
 		err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			err = 0;
@@ -754,7 +753,7 @@ int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
 	if (err < 0)
 		goto done;
 
-	while (true) {
+	while (1) {
 		err = reftable_iterator_next_log(&it, &log);
 		if (err > 0) {
 			err = 0;
@@ -806,7 +805,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	struct strbuf ref_list_contents = STRBUF_INIT;
 	struct strbuf new_table_path = STRBUF_INIT;
 	int err = 0;
-	bool have_lock = false;
+	int have_lock = 0;
 	int lock_file_fd = 0;
 	int compact_count = last - first + 1;
 	char **listp = NULL;
@@ -816,7 +815,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		reftable_calloc(sizeof(char *) * (compact_count + 1));
 	int i = 0;
 	int j = 0;
-	bool is_empty_table = false;
+	int is_empty_table = 0;
 
 	if (first > last || (expiry == NULL && first == last)) {
 		err = 0;
@@ -843,7 +842,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	close(lock_file_fd);
 	lock_file_fd = 0;
 
-	have_lock = true;
+	have_lock = 1;
 	err = stack_uptodate(st);
 	if (err != 0)
 		goto done;
@@ -884,7 +883,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 	err = unlink(lock_file_name.buf);
 	if (err < 0)
 		goto done;
-	have_lock = false;
+	have_lock = 0;
 
 	err = stack_compact_locked(st, first, last, &temp_tab_file_name,
 				   expiry);
@@ -907,7 +906,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		}
 		goto done;
 	}
-	have_lock = true;
+	have_lock = 1;
 
 	format_name(&new_table_name, st->readers[first]->min_update_index,
 		    st->readers[last]->max_update_index);
@@ -959,7 +958,7 @@ static int stack_compact_range(struct reftable_stack *st, int first, int last,
 		unlink(new_table_path.buf);
 		goto done;
 	}
-	have_lock = false;
+	have_lock = 0;
 
 	/* Reload the stack before deleting. On windows, we can only delete the
 	   files after we closed them.
@@ -1192,7 +1191,7 @@ int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
 	if (err < 0)
 		goto done;
 
-	while (true) {
+	while (1) {
 		struct reftable_ref_record ref = { 0 };
 		err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {

@@ -135,7 +135,7 @@ static int merged_iter_next_entry(struct merged_iter *mi,
 
 static int merged_iter_next(struct merged_iter *mi, struct reftable_record *rec)
 {
-	while (true) {
+	while (1) {
 		int err = merged_iter_next_entry(mi, rec);
 		if (err == 0 && mi->suppress_deletions &&
 		    reftable_record_is_deletion(rec)) {

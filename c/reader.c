@@ -159,11 +159,11 @@ static int parse_footer(struct reftable_reader *r, uint8_t *footer,
 	}
 
 	first_block_typ = header[header_size(r->version)];
-	r->ref_offsets.present = (first_block_typ == BLOCK_TYPE_REF);
+	r->ref_offsets.is_present = (first_block_typ == BLOCK_TYPE_REF);
 	r->ref_offsets.offset = 0;
-	r->log_offsets.present = (first_block_typ == BLOCK_TYPE_LOG ||
-				  r->log_offsets.offset > 0);
-	r->obj_offsets.present = r->obj_offsets.offset > 0;
+	r->log_offsets.is_present = (first_block_typ == BLOCK_TYPE_LOG ||
+				     r->log_offsets.offset > 0);
+	r->obj_offsets.is_present = r->obj_offsets.offset > 0;
 	err = 0;
 done:
 	return err;
@@ -219,7 +219,7 @@ struct table_iter {
 	uint8_t typ;
 	uint64_t block_off;
 	struct block_iter bi;
-	bool finished;
+	int is_finished;
 };
 #define TABLE_ITER_INIT                          \
 	{                                        \
@@ -232,7 +232,7 @@ static void table_iter_copy_from(struct table_iter *dest,
 	dest->r = src->r;
 	dest->typ = src->typ;
 	dest->block_off = src->block_off;
-	dest->finished = src->finished;
+	dest->is_finished = src->is_finished;
 	block_iter_copy_from(&dest->bi, &src->bi);
 }
 
@@ -329,7 +329,7 @@ static int table_iter_next_block(struct table_iter *dest,
 
 	err = reader_init_block_reader(src->r, &br, next_block_off, src->typ);
 	if (err > 0) {
-		dest->finished = true;
+		dest->is_finished = 1;
 		return 1;
 	}
 	if (err != 0)
@@ -339,7 +339,7 @@ static int table_iter_next_block(struct table_iter *dest,
 			reftable_malloc(sizeof(struct block_reader));
 		*brp = br;
 
-		dest->finished = false;
+		dest->is_finished = 0;
 		block_reader_start(brp, &dest->bi);
 	}
 	return 0;
@@ -350,10 +350,10 @@ static int table_iter_next(struct table_iter *ti, struct reftable_record *rec)
 	if (reftable_record_type(rec) != ti->typ)
 		return REFTABLE_API_ERROR;
 
-	while (true) {
+	while (1) {
 		struct table_iter next = TABLE_ITER_INIT;
 		int err = 0;
-		if (ti->finished) {
+		if (ti->is_finished) {
 			return 1;
 		}
 
@@ -364,7 +364,7 @@ static int table_iter_next(struct table_iter *ti, struct reftable_record *rec)
 
 		err = table_iter_next_block(&next, ti);
 		if (err != 0) {
-			ti->finished = true;
+			ti->is_finished = 1;
 		}
 		table_iter_block_done(ti);
 		if (err != 0) {
@@ -421,7 +421,7 @@ static int reader_table_iter_at(struct reftable_reader *r,
 }
 
 static int reader_start(struct reftable_reader *r, struct table_iter *ti,
-			uint8_t typ, bool index)
+			uint8_t typ, int index)
 {
 	struct reftable_reader_offsets *offs = reader_offsets_for(r, typ);
 	uint64_t off = offs->offset;
@@ -448,7 +448,7 @@ static int reader_seek_linear(struct reftable_reader *r, struct table_iter *ti,
 
 	reftable_record_key(want, &want_key);
 
-	while (true) {
+	while (1) {
 		err = table_iter_next_block(&next, ti);
 		if (err < 0)
 			goto done;
@@ -499,12 +499,12 @@ static int reader_seek_indexed(struct reftable_reader *r,
 	reftable_record_from_index(&want_index_rec, &want_index);
 	reftable_record_from_index(&index_result_rec, &index_result);
 
-	err = reader_start(r, &index_iter, reftable_record_type(rec), true);
+	err = reader_start(r, &index_iter, reftable_record_type(rec), 1);
 	if (err < 0)
 		goto done;
 
 	err = reader_seek_linear(r, &index_iter, &want_index_rec);
-	while (true) {
+	while (1) {
 		err = table_iter_next(&index_iter, &index_result_rec);
 		table_iter_block_done(&index_iter);
 		if (err != 0)
@@ -559,7 +559,7 @@ static int reader_seek_internal(struct reftable_reader *r,
 	if (idx > 0)
 		return reader_seek_indexed(r, it, rec);
 
-	err = reader_start(r, &ti, reftable_record_type(rec), false);
+	err = reader_start(r, &ti, reftable_record_type(rec), 0);
 	if (err < 0)
 		return err;
 	err = reader_seek_linear(r, &ti, rec);
@@ -581,7 +581,7 @@ int reader_seek(struct reftable_reader *r, struct reftable_iterator *it,
 	uint8_t typ = reftable_record_type(rec);
 
 	struct reftable_reader_offsets *offs = reader_offsets_for(r, typ);
-	if (!offs->present) {
+	if (!offs->is_present) {
 		iterator_set_empty(it);
 		return 0;
 	}
@@ -707,7 +707,7 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 	int err;
 
 	*ti = ti_empty;
-	err = reader_start(r, ti, BLOCK_TYPE_REF, false);
+	err = reader_start(r, ti, BLOCK_TYPE_REF, 0);
 	if (err < 0) {
 		reftable_free(ti);
 		return err;
@@ -718,7 +718,7 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 
 	strbuf_add(&filter->oid, oid, oid_len);
 	reftable_table_from_reader(&filter->tab, r);
-	filter->double_check = false;
+	filter->double_check = 0;
 	iterator_from_table_iter(&filter->it, ti);
 
 	iterator_from_filtering_ref_iterator(it, filter);
@@ -728,7 +728,7 @@ static int reftable_reader_refs_for_unindexed(struct reftable_reader *r,
 int reftable_reader_refs_for(struct reftable_reader *r,
 			     struct reftable_iterator *it, uint8_t *oid)
 {
-	if (r->obj_offsets.present)
+	if (r->obj_offsets.is_present)
 		return reftable_reader_refs_for_indexed(r, it, oid);
 	return reftable_reader_refs_for_unindexed(r, it, oid);
 }

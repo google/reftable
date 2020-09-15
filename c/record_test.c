@@ -271,7 +271,7 @@ static void test_key_roundtrip(void)
 	struct strbuf last_key = STRBUF_INIT;
 	struct strbuf key = STRBUF_INIT;
 	struct strbuf roundtrip = STRBUF_INIT;
-	bool restart;
+	int restart;
 	uint8_t extra;
 	int n, m;
 	uint8_t rt_extra;

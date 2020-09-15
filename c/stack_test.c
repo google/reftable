@@ -299,7 +299,7 @@ static void test_reftable_stack_add(void)
 	int i = 0;
 	int err = 0;
 	struct reftable_write_options cfg = {
-		.exact_log_message = true,
+		.exact_log_message = 1,
 	};
 	struct reftable_stack *st = NULL;
 	char dir[256] = "/tmp/stack_test.XXXXXX";
@@ -311,7 +311,7 @@ static void test_reftable_stack_add(void)
 
 	err = reftable_new_stack(&st, dir, cfg);
 	assert_err(err);
-	st->disable_auto_compact = true;
+	st->disable_auto_compact = 1;
 
 	for (i = 0; i < N; i++) {
 		char buf[256];

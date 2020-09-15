@@ -25,7 +25,7 @@ struct merged_iter_pqueue {
 };
 
 struct pq_entry merged_iter_pqueue_top(struct merged_iter_pqueue pq);
-bool merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq);
+int merged_iter_pqueue_is_empty(struct merged_iter_pqueue pq);
 void merged_iter_pqueue_check(struct merged_iter_pqueue pq);
 struct pq_entry merged_iter_pqueue_remove(struct merged_iter_pqueue *pq);
 void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e);

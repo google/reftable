@@ -15,7 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reader.h"
 #include "reftable.h"
 
-bool iterator_is_null(struct reftable_iterator *it)
+int iterator_is_null(struct reftable_iterator *it)
 {
 	return it->ops == NULL;
 }
@@ -88,7 +88,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 	struct reftable_ref_record *ref =
 		(struct reftable_ref_record *)rec->data;
 	int err = 0;
-	while (true) {
+	while (1) {
 		err = reftable_iterator_next_ref(&fri->it, ref);
 		if (err != 0) {
 			break;
@@ -152,7 +152,7 @@ static int indexed_table_ref_iter_next_block(struct indexed_table_ref_iter *it)
 	uint64_t off;
 	int err = 0;
 	if (it->offset_idx == it->offset_len) {
-		it->finished = true;
+		it->is_finished = 1;
 		return 1;
 	}
 
@@ -178,7 +178,7 @@ static int indexed_table_ref_iter_next(void *p, struct reftable_record *rec)
 	struct reftable_ref_record *ref =
 		(struct reftable_ref_record *)rec->data;
 
-	while (true) {
+	while (1) {
 		int err = block_iter_next(&it->cur, rec);
 		if (err < 0) {
 			return err;
@@ -190,7 +190,7 @@ static int indexed_table_ref_iter_next(void *p, struct reftable_record *rec)
 				return err;
 			}
 
-			if (it->finished) {
+			if (it->is_finished) {
 				return 1;
 			}
 			continue;

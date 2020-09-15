@@ -86,7 +86,7 @@ int modification_has_ref_with_prefix(struct modification *mod,
 	if (err)
 		goto done;
 
-	while (true) {
+	while (1) {
 		err = reftable_iterator_next_ref(&it, &ref);
 		if (err)
 			goto done;
@@ -119,7 +119,7 @@ done:
 
 int validate_refname(const char *name)
 {
-	while (true) {
+	while (1) {
 		char *next = strchr(name, '/');
 		if (!*name) {
 			return REFTABLE_REFNAME_ERROR;
@@ -161,7 +161,7 @@ int validate_ref_record_addition(struct reftable_table tab,
 static void strbuf_trim_component(struct strbuf *sl)
 {
 	while (sl->len > 0) {
-		bool is_slash = (sl->buf[sl->len - 1] == '/');
+		int is_slash = (sl->buf[sl->len - 1] == '/');
 		strbuf_setlen(sl, sl->len - 1);
 		if (is_slash)
 			break;

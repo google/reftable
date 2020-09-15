@@ -11,9 +11,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#define true 1
-#define false 0
-
 /* Bigendian en/decoding of integers */
 
 void put_be24(uint8_t *out, uint32_t i);
