@@ -10,6 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
+#include "blocksource.h"
 #include "basics.h"
 #include "constants.h"
 #include "record.h"

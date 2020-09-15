@@ -8,11 +8,11 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "block.h"
 
-#include "system.h"
-
+#include "blocksource.h"
 #include "constants.h"
 #include "record.h"
 #include "reftable.h"
+#include "system.h"
 #include "zlib.h"
 
 int header_size(int version)

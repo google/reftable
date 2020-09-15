@@ -8,11 +8,69 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#include "block.h"
-#include "iter.h"
-#include "record.h"
+#include "blocksource.h"
+#include "strbuf.h"
 #include "reftable.h"
-#include "tree.h"
+
+static void strbuf_return_block(void *b, struct reftable_block *dest)
+{
+	memset(dest->data, 0xff, dest->len);
+	reftable_free(dest->data);
+}
+
+static void strbuf_close(void *b)
+{
+}
+
+static int strbuf_read_block(void *v, struct reftable_block *dest, uint64_t off,
+			     uint32_t size)
+{
+	struct strbuf *b = (struct strbuf *)v;
+	assert(off + size <= b->len);
+	dest->data = reftable_calloc(size);
+	memcpy(dest->data, b->buf + off, size);
+	dest->len = size;
+	return size;
+}
+
+static uint64_t strbuf_size(void *b)
+{
+	return ((struct strbuf *)b)->len;
+}
+
+struct reftable_block_source_vtable strbuf_vtable = {
+	.size = &strbuf_size,
+	.read_block = &strbuf_read_block,
+	.return_block = &strbuf_return_block,
+	.close = &strbuf_close,
+};
+
+void block_source_from_strbuf(struct reftable_block_source *bs,
+			      struct strbuf *buf)
+{
+	assert(bs->ops == NULL);
+	bs->ops = &strbuf_vtable;
+	bs->arg = buf;
+}
+
+static void malloc_return_block(void *b, struct reftable_block *dest)
+{
+	memset(dest->data, 0xff, dest->len);
+	reftable_free(dest->data);
+}
+
+struct reftable_block_source_vtable malloc_vtable = {
+	.return_block = &malloc_return_block,
+};
+
+struct reftable_block_source malloc_block_source_instance = {
+	.ops = &malloc_vtable,
+};
+
+struct reftable_block_source malloc_block_source(void)
+{
+	return malloc_block_source_instance;
+}
 
 struct file_block_source {
 	int fd;
@@ -86,10 +144,4 @@ int reftable_block_source_from_file(struct reftable_block_source *bs,
 	bs->ops = &file_vtable;
 	bs->arg = p;
 	return 0;
-}
-
-int reftable_fd_write(void *arg, const void *data, size_t sz)
-{
-	int *fdp = (int *)arg;
-	return write(*fdp, data, sz);
 }

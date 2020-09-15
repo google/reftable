@@ -22,16 +22,47 @@ GIT_COPTS = [
     "-Wno-unused-parameter",
 ]
 
+# Used while in review in git-core upstream, to guarantee buildability of the
+# subset offered for review.
+cc_library(
+    name = "upstream",
+    srcs = [
+        "basics.c",
+        "blocksource.c",
+        "compat.c",
+        "publicbasics.c",
+        "strbuf.c",
+        "basics.h",
+        "blocksource.h",
+        "compat.h",
+        "strbuf.h",
+        "system.h",
+    ],
+    hdrs = [
+        "include/reftable.h",
+    ],
+    includes = [
+        "include",
+    ],
+    copts = [
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
+    deps = ["@zlib"],
+    visibility = ["//visibility:public"]
+)
+
 cc_library(
     name = "reftable",
     srcs = [
         "basics.c",
         "block.c",
+        "blocksource.c",
         "compat.c",
         "file.c",
         "iter.c",
         "merged.c",
         "pq.c",
+        "publicbasics.c",
         "reader.c",
         "record.c",
         "refname.c",
@@ -43,6 +74,7 @@ cc_library(
         "zlib-compat.c",
         "basics.h",
         "block.h",
+        "blocksource.h",
         "compat.h",
         "constants.h",
         "iter.h",

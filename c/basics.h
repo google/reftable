@@ -11,8 +11,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#include "reftable.h"
-
 #define true 1
 #define false 0
 

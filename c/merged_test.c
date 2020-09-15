@@ -11,7 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 
 #include "basics.h"
-#include "block.h"
+#include "blocksource.h"
 #include "constants.h"
 #include "pq.h"
 #include "reader.h"

@@ -8,10 +8,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "strbuf.h"
 
-#include "system.h"
-#include "reftable.h"
-#include "basics.h"
-
 #ifdef REFTABLE_STANDALONE
 
 void strbuf_init(struct strbuf *s, size_t alloc)
@@ -124,70 +120,10 @@ int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 
 #endif
 
-static uint64_t strbuf_size(void *b)
-{
-	return ((struct strbuf *)b)->len;
-}
-
 int strbuf_add_void(void *b, const void *data, size_t sz)
 {
 	strbuf_add((struct strbuf *)b, data, sz);
 	return sz;
-}
-
-static void strbuf_return_block(void *b, struct reftable_block *dest)
-{
-	memset(dest->data, 0xff, dest->len);
-	reftable_free(dest->data);
-}
-
-static void strbuf_close(void *b)
-{
-}
-
-static int strbuf_read_block(void *v, struct reftable_block *dest, uint64_t off,
-			     uint32_t size)
-{
-	struct strbuf *b = (struct strbuf *)v;
-	assert(off + size <= b->len);
-	dest->data = reftable_calloc(size);
-	memcpy(dest->data, b->buf + off, size);
-	dest->len = size;
-	return size;
-}
-
-struct reftable_block_source_vtable strbuf_vtable = {
-	.size = &strbuf_size,
-	.read_block = &strbuf_read_block,
-	.return_block = &strbuf_return_block,
-	.close = &strbuf_close,
-};
-
-void block_source_from_strbuf(struct reftable_block_source *bs,
-			      struct strbuf *buf)
-{
-	assert(bs->ops == NULL);
-	bs->ops = &strbuf_vtable;
-	bs->arg = buf;
-}
-
-static void malloc_return_block(void *b, struct reftable_block *dest)
-{
-	memset(dest->data, 0xff, dest->len);
-	reftable_free(dest->data);
-}
-
-struct reftable_block_source_vtable malloc_vtable = {
-	.return_block = &malloc_return_block,
-};
-
-struct reftable_block_source malloc_block_source_instance = {
-	.ops = &malloc_vtable,
-};
-
-struct reftable_block_source malloc_block_source(void)
-{
-	return malloc_block_source_instance;
 }
 
 int common_prefix_size(struct strbuf *a, struct strbuf *b)

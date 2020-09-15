@@ -12,7 +12,6 @@ https://developers.google.com/open-source/licenses/bsd
 #ifdef REFTABLE_STANDALONE
 
 #include "basics.h"
-#include "reftable.h"
 
 /*
   Provides a bounds-checked, growable byte ranges. To use, initialize as "strbuf
@@ -26,6 +25,7 @@ struct strbuf {
 	/* Used to enforce initialization with STRBUF_INIT */
 	uint8_t canary;
 };
+
 #define STRBUF_CANARY 0x42
 #define STRBUF_INIT                       \
 	{                                 \
@@ -76,13 +76,5 @@ int strbuf_add_void(void *b, const void *data, size_t sz);
 
 /* Find the longest shared prefix size of `a` and `b` */
 int common_prefix_size(struct strbuf *a, struct strbuf *b);
-
-struct reftable_block_source;
-
-/* Create an in-memory block source for reading reftables */
-void block_source_from_strbuf(struct reftable_block_source *bs,
-			      struct strbuf *buf);
-
-struct reftable_block_source malloc_block_source(void);
 
 #endif
