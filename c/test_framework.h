@@ -11,13 +11,9 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
-#include "reftable.h"
-
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
-
-#include "system.h"
 
 #ifdef assert
 #undef assert

@@ -10,7 +10,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 #include "basics.h"
-#include "constants.h"
 
 struct test_case **test_cases;
 int test_case_len;
