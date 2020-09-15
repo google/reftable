@@ -58,7 +58,6 @@ cc_library(
         "block.c",
         "blocksource.c",
         "compat.c",
-        "file.c",
         "iter.c",
         "merged.c",
         "pq.c",
