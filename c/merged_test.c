@@ -275,6 +275,50 @@ static void test_merged(void)
 	reftable_free(bs);
 }
 
+static void test_default_write_opts(void)
+{
+	struct reftable_write_options opts = { 0 };
+	struct strbuf buf = STRBUF_INIT;
+	struct reftable_writer *w =
+		reftable_new_writer(&strbuf_add_void, &buf, &opts);
+
+	struct reftable_ref_record rec = {
+		.refname = "master",
+		.update_index = 1,
+	};
+	int err;
+	struct reftable_block_source source = { 0 };
+	struct reftable_table *tab = reftable_calloc(sizeof(*tab) * 1);
+	uint32_t hash_id;
+	struct reftable_reader *rd = NULL;
+	struct reftable_merged_table *merged = NULL;
+
+	reftable_writer_set_limits(w, 1, 1);
+
+	err = reftable_writer_add_ref(w, &rec);
+	assert_err(err);
+
+	err = reftable_writer_close(w);
+	assert_err(err);
+	reftable_writer_free(w);
+
+	block_source_from_strbuf(&source, &buf);
+
+	err = reftable_new_reader(&rd, &source, "filename");
+	assert_err(err);
+
+	hash_id = reftable_reader_hash_id(rd);
+	assert(hash_id == SHA1_ID);
+
+	reftable_table_from_reader(&tab[0], rd);
+	err = reftable_new_merged_table(&merged, tab, 1, SHA1_ID);
+	assert_err(err);
+
+	reftable_reader_free(rd);
+	reftable_merged_table_free(merged);
+	strbuf_release(&buf);
+}
+
 /* XXX test refs_for(oid) */
 
 int merged_test_main(int argc, const char *argv[])
@@ -282,5 +326,6 @@ int merged_test_main(int argc, const char *argv[])
 	add_test_case("test_merged_between", &test_merged_between);
 	add_test_case("test_pq", &test_pq);
 	add_test_case("test_merged", &test_merged);
+	add_test_case("test_default_write_opts", &test_default_write_opts);
 	return test_main(argc, argv);
 }
