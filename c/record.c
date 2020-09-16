@@ -1107,18 +1107,6 @@ int reftable_log_record_is_deletion(const struct reftable_log_record *log)
 		log->message == NULL);
 }
 
-int hash_size(uint32_t id)
-{
-	switch (id) {
-	case 0:
-	case SHA1_ID:
-		return SHA1_SIZE;
-	case SHA256_ID:
-		return SHA256_SIZE;
-	}
-	abort();
-}
-
 void string_view_consume(struct string_view *s, int n)
 {
 	s->buf += n;
