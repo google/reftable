@@ -175,7 +175,6 @@ static void test_log_write_read(void)
 		struct reftable_ref_record ref = { 0 };
 		snprintf(name, sizeof(name), "b%02d%0*d", i, 130, 7);
 		names[i] = xstrdup(name);
-		puts(name);
 		ref.refname = name;
 		ref.update_index = i;
 
