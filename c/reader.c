@@ -30,17 +30,6 @@ int block_source_read_block(struct reftable_block_source *source,
 	return result;
 }
 
-void reftable_block_done(struct reftable_block *blockp)
-{
-	struct reftable_block_source source = blockp->source;
-	if (blockp != NULL && source.ops != NULL)
-		source.ops->return_block(source.arg, blockp);
-	blockp->data = NULL;
-	blockp->len = 0;
-	blockp->source.ops = NULL;
-	blockp->source.arg = NULL;
-}
-
 void block_source_close(struct reftable_block_source *source)
 {
 	if (source->ops == NULL) {

@@ -430,3 +430,14 @@ void block_writer_clear(struct block_writer *bw)
 	strbuf_release(&bw->last_key);
 	/* the block is not owned. */
 }
+
+void reftable_block_done(struct reftable_block *blockp)
+{
+	struct reftable_block_source source = blockp->source;
+	if (blockp != NULL && source.ops != NULL)
+		source.ops->return_block(source.arg, blockp);
+	blockp->data = NULL;
+	blockp->len = 0;
+	blockp->source.ops = NULL;
+	blockp->source.arg = NULL;
+}
