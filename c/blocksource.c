@@ -8,6 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 
+#include "basics.h"
 #include "blocksource.h"
 #include "strbuf.h"
 #include "reftable.h"
