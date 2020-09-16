@@ -36,8 +36,4 @@ int merged_table_seek_record(struct reftable_merged_table *mt,
 			     struct reftable_iterator *it,
 			     struct reftable_record *rec);
 
-int reftable_table_seek_record(struct reftable_table *tab,
-			       struct reftable_iterator *it,
-			       struct reftable_record *rec);
-
 #endif

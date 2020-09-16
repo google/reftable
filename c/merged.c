@@ -8,13 +8,13 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "merged.h"
 
-#include "system.h"
-
 #include "constants.h"
 #include "iter.h"
 #include "pq.h"
 #include "reader.h"
 #include "record.h"
+#include "reftable.h"
+#include "system.h"
 
 static int merged_iter_init(struct merged_iter *mi)
 {
@@ -314,4 +314,45 @@ int reftable_merged_table_seek_log(struct reftable_merged_table *mt,
 uint32_t reftable_merged_table_hash_id(struct reftable_merged_table *mt)
 {
 	return mt->hash_id;
+}
+
+static int reftable_merged_table_seek_void(void *tab,
+					   struct reftable_iterator *it,
+					   struct reftable_record *rec)
+{
+	return merged_table_seek_record((struct reftable_merged_table *)tab, it,
+					rec);
+}
+
+static uint32_t reftable_merged_table_hash_id_void(void *tab)
+{
+	return reftable_merged_table_hash_id(
+		(struct reftable_merged_table *)tab);
+}
+
+static uint64_t reftable_merged_table_min_update_index_void(void *tab)
+{
+	return reftable_merged_table_min_update_index(
+		(struct reftable_merged_table *)tab);
+}
+
+static uint64_t reftable_merged_table_max_update_index_void(void *tab)
+{
+	return reftable_merged_table_max_update_index(
+		(struct reftable_merged_table *)tab);
+}
+
+static struct reftable_table_vtable merged_table_vtable = {
+	.seek_record = reftable_merged_table_seek_void,
+	.hash_id = reftable_merged_table_hash_id_void,
+	.min_update_index = reftable_merged_table_min_update_index_void,
+	.max_update_index = reftable_merged_table_max_update_index_void,
+};
+
+void reftable_table_from_merged_table(struct reftable_table *tab,
+				      struct reftable_merged_table *merged)
+{
+	assert(tab->ops == NULL);
+	tab->ops = &merged_table_vtable;
+	tab->table_arg = merged;
 }

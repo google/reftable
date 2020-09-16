@@ -62,4 +62,17 @@ const char *reader_name(struct reftable_reader *r);
 int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
 			     uint64_t next_off, uint8_t want_typ);
 
+/* generic interface to reftables */
+struct reftable_table_vtable {
+	int (*seek_record)(void *tab, struct reftable_iterator *it,
+			   struct reftable_record *);
+	uint32_t (*hash_id)(void *tab);
+	uint64_t (*min_update_index)(void *tab);
+	uint64_t (*max_update_index)(void *tab);
+};
+
+int reftable_table_seek_record(struct reftable_table *tab,
+			       struct reftable_iterator *it,
+			       struct reftable_record *rec);
+
 #endif
