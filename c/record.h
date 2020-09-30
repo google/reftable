@@ -112,10 +112,6 @@ int reftable_record_is_deletion(struct reftable_record *rec);
 /* zeroes out the embedded record */
 void reftable_record_clear(struct reftable_record *rec);
 
-/* clear out the record, yielding the reftable_record data that was
- * encapsulated. */
-void *reftable_record_yield(struct reftable_record *rec);
-
 /* clear and deallocate embedded record, and zero `rec`. */
 void reftable_record_destroy(struct reftable_record *rec);
 

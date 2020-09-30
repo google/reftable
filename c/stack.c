@@ -15,6 +15,19 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "writer.h"
 
+static int stack_try_add(struct reftable_stack *st,
+			 int (*write_table)(struct reftable_writer *wr,
+					    void *arg),
+			 void *arg);
+static int stack_write_compact(struct reftable_stack *st,
+			       struct reftable_writer *wr, int first, int last,
+			       struct reftable_log_expiry_config *config);
+static int stack_check_addition(struct reftable_stack *st,
+				const char *new_tab_name);
+static void reftable_addition_close(struct reftable_addition *add);
+static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
+					     int reuse_open);
+
 int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 		       struct reftable_write_options config)
 {

@@ -16,6 +16,15 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable.h"
 #include "tree.h"
 
+/* finishes a block, and writes it to storage */
+static int writer_flush_block(struct reftable_writer *w);
+
+/* deallocates memory related to the index */
+static void writer_clear_index(struct reftable_writer *w);
+
+/* finishes writing a 'r' (refs) or 'g' (reflogs) section */
+static int writer_finish_public_section(struct reftable_writer *w);
+
 static struct reftable_block_stats *
 writer_reftable_block_stats(struct reftable_writer *w, uint8_t typ)
 {

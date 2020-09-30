@@ -16,8 +16,6 @@ struct pq_entry {
 	struct reftable_record rec;
 };
 
-int pq_less(struct pq_entry a, struct pq_entry b);
-
 struct merged_iter_pqueue {
 	struct pq_entry *heap;
 	size_t len;

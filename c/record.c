@@ -869,7 +869,9 @@ struct reftable_record reftable_new_record(uint8_t typ)
 	return rec;
 }
 
-void *reftable_record_yield(struct reftable_record *rec)
+/* clear out the record, yielding the reftable_record data that was
+ * encapsulated. */
+static void *reftable_record_yield(struct reftable_record *rec)
 {
 	void *p = rec->data;
 	rec->data = NULL;

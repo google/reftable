@@ -23,7 +23,7 @@ static int find_name(size_t k, void *arg)
 	return strcmp(f_arg->names[k], f_arg->want) >= 0;
 }
 
-int modification_has_ref(struct modification *mod, const char *name)
+static int modification_has_ref(struct modification *mod, const char *name)
 {
 	struct reftable_ref_record ref = { 0 };
 	int err = 0;
@@ -65,8 +65,8 @@ static void modification_clear(struct modification *mod)
 	mod->del_len = 0;
 }
 
-int modification_has_ref_with_prefix(struct modification *mod,
-				     const char *prefix)
+static int modification_has_ref_with_prefix(struct modification *mod,
+					    const char *prefix)
 {
 	struct reftable_iterator it = { NULL };
 	struct reftable_ref_record ref = { NULL };
@@ -117,7 +117,7 @@ done:
 	return err;
 }
 
-int validate_refname(const char *name)
+static int validate_refname(const char *name)
 {
 	while (1) {
 		char *next = strchr(name, '/');

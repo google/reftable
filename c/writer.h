@@ -48,13 +48,4 @@ struct reftable_writer {
 	struct reftable_stats stats;
 };
 
-/* finishes a block, and writes it to storage */
-int writer_flush_block(struct reftable_writer *w);
-
-/* deallocates memory related to the index */
-void writer_clear_index(struct reftable_writer *w);
-
-/* finishes writing a 'r' (refs) or 'g' (reflogs) section */
-int writer_finish_public_section(struct reftable_writer *w);
-
 #endif

@@ -26,17 +26,6 @@ struct reftable_stack {
 };
 
 int read_lines(const char *filename, char ***lines);
-int stack_try_add(struct reftable_stack *st,
-		  int (*write_table)(struct reftable_writer *wr, void *arg),
-		  void *arg);
-int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
-			int first, int last,
-			struct reftable_log_expiry_config *config);
-int fastlog2(uint64_t sz);
-int stack_check_addition(struct reftable_stack *st, const char *new_tab_name);
-void reftable_addition_close(struct reftable_addition *add);
-int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
-				      int reuse_open);
 
 struct segment {
 	int start, end;
@@ -44,6 +33,7 @@ struct segment {
 	uint64_t bytes;
 };
 
+int fastlog2(uint64_t sz);
 struct segment *sizes_to_segments(int *seglen, uint64_t *sizes, int n);
 struct segment suggest_compaction_segment(uint64_t *sizes, int n);
 

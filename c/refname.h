@@ -20,16 +20,6 @@ struct modification {
 	size_t del_len;
 };
 
-// -1 = error, 0 = found, 1 = not found
-int modification_has_ref(struct modification *mod, const char *name);
-
-// -1 = error, 0 = found, 1 = not found.
-int modification_has_ref_with_prefix(struct modification *mod,
-				     const char *prefix);
-
-// 0 = OK.
-int validate_refname(const char *name);
-
 int validate_ref_record_addition(struct reftable_table tab,
 				 struct reftable_ref_record *recs, size_t sz);
 

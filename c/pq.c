@@ -12,7 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 #include "basics.h"
 
-int pq_less(struct pq_entry a, struct pq_entry b)
+static int pq_less(struct pq_entry a, struct pq_entry b)
 {
 	struct strbuf ak = STRBUF_INIT;
 	struct strbuf bk = STRBUF_INIT;
