@@ -37,8 +37,36 @@ int footer_size(int version)
 	abort();
 }
 
-int block_writer_register_restart(struct block_writer *w, int n, int restart,
-				  struct strbuf *key);
+static int block_writer_register_restart(struct block_writer *w, int n,
+					 int is_restart, struct strbuf *key)
+{
+	int rlen = w->restart_len;
+	if (rlen >= MAX_RESTARTS) {
+		is_restart = 0;
+	}
+
+	if (is_restart) {
+		rlen++;
+	}
+	if (2 + 3 * rlen + n > w->block_size - w->next)
+		return -1;
+	if (is_restart) {
+		if (w->restart_len == w->restart_cap) {
+			w->restart_cap = w->restart_cap * 2 + 1;
+			w->restarts = reftable_realloc(
+				w->restarts, sizeof(uint32_t) * w->restart_cap);
+		}
+
+		w->restarts[w->restart_len++] = w->next;
+	}
+
+	w->next += n;
+
+	strbuf_reset(&w->last_key);
+	strbuf_addbuf(&w->last_key, key);
+	w->entries++;
+	return 0;
+}
 
 void block_writer_init(struct block_writer *bw, uint8_t typ, uint8_t *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size)
@@ -102,36 +130,6 @@ done:
 	return -1;
 }
 
-int block_writer_register_restart(struct block_writer *w, int n, int is_restart,
-				  struct strbuf *key)
-{
-	int rlen = w->restart_len;
-	if (rlen >= MAX_RESTARTS) {
-		is_restart = 0;
-	}
-
-	if (is_restart) {
-		rlen++;
-	}
-	if (2 + 3 * rlen + n > w->block_size - w->next)
-		return -1;
-	if (is_restart) {
-		if (w->restart_len == w->restart_cap) {
-			w->restart_cap = w->restart_cap * 2 + 1;
-			w->restarts = reftable_realloc(
-				w->restarts, sizeof(uint32_t) * w->restart_cap);
-		}
-
-		w->restarts[w->restart_len++] = w->next;
-	}
-
-	w->next += n;
-
-	strbuf_reset(&w->last_key);
-	strbuf_addbuf(&w->last_key, key);
-	w->entries++;
-	return 0;
-}
 
 int block_writer_finish(struct block_writer *w)
 {
