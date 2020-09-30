@@ -11,11 +11,11 @@ https://developers.google.com/open-source/licenses/bsd
 #include "system.h"
 #include "basics.h"
 
-struct test_case **test_cases;
-int test_case_len;
-int test_case_cap;
+static struct test_case **test_cases;
+static int test_case_len;
+static int test_case_cap;
 
-struct test_case *new_test_case(const char *name, void (*testfunc)(void))
+static struct test_case *new_test_case(const char *name, void (*testfunc)(void))
 {
 	struct test_case *tc = reftable_malloc(sizeof(struct test_case));
 	tc->name = name;

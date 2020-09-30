@@ -537,9 +537,10 @@ int reftable_stack_new_addition(struct reftable_addition **dest,
 	return err;
 }
 
-int stack_try_add(struct reftable_stack *st,
-		  int (*write_table)(struct reftable_writer *wr, void *arg),
-		  void *arg)
+static int stack_try_add(struct reftable_stack *st,
+			 int (*write_table)(struct reftable_writer *wr,
+					    void *arg),
+			 void *arg)
 {
 	struct reftable_addition add = REFTABLE_ADDITION_INIT;
 	int err = reftable_stack_init_addition(&add, st);
@@ -706,9 +707,9 @@ done:
 	return err;
 }
 
-int stack_write_compact(struct reftable_stack *st, struct reftable_writer *wr,
-			int first, int last,
-			struct reftable_log_expiry_config *config)
+static int stack_write_compact(struct reftable_stack *st,
+			       struct reftable_writer *wr, int first, int last,
+			       struct reftable_log_expiry_config *config)
 {
 	int subtabs_len = last - first + 1;
 	struct reftable_table *subtabs = reftable_calloc(
@@ -1173,7 +1174,8 @@ done:
 	return err;
 }
 
-int stack_check_addition(struct reftable_stack *st, const char *new_tab_name)
+static int stack_check_addition(struct reftable_stack *st,
+				const char *new_tab_name)
 {
 	int err = 0;
 	struct reftable_block_source src = { 0 };
