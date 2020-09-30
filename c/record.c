@@ -395,7 +395,7 @@ static int reftable_ref_record_is_deletion_void(const void *p)
 		(const struct reftable_ref_record *)p);
 }
 
-struct reftable_record_vtable reftable_ref_record_vtable = {
+static struct reftable_record_vtable reftable_ref_record_vtable = {
 	.key = &reftable_ref_record_key,
 	.type = BLOCK_TYPE_REF,
 	.copy_from = &reftable_ref_record_copy_from,
@@ -539,7 +539,7 @@ static int not_a_deletion(const void *p)
 	return 0;
 }
 
-struct reftable_record_vtable reftable_obj_record_vtable = {
+static struct reftable_record_vtable reftable_obj_record_vtable = {
 	.key = &reftable_obj_record_key,
 	.type = BLOCK_TYPE_OBJ,
 	.copy_from = &reftable_obj_record_copy_from,
@@ -821,7 +821,7 @@ static int reftable_log_record_is_deletion_void(const void *p)
 		(const struct reftable_log_record *)p);
 }
 
-struct reftable_record_vtable reftable_log_record_vtable = {
+static struct reftable_record_vtable reftable_log_record_vtable = {
 	.key = &reftable_log_record_key,
 	.type = BLOCK_TYPE_LOG,
 	.copy_from = &reftable_log_record_copy_from,
@@ -947,7 +947,7 @@ static int reftable_index_record_decode(void *rec, struct strbuf key,
 	return start.len - in.len;
 }
 
-struct reftable_record_vtable reftable_index_record_vtable = {
+static struct reftable_record_vtable reftable_index_record_vtable = {
 	.key = &reftable_index_record_key,
 	.type = BLOCK_TYPE_INDEX,
 	.copy_from = &reftable_index_record_copy_from,

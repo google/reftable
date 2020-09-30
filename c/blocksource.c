@@ -39,7 +39,7 @@ static uint64_t strbuf_size(void *b)
 	return ((struct strbuf *)b)->len;
 }
 
-struct reftable_block_source_vtable strbuf_vtable = {
+static struct reftable_block_source_vtable strbuf_vtable = {
 	.size = &strbuf_size,
 	.read_block = &strbuf_read_block,
 	.return_block = &strbuf_return_block,
@@ -60,11 +60,11 @@ static void malloc_return_block(void *b, struct reftable_block *dest)
 	reftable_free(dest->data);
 }
 
-struct reftable_block_source_vtable malloc_vtable = {
+static struct reftable_block_source_vtable malloc_vtable = {
 	.return_block = &malloc_return_block,
 };
 
-struct reftable_block_source malloc_block_source_instance = {
+static struct reftable_block_source malloc_block_source_instance = {
 	.ops = &malloc_vtable,
 };
 
@@ -112,7 +112,7 @@ static int file_read_block(void *v, struct reftable_block *dest, uint64_t off,
 	return size;
 }
 
-struct reftable_block_source_vtable file_vtable = {
+static struct reftable_block_source_vtable file_vtable = {
 	.size = &file_size,
 	.read_block = &file_read_block,
 	.return_block = &file_return_block,

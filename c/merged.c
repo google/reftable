@@ -155,7 +155,7 @@ static int merged_iter_next_void(void *p, struct reftable_record *rec)
 	return merged_iter_next(mi, rec);
 }
 
-struct reftable_iterator_vtable merged_iter_vtable = {
+static struct reftable_iterator_vtable merged_iter_vtable = {
 	.next = &merged_iter_next_void,
 	.close = &merged_iter_close,
 };

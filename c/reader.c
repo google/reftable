@@ -376,7 +376,7 @@ static void table_iter_close(void *p)
 	block_iter_close(&ti->bi);
 }
 
-struct reftable_iterator_vtable table_iter_vtable = {
+static struct reftable_iterator_vtable table_iter_vtable = {
 	.next = &table_iter_next_void,
 	.close = &table_iter_close,
 };

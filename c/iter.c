@@ -29,7 +29,7 @@ static void empty_iterator_close(void *arg)
 {
 }
 
-struct reftable_iterator_vtable empty_vtable = {
+static struct reftable_iterator_vtable empty_vtable = {
 	.next = &empty_iterator_next,
 	.close = &empty_iterator_close,
 };
@@ -126,7 +126,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 	return err;
 }
 
-struct reftable_iterator_vtable filtering_ref_iterator_vtable = {
+static struct reftable_iterator_vtable filtering_ref_iterator_vtable = {
 	.next = &filtering_ref_iterator_next,
 	.close = &filtering_ref_iterator_close,
 };
@@ -228,7 +228,7 @@ int new_indexed_table_ref_iter(struct indexed_table_ref_iter **dest,
 	return err;
 }
 
-struct reftable_iterator_vtable indexed_table_ref_iter_vtable = {
+static struct reftable_iterator_vtable indexed_table_ref_iter_vtable = {
 	.next = &indexed_table_ref_iter_next,
 	.close = &indexed_table_ref_iter_close,
 };

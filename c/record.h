@@ -70,8 +70,6 @@ int reftable_is_block_type(uint8_t typ);
 /* creates a malloced record of the given type. Dispose with record_destroy */
 struct reftable_record reftable_new_record(uint8_t typ);
 
-extern struct reftable_record_vtable reftable_ref_record_vtable;
-
 /* Encode `key` into `dest`. Sets `is_restart` to indicate a restart. Returns
    number of bytes written. */
 int reftable_encode_key(int *is_restart, struct string_view dest,
