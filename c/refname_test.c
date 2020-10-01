@@ -39,7 +39,7 @@ static void test_conflict(void)
 	};
 	int err;
 	int i;
-	struct reftable_block_source source = { 0 };
+	struct reftable_block_source source = { NULL };
 	struct reftable_reader *rd = NULL;
 	struct reftable_table tab = { NULL };
 	struct testcase cases[] = {

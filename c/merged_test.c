@@ -22,10 +22,10 @@ https://developers.google.com/open-source/licenses/bsd
 
 static void test_pq(void)
 {
-	char *names[54] = { 0 };
+	char *names[54] = { NULL };
 	int N = ARRAY_SIZE(names) - 1;
 
-	struct merged_iter_pqueue pq = { 0 };
+	struct merged_iter_pqueue pq = { NULL };
 	const char *last = NULL;
 
 	int i = 0;
@@ -166,8 +166,8 @@ static void test_merged_between(void)
 	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, &bs, &readers, sizes, bufs, 2);
 	int i;
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_iterator it = { 0 };
+	struct reftable_ref_record ref = { NULL };
+	struct reftable_iterator it = { NULL };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
 	assert_err(err);
 
@@ -235,7 +235,7 @@ static void test_merged(void)
 	struct reftable_merged_table *mt =
 		merged_table_from_records(refs, &bs, &readers, sizes, bufs, 3);
 
-	struct reftable_iterator it = { 0 };
+	struct reftable_iterator it = { NULL };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
 	struct reftable_ref_record *out = NULL;
 	size_t len = 0;
@@ -244,7 +244,7 @@ static void test_merged(void)
 
 	assert_err(err);
 	while (len < 100) { /* cap loops/recursion. */
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 		int err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			break;
@@ -287,7 +287,7 @@ static void test_default_write_opts(void)
 		.update_index = 1,
 	};
 	int err;
-	struct reftable_block_source source = { 0 };
+	struct reftable_block_source source = { NULL };
 	struct reftable_table *tab = reftable_calloc(sizeof(*tab) * 1);
 	uint32_t hash_id;
 	struct reftable_reader *rd = NULL;

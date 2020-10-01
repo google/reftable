@@ -59,9 +59,9 @@ int reftable_error_to_errno(int err)
 	}
 }
 
-void *(*reftable_malloc_ptr)(size_t sz) = &malloc;
-void *(*reftable_realloc_ptr)(void *, size_t) = &realloc;
-void (*reftable_free_ptr)(void *) = &free;
+static void *(*reftable_malloc_ptr)(size_t sz) = &malloc;
+static void *(*reftable_realloc_ptr)(void *, size_t) = &realloc;
+static void (*reftable_free_ptr)(void *) = &free;
 
 void *reftable_malloc(size_t sz)
 {

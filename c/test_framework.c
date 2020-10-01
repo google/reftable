@@ -56,7 +56,7 @@ int test_main(int argc, const char *argv[])
 		reftable_free(test_cases[i]);
 	}
 	reftable_free(test_cases);
-	test_cases = 0;
+	test_cases = NULL;
 	test_case_len = 0;
 	test_case_cap = 0;
 	return 0;

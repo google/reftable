@@ -59,7 +59,7 @@ void reftable_iterator_destroy(struct reftable_iterator *it)
 int reftable_iterator_next_ref(struct reftable_iterator *it,
 			       struct reftable_ref_record *ref)
 {
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	reftable_record_from_ref(&rec, ref);
 	return iterator_next(it, &rec);
 }
@@ -67,7 +67,7 @@ int reftable_iterator_next_ref(struct reftable_iterator *it,
 int reftable_iterator_next_log(struct reftable_iterator *it,
 			       struct reftable_log_record *log)
 {
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	reftable_record_from_log(&rec, log);
 	return iterator_next(it, &rec);
 }
@@ -95,7 +95,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 		}
 
 		if (fri->double_check) {
-			struct reftable_iterator it = { 0 };
+			struct reftable_iterator it = { NULL };
 
 			err = reftable_table_seek_ref(&fri->tab, &it,
 						      ref->refname);

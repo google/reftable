@@ -25,7 +25,7 @@ static void test_buffer(void)
 {
 	struct strbuf buf = STRBUF_INIT;
 	struct reftable_block_source source = { NULL };
-	struct reftable_block out = { 0 };
+	struct reftable_block out = { NULL };
 	int n;
 	uint8_t in[] = "hello";
 	strbuf_add(&buf, in, sizeof(in));
@@ -54,9 +54,9 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 	};
 	struct reftable_writer *w =
 		reftable_new_writer(&strbuf_add_void, buf, &opts);
-	struct reftable_ref_record ref = { 0 };
+	struct reftable_ref_record ref = { NULL };
 	int i = 0, n;
-	struct reftable_log_record log = { 0 };
+	struct reftable_log_record log = { NULL };
 	const struct reftable_stats *stats = NULL;
 	*names = reftable_calloc(sizeof(char *) * (N + 1));
 	reftable_writer_set_limits(w, update_index, update_index);
@@ -158,13 +158,13 @@ static void test_log_write_read(void)
 	struct reftable_write_options opts = {
 		.block_size = 256,
 	};
-	struct reftable_ref_record ref = { 0 };
+	struct reftable_ref_record ref = { NULL };
 	int i = 0;
-	struct reftable_log_record log = { 0 };
+	struct reftable_log_record log = { NULL };
 	int n;
-	struct reftable_iterator it = { 0 };
-	struct reftable_reader rd = { 0 };
-	struct reftable_block_source source = { 0 };
+	struct reftable_iterator it = { NULL };
+	struct reftable_reader rd = { NULL };
+	struct reftable_block_source source = { NULL };
 	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
@@ -172,7 +172,7 @@ static void test_log_write_read(void)
 	reftable_writer_set_limits(w, 0, N);
 	for (i = 0; i < N; i++) {
 		char name[256];
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 		snprintf(name, sizeof(name), "b%02d%0*d", i, 130, 7);
 		names[i] = xstrdup(name);
 		ref.refname = name;
@@ -183,7 +183,7 @@ static void test_log_write_read(void)
 	}
 	for (i = 0; i < N; i++) {
 		uint8_t hash1[SHA1_SIZE], hash2[SHA1_SIZE];
-		struct reftable_log_record log = { 0 };
+		struct reftable_log_record log = { NULL };
 		set_test_hash(hash1, i);
 		set_test_hash(hash2, i + 1);
 
@@ -253,9 +253,9 @@ static void test_table_read_write_sequential(void)
 	char **names;
 	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
-	struct reftable_iterator it = { 0 };
-	struct reftable_block_source source = { 0 };
-	struct reftable_reader rd = { 0 };
+	struct reftable_iterator it = { NULL };
+	struct reftable_block_source source = { NULL };
+	struct reftable_reader rd = { NULL };
 	int err = 0;
 	int j = 0;
 
@@ -270,7 +270,7 @@ static void test_table_read_write_sequential(void)
 	assert_err(err);
 
 	while (1) {
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 		int r = reftable_iterator_next_ref(&it, &ref);
 		assert(r >= 0);
 		if (r > 0) {
@@ -306,12 +306,12 @@ static void test_table_read_api(void)
 	char **names;
 	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
-	struct reftable_reader rd = { 0 };
-	struct reftable_block_source source = { 0 };
+	struct reftable_reader rd = { NULL };
+	struct reftable_block_source source = { NULL };
 	int err;
 	int i;
-	struct reftable_log_record log = { 0 };
-	struct reftable_iterator it = { 0 };
+	struct reftable_log_record log = { NULL };
+	struct reftable_iterator it = { NULL };
 
 	write_table(&names, &buf, N, 256, SHA1_ID);
 
@@ -341,14 +341,14 @@ static void test_table_read_write_seek(int index, int hash_id)
 	char **names;
 	struct strbuf buf = STRBUF_INIT;
 	int N = 50;
-	struct reftable_reader rd = { 0 };
-	struct reftable_block_source source = { 0 };
+	struct reftable_reader rd = { NULL };
+	struct reftable_block_source source = { NULL };
 	int err;
 	int i = 0;
 
-	struct reftable_iterator it = { 0 };
+	struct reftable_iterator it = { NULL };
 	struct strbuf pastLast = STRBUF_INIT;
-	struct reftable_ref_record ref = { 0 };
+	struct reftable_ref_record ref = { NULL };
 
 	write_table(&names, &buf, N, 256, hash_id);
 
@@ -381,7 +381,7 @@ static void test_table_read_write_seek(int index, int hash_id)
 
 	err = reftable_reader_seek_ref(&rd, &it, pastLast.buf);
 	if (err == 0) {
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 		int err = reftable_iterator_next_ref(&it, &ref);
 		assert(err > 0);
 	} else {
@@ -424,18 +424,18 @@ static void test_table_refs_for(int indexed)
 	struct reftable_write_options opts = {
 		.block_size = 256,
 	};
-	struct reftable_ref_record ref = { 0 };
+	struct reftable_ref_record ref = { NULL };
 	int i = 0;
 	int n;
 	int err;
 	struct reftable_reader rd;
-	struct reftable_block_source source = { 0 };
+	struct reftable_block_source source = { NULL };
 
 	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 
-	struct reftable_iterator it = { 0 };
+	struct reftable_iterator it = { NULL };
 	int j;
 
 	set_test_hash(want_hash, 4);
@@ -446,7 +446,7 @@ static void test_table_refs_for(int indexed)
 		char name[100];
 		uint8_t hash1[SHA1_SIZE];
 		uint8_t hash2[SHA1_SIZE];
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 
 		memset(hash, i, sizeof(hash));
 		memset(fill, 'x', 50);
@@ -530,10 +530,10 @@ static void test_table_empty(void)
 	struct strbuf buf = STRBUF_INIT;
 	struct reftable_writer *w =
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
-	struct reftable_block_source source = { 0 };
+	struct reftable_block_source source = { NULL };
 	struct reftable_reader *rd = NULL;
-	struct reftable_ref_record rec = { 0 };
-	struct reftable_iterator it = { 0 };
+	struct reftable_ref_record rec = { NULL };
+	struct reftable_iterator it = { NULL };
 	int err;
 
 	reftable_writer_set_limits(w, 1, 1);

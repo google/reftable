@@ -36,10 +36,10 @@ static void test_tree(void)
 {
 	struct tree_node *root = NULL;
 
-	void *values[11] = { 0 };
-	struct tree_node *nodes[11] = { 0 };
+	void *values[11] = { NULL };
+	struct tree_node *nodes[11] = { NULL };
 	int i = 1;
-	struct curry c = { 0 };
+	struct curry c = { NULL };
 	do {
 		nodes[i] = tree_search(values + i, &root, &test_compare, 1);
 		i = (i * 7) % 11;

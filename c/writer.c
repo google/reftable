@@ -248,7 +248,7 @@ done:
 int reftable_writer_add_ref(struct reftable_writer *w,
 			    struct reftable_ref_record *ref)
 {
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	struct reftable_ref_record copy = *ref;
 	int err = 0;
 
@@ -295,7 +295,7 @@ int reftable_writer_add_refs(struct reftable_writer *w,
 int reftable_writer_add_log(struct reftable_writer *w,
 			    struct reftable_log_record *log)
 {
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	char *input_log_message = log->message;
 	struct strbuf cleaned_message = STRBUF_INIT;
 	int err;
@@ -376,7 +376,7 @@ static int writer_finish_section(struct reftable_writer *w)
 		w->index_len = 0;
 		w->index_cap = 0;
 		for (i = 0; i < idx_len; i++) {
-			struct reftable_record rec = { 0 };
+			struct reftable_record rec = { NULL };
 			reftable_record_from_index(&rec, idx + i);
 			if (block_writer_add(w->block_writer, &rec) == 0) {
 				continue;
@@ -451,7 +451,7 @@ static void write_object_record(void *void_arg, void *key)
 		.offsets = entry->offsets,
 		.offset_len = entry->offset_len,
 	};
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	if (arg->err < 0)
 		goto done;
 
@@ -489,7 +489,7 @@ static void object_record_free(void *void_arg, void *key)
 static int writer_dump_object_index(struct reftable_writer *w)
 {
 	struct write_record_arg closure = { .w = w };
-	struct common_prefix_arg common = { 0 };
+	struct common_prefix_arg common = { NULL };
 	if (w->obj_index_tree != NULL) {
 		infix_walk(w->obj_index_tree, &update_common, &common);
 	}
@@ -506,7 +506,7 @@ static int writer_dump_object_index(struct reftable_writer *w)
 	return writer_finish_section(w);
 }
 
-int writer_finish_public_section(struct reftable_writer *w)
+static int writer_finish_public_section(struct reftable_writer *w)
 {
 	uint8_t typ = 0;
 	int err = 0;
@@ -586,7 +586,7 @@ done:
 	return err;
 }
 
-void writer_clear_index(struct reftable_writer *w)
+static void writer_clear_index(struct reftable_writer *w)
 {
 	int i = 0;
 	for (i = 0; i < w->index_len; i++) {
@@ -598,7 +598,7 @@ void writer_clear_index(struct reftable_writer *w)
 	w->index_cap = 0;
 }
 
-const int debug = 0;
+static const int debug = 0;
 
 static int writer_flush_nonempty_block(struct reftable_writer *w)
 {
@@ -658,7 +658,7 @@ static int writer_flush_nonempty_block(struct reftable_writer *w)
 	return 0;
 }
 
-int writer_flush_block(struct reftable_writer *w)
+static int writer_flush_block(struct reftable_writer *w)
 {
 	if (w->block_writer == NULL)
 		return 0;

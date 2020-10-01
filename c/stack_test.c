@@ -101,7 +101,7 @@ static void test_reftable_stack_add_one(void)
 		.update_index = 1,
 		.target = "master",
 	};
-	struct reftable_ref_record dest = { 0 };
+	struct reftable_ref_record dest = { NULL };
 
 	assert(mkdtemp(dir));
 
@@ -175,7 +175,7 @@ static void test_reftable_stack_transaction_api(void)
 		.update_index = 1,
 		.target = "master",
 	};
-	struct reftable_ref_record dest = { 0 };
+	struct reftable_ref_record dest = { NULL };
 
 	assert(mkdtemp(dir));
 
@@ -303,8 +303,8 @@ static void test_reftable_stack_add(void)
 	};
 	struct reftable_stack *st = NULL;
 	char dir[256] = "/tmp/stack_test.XXXXXX";
-	struct reftable_ref_record refs[2] = { { 0 } };
-	struct reftable_log_record logs[2] = { { 0 } };
+	struct reftable_ref_record refs[2] = { { NULL } };
+	struct reftable_log_record logs[2] = { { NULL } };
 	int N = ARRAY_SIZE(refs);
 
 	assert(mkdtemp(dir));
@@ -346,7 +346,8 @@ static void test_reftable_stack_add(void)
 	assert_err(err);
 
 	for (i = 0; i < N; i++) {
-		struct reftable_ref_record dest = { 0 };
+		struct reftable_ref_record dest = { NULL };
+
 		int err = reftable_stack_read_ref(st, refs[i].refname, &dest);
 		assert_err(err);
 		assert(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
@@ -354,7 +355,7 @@ static void test_reftable_stack_add(void)
 	}
 
 	for (i = 0; i < N; i++) {
-		struct reftable_log_record dest = { 0 };
+		struct reftable_log_record dest = { NULL };
 		int err = reftable_stack_read_log(st, refs[i].refname, &dest);
 		assert_err(err);
 		assert(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
@@ -432,11 +433,11 @@ static void test_reftable_stack_tombstone(void)
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
-	struct reftable_ref_record refs[2] = { { 0 } };
-	struct reftable_log_record logs[2] = { { 0 } };
+	struct reftable_ref_record refs[2] = { { NULL } };
+	struct reftable_log_record logs[2] = { { NULL } };
 	int N = ARRAY_SIZE(refs);
-	struct reftable_ref_record dest = { 0 };
-	struct reftable_log_record log_dest = { 0 };
+	struct reftable_ref_record dest = { NULL };
+	struct reftable_log_record log_dest = { NULL };
 
 	assert(mkdtemp(dir));
 
@@ -517,7 +518,7 @@ static void test_reftable_stack_hash_id(void)
 	struct reftable_stack *st32 = NULL;
 	struct reftable_write_options cfg_default = { 0 };
 	struct reftable_stack *st_default = NULL;
-	struct reftable_ref_record dest = { 0 };
+	struct reftable_ref_record dest = { NULL };
 
 	assert(mkdtemp(dir));
 	err = reftable_new_stack(&st, dir, cfg);
@@ -616,14 +617,14 @@ static void test_reflog_expire(void)
 	char dir[256] = "/tmp/stack.test_reflog_expire.XXXXXX";
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
-	struct reftable_log_record logs[20] = { { 0 } };
+	struct reftable_log_record logs[20] = { { NULL } };
 	int N = ARRAY_SIZE(logs) - 1;
 	int i = 0;
 	int err;
 	struct reftable_log_expiry_config expiry = {
 		.time = 10,
 	};
-	struct reftable_log_record log = { 0 };
+	struct reftable_log_record log = { NULL };
 
 	assert(mkdtemp(dir));
 

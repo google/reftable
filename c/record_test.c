@@ -107,16 +107,16 @@ static void test_reftable_ref_record_roundtrip(void)
 	int i = 0;
 
 	for (i = 0; i <= 3; i++) {
-		struct reftable_ref_record in = { 0 };
+		struct reftable_ref_record in = { NULL };
 		struct reftable_ref_record out = {
 			.refname = xstrdup("old name"),
 			.value = reftable_calloc(SHA1_SIZE),
 			.target_value = reftable_calloc(SHA1_SIZE),
 			.target = xstrdup("old value"),
 		};
-		struct reftable_record rec_out = { 0 };
+		struct reftable_record rec_out = { NULL };
 		struct strbuf key = STRBUF_INIT;
-		struct reftable_record rec = { 0 };
+		struct reftable_record rec = { NULL };
 		uint8_t buffer[1024] = { 0 };
 		struct string_view dest = {
 			.buf = buffer,
@@ -211,7 +211,7 @@ static void test_reftable_log_record_roundtrip(void)
 	set_test_hash(in[0].new_hash, 1);
 	set_test_hash(in[0].old_hash, 2);
 	for (int i = 0; i < ARRAY_SIZE(in); i++) {
-		struct reftable_record rec = { 0 };
+		struct reftable_record rec = { NULL };
 		struct strbuf key = STRBUF_INIT;
 		uint8_t buffer[1024] = { 0 };
 		struct string_view dest = {
@@ -227,7 +227,7 @@ static void test_reftable_log_record_roundtrip(void)
 			.email = xstrdup("old@email"),
 			.message = xstrdup("old message"),
 		};
-		struct reftable_record rec_out = { 0 };
+		struct reftable_record rec_out = { NULL };
 		int n, m, valtype;
 
 		reftable_record_from_log(&rec, &in[i]);
@@ -321,10 +321,10 @@ static void test_reftable_obj_record_roundtrip(void)
 			.buf = buffer,
 			.len = sizeof(buffer),
 		};
-		struct reftable_record rec = { 0 };
+		struct reftable_record rec = { NULL };
 		struct strbuf key = STRBUF_INIT;
-		struct reftable_obj_record out = { 0 };
-		struct reftable_record rec_out = { 0 };
+		struct reftable_obj_record out = { NULL };
+		struct reftable_record rec_out = { NULL };
 		int n, m;
 		uint8_t extra;
 
@@ -363,7 +363,7 @@ static void test_reftable_index_record_roundtrip(void)
 		.len = sizeof(buffer),
 	};
 	struct strbuf key = STRBUF_INIT;
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	struct reftable_index_record out = { .last_key = STRBUF_INIT };
 	struct reftable_record out_rec = { NULL };
 	int n, m;

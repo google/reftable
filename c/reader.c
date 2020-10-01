@@ -161,8 +161,8 @@ done:
 int init_reader(struct reftable_reader *r, struct reftable_block_source *source,
 		const char *name)
 {
-	struct reftable_block footer = { 0 };
-	struct reftable_block header = { 0 };
+	struct reftable_block footer = { NULL };
+	struct reftable_block header = { NULL };
 	int err = 0;
 
 	memset(r, 0, sizeof(struct reftable_reader));
@@ -270,7 +270,7 @@ int reader_init_block_reader(struct reftable_reader *r, struct block_reader *br,
 {
 	int32_t guess_block_size = r->block_size ? r->block_size :
 							 DEFAULT_BLOCK_SIZE;
-	struct reftable_block block = { 0 };
+	struct reftable_block block = { NULL };
 	uint8_t block_typ = 0;
 	int err = 0;
 	uint32_t header_off = next_off ? 0 : header_size(r->version);
@@ -477,9 +477,9 @@ static int reader_seek_indexed(struct reftable_reader *r,
 			       struct reftable_record *rec)
 {
 	struct reftable_index_record want_index = { .last_key = STRBUF_INIT };
-	struct reftable_record want_index_rec = { 0 };
+	struct reftable_record want_index_rec = { NULL };
 	struct reftable_index_record index_result = { .last_key = STRBUF_INIT };
-	struct reftable_record index_result_rec = { 0 };
+	struct reftable_record index_result_rec = { NULL };
 	struct table_iter index_iter = TABLE_ITER_INIT;
 	struct table_iter next = TABLE_ITER_INIT;
 	int err = 0;
@@ -584,7 +584,7 @@ int reftable_reader_seek_ref(struct reftable_reader *r,
 	struct reftable_ref_record ref = {
 		.refname = (char *)name,
 	};
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	reftable_record_from_ref(&rec, &ref);
 	return reader_seek(r, it, &rec);
 }
@@ -597,7 +597,7 @@ int reftable_reader_seek_log_at(struct reftable_reader *r,
 		.refname = (char *)name,
 		.update_index = update_index,
 	};
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	reftable_record_from_log(&rec, &log);
 	return reader_seek(r, it, &rec);
 }
@@ -644,10 +644,10 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 		.hash_prefix = oid,
 		.hash_prefix_len = r->object_id_len,
 	};
-	struct reftable_record want_rec = { 0 };
-	struct reftable_iterator oit = { 0 };
-	struct reftable_obj_record got = { 0 };
-	struct reftable_record got_rec = { 0 };
+	struct reftable_record want_rec = { NULL };
+	struct reftable_iterator oit = { NULL };
+	struct reftable_obj_record got = { NULL };
+	struct reftable_record got_rec = { NULL };
 	int err = 0;
 	struct indexed_table_ref_iter *itr = NULL;
 

@@ -44,7 +44,7 @@ int reftable_table_seek_ref(struct reftable_table *tab,
 	struct reftable_ref_record ref = {
 		.refname = (char *)name,
 	};
-	struct reftable_record rec = { 0 };
+	struct reftable_record rec = { NULL };
 	reftable_record_from_ref(&rec, &ref);
 	return tab->ops->seek_record(tab->table_arg, it, &rec);
 }
@@ -60,7 +60,7 @@ void reftable_table_from_reader(struct reftable_table *tab,
 int reftable_table_read_ref(struct reftable_table *tab, const char *name,
 			    struct reftable_ref_record *ref)
 {
-	struct reftable_iterator it = { 0 };
+	struct reftable_iterator it = { NULL };
 	int err = reftable_table_seek_ref(tab, &it, name);
 	if (err)
 		goto done;

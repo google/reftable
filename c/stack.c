@@ -175,7 +175,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 		}
 
 		if (rd == NULL) {
-			struct reftable_block_source src = { 0 };
+			struct reftable_block_source src = { NULL };
 			struct strbuf table_path = STRBUF_INIT;
 			strbuf_addstr(&table_path, st->reftable_dir);
 			strbuf_addstr(&table_path, "/");
@@ -249,7 +249,8 @@ static int tv_cmp(struct timeval *a, struct timeval *b)
 	return udiff;
 }
 
-int reftable_stack_reload_maybe_reuse(struct reftable_stack *st, int reuse_open)
+static int reftable_stack_reload_maybe_reuse(struct reftable_stack *st,
+					     int reuse_open)
 {
 	struct timeval deadline = { 0 };
 	int err = gettimeofday(&deadline, NULL);
@@ -438,7 +439,7 @@ done:
 	return err;
 }
 
-void reftable_addition_close(struct reftable_addition *add)
+static void reftable_addition_close(struct reftable_addition *add)
 {
 	int i = 0;
 	struct strbuf nm = STRBUF_INIT;
@@ -716,9 +717,9 @@ static int stack_write_compact(struct reftable_stack *st,
 		sizeof(struct reftable_table) * (last - first + 1));
 	struct reftable_merged_table *mt = NULL;
 	int err = 0;
-	struct reftable_iterator it = { 0 };
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_log_record log = { 0 };
+	struct reftable_iterator it = { NULL };
+	struct reftable_ref_record ref = { NULL };
+	struct reftable_log_record log = { NULL };
 
 	uint64_t entries = 0;
 
@@ -1150,7 +1151,7 @@ int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 			    struct reftable_log_record *log)
 {
-	struct reftable_iterator it = { 0 };
+	struct reftable_iterator it = { NULL };
 	struct reftable_merged_table *mt = reftable_stack_merged_table(st);
 	int err = reftable_merged_table_seek_log(mt, &it, refname);
 	if (err)
@@ -1178,7 +1179,7 @@ static int stack_check_addition(struct reftable_stack *st,
 				const char *new_tab_name)
 {
 	int err = 0;
-	struct reftable_block_source src = { 0 };
+	struct reftable_block_source src = { NULL };
 	struct reftable_reader *rd = NULL;
 	struct reftable_table tab = { NULL };
 	struct reftable_ref_record *refs = NULL;
@@ -1207,7 +1208,7 @@ static int stack_check_addition(struct reftable_stack *st,
 		goto done;
 
 	while (1) {
-		struct reftable_ref_record ref = { 0 };
+		struct reftable_ref_record ref = { NULL };
 		err = reftable_iterator_next_ref(&it, &ref);
 		if (err > 0) {
 			break;

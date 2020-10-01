@@ -61,12 +61,12 @@ static void test_block_read_write(void)
 	char *names[30];
 	const int N = ARRAY_SIZE(names);
 	const int block_size = 1024;
-	struct reftable_block block = { 0 };
+	struct reftable_block block = { NULL };
 	struct block_writer bw = {
 		.last_key = STRBUF_INIT,
 	};
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_record rec = { 0 };
+	struct reftable_ref_record ref = { NULL };
+	struct reftable_record rec = { NULL };
 	int i = 0;
 	int n;
 	struct block_reader br = { 0 };

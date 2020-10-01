@@ -19,11 +19,11 @@ static uint32_t hash_id;
 
 static int dump_table(const char *tablename)
 {
-	struct reftable_block_source src = { 0 };
+	struct reftable_block_source src = { NULL };
 	int err = reftable_block_source_from_file(&src, tablename);
-	struct reftable_iterator it = { 0 };
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_log_record log = { 0 };
+	struct reftable_iterator it = { NULL };
+	struct reftable_ref_record ref = { NULL };
+	struct reftable_log_record log = { NULL };
 	struct reftable_reader *r = NULL;
 
 	if (err < 0)
@@ -95,9 +95,9 @@ static int dump_stack(const char *stackdir)
 {
 	struct reftable_stack *stack = NULL;
 	struct reftable_write_options cfg = {};
-	struct reftable_iterator it = { 0 };
-	struct reftable_ref_record ref = { 0 };
-	struct reftable_log_record log = { 0 };
+	struct reftable_iterator it = { NULL };
+	struct reftable_ref_record ref = { NULL };
+	struct reftable_log_record log = { NULL };
 	struct reftable_merged_table *merged = NULL;
 
 	int err = reftable_new_stack(&stack, stackdir, cfg);

@@ -25,7 +25,7 @@ static int find_name(size_t k, void *arg)
 
 static int modification_has_ref(struct modification *mod, const char *name)
 {
-	struct reftable_ref_record ref = { 0 };
+	struct reftable_ref_record ref = { NULL };
 	int err = 0;
 
 	if (mod->add_len > 0) {
