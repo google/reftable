@@ -12,7 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef REFTABLE_STANDALONE
 
 #include "git-compat-util.h"
-#include "cache.h"
+#include "cache.h" /*  sleep_millisec() */
 #include <zlib.h>
 
 #else
