@@ -82,13 +82,6 @@ done:
 	return err;
 }
 
-int reftable_table_seek_record(struct reftable_table *tab,
-			       struct reftable_iterator *it,
-			       struct reftable_record *rec)
-{
-	return tab->ops->seek_record(tab->table_arg, it, rec);
-}
-
 uint64_t reftable_table_max_update_index(struct reftable_table *tab)
 {
 	return tab->ops->max_update_index(tab->table_arg);
