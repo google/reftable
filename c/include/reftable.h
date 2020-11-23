@@ -104,6 +104,9 @@ enum reftable_error {
 	   - on writing a log record with multiline message with
 	   exact_log_message unset
 	   - on reading a reftable_ref_record from log iterator, or vice versa.
+
+	  When a call misuses the API, the internal state of the library is kept
+	  unchanged.
 	*/
 	REFTABLE_API_ERROR = -6,
 
@@ -138,13 +141,13 @@ int reftable_error_to_errno(int err);
 /* reftable_write_options sets options for writing a single reftable. */
 struct reftable_write_options {
 	/* boolean: do not pad out blocks to block size. */
-	int unpadded;
+	unsigned unpadded : 1;
 
 	/* the blocksize. Should be less than 2^24. */
 	uint32_t block_size;
 
 	/* boolean: do not generate a SHA1 => ref index. */
-	int skip_index_objects;
+	unsigned skip_index_objects : 1;
 
 	/* how often to write complete keys in each block. */
 	int restart_interval;
@@ -156,12 +159,12 @@ struct reftable_write_options {
 
 	/* boolean: do not check ref names for validity or dir/file conflicts.
 	 */
-	int skip_name_check;
+	unsigned skip_name_check : 1;
 
 	/* boolean: copy log messages exactly. If unset, check that the message
 	 *   is a single line, and add '\n' if missing.
 	 */
-	int exact_log_message;
+	unsigned exact_log_message : 1;
 };
 
 /* reftable_block_stats holds statistics for a single block type */
@@ -209,39 +212,48 @@ reftable_new_writer(int (*writer_func)(void *, const void *, size_t),
 /* write to a file descriptor. fdp should be an int* pointing to the fd. */
 int reftable_fd_write(void *fdp, const void *data, size_t size);
 
-/* Set the range of update indices for the records we will add.  When
-   writing a table into a stack, the min should be at least
+/* Set the range of update indices for the records we will add. When writing a
+   table into a stack, the min should be at least
    reftable_stack_next_update_index(), or REFTABLE_API_ERROR is returned.
 
-   For transactional updates, typically min==max. When converting an existing
-   ref database into a single reftable, this would be a range of update-index
-   timestamps.
+   For transactional updates to a stack, typically min==max, and the
+   update_index can be obtained by inspeciting the stack. When converting an
+   existing ref database into a single reftable, this would be a range of
+   update-index timestamps.
  */
 void reftable_writer_set_limits(struct reftable_writer *w, uint64_t min,
 				uint64_t max);
 
-/* adds a reftable_ref_record. Must be called in ascending
-   order. The update_index must be within the limits set by
-   reftable_writer_set_limits(), or REFTABLE_API_ERROR is returned.
+/*
+  Add a reftable_ref_record. The record should have names that come after
+  already added records.
 
-   It is an error to write a ref record after a log record.
- */
+  The update_index must be within the limits set by
+  reftable_writer_set_limits(), or REFTABLE_API_ERROR is returned. It is an
+  REFTABLE_API_ERROR error to write a ref record after a log record.
+*/
 int reftable_writer_add_ref(struct reftable_writer *w,
 			    struct reftable_ref_record *ref);
 
-/* Convenience function to add multiple refs. Will sort the refs by
-   name before adding. */
+/*
+  Convenience function to add multiple reftable_ref_records; the function sorts
+  the records before adding them, reordering the records array passed in.
+*/
 int reftable_writer_add_refs(struct reftable_writer *w,
 			     struct reftable_ref_record *refs, int n);
 
-/* adds a reftable_log_record. Must be called in ascending order (with more
-   recent log entries first.)
- */
+/*
+  adds reftable_log_records. Log records are keyed by (refname, decreasing
+  update_index). The key for the record added must come after the already added
+  log records.
+*/
 int reftable_writer_add_log(struct reftable_writer *w,
 			    struct reftable_log_record *log);
 
-/* Convenience function to add multiple logs. Will sort the records by
-   key before adding. */
+/*
+  Convenience function to add multiple reftable_log_records; the function sorts
+  the records before adding them, reordering records array passed in.
+*/
 int reftable_writer_add_logs(struct reftable_writer *w,
 			     struct reftable_log_record *logs, int n);
 

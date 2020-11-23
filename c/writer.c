@@ -287,7 +287,8 @@ int reftable_writer_add_refs(struct reftable_writer *w,
 {
 	int err = 0;
 	int i = 0;
-	QSORT(refs, n, reftable_ref_record_compare_name);
+	if (n > 1)
+		QSORT(refs, n, reftable_ref_record_compare_name);
 	for (i = 0; err == 0 && i < n; i++) {
 		err = reftable_writer_add_ref(w, &refs[i]);
 	}
@@ -343,7 +344,9 @@ int reftable_writer_add_logs(struct reftable_writer *w,
 {
 	int err = 0;
 	int i = 0;
-	QSORT(logs, n, reftable_log_record_compare_key);
+	if (n > 1)
+		QSORT(logs, n, reftable_log_record_compare_key);
+
 	for (i = 0; err == 0 && i < n; i++) {
 		err = reftable_writer_add_log(w, &logs[i]);
 	}
