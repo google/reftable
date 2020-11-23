@@ -32,6 +32,6 @@ static void test_strbuf(void)
 
 int strbuf_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_strbuf", &test_strbuf);
-	return test_main(argc, argv);
+	test_strbuf();
+	return 0;
 }

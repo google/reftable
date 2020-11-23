@@ -59,15 +59,15 @@ static void test_conflict(void)
 	reftable_writer_set_limits(w, 1, 1);
 
 	err = reftable_writer_add_ref(w, &rec);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_writer_close(w);
-	assert_err(err);
+	EXPECT_ERR(err);
 	reftable_writer_free(w);
 
 	block_source_from_strbuf(&source, &buf);
 	err = reftable_new_reader(&rd, &source, "filename");
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	reftable_table_from_reader(&tab, rd);
 
@@ -86,7 +86,7 @@ static void test_conflict(void)
 		}
 
 		err = modification_validate(&mod);
-		assert(err == cases[i].error_code);
+		EXPECT(err == cases[i].error_code);
 	}
 
 	reftable_reader_free(rd);
@@ -95,6 +95,6 @@ static void test_conflict(void)
 
 int refname_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_conflict", &test_conflict);
-	return test_main(argc, argv);
+	test_conflict();
+	return 0;
 }

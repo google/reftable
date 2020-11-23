@@ -31,17 +31,17 @@ static void test_read_file(void)
 	char *want[] = { "line1", "line2", "line3" };
 	int i = 0;
 
-	assert(fd > 0);
+	EXPECT(fd > 0);
 	n = write(fd, out, strlen(out));
-	assert(n == strlen(out));
+	EXPECT(n == strlen(out));
 	err = close(fd);
-	assert(err >= 0);
+	EXPECT(err >= 0);
 
 	err = read_lines(fn, &names);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 0; names[i] != NULL; i++) {
-		assert(0 == strcmp(want[i], names[i]));
+		EXPECT(0 == strcmp(want[i], names[i]));
 	}
 	free_names(names);
 	remove(fn);
@@ -53,9 +53,9 @@ static void test_parse_names(void)
 	char **names = NULL;
 	parse_names(buf, strlen(buf), &names);
 
-	assert(NULL != names[0]);
-	assert(0 == strcmp(names[0], "line"));
-	assert(NULL == names[1]);
+	EXPECT(NULL != names[0]);
+	EXPECT(0 == strcmp(names[0], "line"));
+	EXPECT(NULL == names[1]);
 	free_names(names);
 }
 
@@ -65,9 +65,9 @@ static void test_names_equal(void)
 	char *b[] = { "a", "b", "d", NULL };
 	char *c[] = { "a", "b", NULL };
 
-	assert(names_equal(a, a));
-	assert(!names_equal(a, b));
-	assert(!names_equal(a, c));
+	EXPECT(names_equal(a, a));
+	EXPECT(!names_equal(a, b));
+	EXPECT(!names_equal(a, c));
 }
 
 static int write_test_ref(struct reftable_writer *wr, void *arg)
@@ -103,17 +103,17 @@ static void test_reftable_stack_add_one(void)
 	};
 	struct reftable_ref_record dest = { NULL };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_test_ref, &ref);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_ref(st, ref.refname, &dest);
-	assert_err(err);
-	assert(0 == strcmp("master", dest.target));
+	EXPECT_ERR(err);
+	EXPECT(0 == strcmp("master", dest.target));
 
 	reftable_ref_record_clear(&dest);
 	reftable_stack_destroy(st);
@@ -138,25 +138,25 @@ static void test_reftable_stack_uptodate(void)
 		.target = "master",
 	};
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st1, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_new_stack(&st2, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st1, &write_test_ref, &ref1);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
-	assert(err == REFTABLE_LOCK_ERROR);
+	EXPECT(err == REFTABLE_LOCK_ERROR);
 
 	err = reftable_stack_reload(st2);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
-	assert_err(err);
+	EXPECT_ERR(err);
 	reftable_stack_destroy(st1);
 	reftable_stack_destroy(st2);
 	reftable_clear_dir(dir);
@@ -177,27 +177,27 @@ static void test_reftable_stack_transaction_api(void)
 	};
 	struct reftable_ref_record dest = { NULL };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	reftable_addition_destroy(add);
 
 	err = reftable_stack_new_addition(&add, st);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_addition_add(add, &write_test_ref, &ref);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_addition_commit(add);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	reftable_addition_destroy(add);
 
 	err = reftable_stack_read_ref(st, ref.refname, &dest);
-	assert_err(err);
-	assert(0 == strcmp("master", dest.target));
+	EXPECT_ERR(err);
+	EXPECT(0 == strcmp("master", dest.target));
 
 	reftable_ref_record_clear(&dest);
 	reftable_stack_destroy(st);
@@ -218,12 +218,12 @@ static void test_reftable_stack_validate_refname(void)
 	};
 	char *additions[] = { "a", "a/b/c" };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_test_ref, &ref);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 0; i < ARRAY_SIZE(additions); i++) {
 		struct reftable_ref_record ref = {
@@ -233,7 +233,7 @@ static void test_reftable_stack_validate_refname(void)
 		};
 
 		err = reftable_stack_add(st, &write_test_ref, &ref);
-		assert(err == REFTABLE_NAME_CONFLICT);
+		EXPECT(err == REFTABLE_NAME_CONFLICT);
 	}
 
 	reftable_stack_destroy(st);
@@ -261,16 +261,16 @@ static void test_reftable_stack_update_index_check(void)
 		.update_index = 1,
 		.target = "master",
 	};
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_test_ref, &ref1);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_test_ref, &ref2);
-	assert(err == REFTABLE_API_ERROR);
+	EXPECT(err == REFTABLE_API_ERROR);
 	reftable_stack_destroy(st);
 	reftable_clear_dir(dir);
 }
@@ -281,13 +281,13 @@ static void test_reftable_stack_lock_failure(void)
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err, i;
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 	for (i = -1; i != REFTABLE_EMPTY_TABLE_ERROR; i--) {
 		err = reftable_stack_add(st, &write_error, &i);
-		assert(err == i);
+		EXPECT(err == i);
 	}
 
 	reftable_stack_destroy(st);
@@ -307,10 +307,10 @@ static void test_reftable_stack_add(void)
 	struct reftable_log_record logs[2] = { { NULL } };
 	int N = ARRAY_SIZE(refs);
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 	st->disable_auto_compact = 1;
 
 	for (i = 0; i < N; i++) {
@@ -330,7 +330,7 @@ static void test_reftable_stack_add(void)
 
 	for (i = 0; i < N; i++) {
 		int err = reftable_stack_add(st, &write_test_ref, &refs[i]);
-		assert_err(err);
+		EXPECT_ERR(err);
 	}
 
 	for (i = 0; i < N; i++) {
@@ -339,26 +339,26 @@ static void test_reftable_stack_add(void)
 			.update_index = reftable_stack_next_update_index(st),
 		};
 		int err = reftable_stack_add(st, &write_test_log, &arg);
-		assert_err(err);
+		EXPECT_ERR(err);
 	}
 
 	err = reftable_stack_compact_all(st, NULL);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 0; i < N; i++) {
 		struct reftable_ref_record dest = { NULL };
 
 		int err = reftable_stack_read_ref(st, refs[i].refname, &dest);
-		assert_err(err);
-		assert(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
+		EXPECT_ERR(err);
+		EXPECT(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
 		reftable_ref_record_clear(&dest);
 	}
 
 	for (i = 0; i < N; i++) {
 		struct reftable_log_record dest = { NULL };
 		int err = reftable_stack_read_log(st, refs[i].refname, &dest);
-		assert_err(err);
-		assert(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
+		EXPECT_ERR(err);
+		EXPECT(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
 		reftable_log_record_clear(&dest);
 	}
 
@@ -396,29 +396,29 @@ static void test_reftable_stack_log_normalize(void)
 		.update_index = 1,
 	};
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	input.message = "one\ntwo";
 	err = reftable_stack_add(st, &write_test_log, &arg);
-	assert(err == REFTABLE_API_ERROR);
+	EXPECT(err == REFTABLE_API_ERROR);
 
 	input.message = "one";
 	err = reftable_stack_add(st, &write_test_log, &arg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_log(st, input.refname, &dest);
-	assert_err(err);
-	assert(0 == strcmp(dest.message, "one\n"));
+	EXPECT_ERR(err);
+	EXPECT(0 == strcmp(dest.message, "one\n"));
 
 	input.message = "two\n";
 	arg.update_index = 2;
 	err = reftable_stack_add(st, &write_test_log, &arg);
-	assert_err(err);
+	EXPECT_ERR(err);
 	err = reftable_stack_read_log(st, input.refname, &dest);
-	assert_err(err);
-	assert(0 == strcmp(dest.message, "two\n"));
+	EXPECT_ERR(err);
+	EXPECT(0 == strcmp(dest.message, "two\n"));
 
 	/* cleanup */
 	reftable_stack_destroy(st);
@@ -439,10 +439,10 @@ static void test_reftable_stack_tombstone(void)
 	struct reftable_ref_record dest = { NULL };
 	struct reftable_log_record log_dest = { NULL };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 0; i < N; i++) {
 		const char *buf = "branch";
@@ -463,7 +463,7 @@ static void test_reftable_stack_tombstone(void)
 	}
 	for (i = 0; i < N; i++) {
 		int err = reftable_stack_add(st, &write_test_ref, &refs[i]);
-		assert_err(err);
+		EXPECT_ERR(err);
 	}
 	for (i = 0; i < N; i++) {
 		struct write_log_arg arg = {
@@ -471,25 +471,25 @@ static void test_reftable_stack_tombstone(void)
 			.update_index = reftable_stack_next_update_index(st),
 		};
 		int err = reftable_stack_add(st, &write_test_log, &arg);
-		assert_err(err);
+		EXPECT_ERR(err);
 	}
 
 	err = reftable_stack_read_ref(st, "branch", &dest);
-	assert(err == 1);
+	EXPECT(err == 1);
 	reftable_ref_record_clear(&dest);
 
 	err = reftable_stack_read_log(st, "branch", &log_dest);
-	assert(err == 1);
+	EXPECT(err == 1);
 	reftable_log_record_clear(&log_dest);
 
 	err = reftable_stack_compact_all(st, NULL);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_ref(st, "branch", &dest);
-	assert(err == 1);
+	EXPECT(err == 1);
 
 	err = reftable_stack_read_log(st, "branch", &log_dest);
-	assert(err == 1);
+	EXPECT(err == 1);
 	reftable_ref_record_clear(&dest);
 	reftable_log_record_clear(&log_dest);
 
@@ -520,25 +520,25 @@ static void test_reftable_stack_hash_id(void)
 	struct reftable_stack *st_default = NULL;
 	struct reftable_ref_record dest = { NULL };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_test_ref, &ref);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	/* can't read it with the wrong hash ID. */
 	err = reftable_new_stack(&st32, dir, cfg32);
-	assert(err == REFTABLE_FORMAT_ERROR);
+	EXPECT(err == REFTABLE_FORMAT_ERROR);
 
 	/* check that we can read it back with default config too. */
 	err = reftable_new_stack(&st_default, dir, cfg_default);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_ref(st_default, "master", &dest);
-	assert_err(err);
+	EXPECT_ERR(err);
 
-	assert(!strcmp(dest.target, ref.target));
+	EXPECT(!strcmp(dest.target, ref.target));
 	reftable_ref_record_clear(&dest);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st_default);
@@ -547,9 +547,9 @@ static void test_reftable_stack_hash_id(void)
 
 static void test_log2(void)
 {
-	assert(1 == fastlog2(3));
-	assert(2 == fastlog2(4));
-	assert(2 == fastlog2(5));
+	EXPECT(1 == fastlog2(3));
+	EXPECT(2 == fastlog2(4));
+	EXPECT(2 == fastlog2(5));
 }
 
 static void test_sizes_to_segments(void)
@@ -560,13 +560,13 @@ static void test_sizes_to_segments(void)
 	int seglen = 0;
 	struct segment *segs =
 		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
-	assert(segs[2].log == 3);
-	assert(segs[2].start == 5);
-	assert(segs[2].end == 6);
+	EXPECT(segs[2].log == 3);
+	EXPECT(segs[2].start == 5);
+	EXPECT(segs[2].end == 6);
 
-	assert(segs[1].log == 2);
-	assert(segs[1].start == 2);
-	assert(segs[1].end == 5);
+	EXPECT(segs[1].log == 2);
+	EXPECT(segs[1].start == 2);
+	EXPECT(segs[1].end == 5);
 	reftable_free(segs);
 }
 
@@ -577,7 +577,7 @@ static void test_sizes_to_segments_empty(void)
 	int seglen = 0;
 	struct segment *segs =
 		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
-	assert(seglen == 0);
+	EXPECT(seglen == 0);
 	reftable_free(segs);
 }
 
@@ -588,9 +588,9 @@ static void test_sizes_to_segments_all_equal(void)
 	int seglen = 0;
 	struct segment *segs =
 		sizes_to_segments(&seglen, sizes, ARRAY_SIZE(sizes));
-	assert(seglen == 1);
-	assert(segs[0].start == 0);
-	assert(segs[0].end == 2);
+	EXPECT(seglen == 1);
+	EXPECT(segs[0].start == 0);
+	EXPECT(segs[0].end == 2);
 	reftable_free(segs);
 }
 
@@ -600,8 +600,8 @@ static void test_suggest_compaction_segment(void)
 	/* .................0    1    2  3   4  5  6 */
 	struct segment min =
 		suggest_compaction_segment(sizes, ARRAY_SIZE(sizes));
-	assert(min.start == 2);
-	assert(min.end == 7);
+	EXPECT(min.start == 2);
+	EXPECT(min.end == 7);
 }
 
 static void test_suggest_compaction_segment_nothing(void)
@@ -609,7 +609,7 @@ static void test_suggest_compaction_segment_nothing(void)
 	uint64_t sizes[] = { 64, 32, 16, 8, 4, 2 };
 	struct segment result =
 		suggest_compaction_segment(sizes, ARRAY_SIZE(sizes));
-	assert(result.start == result.end);
+	EXPECT(result.start == result.end);
 }
 
 static void test_reflog_expire(void)
@@ -626,10 +626,10 @@ static void test_reflog_expire(void)
 	};
 	struct reftable_log_record log = { NULL };
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 1; i <= N; i++) {
 		char buf[256];
@@ -649,30 +649,30 @@ static void test_reflog_expire(void)
 			.update_index = reftable_stack_next_update_index(st),
 		};
 		int err = reftable_stack_add(st, &write_test_log, &arg);
-		assert_err(err);
+		EXPECT_ERR(err);
 	}
 
 	err = reftable_stack_compact_all(st, NULL);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_compact_all(st, &expiry);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_log(st, logs[9].refname, &log);
-	assert(err == 1);
+	EXPECT(err == 1);
 
 	err = reftable_stack_read_log(st, logs[11].refname, &log);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	expiry.min_update_index = 15;
 	err = reftable_stack_compact_all(st, &expiry);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_read_log(st, logs[14].refname, &log);
-	assert(err == 1);
+	EXPECT(err == 1);
 
 	err = reftable_stack_read_log(st, logs[16].refname, &log);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	/* cleanup */
 	reftable_stack_destroy(st);
@@ -697,16 +697,16 @@ static void test_empty_add(void)
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 	struct reftable_stack *st2 = NULL;
 
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st, &write_nothing, NULL);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_new_stack(&st2, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 	reftable_clear_dir(dir);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st2);
@@ -719,10 +719,10 @@ static void test_reftable_stack_auto_compaction(void)
 	char dir[256] = "/tmp/stack_test.XXXXXX";
 	int err, i;
 	int N = 100;
-	assert(mkdtemp(dir));
+	EXPECT(mkdtemp(dir));
 
 	err = reftable_new_stack(&st, dir, cfg);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	for (i = 0; i < N; i++) {
 		char name[100];
@@ -734,12 +734,12 @@ static void test_reftable_stack_auto_compaction(void)
 		snprintf(name, sizeof(name), "branch%04d", i);
 
 		err = reftable_stack_add(st, &write_test_ref, &ref);
-		assert_err(err);
+		EXPECT_ERR(err);
 
-		assert(i < 3 || st->merged->stack_len < 2 * fastlog2(i));
+		EXPECT(i < 3 || st->merged->stack_len < 2 * fastlog2(i));
 	}
 
-	assert(reftable_stack_compaction_stats(st)->entries_written <
+	EXPECT(reftable_stack_compaction_stats(st)->entries_written <
 	       (uint64_t)(N * fastlog2(N)));
 
 	reftable_stack_destroy(st);
@@ -748,41 +748,27 @@ static void test_reftable_stack_auto_compaction(void)
 
 int stack_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_reftable_stack_uptodate",
-		      &test_reftable_stack_uptodate);
-	add_test_case("test_reftable_stack_transaction_api",
-		      &test_reftable_stack_transaction_api);
-	add_test_case("test_reftable_stack_hash_id",
-		      &test_reftable_stack_hash_id);
-	add_test_case("test_sizes_to_segments_all_equal",
-		      &test_sizes_to_segments_all_equal);
-	add_test_case("test_reftable_stack_auto_compaction",
-		      &test_reftable_stack_auto_compaction);
-	add_test_case("test_reftable_stack_validate_refname",
-		      &test_reftable_stack_validate_refname);
-	add_test_case("test_reftable_stack_update_index_check",
-		      &test_reftable_stack_update_index_check);
-	add_test_case("test_reftable_stack_lock_failure",
-		      &test_reftable_stack_lock_failure);
-	add_test_case("test_reftable_stack_log_normalize",
-		      &test_reftable_stack_log_normalize);
-	add_test_case("test_reftable_stack_tombstone",
-		      &test_reftable_stack_tombstone);
-	add_test_case("test_reftable_stack_add_one",
-		      &test_reftable_stack_add_one);
-	add_test_case("test_empty_add", test_empty_add);
-	add_test_case("test_reflog_expire", test_reflog_expire);
-	add_test_case("test_suggest_compaction_segment",
-		      &test_suggest_compaction_segment);
-	add_test_case("test_suggest_compaction_segment_nothing",
-		      &test_suggest_compaction_segment_nothing);
-	add_test_case("test_sizes_to_segments", &test_sizes_to_segments);
-	add_test_case("test_sizes_to_segments_empty",
-		      &test_sizes_to_segments_empty);
-	add_test_case("test_log2", &test_log2);
-	add_test_case("test_parse_names", &test_parse_names);
-	add_test_case("test_read_file", &test_read_file);
-	add_test_case("test_names_equal", &test_names_equal);
-	add_test_case("test_reftable_stack_add", &test_reftable_stack_add);
-	return test_main(argc, argv);
+	test_reftable_stack_uptodate();
+	test_reftable_stack_transaction_api();
+	test_reftable_stack_hash_id();
+	test_sizes_to_segments_all_equal();
+	test_reftable_stack_auto_compaction();
+	test_reftable_stack_validate_refname();
+	test_reftable_stack_update_index_check();
+	test_reftable_stack_lock_failure();
+	test_reftable_stack_log_normalize();
+	test_reftable_stack_tombstone();
+	test_reftable_stack_add_one();
+	test_empty_add();
+	test_reflog_expire();
+	test_suggest_compaction_segment();
+	test_suggest_compaction_segment_nothing();
+	test_sizes_to_segments();
+	test_sizes_to_segments_empty();
+	test_log2();
+	test_parse_names();
+	test_read_file();
+	test_names_equal();
+	test_reftable_stack_add();
+	return 0;
 }

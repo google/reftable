@@ -15,11 +15,7 @@ https://developers.google.com/open-source/licenses/bsd
 #undef NDEBUG
 #endif
 
-#ifdef assert
-#undef assert
-#endif
-
-#define assert_err(c)                                                  \
+#define EXPECT_ERR(c)                                                  \
 	if (c != 0) {                                                  \
 		fflush(stderr);                                        \
 		fflush(stdout);                                        \
@@ -28,7 +24,7 @@ https://developers.google.com/open-source/licenses/bsd
 		abort();                                               \
 	}
 
-#define assert_streq(a, b)                                               \
+#define EXPECT_STREQ(a, b)                                               \
 	if (strcmp(a, b)) {                                              \
 		fflush(stderr);                                          \
 		fflush(stdout);                                          \
@@ -37,7 +33,7 @@ https://developers.google.com/open-source/licenses/bsd
 		abort();                                                 \
 	}
 
-#define assert(c)                                                          \
+#define EXPECT(c)                                                          \
 	if (!(c)) {                                                        \
 		fflush(stderr);                                            \
 		fflush(stdout);                                            \
@@ -45,14 +41,6 @@ https://developers.google.com/open-source/licenses/bsd
 			__LINE__, #c);                                     \
 		abort();                                                   \
 	}
-
-struct test_case {
-	const char *name;
-	void (*testfunc)(void);
-};
-
-struct test_case *add_test_case(const char *name, void (*testfunc)(void));
-int test_main(int argc, const char *argv[]);
 
 void set_test_hash(uint8_t *p, int i);
 

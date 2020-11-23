@@ -57,6 +57,6 @@ static void test_tree(void)
 
 int tree_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_tree", &test_tree);
-	return test_main(argc, argv);
+	test_tree();
+	return 0;
 }

@@ -103,7 +103,7 @@ static void write_test_table(struct strbuf *buf,
 	}
 
 	err = reftable_writer_close(w);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	reftable_writer_free(w);
 }
@@ -127,12 +127,12 @@ merged_table_from_records(struct reftable_ref_record **refs,
 
 		err = reftable_new_reader(&(*readers)[i], &(*source)[i],
 					  "name");
-		assert_err(err);
+		EXPECT_ERR(err);
 		reftable_table_from_reader(&tabs[i], (*readers)[i]);
 	}
 
 	err = reftable_new_merged_table(&mt, tabs, n, SHA1_ID);
-	assert_err(err);
+	EXPECT_ERR(err);
 	return mt;
 }
 
@@ -169,12 +169,11 @@ static void test_merged_between(void)
 	struct reftable_ref_record ref = { NULL };
 	struct reftable_iterator it = { NULL };
 	int err = reftable_merged_table_seek_ref(mt, &it, "a");
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_iterator_next_ref(&it, &ref);
-	assert_err(err);
-	assert(ref.update_index == 2);
-	reftable_ref_record_clear(&ref);
+	EXPECT_ERR(err);
+	EXPECT(ref.update_index == 2);
 	reftable_iterator_destroy(&it);
 	readers_destroy(readers, 2);
 	reftable_merged_table_free(mt);
@@ -242,7 +241,7 @@ static void test_merged(void)
 	size_t cap = 0;
 	int i = 0;
 
-	assert_err(err);
+	EXPECT_ERR(err);
 	while (len < 100) { /* cap loops/recursion. */
 		struct reftable_ref_record ref = { NULL };
 		int err = reftable_iterator_next_ref(&it, &ref);
@@ -296,23 +295,23 @@ static void test_default_write_opts(void)
 	reftable_writer_set_limits(w, 1, 1);
 
 	err = reftable_writer_add_ref(w, &rec);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	err = reftable_writer_close(w);
-	assert_err(err);
+	EXPECT_ERR(err);
 	reftable_writer_free(w);
 
 	block_source_from_strbuf(&source, &buf);
 
 	err = reftable_new_reader(&rd, &source, "filename");
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	hash_id = reftable_reader_hash_id(rd);
 	assert(hash_id == SHA1_ID);
 
 	reftable_table_from_reader(&tab[0], rd);
 	err = reftable_new_merged_table(&merged, tab, 1, SHA1_ID);
-	assert_err(err);
+	EXPECT_ERR(err);
 
 	reftable_reader_free(rd);
 	reftable_merged_table_free(merged);
@@ -323,9 +322,9 @@ static void test_default_write_opts(void)
 
 int merged_test_main(int argc, const char *argv[])
 {
-	add_test_case("test_merged_between", &test_merged_between);
-	add_test_case("test_pq", &test_pq);
-	add_test_case("test_merged", &test_merged);
-	add_test_case("test_default_write_opts", &test_default_write_opts);
-	return test_main(argc, argv);
+	test_merged_between();
+	test_pq();
+	test_merged();
+	test_default_write_opts();
+	return 0;
 }

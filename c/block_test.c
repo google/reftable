@@ -45,12 +45,12 @@ static void test_binsearch(void)
 		res = binsearch(sz, &binsearch_func, &args);
 
 		if (res < sz) {
-			assert(args.key < arr[res]);
+			EXPECT(args.key < arr[res]);
 			if (res > 0) {
-				assert(args.key >= arr[res - 1]);
+				EXPECT(args.key >= arr[res - 1]);
 			}
 		} else {
-			assert(args.key == 10 || args.key == 11);
+			EXPECT(args.key == 10 || args.key == 11);
 		}
 	}
 }
@@ -93,11 +93,11 @@ static void test_block_read_write(void)
 		n = block_writer_add(&bw, &rec);
 		ref.refname = NULL;
 		ref.value = NULL;
-		assert(n == 0);
+		EXPECT(n == 0);
 	}
 
 	n = block_writer_finish(&bw);
-	assert(n > 0);
+	EXPECT(n > 0);
 
 	block_writer_clear(&bw);
 
@@ -107,11 +107,11 @@ static void test_block_read_write(void)
 
 	while (1) {
 		int r = block_iter_next(&it, &rec);
-		assert(r >= 0);
+		EXPECT(r >= 0);
 		if (r > 0) {
 			break;
 		}
-		assert_streq(names[j], ref.refname);
+		EXPECT_STREQ(names[j], ref.refname);
 		j++;
 	}
 
@@ -124,20 +124,20 @@ static void test_block_read_write(void)
 		strbuf_addstr(&want, names[i]);
 
 		n = block_reader_seek(&br, &it, &want);
-		assert(n == 0);
+		EXPECT(n == 0);
 
 		n = block_iter_next(&it, &rec);
-		assert(n == 0);
+		EXPECT(n == 0);
 
-		assert_streq(names[i], ref.refname);
+		EXPECT_STREQ(names[i], ref.refname);
 
 		want.len--;
 		n = block_reader_seek(&br, &it, &want);
-		assert(n == 0);
+		EXPECT(n == 0);
 
 		n = block_iter_next(&it, &rec);
-		assert(n == 0);
-		assert_streq(names[10 * (i / 10)], ref.refname);
+		EXPECT(n == 0);
+		EXPECT_STREQ(names[10 * (i / 10)], ref.refname);
 
 		block_iter_close(&it);
 	}
@@ -152,7 +152,7 @@ static void test_block_read_write(void)
 
 int block_test_main(int argc, const char *argv[])
 {
-	add_test_case("binsearch", &test_binsearch);
-	add_test_case("block_read_write", &test_block_read_write);
-	return test_main(argc, argv);
+	test_binsearch();
+	test_block_read_write();
+	return 0;
 }
