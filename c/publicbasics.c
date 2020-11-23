@@ -8,7 +8,6 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable-error.h"
 #include "reftable-malloc.h"
-#include "reftable-writer.h"
 
 #include "basics.h"
 #include "system.h"
@@ -95,8 +94,3 @@ void reftable_set_alloc(void *(*malloc)(size_t),
 	reftable_free_ptr = free;
 }
 
-int reftable_fd_write(void *arg, const void *data, size_t sz)
-{
-	int *fdp = (int *)arg;
-	return write(*fdp, data, sz);
-}

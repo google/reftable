@@ -90,9 +90,6 @@ struct reftable_writer *
 reftable_new_writer(int (*writer_func)(void *, const void *, size_t),
 		    void *writer_arg, struct reftable_write_options *opts);
 
-/* write to a file descriptor. fdp should be an int* pointing to the fd. */
-int reftable_fd_write(void *fdp, const void *data, size_t size);
-
 /* Set the range of update indices for the records we will add. When writing a
    table into a stack, the min should be at least
    reftable_stack_next_update_index(), or REFTABLE_API_ERROR is returned.
