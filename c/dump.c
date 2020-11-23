@@ -12,6 +12,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include <unistd.h>
 #include <string.h>
 
+#include "reftable-blocksource.h"
 #include "reftable-error.h"
 #include "reftable-merged.h"
 #include "reftable-record.h"

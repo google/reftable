@@ -39,6 +39,7 @@ cc_library(
         "system.h",
     ],
     hdrs = [
+        "include/reftable-blocksource.h",
         "include/reftable-error.h",
         "include/reftable-malloc.h",
         "include/reftable-record.h",
@@ -97,6 +98,7 @@ cc_library(
         "writer.h",
     ],
     hdrs = [
+        "include/reftable-blocksource.h",
         "include/reftable-error.h",
         "include/reftable-malloc.h",
         "include/reftable-record.h",

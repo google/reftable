@@ -10,6 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 #define REFTABLE_READER_H
 
 #include "reftable-iterator.h"
+#include "reftable-blocksource.h"
 
 /*
  Reading single tables
@@ -18,43 +19,6 @@ https://developers.google.com/open-source/licenses/bsd
  interface, skip ahead to struct reftable_merged_table and struct
  reftable_stack.
 */
-
-/* block_source is a generic wrapper for a seekable readable file.
-   It is generally passed around by value.
- */
-struct reftable_block_source {
-	struct reftable_block_source_vtable *ops;
-	void *arg;
-};
-
-/* a contiguous segment of bytes. It keeps track of its generating block_source
-   so it can return itself into the pool.
-*/
-struct reftable_block {
-	uint8_t *data;
-	int len;
-	struct reftable_block_source source;
-};
-
-/* block_source_vtable are the operations that make up block_source */
-struct reftable_block_source_vtable {
-	/* returns the size of a block source */
-	uint64_t (*size)(void *source);
-
-	/* reads a segment from the block source. It is an error to read
-	   beyond the end of the block */
-	int (*read_block)(void *source, struct reftable_block *dest,
-			  uint64_t off, uint32_t size);
-	/* mark the block as read; may return the data back to malloc */
-	void (*return_block)(void *source, struct reftable_block *blockp);
-
-	/* release all resources associated with the block source */
-	void (*close)(void *source);
-};
-
-/* opens a file on the file system as a block_source */
-int reftable_block_source_from_file(struct reftable_block_source *block_src,
-				    const char *name);
 
 /* The reader struct is a handle to an open reftable file. */
 struct reftable_reader;
