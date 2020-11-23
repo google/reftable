@@ -99,7 +99,7 @@ static void test_block_read_write(void)
 	n = block_writer_finish(&bw);
 	EXPECT(n > 0);
 
-	block_writer_clear(&bw);
+	block_writer_release(&bw);
 
 	block_reader_init(&br, &block, header_off, block_size, SHA1_SIZE);
 
@@ -115,7 +115,7 @@ static void test_block_read_write(void)
 		j++;
 	}
 
-	reftable_record_clear(&rec);
+	reftable_record_release(&rec);
 	block_iter_close(&it);
 
 	for (i = 0; i < N; i++) {
@@ -142,7 +142,7 @@ static void test_block_read_write(void)
 		block_iter_close(&it);
 	}
 
-	reftable_record_clear(&rec);
+	reftable_record_release(&rec);
 	reftable_block_done(&br.block);
 	strbuf_release(&want);
 	for (i = 0; i < N; i++) {

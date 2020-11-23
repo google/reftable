@@ -51,11 +51,11 @@ static int modification_has_ref(struct modification *mod, const char *name)
 	}
 
 	err = reftable_table_read_ref(&mod->tab, name, &ref);
-	reftable_ref_record_clear(&ref);
+	reftable_ref_record_release(&ref);
 	return err;
 }
 
-static void modification_clear(struct modification *mod)
+static void modification_release(struct modification *mod)
 {
 	/* don't delete the strings themselves; they're owned by ref records.
 	 */
@@ -112,7 +112,7 @@ static int modification_has_ref_with_prefix(struct modification *mod,
 	}
 
 done:
-	reftable_ref_record_clear(&ref);
+	reftable_ref_record_release(&ref);
 	reftable_iterator_destroy(&it);
 	return err;
 }
@@ -154,7 +154,7 @@ int validate_ref_record_addition(struct reftable_table tab,
 	}
 
 	err = modification_validate(&mod);
-	modification_clear(&mod);
+	modification_release(&mod);
 	return err;
 }
 

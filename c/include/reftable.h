@@ -40,7 +40,7 @@ void reftable_ref_record_print(struct reftable_ref_record *ref,
 			       uint32_t hash_id);
 
 /* frees and nulls all pointer values. */
-void reftable_ref_record_clear(struct reftable_ref_record *ref);
+void reftable_ref_record_release(struct reftable_ref_record *ref);
 
 /* returns whether two reftable_ref_records are the same */
 int reftable_ref_record_equal(struct reftable_ref_record *a,
@@ -64,7 +64,7 @@ struct reftable_log_record {
 int reftable_log_record_is_deletion(const struct reftable_log_record *log);
 
 /* frees and nulls all pointer values. */
-void reftable_log_record_clear(struct reftable_log_record *log);
+void reftable_log_record_release(struct reftable_log_record *log);
 
 /* returns whether two records are equal. */
 int reftable_log_record_equal(struct reftable_log_record *a,
@@ -364,7 +364,7 @@ int reftable_new_reader(struct reftable_reader **pp,
      ..found..
    }
    reftable_iterator_destroy(&it);
-   reftable_ref_record_clear(&ref);
+   reftable_ref_record_release(&ref);
  */
 int reftable_reader_seek_ref(struct reftable_reader *r,
 			     struct reftable_iterator *it, const char *name);

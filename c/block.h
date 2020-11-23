@@ -56,7 +56,7 @@ int block_writer_add(struct block_writer *w, struct reftable_record *rec);
 int block_writer_finish(struct block_writer *w);
 
 /* clears out internally allocated block_writer members. */
-void block_writer_clear(struct block_writer *bw);
+void block_writer_release(struct block_writer *bw);
 
 /* Read a block. */
 struct block_reader {

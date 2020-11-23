@@ -45,7 +45,7 @@ static void merged_iter_close(void *p)
 {
 	struct merged_iter *mi = (struct merged_iter *)p;
 	int i = 0;
-	merged_iter_pqueue_clear(&mi->pq);
+	merged_iter_pqueue_release(&mi->pq);
 	for (i = 0; i < mi->stack_len; i++) {
 		reftable_iterator_destroy(&mi->stack[i]);
 	}
@@ -203,7 +203,7 @@ int reftable_new_merged_table(struct reftable_merged_table **dest,
 }
 
 /* clears the list of subtable, without affecting the readers themselves. */
-void merged_table_clear(struct reftable_merged_table *mt)
+void merged_table_release(struct reftable_merged_table *mt)
 {
 	FREE_AND_NULL(mt->stack);
 	mt->stack_len = 0;
@@ -214,7 +214,7 @@ void reftable_merged_table_free(struct reftable_merged_table *mt)
 	if (mt == NULL) {
 		return;
 	}
-	merged_table_clear(mt);
+	merged_table_release(mt);
 	reftable_free(mt);
 }
 

@@ -162,10 +162,10 @@ static void test_reftable_ref_record_roundtrip(void)
 		EXPECT((out.value != NULL) == (in.value != NULL));
 		EXPECT((out.target_value != NULL) == (in.target_value != NULL));
 		EXPECT((out.target != NULL) == (in.target != NULL));
-		reftable_record_clear(&rec_out);
+		reftable_record_release(&rec_out);
 
 		strbuf_release(&key);
-		reftable_ref_record_clear(&in);
+		reftable_ref_record_release(&in);
 	}
 }
 
@@ -185,8 +185,8 @@ static void test_reftable_log_record_equal(void)
 	EXPECT(!reftable_log_record_equal(&in[0], &in[1], SHA1_SIZE));
 	in[1].update_index = in[0].update_index;
 	EXPECT(reftable_log_record_equal(&in[0], &in[1], SHA1_SIZE));
-	reftable_log_record_clear(&in[0]);
-	reftable_log_record_clear(&in[1]);
+	reftable_log_record_release(&in[0]);
+	reftable_log_record_release(&in[1]);
 }
 
 static void test_reftable_log_record_roundtrip(void)
@@ -245,9 +245,9 @@ static void test_reftable_log_record_roundtrip(void)
 		EXPECT(n == m);
 
 		EXPECT(reftable_log_record_equal(&in[i], &out, SHA1_SIZE));
-		reftable_log_record_clear(&in[i]);
+		reftable_log_record_release(&in[i]);
 		strbuf_release(&key);
-		reftable_record_clear(&rec_out);
+		reftable_record_release(&rec_out);
 	}
 }
 
@@ -347,7 +347,7 @@ static void test_reftable_obj_record_roundtrip(void)
 		EXPECT(0 == memcmp(in.offsets, out.offsets,
 				   sizeof(uint64_t) * in.offset_len));
 		strbuf_release(&key);
-		reftable_record_clear(&rec_out);
+		reftable_record_release(&rec_out);
 	}
 }
 
@@ -385,7 +385,7 @@ static void test_reftable_index_record_roundtrip(void)
 
 	EXPECT(in.offset == out.offset);
 
-	reftable_record_clear(&out_rec);
+	reftable_record_release(&out_rec);
 	strbuf_release(&key);
 	strbuf_release(&in.last_key);
 }

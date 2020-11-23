@@ -67,7 +67,7 @@ static void test_pq(void)
 		reftable_free(names[i]);
 	}
 
-	merged_iter_pqueue_clear(&pq);
+	merged_iter_pqueue_release(&pq);
 }
 
 static void write_test_table(struct strbuf *buf,
@@ -174,6 +174,7 @@ static void test_merged_between(void)
 	err = reftable_iterator_next_ref(&it, &ref);
 	EXPECT_ERR(err);
 	EXPECT(ref.update_index == 2);
+	reftable_ref_record_release(&ref);
 	reftable_iterator_destroy(&it);
 	readers_destroy(readers, 2);
 	reftable_merged_table_free(mt);
@@ -262,7 +263,7 @@ static void test_merged(void)
 		assert(reftable_ref_record_equal(&want[i], &out[i], SHA1_SIZE));
 	}
 	for (i = 0; i < len; i++) {
-		reftable_ref_record_clear(&out[i]);
+		reftable_ref_record_release(&out[i]);
 	}
 	reftable_free(out);
 

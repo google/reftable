@@ -49,7 +49,7 @@ static int dump_table(const char *tablename)
 		reftable_ref_record_print(&ref, hash_id);
 	}
 	reftable_iterator_destroy(&it);
-	reftable_ref_record_clear(&ref);
+	reftable_ref_record_release(&ref);
 
 	err = reftable_reader_seek_log(r, &it, "");
 	if (err < 0) {
@@ -66,7 +66,7 @@ static int dump_table(const char *tablename)
 		reftable_log_record_print(&log, hash_id);
 	}
 	reftable_iterator_destroy(&it);
-	reftable_log_record_clear(&log);
+	reftable_log_record_release(&log);
 
 	reftable_reader_free(r);
 	return 0;
@@ -122,7 +122,7 @@ static int dump_stack(const char *stackdir)
 		reftable_ref_record_print(&ref, hash_id);
 	}
 	reftable_iterator_destroy(&it);
-	reftable_ref_record_clear(&ref);
+	reftable_ref_record_release(&ref);
 
 	err = reftable_merged_table_seek_log(merged, &it, "");
 	if (err < 0) {
@@ -139,7 +139,7 @@ static int dump_stack(const char *stackdir)
 		reftable_log_record_print(&log, hash_id);
 	}
 	reftable_iterator_destroy(&it);
-	reftable_log_record_clear(&log);
+	reftable_log_record_release(&log);
 
 	reftable_stack_destroy(stack);
 	return 0;

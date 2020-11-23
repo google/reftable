@@ -71,7 +71,7 @@ int reftable_table_read_ref(struct reftable_table *tab, const char *name,
 
 	if (strcmp(ref->refname, name) ||
 	    reftable_ref_record_is_deletion(ref)) {
-		reftable_ref_record_clear(ref);
+		reftable_ref_record_release(ref);
 		err = 1;
 		goto done;
 	}

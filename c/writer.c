@@ -580,7 +580,7 @@ int reftable_writer_close(struct reftable_writer *w)
 
 done:
 	/* free up memory. */
-	block_writer_clear(&w->block_writer_data);
+	block_writer_release(&w->block_writer_data);
 	writer_clear_index(w);
 	strbuf_release(&w->last_key);
 	return err;

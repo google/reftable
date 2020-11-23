@@ -422,7 +422,7 @@ done:
 	return err;
 }
 
-void block_writer_clear(struct block_writer *bw)
+void block_writer_release(struct block_writer *bw)
 {
 	FREE_AND_NULL(bw->restarts);
 	strbuf_release(&bw->last_key);

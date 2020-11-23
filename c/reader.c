@@ -531,8 +531,8 @@ static int reader_seek_indexed(struct reftable_reader *r,
 done:
 	block_iter_close(&next.bi);
 	table_iter_close(&index_iter);
-	reftable_record_clear(&want_index_rec);
-	reftable_record_clear(&index_result_rec);
+	reftable_record_release(&want_index_rec);
+	reftable_record_release(&index_result_rec);
 	return err;
 }
 
@@ -680,7 +680,7 @@ static int reftable_reader_refs_for_indexed(struct reftable_reader *r,
 
 done:
 	reftable_iterator_destroy(&oit);
-	reftable_record_clear(&got_rec);
+	reftable_record_release(&got_rec);
 	return err;
 }
 

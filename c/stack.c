@@ -207,7 +207,7 @@ static int reftable_stack_reload_once(struct reftable_stack *st, char **names,
 	new_tables = NULL;
 	st->readers_len = new_readers_len;
 	if (st->merged != NULL) {
-		merged_table_clear(st->merged);
+		merged_table_release(st->merged);
 		reftable_merged_table_free(st->merged);
 	}
 	if (st->readers != NULL) {
@@ -801,11 +801,11 @@ static int stack_write_compact(struct reftable_stack *st,
 done:
 	reftable_iterator_destroy(&it);
 	if (mt != NULL) {
-		merged_table_clear(mt);
+		merged_table_release(mt);
 		reftable_merged_table_free(mt);
 	}
-	reftable_ref_record_clear(&ref);
-	reftable_log_record_clear(&log);
+	reftable_ref_record_release(&ref);
+	reftable_log_record_release(&log);
 	st->stats.entries_written += entries;
 	return err;
 }
@@ -1169,7 +1169,7 @@ int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 
 done:
 	if (err) {
-		reftable_log_record_clear(log);
+		reftable_log_record_release(log);
 	}
 	reftable_iterator_destroy(&it);
 	return err;
@@ -1230,7 +1230,7 @@ static int stack_check_addition(struct reftable_stack *st,
 
 done:
 	for (i = 0; i < len; i++) {
-		reftable_ref_record_clear(&refs[i]);
+		reftable_ref_record_release(&refs[i]);
 	}
 
 	free(refs);

@@ -104,7 +104,7 @@ void merged_iter_pqueue_add(struct merged_iter_pqueue *pq, struct pq_entry e)
 	}
 }
 
-void merged_iter_pqueue_clear(struct merged_iter_pqueue *pq)
+void merged_iter_pqueue_release(struct merged_iter_pqueue *pq)
 {
 	int i = 0;
 	for (i = 0; i < pq->len; i++) {

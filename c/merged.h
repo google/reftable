@@ -31,6 +31,6 @@ struct merged_iter {
 	struct merged_iter_pqueue pq;
 };
 
-void merged_table_clear(struct reftable_merged_table *mt);
+void merged_table_release(struct reftable_merged_table *mt);
 
 #endif

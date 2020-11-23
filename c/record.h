@@ -52,7 +52,7 @@ struct reftable_record_vtable {
 		      struct string_view src, int hash_size);
 
 	/* deallocate and null the record. */
-	void (*clear)(void *rec);
+	void (*release)(void *rec);
 
 	/* is this a tombstone? */
 	int (*is_deletion)(const void *rec);
@@ -110,7 +110,7 @@ int reftable_record_decode(struct reftable_record *rec, struct strbuf key,
 int reftable_record_is_deletion(struct reftable_record *rec);
 
 /* zeroes out the embedded record */
-void reftable_record_clear(struct reftable_record *rec);
+void reftable_record_release(struct reftable_record *rec);
 
 /* clear and deallocate embedded record, and zero `rec`. */
 void reftable_record_destroy(struct reftable_record *rec);

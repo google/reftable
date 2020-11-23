@@ -115,7 +115,7 @@ static void test_reftable_stack_add_one(void)
 	EXPECT_ERR(err);
 	EXPECT(0 == strcmp("master", dest.target));
 
-	reftable_ref_record_clear(&dest);
+	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
 	reftable_clear_dir(dir);
 }
@@ -199,7 +199,7 @@ static void test_reftable_stack_transaction_api(void)
 	EXPECT_ERR(err);
 	EXPECT(0 == strcmp("master", dest.target));
 
-	reftable_ref_record_clear(&dest);
+	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
 	reftable_clear_dir(dir);
 }
@@ -351,7 +351,7 @@ static void test_reftable_stack_add(void)
 		int err = reftable_stack_read_ref(st, refs[i].refname, &dest);
 		EXPECT_ERR(err);
 		EXPECT(reftable_ref_record_equal(&dest, refs + i, SHA1_SIZE));
-		reftable_ref_record_clear(&dest);
+		reftable_ref_record_release(&dest);
 	}
 
 	for (i = 0; i < N; i++) {
@@ -359,14 +359,14 @@ static void test_reftable_stack_add(void)
 		int err = reftable_stack_read_log(st, refs[i].refname, &dest);
 		EXPECT_ERR(err);
 		EXPECT(reftable_log_record_equal(&dest, logs + i, SHA1_SIZE));
-		reftable_log_record_clear(&dest);
+		reftable_log_record_release(&dest);
 	}
 
 	/* cleanup */
 	reftable_stack_destroy(st);
 	for (i = 0; i < N; i++) {
-		reftable_ref_record_clear(&refs[i]);
-		reftable_log_record_clear(&logs[i]);
+		reftable_ref_record_release(&refs[i]);
+		reftable_log_record_release(&logs[i]);
 	}
 	reftable_clear_dir(dir);
 }
@@ -422,7 +422,7 @@ static void test_reftable_stack_log_normalize(void)
 
 	/* cleanup */
 	reftable_stack_destroy(st);
-	reftable_log_record_clear(&dest);
+	reftable_log_record_release(&dest);
 	reftable_clear_dir(dir);
 }
 
@@ -476,11 +476,11 @@ static void test_reftable_stack_tombstone(void)
 
 	err = reftable_stack_read_ref(st, "branch", &dest);
 	EXPECT(err == 1);
-	reftable_ref_record_clear(&dest);
+	reftable_ref_record_release(&dest);
 
 	err = reftable_stack_read_log(st, "branch", &log_dest);
 	EXPECT(err == 1);
-	reftable_log_record_clear(&log_dest);
+	reftable_log_record_release(&log_dest);
 
 	err = reftable_stack_compact_all(st, NULL);
 	EXPECT_ERR(err);
@@ -490,14 +490,14 @@ static void test_reftable_stack_tombstone(void)
 
 	err = reftable_stack_read_log(st, "branch", &log_dest);
 	EXPECT(err == 1);
-	reftable_ref_record_clear(&dest);
-	reftable_log_record_clear(&log_dest);
+	reftable_ref_record_release(&dest);
+	reftable_log_record_release(&log_dest);
 
 	/* cleanup */
 	reftable_stack_destroy(st);
 	for (i = 0; i < N; i++) {
-		reftable_ref_record_clear(&refs[i]);
-		reftable_log_record_clear(&logs[i]);
+		reftable_ref_record_release(&refs[i]);
+		reftable_log_record_release(&logs[i]);
 	}
 	reftable_clear_dir(dir);
 }
@@ -539,7 +539,7 @@ static void test_reftable_stack_hash_id(void)
 	EXPECT_ERR(err);
 
 	EXPECT(!strcmp(dest.target, ref.target));
-	reftable_ref_record_clear(&dest);
+	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st_default);
 	reftable_clear_dir(dir);
@@ -677,10 +677,10 @@ static void test_reflog_expire(void)
 	/* cleanup */
 	reftable_stack_destroy(st);
 	for (i = 0; i <= N; i++) {
-		reftable_log_record_clear(&logs[i]);
+		reftable_log_record_release(&logs[i]);
 	}
 	reftable_clear_dir(dir);
-	reftable_log_record_clear(&log);
+	reftable_log_record_release(&log);
 }
 
 static int write_nothing(struct reftable_writer *wr, void *arg)

@@ -183,7 +183,7 @@ static void reftable_ref_record_copy_from(void *rec, const void *src_rec,
 
 	/* This is simple and correct, but we could probably reuse the hash
 	   fields. */
-	reftable_ref_record_clear(ref);
+	reftable_ref_record_release(ref);
 	if (src->refname != NULL) {
 		ref->refname = xstrdup(src->refname);
 	}
@@ -243,12 +243,12 @@ void reftable_ref_record_print(struct reftable_ref_record *ref,
 	printf("}\n");
 }
 
-static void reftable_ref_record_clear_void(void *rec)
+static void reftable_ref_record_release_void(void *rec)
 {
-	reftable_ref_record_clear((struct reftable_ref_record *)rec);
+	reftable_ref_record_release((struct reftable_ref_record *)rec);
 }
 
-void reftable_ref_record_clear(struct reftable_ref_record *ref)
+void reftable_ref_record_release(struct reftable_ref_record *ref)
 {
 	reftable_free(ref->refname);
 	reftable_free(ref->target);
@@ -402,7 +402,7 @@ static struct reftable_record_vtable reftable_ref_record_vtable = {
 	.val_type = &reftable_ref_record_val_type,
 	.encode = &reftable_ref_record_encode,
 	.decode = &reftable_ref_record_decode,
-	.clear = &reftable_ref_record_clear_void,
+	.release = &reftable_ref_record_release_void,
 	.is_deletion = &reftable_ref_record_is_deletion_void,
 };
 
@@ -414,7 +414,7 @@ static void reftable_obj_record_key(const void *r, struct strbuf *dest)
 	strbuf_add(dest, rec->hash_prefix, rec->hash_prefix_len);
 }
 
-static void reftable_obj_record_clear(void *rec)
+static void reftable_obj_record_release(void *rec)
 {
 	struct reftable_obj_record *obj = (struct reftable_obj_record *)rec;
 	FREE_AND_NULL(obj->hash_prefix);
@@ -430,7 +430,7 @@ static void reftable_obj_record_copy_from(void *rec, const void *src_rec,
 		(const struct reftable_obj_record *)src_rec;
 	int olen;
 
-	reftable_obj_record_clear(obj);
+	reftable_obj_record_release(obj);
 	*obj = *src;
 	obj->hash_prefix = reftable_malloc(obj->hash_prefix_len);
 	memcpy(obj->hash_prefix, src->hash_prefix, obj->hash_prefix_len);
@@ -546,7 +546,7 @@ static struct reftable_record_vtable reftable_obj_record_vtable = {
 	.val_type = &reftable_obj_record_val_type,
 	.encode = &reftable_obj_record_encode,
 	.decode = &reftable_obj_record_decode,
-	.clear = &reftable_obj_record_clear,
+	.release = &reftable_obj_record_release,
 	.is_deletion = not_a_deletion,
 };
 
@@ -586,7 +586,7 @@ static void reftable_log_record_copy_from(void *rec, const void *src_rec,
 	const struct reftable_log_record *src =
 		(const struct reftable_log_record *)src_rec;
 
-	reftable_log_record_clear(dst);
+	reftable_log_record_release(dst);
 	*dst = *src;
 	if (dst->refname != NULL) {
 		dst->refname = xstrdup(dst->refname);
@@ -611,13 +611,13 @@ static void reftable_log_record_copy_from(void *rec, const void *src_rec,
 	}
 }
 
-static void reftable_log_record_clear_void(void *rec)
+static void reftable_log_record_release_void(void *rec)
 {
 	struct reftable_log_record *r = (struct reftable_log_record *)rec;
-	reftable_log_record_clear(r);
+	reftable_log_record_release(r);
 }
 
-void reftable_log_record_clear(struct reftable_log_record *r)
+void reftable_log_record_release(struct reftable_log_record *r)
 {
 	reftable_free(r->refname);
 	reftable_free(r->new_hash);
@@ -828,7 +828,7 @@ static struct reftable_record_vtable reftable_log_record_vtable = {
 	.val_type = &reftable_log_record_val_type,
 	.encode = &reftable_log_record_encode,
 	.decode = &reftable_log_record_decode,
-	.clear = &reftable_log_record_clear_void,
+	.release = &reftable_log_record_release_void,
 	.is_deletion = &reftable_log_record_is_deletion_void,
 };
 
@@ -880,7 +880,7 @@ static void *reftable_record_yield(struct reftable_record *rec)
 
 void reftable_record_destroy(struct reftable_record *rec)
 {
-	reftable_record_clear(rec);
+	reftable_record_release(rec);
 	reftable_free(reftable_record_yield(rec));
 }
 
@@ -903,7 +903,7 @@ static void reftable_index_record_copy_from(void *rec, const void *src_rec,
 	dst->offset = src->offset;
 }
 
-static void reftable_index_record_clear(void *rec)
+static void reftable_index_record_release(void *rec)
 {
 	struct reftable_index_record *idx = (struct reftable_index_record *)rec;
 	strbuf_release(&idx->last_key);
@@ -956,7 +956,7 @@ static struct reftable_record_vtable reftable_index_record_vtable = {
 	.val_type = &reftable_index_record_val_type,
 	.encode = &reftable_index_record_encode,
 	.decode = &reftable_index_record_decode,
-	.clear = &reftable_index_record_clear,
+	.release = &reftable_index_record_release,
 	.is_deletion = &not_a_deletion,
 };
 
@@ -995,9 +995,9 @@ int reftable_record_decode(struct reftable_record *rec, struct strbuf key,
 	return rec->ops->decode(rec->data, key, extra, src, hash_size);
 }
 
-void reftable_record_clear(struct reftable_record *rec)
+void reftable_record_release(struct reftable_record *rec)
 {
-	rec->ops->clear(rec->data);
+	rec->ops->release(rec->data);
 }
 
 int reftable_record_is_deletion(struct reftable_record *rec)

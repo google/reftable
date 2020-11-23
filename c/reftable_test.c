@@ -220,7 +220,7 @@ static void test_log_write_read(void)
 	EXPECT(0 < err);
 
 	reftable_iterator_destroy(&it);
-	reftable_ref_record_clear(&ref);
+	reftable_ref_record_release(&ref);
 
 	err = reftable_reader_seek_log(&rd, &it, "");
 	EXPECT_ERR(err);
@@ -236,7 +236,7 @@ static void test_log_write_read(void)
 		EXPECT_STREQ(names[i], log.refname);
 		EXPECT(i == log.update_index);
 		i++;
-		reftable_log_record_clear(&log);
+		reftable_log_record_release(&log);
 	}
 
 	EXPECT(i == N);
@@ -280,7 +280,7 @@ static void test_table_read_write_sequential(void)
 		EXPECT(update_index == ref.update_index);
 
 		j++;
-		reftable_ref_record_clear(&ref);
+		reftable_ref_record_release(&ref);
 	}
 	EXPECT(j == N);
 	reftable_iterator_destroy(&it);
@@ -372,7 +372,7 @@ static void test_table_read_write_seek(int index, int hash_id)
 		EXPECT(0 == strcmp(names[i], ref.refname));
 		EXPECT(i == ref.value[0]);
 
-		reftable_ref_record_clear(&ref);
+		reftable_ref_record_release(&ref);
 		reftable_iterator_destroy(&it);
 	}
 
@@ -504,7 +504,7 @@ static void test_table_refs_for(int indexed)
 		EXPECT(j < want_names_len);
 		EXPECT(0 == strcmp(ref.refname, want_names[j]));
 		j++;
-		reftable_ref_record_clear(&ref);
+		reftable_ref_record_release(&ref);
 	}
 	EXPECT(j == want_names_len);
 

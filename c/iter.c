@@ -122,7 +122,7 @@ static int filtering_ref_iterator_next(void *iter_arg,
 		}
 	}
 
-	reftable_ref_record_clear(ref);
+	reftable_ref_record_release(ref);
 	return err;
 }
 
