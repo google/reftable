@@ -139,4 +139,3 @@ int common_prefix_size(struct strbuf *a, struct strbuf *b)
 	return p;
 }
 
-struct strbuf reftable_empty_strbuf = STRBUF_INIT;

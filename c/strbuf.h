@@ -68,8 +68,6 @@ void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
 
 #endif
 
-extern struct strbuf reftable_empty_strbuf;
-
 /* Like strbuf_add, but suitable for passing to reftable_new_writer
  */
 int strbuf_add_void(void *b, const void *data, size_t sz);
