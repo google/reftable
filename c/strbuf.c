@@ -119,23 +119,3 @@ int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 }
 
 #endif
-
-int strbuf_add_void(void *b, const void *data, size_t sz)
-{
-	strbuf_add((struct strbuf *)b, data, sz);
-	return sz;
-}
-
-int common_prefix_size(struct strbuf *a, struct strbuf *b)
-{
-	int p = 0;
-	while (p < a->len && p < b->len) {
-		if (a->buf[p] != b->buf[p]) {
-			break;
-		}
-		p++;
-	}
-
-	return p;
-}
-

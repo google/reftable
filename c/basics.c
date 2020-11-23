@@ -7,6 +7,7 @@ https://developers.google.com/open-source/licenses/bsd
 */
 
 #include "basics.h"
+#include "strbuf.h"
 
 void put_be24(uint8_t *out, uint32_t i)
 {
@@ -128,4 +129,17 @@ int names_equal(char **a, char **b)
 	}
 
 	return *a == *b;
+}
+
+int common_prefix_size(struct strbuf *a, struct strbuf *b)
+{
+	int p = 0;
+	while (p < a->len && p < b->len) {
+		if (a->buf[p] != b->buf[p]) {
+			break;
+		}
+		p++;
+	}
+
+	return p;
 }

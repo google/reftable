@@ -7,6 +7,7 @@ https://developers.google.com/open-source/licenses/bsd
 */
 
 #include "test_framework.h"
+#include "strbuf.h"
 
 #include "system.h"
 #include "basics.h"
@@ -14,4 +15,10 @@ https://developers.google.com/open-source/licenses/bsd
 void set_test_hash(uint8_t *p, int i)
 {
 	memset(p, (uint8_t)i, hash_size(SHA1_ID));
+}
+
+int strbuf_add_void(void *b, const void *data, size_t sz)
+{
+	strbuf_add((struct strbuf *)b, data, sz);
+	return sz;
 }

@@ -68,11 +68,4 @@ void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
 
 #endif
 
-/* Like strbuf_add, but suitable for passing to reftable_new_writer
- */
-int strbuf_add_void(void *b, const void *data, size_t sz);
-
-/* Find the longest shared prefix size of `a` and `b` */
-int common_prefix_size(struct strbuf *a, struct strbuf *b);
-
 #endif
