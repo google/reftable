@@ -13,7 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "block.h"
 #include "constants.h"
 #include "reader.h"
-#include "reftable.h"
+#include "reftable-error.h"
 
 int iterator_is_null(struct reftable_iterator *it)
 {

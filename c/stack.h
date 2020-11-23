@@ -9,8 +9,9 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef STACK_H
 #define STACK_H
 
-#include "reftable.h"
 #include "system.h"
+#include "reftable-writer.h"
+#include "reftable-stack.h"
 
 struct reftable_stack {
 	char *list_file;

@@ -16,9 +16,11 @@ https://developers.google.com/open-source/licenses/bsd
 #include "pq.h"
 #include "reader.h"
 #include "record.h"
-#include "reftable.h"
 #include "test_framework.h"
+#include "reftable-merged.h"
 #include "reftable-tests.h"
+#include "reftable-generic.h"
+#include "reftable-stack.h"
 
 static void test_pq(void)
 {

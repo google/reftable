@@ -11,7 +11,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "basics.h"
 #include "blocksource.h"
 #include "strbuf.h"
-#include "reftable.h"
+#include "reftable-error.h"
+#include "reftable-writer.h"
+#include "reftable-reader.h"
 
 static void strbuf_return_block(void *b, struct reftable_block *dest)
 {

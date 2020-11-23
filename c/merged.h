@@ -10,7 +10,6 @@ https://developers.google.com/open-source/licenses/bsd
 #define MERGED_H
 
 #include "pq.h"
-#include "reftable.h"
 
 struct reftable_merged_table {
 	struct reftable_table *stack;

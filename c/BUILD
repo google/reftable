@@ -39,7 +39,15 @@ cc_library(
         "system.h",
     ],
     hdrs = [
-        "include/reftable.h",
+        "include/reftable-error.h",
+        "include/reftable-malloc.h",
+        "include/reftable-record.h",
+        "include/reftable-writer.h",
+        "include/reftable-iterator.h",
+        "include/reftable-reader.h",
+        "include/reftable-merged.h",
+        "include/reftable-generic.h",
+        "include/reftable-stack.h",
     ],
     includes = [
         "include",
@@ -89,7 +97,15 @@ cc_library(
         "writer.h",
     ],
     hdrs = [
-        "include/reftable.h",
+        "include/reftable-error.h",
+        "include/reftable-malloc.h",
+        "include/reftable-record.h",
+        "include/reftable-writer.h",
+        "include/reftable-iterator.h",
+        "include/reftable-reader.h",
+        "include/reftable-merged.h",
+        "include/reftable-generic.h",
+        "include/reftable-stack.h",
     ],
     includes = [
         "include",

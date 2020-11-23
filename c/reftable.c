@@ -6,9 +6,10 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "reftable.h"
 #include "record.h"
 #include "reader.h"
+#include "reftable-iterator.h"
+#include "reftable-generic.h"
 
 static int reftable_reader_seek_void(void *tab, struct reftable_iterator *it,
 				     struct reftable_record *rec)

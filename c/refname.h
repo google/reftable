@@ -8,7 +8,8 @@
 #ifndef REFNAME_H
 #define REFNAME_H
 
-#include "reftable.h"
+#include "reftable-record.h"
+#include "reftable-generic.h"
 
 struct modification {
 	struct reftable_table tab;

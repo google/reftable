@@ -8,7 +8,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "pq.h"
 
-#include "reftable.h"
+#include "reftable-record.h"
 #include "system.h"
 #include "basics.h"
 

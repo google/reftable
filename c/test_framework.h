@@ -10,10 +10,7 @@ https://developers.google.com/open-source/licenses/bsd
 #define TEST_FRAMEWORK_H
 
 #include "system.h"
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+#include "reftable-error.h"
 
 #define EXPECT_ERR(c)                                                  \
 	if (c != 0) {                                                  \

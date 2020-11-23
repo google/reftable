@@ -13,7 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "constants.h"
 #include "iter.h"
 #include "record.h"
-#include "reftable.h"
+#include "reftable-error.h"
 #include "tree.h"
 
 uint64_t block_source_size(struct reftable_block_source *source)

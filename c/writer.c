@@ -13,8 +13,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "block.h"
 #include "constants.h"
 #include "record.h"
-#include "reftable.h"
 #include "tree.h"
+#include "reftable-error.h"
 
 /* finishes a block, and writes it to storage */
 static int writer_flush_block(struct reftable_writer *w);

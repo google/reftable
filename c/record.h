@@ -9,7 +9,9 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef RECORD_H
 #define RECORD_H
 
-#include "reftable.h"
+#include <stdint.h>
+
+#include "reftable-record.h"
 #include "strbuf.h"
 #include "system.h"
 

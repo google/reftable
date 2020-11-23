@@ -13,7 +13,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "pq.h"
 #include "reader.h"
 #include "record.h"
-#include "reftable.h"
+#include "reftable-merged.h"
+#include "reftable-error.h"
 #include "system.h"
 
 static int merged_iter_init(struct merged_iter *mi)

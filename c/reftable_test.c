@@ -6,8 +6,6 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "reftable.h"
-
 #include "system.h"
 
 #include "basics.h"
@@ -18,6 +16,7 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "test_framework.h"
 #include "reftable-tests.h"
+#include "reftable-stack.h"
 
 static const int update_index = 5;
 

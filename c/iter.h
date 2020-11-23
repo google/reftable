@@ -13,6 +13,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "record.h"
 #include "strbuf.h"
 
+#include "reftable-iterator.h"
+#include "reftable-generic.h"
+
 struct reftable_iterator_vtable {
 	int (*next)(void *iter_arg, struct reftable_record *rec);
 	void (*close)(void *iter_arg);

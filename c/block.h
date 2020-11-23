@@ -11,7 +11,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "basics.h"
 #include "record.h"
-#include "reftable.h"
+#include "reftable-reader.h"
 
 /*
   Writes reftable blocks. The block_writer is reused across blocks to minimize

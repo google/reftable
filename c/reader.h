@@ -11,7 +11,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "block.h"
 #include "record.h"
-#include "reftable.h"
+#include "reftable-iterator.h"
+#include "reftable-reader.h"
 
 uint64_t block_source_size(struct reftable_block_source *source);
 
@@ -71,8 +72,5 @@ struct reftable_table_vtable {
 	uint64_t (*max_update_index)(void *tab);
 };
 
-int reftable_table_seek_record(struct reftable_table *tab,
-			       struct reftable_iterator *it,
-			       struct reftable_record *rec);
 
 #endif

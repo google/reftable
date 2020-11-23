@@ -6,7 +6,9 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "reftable.h"
+#include "reftable-error.h"
+#include "reftable-malloc.h"
+#include "reftable-writer.h"
 
 #include "basics.h"
 #include "system.h"

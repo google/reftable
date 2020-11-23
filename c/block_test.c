@@ -14,7 +14,6 @@ https://developers.google.com/open-source/licenses/bsd
 #include "basics.h"
 #include "constants.h"
 #include "record.h"
-#include "reftable.h"
 #include "test_framework.h"
 #include "reftable-tests.h"
 

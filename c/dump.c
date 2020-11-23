@@ -12,8 +12,14 @@ https://developers.google.com/open-source/licenses/bsd
 #include <unistd.h>
 #include <string.h>
 
-#include "reftable.h"
+#include "reftable-error.h"
+#include "reftable-merged.h"
+#include "reftable-record.h"
 #include "reftable-tests.h"
+#include "reftable-writer.h"
+#include "reftable-iterator.h"
+#include "reftable-reader.h"
+#include "reftable-stack.h"
 
 static uint32_t hash_id;
 

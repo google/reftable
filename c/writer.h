@@ -11,9 +11,9 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "basics.h"
 #include "block.h"
-#include "reftable.h"
 #include "strbuf.h"
 #include "tree.h"
+#include "reftable-writer.h"
 
 struct reftable_writer {
 	int (*write)(void *, const void *, size_t);
