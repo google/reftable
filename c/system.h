@@ -9,33 +9,12 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#ifndef REFTABLE_STANDALONE
-
 #include "git-compat-util.h"
-#include "cache.h" /*  sleep_millisec() */
-#include <zlib.h>
 
-#else
-
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <zlib.h>
-
-#include "compat.h"
-
-#endif /* REFTABLE_STANDALONE */
-
-void reftable_clear_dir(const char *dirname);
+#ifdef REFTABLE_STANDALONE
+struct strbuf;
+int remove_dir_recursively(struct strbuf *path, int flags);
+#endif
 
 #define SHA1_ID 0x73686131
 #define SHA256_ID 0x73323536

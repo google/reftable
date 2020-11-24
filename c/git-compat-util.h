@@ -6,15 +6,24 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#ifndef COMPAT_H
-#define COMPAT_H
+#ifndef GIT_COMPAT_UTIL_H
+#define GIT_COMPAT_UTIL_H
 
-#include "system.h"
-
-#ifdef REFTABLE_STANDALONE
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <zlib.h>
 
 /* functions that git-core provides, for standalone compilation */
-#include <stdint.h>
 
 uint64_t get_be64(void *in);
 void put_be64(void *out, uint64_t i);
@@ -44,5 +53,4 @@ char *xstrdup(const char *s);
 
 void sleep_millisec(int millisecs);
 
-#endif
 #endif

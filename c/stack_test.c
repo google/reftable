@@ -20,6 +20,14 @@ https://developers.google.com/open-source/licenses/bsd
 #include <sys/types.h>
 #include <dirent.h>
 
+static void clear_dir(const char *dirname)
+{
+	struct strbuf path = STRBUF_INIT;
+	strbuf_addstr(&path, dirname);
+	remove_dir_recursively(&path, 0);
+	strbuf_release(&path);
+}
+
 static void test_read_file(void)
 {
 	char fn[256] = "/tmp/stack.test_read_file.XXXXXX";
@@ -116,7 +124,7 @@ static void test_reftable_stack_add_one(void)
 
 	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_uptodate(void)
@@ -158,7 +166,7 @@ static void test_reftable_stack_uptodate(void)
 	EXPECT_ERR(err);
 	reftable_stack_destroy(st1);
 	reftable_stack_destroy(st2);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_transaction_api(void)
@@ -200,7 +208,7 @@ static void test_reftable_stack_transaction_api(void)
 
 	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_validate_refname(void)
@@ -236,7 +244,7 @@ static void test_reftable_stack_validate_refname(void)
 	}
 
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static int write_error(struct reftable_writer *wr, void *arg)
@@ -271,7 +279,7 @@ static void test_reftable_stack_update_index_check(void)
 	err = reftable_stack_add(st, &write_test_ref, &ref2);
 	EXPECT(err == REFTABLE_API_ERROR);
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_lock_failure(void)
@@ -290,7 +298,7 @@ static void test_reftable_stack_lock_failure(void)
 	}
 
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_add(void)
@@ -367,7 +375,7 @@ static void test_reftable_stack_add(void)
 		reftable_ref_record_release(&refs[i]);
 		reftable_log_record_release(&logs[i]);
 	}
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_log_normalize(void)
@@ -422,7 +430,7 @@ static void test_reftable_stack_log_normalize(void)
 	/* cleanup */
 	reftable_stack_destroy(st);
 	reftable_log_record_release(&dest);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_tombstone(void)
@@ -498,7 +506,7 @@ static void test_reftable_stack_tombstone(void)
 		reftable_ref_record_release(&refs[i]);
 		reftable_log_record_release(&logs[i]);
 	}
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_reftable_stack_hash_id(void)
@@ -541,7 +549,7 @@ static void test_reftable_stack_hash_id(void)
 	reftable_ref_record_release(&dest);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st_default);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 static void test_log2(void)
@@ -678,7 +686,7 @@ static void test_reflog_expire(void)
 	for (i = 0; i <= N; i++) {
 		reftable_log_record_release(&logs[i]);
 	}
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 	reftable_log_record_release(&log);
 }
 
@@ -706,7 +714,7 @@ static void test_empty_add(void)
 
 	err = reftable_new_stack(&st2, dir, cfg);
 	EXPECT_ERR(err);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 	reftable_stack_destroy(st);
 	reftable_stack_destroy(st2);
 }
@@ -742,7 +750,7 @@ static void test_reftable_stack_auto_compaction(void)
 	       (uint64_t)(N * fastlog2(N)));
 
 	reftable_stack_destroy(st);
-	reftable_clear_dir(dir);
+	clear_dir(dir);
 }
 
 int stack_test_main(int argc, const char *argv[])

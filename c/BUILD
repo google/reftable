@@ -22,45 +22,6 @@ GIT_COPTS = [
     "-Wno-unused-parameter",
 ]
 
-# Used while in review in git-core upstream, to guarantee buildability of the
-# subset offered for review.
-cc_library(
-    name = "upstream",
-    srcs = [
-        "basics.c",
-        "blocksource.c",
-        "compat.c",
-        "publicbasics.c",
-        "error.c",
-        "strbuf.c",
-        "basics.h",
-        "blocksource.h",
-        "compat.h",
-        "strbuf.h",
-        "system.h",
-    ],
-    hdrs = [
-        "include/reftable-blocksource.h",
-        "include/reftable-error.h",
-        "include/reftable-malloc.h",
-        "include/reftable-record.h",
-        "include/reftable-writer.h",
-        "include/reftable-iterator.h",
-        "include/reftable-reader.h",
-        "include/reftable-merged.h",
-        "include/reftable-generic.h",
-        "include/reftable-stack.h",
-    ],
-    includes = [
-        "include",
-    ],
-    copts = [
-        "-fvisibility=protected",
-    ] + GIT_COPTS,
-    deps = ["@zlib"],
-    visibility = ["//visibility:public"]
-)
-
 cc_library(
     name = "reftable",
     srcs = [
@@ -85,7 +46,7 @@ cc_library(
         "basics.h",
         "block.h",
         "blocksource.h",
-        "compat.h",
+        "git-compat-util.h",
         "constants.h",
         "iter.h",
         "merged.h",

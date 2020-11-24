@@ -11,9 +11,13 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "system.h"
 #include "basics.h"
+#include "strbuf.h"
 
 #ifdef REFTABLE_STANDALONE
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <ftw.h>
 #include <dirent.h>
 
 void put_be32(void *p, uint32_t i)
@@ -71,28 +75,20 @@ void sleep_millisec(int millisecs)
 	usleep(millisecs * 1000);
 }
 
-void reftable_clear_dir(const char *dirname)
+static int removePath(const char *pathname, const struct stat *sbuf, int type)
 {
-	DIR *dir = opendir(dirname);
-	struct dirent *ent = NULL;
-	assert(dir);
-	while ((ent = readdir(dir)) != NULL) {
-		unlinkat(dirfd(dir), ent->d_name, 0);
+	if (remove(pathname) < 0) {
+		perror("ERROR: remove");
+		return -1;
 	}
-	closedir(dir);
-	rmdir(dirname);
+	return 0;
 }
 
-#else
-
-#include "../dir.h"
-
-void reftable_clear_dir(const char *dirname)
+// See
+// https://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c
+int remove_dir_recursively(struct strbuf *path, int flags)
 {
-	struct strbuf path = STRBUF_INIT;
-	strbuf_addstr(&path, dirname);
-	remove_dir_recursively(&path, 0);
-	strbuf_release(&path);
+	return ftw(path->buf, removePath, 10);
 }
 
 #endif
