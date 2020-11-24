@@ -130,7 +130,6 @@ done:
 	return -1;
 }
 
-
 int block_writer_finish(struct block_writer *w)
 {
 	int i = 0;
