@@ -59,9 +59,4 @@ enum reftable_error {
  * deallocated. */
 const char *reftable_error_str(int err);
 
-/*
- * Convert the numeric error code to an equivalent errno code.
- */
-int reftable_error_to_errno(int err);
-
 #endif

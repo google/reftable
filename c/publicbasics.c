@@ -6,59 +6,10 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "reftable-error.h"
 #include "reftable-malloc.h"
 
 #include "basics.h"
 #include "system.h"
-
-const char *reftable_error_str(int err)
-{
-	static char buf[250];
-	switch (err) {
-	case REFTABLE_IO_ERROR:
-		return "I/O error";
-	case REFTABLE_FORMAT_ERROR:
-		return "corrupt reftable file";
-	case REFTABLE_NOT_EXIST_ERROR:
-		return "file does not exist";
-	case REFTABLE_LOCK_ERROR:
-		return "data is outdated";
-	case REFTABLE_API_ERROR:
-		return "misuse of the reftable API";
-	case REFTABLE_ZLIB_ERROR:
-		return "zlib failure";
-	case REFTABLE_NAME_CONFLICT:
-		return "file/directory conflict";
-	case REFTABLE_REFNAME_ERROR:
-		return "invalid refname";
-	case -1:
-		return "general error";
-	default:
-		snprintf(buf, sizeof(buf), "unknown error code %d", err);
-		return buf;
-	}
-}
-
-int reftable_error_to_errno(int err)
-{
-	switch (err) {
-	case REFTABLE_IO_ERROR:
-		return EIO;
-	case REFTABLE_FORMAT_ERROR:
-		return EFAULT;
-	case REFTABLE_NOT_EXIST_ERROR:
-		return ENOENT;
-	case REFTABLE_LOCK_ERROR:
-		return EBUSY;
-	case REFTABLE_API_ERROR:
-		return EINVAL;
-	case REFTABLE_ZLIB_ERROR:
-		return EDOM;
-	default:
-		return ERANGE;
-	}
-}
 
 static void *(*reftable_malloc_ptr)(size_t sz) = &malloc;
 static void *(*reftable_realloc_ptr)(void *, size_t) = &realloc;
