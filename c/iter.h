@@ -9,9 +9,9 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef ITER_H
 #define ITER_H
 
+#include "system.h"
 #include "block.h"
 #include "record.h"
-#include "strbuf.h"
 
 #include "reftable-iterator.h"
 #include "reftable-generic.h"

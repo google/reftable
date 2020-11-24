@@ -1,6 +1,5 @@
 # Mirror core-git COPTS so reftable compiles without warning in CGit.
 GIT_COPTS = [
-    "-DREFTABLE_STANDALONE",
     "-Wall",
     "-Werror",
     "-Wdeclaration-after-statement",

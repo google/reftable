@@ -6,10 +6,9 @@ license that can be found in the LICENSE file or at
 https://developers.google.com/open-source/licenses/bsd
 */
 
-#include "test_framework.h"
-#include "strbuf.h"
-
 #include "system.h"
+#include "test_framework.h"
+
 #include "basics.h"
 
 void set_test_hash(uint8_t *p, int i)

@@ -9,6 +9,10 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef BASICS_H
 #define BASICS_H
 
+/*
+ * miscellaneous utilities that are not provided by Git.
+ */
+
 #include "system.h"
 
 /* Bigendian en/decoding of integers */

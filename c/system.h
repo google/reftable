@@ -10,6 +10,8 @@ https://developers.google.com/open-source/licenses/bsd
 #define SYSTEM_H
 
 #include "git-compat-util.h"
+#include "strbuf.h"
+
 #include <zlib.h>
 
 struct strbuf;

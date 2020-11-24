@@ -7,7 +7,6 @@ https://developers.google.com/open-source/licenses/bsd
 */
 
 #include "basics.h"
-#include "strbuf.h"
 
 void put_be24(uint8_t *out, uint32_t i)
 {

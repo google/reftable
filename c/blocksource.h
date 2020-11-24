@@ -9,7 +9,7 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef BLOCKSOURCE_H
 #define BLOCKSOURCE_H
 
-#include "strbuf.h"
+#include "system.h"
 
 struct reftable_block_source;
 

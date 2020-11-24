@@ -9,11 +9,11 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef RECORD_H
 #define RECORD_H
 
+#include "system.h"
+
 #include <stdint.h>
 
 #include "reftable-record.h"
-#include "strbuf.h"
-#include "system.h"
 
 /*
   A substring of existing string data. This structure takes no responsibility

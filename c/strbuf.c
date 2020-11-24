@@ -7,8 +7,7 @@ https://developers.google.com/open-source/licenses/bsd
 */
 
 #include "strbuf.h"
-
-#ifdef REFTABLE_STANDALONE
+#include "basics.h"
 
 void strbuf_init(struct strbuf *s, size_t alloc)
 {
@@ -118,4 +117,3 @@ int strbuf_add(struct strbuf *b, const void *data, size_t sz)
 	return sz;
 }
 
-#endif

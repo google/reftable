@@ -9,9 +9,8 @@ https://developers.google.com/open-source/licenses/bsd
 #ifndef SLICE_H
 #define SLICE_H
 
-#ifdef REFTABLE_STANDALONE
-
-#include "basics.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 /*
   Provides a bounds-checked, growable byte ranges. To use, initialize as "strbuf
@@ -60,12 +59,5 @@ int strbuf_add(struct strbuf *dest, const void *data, size_t sz);
 
 /* Append `add` to `dest. */
 void strbuf_addbuf(struct strbuf *dest, struct strbuf *add);
-
-#else
-
-#include "../git-compat-util.h"
-#include "../strbuf.h"
-
-#endif
 
 #endif

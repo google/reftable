@@ -10,7 +10,6 @@
 #include "reftable-error.h"
 #include "basics.h"
 #include "refname.h"
-#include "strbuf.h"
 #include "reftable-iterator.h"
 
 struct find_arg {
