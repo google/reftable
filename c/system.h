@@ -10,11 +10,11 @@ https://developers.google.com/open-source/licenses/bsd
 #define SYSTEM_H
 
 #include "git-compat-util.h"
+#include <zlib.h>
 
-#ifdef REFTABLE_STANDALONE
 struct strbuf;
+/* In git, this is declared in dir.h */
 int remove_dir_recursively(struct strbuf *path, int flags);
-#endif
 
 #define SHA1_ID 0x73686131
 #define SHA256_ID 0x73323536

@@ -28,7 +28,7 @@ cc_library(
         "basics.c",
         "block.c",
         "blocksource.c",
-        "compat.c",
+        "git-compat-util.c",
         "error.c",
         "iter.c",
         "merged.c",

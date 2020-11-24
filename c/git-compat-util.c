@@ -13,8 +13,6 @@ https://developers.google.com/open-source/licenses/bsd
 #include "basics.h"
 #include "strbuf.h"
 
-#ifdef REFTABLE_STANDALONE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ftw.h>
@@ -89,18 +87,4 @@ static int removePath(const char *pathname, const struct stat *sbuf, int type)
 int remove_dir_recursively(struct strbuf *path, int flags)
 {
 	return ftw(path->buf, removePath, 10);
-}
-
-#endif
-
-int hash_size(uint32_t id)
-{
-	switch (id) {
-	case 0:
-	case SHA1_ID:
-		return SHA1_SIZE;
-	case SHA256_ID:
-		return SHA256_SIZE;
-	}
-	abort();
 }

@@ -45,3 +45,14 @@ void reftable_set_alloc(void *(*malloc)(size_t),
 	reftable_free_ptr = free;
 }
 
+int hash_size(uint32_t id)
+{
+	switch (id) {
+	case 0:
+	case SHA1_ID:
+		return SHA1_SIZE;
+	case SHA256_ID:
+		return SHA256_SIZE;
+	}
+	abort();
+}
