@@ -161,6 +161,19 @@ cc_test(
 )
 
 cc_test(
+    name = "basics_test",
+    srcs = ["basics_test.c"],
+    deps = [
+        ":reftable",
+        ":testlib",
+    ],
+    copts = [
+        "-Dbasics_test_main=main",
+        "-fvisibility=protected",
+    ] + GIT_COPTS,
+)
+
+cc_test(
     name = "block_test",
     srcs = ["block_test.c"],
     deps = [
