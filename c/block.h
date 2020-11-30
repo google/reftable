@@ -14,9 +14,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-blocksource.h"
 
 /*
-  Writes reftable blocks. The block_writer is reused across blocks to minimize
-  allocation overhead.
-*/
+ * Writes reftable blocks. The block_writer is reused across blocks to minimize
+ * allocation overhead.
+ */
 struct block_writer {
 	uint8_t *buf;
 	uint32_t block_size;
@@ -39,14 +39,12 @@ struct block_writer {
 };
 
 /*
-  initializes the blockwriter to write `typ` entries, using `buf` as temporary
-  storage. `buf` is not owned by the block_writer. */
+ * initializes the blockwriter to write `typ` entries, using `buf` as temporary
+ * storage. `buf` is not owned by the block_writer. */
 void block_writer_init(struct block_writer *bw, uint8_t typ, uint8_t *buf,
 		       uint32_t block_size, uint32_t header_off, int hash_size);
 
-/*
-  returns the block type (eg. 'r' for ref records.
-*/
+/* returns the block type (eg. 'r' for ref records. */
 uint8_t block_writer_type(struct block_writer *bw);
 
 /* appends the record, or -1 if it doesn't fit. */

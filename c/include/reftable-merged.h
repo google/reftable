@@ -12,16 +12,16 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-iterator.h"
 
 /*
- Merged tables
-
- A ref database kept in a sequence of table files. The merged_table presents a
- unified view to reading (seeking, iterating) a sequence of immutable tables.
-
- The merged tables are on purpose kept disconnected from their actual storage
- (eg. files on disk), because it is useful to merge tables aren't files. For
- example, the per-workspace and global ref namespace can be implemented as a
- merged table of two stacks of file-backed reftables.
-*/
+ * Merged tables
+ *
+ * A ref database kept in a sequence of table files. The merged_table presents a
+ * unified view to reading (seeking, iterating) a sequence of immutable tables.
+ *
+ * The merged tables are on purpose kept disconnected from their actual storage
+ * (eg. files on disk), because it is useful to merge tables aren't files. For
+ * example, the per-workspace and global ref namespace can be implemented as a
+ * merged table of two stacks of file-backed reftables.
+ */
 
 /* A merged table is implements seeking/iterating over a stack of tables. */
 struct reftable_merged_table;

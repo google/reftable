@@ -13,12 +13,12 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-blocksource.h"
 
 /*
- Reading single tables
-
- The follow routines are for reading single files. For an application-level
- interface, skip ahead to struct reftable_merged_table and struct
- reftable_stack.
-*/
+ * Reading single tables
+ *
+ * The follow routines are for reading single files. For an application-level
+ * interface, skip ahead to struct reftable_merged_table and struct
+ * reftable_stack.
+ */
 
 /* The reader struct is a handle to an open reftable file. */
 struct reftable_reader;

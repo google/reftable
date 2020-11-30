@@ -16,8 +16,8 @@ struct tree_node {
 };
 
 /* looks for `key` in `rootp` using `compare` as comparison function. If insert
-   is set, insert the key if it's not found. Else, return NULL.
-*/
+ * is set, insert the key if it's not found. Else, return NULL.
+ */
 struct tree_node *tree_search(void *key, struct tree_node **rootp,
 			      int (*compare)(const void *, const void *),
 			      int insert);
@@ -27,8 +27,8 @@ void infix_walk(struct tree_node *t, void (*action)(void *arg, void *key),
 		void *arg);
 
 /*
-  deallocates the tree nodes recursively. Keys should be deallocated separately
-  by walking over the tree. */
+ * deallocates the tree nodes recursively. Keys should be deallocated separately
+ * by walking over the tree. */
 void tree_free(struct tree_node *t);
 
 #endif

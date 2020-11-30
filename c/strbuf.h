@@ -13,8 +13,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include <stdlib.h>
 
 /*
-  Provides a bounds-checked, growable byte ranges. To use, initialize as "strbuf
-  x = STRBUF_INIT;"
+ * Provides a bounds-checked, growable byte ranges. To use, initialize as
+ * "strbuf x = STRBUF_INIT;"
  */
 struct strbuf {
 	size_t len;

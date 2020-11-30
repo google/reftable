@@ -14,9 +14,8 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-merged.h"
 
 /*
- Provides a unified API for reading tables, either merged tables, or single
- readers.
-*/
+ * Provides a unified API for reading tables, either merged tables, or single
+ * readers. */
 struct reftable_table {
 	struct reftable_table_vtable *ops;
 	void *table_arg;

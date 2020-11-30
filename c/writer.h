@@ -40,8 +40,8 @@ struct reftable_writer {
 	size_t index_cap;
 
 	/*
-	  tree for use with tsearch; used to populate the 'o' inverse OID
-	  map */
+	 * tree for use with tsearch; used to populate the 'o' inverse OID
+	 * map */
 	struct tree_node *obj_index_tree;
 
 	struct reftable_stats stats;

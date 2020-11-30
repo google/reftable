@@ -19,8 +19,7 @@ struct reftable_block_source {
 };
 
 /* a contiguous segment of bytes. It keeps track of its generating block_source
-   so it can return itself into the pool.
-*/
+ * so it can return itself into the pool. */
 struct reftable_block {
 	uint8_t *data;
 	int len;

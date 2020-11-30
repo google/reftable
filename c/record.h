@@ -16,9 +16,9 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-record.h"
 
 /*
-  A substring of existing string data. This structure takes no responsibility
-  for the lifetime of the data it points to.
-*/
+ * A substring of existing string data. This structure takes no responsibility
+ * for the lifetime of the data it points to.
+ */
 struct string_view {
 	uint8_t *buf;
 	size_t len;
@@ -73,7 +73,7 @@ int reftable_is_block_type(uint8_t typ);
 struct reftable_record reftable_new_record(uint8_t typ);
 
 /* Encode `key` into `dest`. Sets `is_restart` to indicate a restart. Returns
-   number of bytes written. */
+ * number of bytes written. */
 int reftable_encode_key(int *is_restart, struct string_view dest,
 			struct strbuf prev_key, struct strbuf key,
 			uint8_t extra);

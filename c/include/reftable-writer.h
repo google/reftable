@@ -13,9 +13,7 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include "reftable-record.h"
 
-/*
- Writing single reftables
-*/
+/* Writing single reftables */
 
 /* reftable_write_options sets options for writing a single reftable. */
 struct reftable_write_options {

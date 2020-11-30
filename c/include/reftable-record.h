@@ -12,11 +12,11 @@ https://developers.google.com/open-source/licenses/bsd
 #include <stdint.h>
 
 /*
- Basic data types
-
- Reftables store the state of each ref in struct reftable_ref_record, and they
- store a sequence of reflog updates in struct reftable_log_record.
-*/
+ * Basic data types
+ *
+ * Reftables store the state of each ref in struct reftable_ref_record, and they
+ * store a sequence of reflog updates in struct reftable_log_record.
+ */
 
 /* reftable_ref_record holds a ref database entry target_value */
 struct reftable_ref_record {

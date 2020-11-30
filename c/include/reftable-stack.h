@@ -12,18 +12,18 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-writer.h"
 
 /*
-  The stack presents an interface to a mutable sequence of reftables.
+ * The stack presents an interface to a mutable sequence of reftables.
 
-  A stack can be mutated by pushing a table to the top of the stack.
+ * A stack can be mutated by pushing a table to the top of the stack.
 
-  The reftable_stack automatically compacts files on disk to ensure good
-  amortized performance.
-*/
+ * The reftable_stack automatically compacts files on disk to ensure good
+ * amortized performance.
+ */
 struct reftable_stack;
 
 /* open a new reftable stack. The tables along with the table list will be
-   stored in 'dir'. Typically, this should be .git/reftables.
-*/
+ *  stored in 'dir'. Typically, this should be .git/reftables.
+ */
 int reftable_new_stack(struct reftable_stack **dest, const char *dir,
 		       struct reftable_write_options config);
 
@@ -34,9 +34,9 @@ uint64_t reftable_stack_next_update_index(struct reftable_stack *st);
 struct reftable_addition;
 
 /*
-  returns a new transaction to add reftables to the given stack. As a side
-  effect, the ref database is locked.
-*/
+ * returns a new transaction to add reftables to the given stack. As a side
+ * effect, the ref database is locked.
+ */
 int reftable_stack_new_addition(struct reftable_addition **dest,
 				struct reftable_stack *st);
 
@@ -50,19 +50,19 @@ int reftable_addition_add(struct reftable_addition *add,
 int reftable_addition_commit(struct reftable_addition *add);
 
 /* Release all non-committed data from the transaction, and deallocate the
-   transaction. Releases the lock if held. */
+ * transaction. Releases the lock if held. */
 void reftable_addition_destroy(struct reftable_addition *add);
 
 /* add a new table to the stack. The write_table function must call
-   reftable_writer_set_limits, add refs and return an error value. */
+ * reftable_writer_set_limits, add refs and return an error value. */
 int reftable_stack_add(struct reftable_stack *st,
 		       int (*write_table)(struct reftable_writer *wr,
 					  void *write_arg),
 		       void *write_arg);
 
 /* returns the merged_table for seeking. This table is valid until the
-   next write or reload, and should not be closed or deleted.
-*/
+ * next write or reload, and should not be closed or deleted.
+ */
 struct reftable_merged_table *
 reftable_stack_merged_table(struct reftable_stack *st);
 
@@ -90,13 +90,13 @@ int reftable_stack_compact_all(struct reftable_stack *st,
 /* heuristically compact unbalanced table stack. */
 int reftable_stack_auto_compact(struct reftable_stack *st);
 
-/* convenience function to read a single ref. Returns < 0 for error, 0
-   for success, and 1 if ref not found. */
+/* convenience function to read a single ref. Returns < 0 for error, 0 for
+ * success, and 1 if ref not found. */
 int reftable_stack_read_ref(struct reftable_stack *st, const char *refname,
 			    struct reftable_ref_record *ref);
 
-/* convenience function to read a single log. Returns < 0 for error, 0
-   for success, and 1 if ref not found. */
+/* convenience function to read a single log. Returns < 0 for error, 0 for
+ * success, and 1 if ref not found. */
 int reftable_stack_read_log(struct reftable_stack *st, const char *refname,
 			    struct reftable_log_record *log);
 

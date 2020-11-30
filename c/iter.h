@@ -25,7 +25,7 @@ void iterator_set_empty(struct reftable_iterator *it);
 int iterator_next(struct reftable_iterator *it, struct reftable_record *rec);
 
 /* Returns true for a zeroed out iterator, such as the one returned from
-   iterator_destroy. */
+ * iterator_destroy. */
 int iterator_is_null(struct reftable_iterator *it);
 
 /* iterator that produces only ref records that point to `oid` */
@@ -44,7 +44,7 @@ void iterator_from_filtering_ref_iterator(struct reftable_iterator *,
 					  struct filtering_ref_iterator *);
 
 /* iterator that produces only ref records that point to `oid`,
-   but using the object index.
+ * but using the object index.
  */
 struct indexed_table_ref_iter {
 	struct reftable_reader *r;

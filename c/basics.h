@@ -31,8 +31,8 @@ void put_be16(uint8_t *out, uint16_t i);
 int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args);
 
 /*
-  Frees a NULL terminated array of malloced strings. The array itself is also
-  freed.
+ * Frees a NULL terminated array of malloced strings. The array itself is also
+ * freed.
  */
 void free_names(char **a);
 
