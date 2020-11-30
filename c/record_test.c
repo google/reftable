@@ -105,14 +105,9 @@ static void test_reftable_ref_record_roundtrip(void)
 {
 	int i = 0;
 
-	for (i = 0; i <= 3; i++) {
+	for (i = REFTABLE_REF_DELETION; i < REFTABLE_NR_REF_VALUETYPES; i++) {
 		struct reftable_ref_record in = { NULL };
-		struct reftable_ref_record out = {
-			.refname = xstrdup("old name"),
-			.value = reftable_calloc(SHA1_SIZE),
-			.target_value = reftable_calloc(SHA1_SIZE),
-			.target = xstrdup("old value"),
-		};
+		struct reftable_ref_record out = { NULL };
 		struct reftable_record rec_out = { NULL };
 		struct strbuf key = STRBUF_INIT;
 		struct reftable_record rec = { NULL };
@@ -124,21 +119,22 @@ static void test_reftable_ref_record_roundtrip(void)
 
 		int n, m;
 
+		in.value_type = i;
 		switch (i) {
-		case 0:
+		case REFTABLE_REF_DELETION:
 			break;
-		case 1:
-			in.value = reftable_malloc(SHA1_SIZE);
-			set_hash(in.value, 1);
+		case REFTABLE_REF_VAL1:
+			in.value.val1 = reftable_malloc(SHA1_SIZE);
+			set_hash(in.value.val1, 1);
 			break;
-		case 2:
-			in.value = reftable_malloc(SHA1_SIZE);
-			set_hash(in.value, 1);
-			in.target_value = reftable_malloc(SHA1_SIZE);
-			set_hash(in.target_value, 2);
+		case REFTABLE_REF_VAL2:
+			in.value.val2.value = reftable_malloc(SHA1_SIZE);
+			set_hash(in.value.val2.value, 1);
+			in.value.val2.target_value = reftable_malloc(SHA1_SIZE);
+			set_hash(in.value.val2.target_value, 2);
 			break;
-		case 3:
-			in.target = xstrdup("target");
+		case REFTABLE_REF_SYMREF:
+			in.value.symref = xstrdup("target");
 			break;
 		}
 		in.refname = xstrdup("refs/heads/master");
@@ -158,9 +154,7 @@ static void test_reftable_ref_record_roundtrip(void)
 		m = reftable_record_decode(&rec_out, key, i, dest, SHA1_SIZE);
 		EXPECT(n == m);
 
-		EXPECT((out.value != NULL) == (in.value != NULL));
-		EXPECT((out.target_value != NULL) == (in.target_value != NULL));
-		EXPECT((out.target != NULL) == (in.target != NULL));
+		EXPECT(reftable_ref_record_equal(&in, &out, SHA1_SIZE));
 		reftable_record_release(&rec_out);
 
 		strbuf_release(&key);

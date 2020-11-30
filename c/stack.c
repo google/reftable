@@ -759,6 +759,7 @@ static int stack_write_compact(struct reftable_stack *st,
 		if (err < 0) {
 			break;
 		}
+
 		if (first == 0 && reftable_ref_record_is_deletion(&ref)) {
 			continue;
 		}

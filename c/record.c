@@ -72,6 +72,28 @@ int reftable_is_block_type(uint8_t typ)
 	return 0;
 }
 
+uint8_t *reftable_ref_record_val1(struct reftable_ref_record *rec)
+{
+	switch (rec->value_type) {
+	case REFTABLE_REF_VAL1:
+		return rec->value.val1;
+	case REFTABLE_REF_VAL2:
+		return rec->value.val2.value;
+	default:
+		return NULL;
+	}
+}
+
+uint8_t *reftable_ref_record_val2(struct reftable_ref_record *rec)
+{
+	switch (rec->value_type) {
+	case REFTABLE_REF_VAL2:
+		return rec->value.val2.target_value;
+	default:
+		return NULL;
+	}
+}
+
 static int decode_string(struct strbuf *dest, struct string_view in)
 {
 	int start_len = in.len;
@@ -182,26 +204,31 @@ static void reftable_ref_record_copy_from(void *rec, const void *src_rec,
 	assert(hash_size > 0);
 
 	/* This is simple and correct, but we could probably reuse the hash
-	   fields. */
+	 * fields. */
 	reftable_ref_record_release(ref);
 	if (src->refname != NULL) {
 		ref->refname = xstrdup(src->refname);
 	}
-
-	if (src->target != NULL) {
-		ref->target = xstrdup(src->target);
-	}
-
-	if (src->target_value != NULL) {
-		ref->target_value = reftable_malloc(hash_size);
-		memcpy(ref->target_value, src->target_value, hash_size);
-	}
-
-	if (src->value != NULL) {
-		ref->value = reftable_malloc(hash_size);
-		memcpy(ref->value, src->value, hash_size);
-	}
 	ref->update_index = src->update_index;
+	ref->value_type = src->value_type;
+	switch (src->value_type) {
+	case REFTABLE_REF_DELETION:
+		break;
+	case REFTABLE_REF_VAL1:
+		ref->value.val1 = reftable_malloc(hash_size);
+		memcpy(ref->value.val1, src->value.val1, hash_size);
+		break;
+	case REFTABLE_REF_VAL2:
+		ref->value.val2.value = reftable_malloc(hash_size);
+		memcpy(ref->value.val2.value, src->value.val2.value, hash_size);
+		ref->value.val2.target_value = reftable_malloc(hash_size);
+		memcpy(ref->value.val2.target_value,
+		       src->value.val2.target_value, hash_size);
+		break;
+	case REFTABLE_REF_SYMREF:
+		ref->value.symref = xstrdup(src->value.symref);
+		break;
+	}
 }
 
 static char hexdigit(int c)
@@ -227,18 +254,26 @@ static void hex_format(char *dest, uint8_t *src, int hash_size)
 void reftable_ref_record_print(struct reftable_ref_record *ref,
 			       uint32_t hash_id)
 {
-	char hex[SHA256_SIZE + 1] = { 0 };
+	char hex[2 * SHA256_SIZE + 1] = { 0 }; /* BUG */
 	printf("ref{%s(%" PRIu64 ") ", ref->refname, ref->update_index);
-	if (ref->value != NULL) {
-		hex_format(hex, ref->value, hash_size(hash_id));
-		printf("%s", hex);
-	}
-	if (ref->target_value != NULL) {
-		hex_format(hex, ref->target_value, hash_size(hash_id));
-		printf(" (T %s)", hex);
-	}
-	if (ref->target != NULL) {
-		printf("=> %s", ref->target);
+	switch (ref->value_type) {
+	case REFTABLE_REF_SYMREF:
+		printf("=> %s", ref->value.symref);
+		break;
+	case REFTABLE_REF_VAL2:
+		hex_format(hex, ref->value.val2.value, hash_size(hash_id));
+		printf("val 2 %s", hex);
+		hex_format(hex, ref->value.val2.target_value,
+			   hash_size(hash_id));
+		printf("(T %s)", hex);
+		break;
+	case REFTABLE_REF_VAL1:
+		hex_format(hex, ref->value.val1, hash_size(hash_id));
+		printf("val 1 %s", hex);
+		break;
+	case REFTABLE_REF_DELETION:
+		printf("delete");
+		break;
 	}
 	printf("}\n");
 }
@@ -250,10 +285,24 @@ static void reftable_ref_record_release_void(void *rec)
 
 void reftable_ref_record_release(struct reftable_ref_record *ref)
 {
+	switch (ref->value_type) {
+	case REFTABLE_REF_SYMREF:
+		reftable_free(ref->value.symref);
+		break;
+	case REFTABLE_REF_VAL2:
+		reftable_free(ref->value.val2.target_value);
+		reftable_free(ref->value.val2.value);
+		break;
+	case REFTABLE_REF_VAL1:
+		reftable_free(ref->value.val1);
+		break;
+	case REFTABLE_REF_DELETION:
+		break;
+	default:
+		abort();
+	}
+
 	reftable_free(ref->refname);
-	reftable_free(ref->target);
-	reftable_free(ref->target_value);
-	reftable_free(ref->value);
 	memset(ref, 0, sizeof(struct reftable_ref_record));
 }
 
@@ -261,15 +310,7 @@ static uint8_t reftable_ref_record_val_type(const void *rec)
 {
 	const struct reftable_ref_record *r =
 		(const struct reftable_ref_record *)rec;
-	if (r->value != NULL) {
-		if (r->target_value != NULL) {
-			return 2;
-		} else {
-			return 1;
-		}
-	} else if (r->target != NULL)
-		return 3;
-	return 0;
+	return r->value_type;
 }
 
 static int reftable_ref_record_encode(const void *rec, struct string_view s,
@@ -284,28 +325,34 @@ static int reftable_ref_record_encode(const void *rec, struct string_view s,
 		return -1;
 	string_view_consume(&s, n);
 
-	if (r->value != NULL) {
-		if (s.len < hash_size) {
-			return -1;
-		}
-		memcpy(s.buf, r->value, hash_size);
-		string_view_consume(&s, hash_size);
-	}
-
-	if (r->target_value != NULL) {
-		if (s.len < hash_size) {
-			return -1;
-		}
-		memcpy(s.buf, r->target_value, hash_size);
-		string_view_consume(&s, hash_size);
-	}
-
-	if (r->target != NULL) {
-		int n = encode_string(r->target, s);
+	switch (r->value_type) {
+	case REFTABLE_REF_SYMREF:
+		n = encode_string(r->value.symref, s);
 		if (n < 0) {
 			return -1;
 		}
 		string_view_consume(&s, n);
+		break;
+	case REFTABLE_REF_VAL2:
+		if (s.len < 2 * hash_size) {
+			return -1;
+		}
+		memcpy(s.buf, r->value.val2.value, hash_size);
+		string_view_consume(&s, hash_size);
+		memcpy(s.buf, r->value.val2.target_value, hash_size);
+		string_view_consume(&s, hash_size);
+		break;
+	case REFTABLE_REF_VAL1:
+		if (s.len < hash_size) {
+			return -1;
+		}
+		memcpy(s.buf, r->value.val1, hash_size);
+		string_view_consume(&s, hash_size);
+		break;
+	case REFTABLE_REF_DELETION:
+		break;
+	default:
+		abort();
 	}
 
 	return start.len - s.len;
@@ -317,73 +364,61 @@ static int reftable_ref_record_decode(void *rec, struct strbuf key,
 {
 	struct reftable_ref_record *r = (struct reftable_ref_record *)rec;
 	struct string_view start = in;
-	int seen_value = 0;
-	int seen_target_value = 0;
-	int seen_target = 0;
-
-	int n = get_var_int(&r->update_index, &in);
+	uint64_t update_index = 0;
+	int n = get_var_int(&update_index, &in);
 	if (n < 0)
 		return n;
-	assert(hash_size > 0);
-
 	string_view_consume(&in, n);
+
+	reftable_ref_record_release(r);
+
+	assert(hash_size > 0);
 
 	r->refname = reftable_realloc(r->refname, key.len + 1);
 	memcpy(r->refname, key.buf, key.len);
+	r->update_index = update_index;
 	r->refname[key.len] = 0;
-
+	r->value_type = val_type;
 	switch (val_type) {
-	case 1:
-	case 2:
+	case REFTABLE_REF_VAL1:
 		if (in.len < hash_size) {
 			return -1;
 		}
 
-		if (r->value == NULL) {
-			r->value = reftable_malloc(hash_size);
-		}
-		seen_value = 1;
-		memcpy(r->value, in.buf, hash_size);
-		string_view_consume(&in, hash_size);
-		if (val_type == 1) {
-			break;
-		}
-		if (r->target_value == NULL) {
-			r->target_value = reftable_malloc(hash_size);
-		}
-		seen_target_value = 1;
-		memcpy(r->target_value, in.buf, hash_size);
+		r->value.val1 = reftable_malloc(hash_size);
+		memcpy(r->value.val1, in.buf, hash_size);
 		string_view_consume(&in, hash_size);
 		break;
-	case 3: {
+
+	case REFTABLE_REF_VAL2:
+		if (in.len < 2 * hash_size) {
+			return -1;
+		}
+
+		r->value.val2.value = reftable_malloc(hash_size);
+		memcpy(r->value.val2.value, in.buf, hash_size);
+		string_view_consume(&in, hash_size);
+
+		r->value.val2.target_value = reftable_malloc(hash_size);
+		memcpy(r->value.val2.target_value, in.buf, hash_size);
+		string_view_consume(&in, hash_size);
+		break;
+
+	case REFTABLE_REF_SYMREF: {
 		struct strbuf dest = STRBUF_INIT;
 		int n = decode_string(&dest, in);
 		if (n < 0) {
 			return -1;
 		}
 		string_view_consume(&in, n);
-		seen_target = 1;
-		if (r->target != NULL) {
-			reftable_free(r->target);
-		}
-		r->target = dest.buf;
+		r->value.symref = dest.buf;
 	} break;
 
-	case 0:
+	case REFTABLE_REF_DELETION:
 		break;
 	default:
 		abort();
 		break;
-	}
-
-	if (!seen_target && r->target != NULL) {
-		FREE_AND_NULL(r->target);
-	}
-	if (!seen_target_value && r->target_value != NULL) {
-		FREE_AND_NULL(r->target_value);
-	}
-	if (!seen_value && r->value != NULL) {
-		FREE_AND_NULL(r->value);
 	}
 
 	return start.len - in.len;
@@ -1057,23 +1092,30 @@ static int hash_equal(uint8_t *a, uint8_t *b, int hash_size)
 	return a == b;
 }
 
-static int str_equal(char *a, char *b)
-{
-	if (a != NULL && b != NULL)
-		return 0 == strcmp(a, b);
-
-	return a == b;
-}
-
 int reftable_ref_record_equal(struct reftable_ref_record *a,
 			      struct reftable_ref_record *b, int hash_size)
 {
 	assert(hash_size > 0);
-	return 0 == strcmp(a->refname, b->refname) &&
-	       a->update_index == b->update_index &&
-	       hash_equal(a->value, b->value, hash_size) &&
-	       hash_equal(a->target_value, b->target_value, hash_size) &&
-	       str_equal(a->target, b->target);
+	if (!(0 == strcmp(a->refname, b->refname) &&
+	      a->update_index == b->update_index &&
+	      a->value_type == b->value_type))
+		return 0;
+
+	switch (a->value_type) {
+	case REFTABLE_REF_SYMREF:
+		return !strcmp(a->value.symref, b->value.symref);
+	case REFTABLE_REF_VAL2:
+		return hash_equal(a->value.val2.value, b->value.val2.value,
+				  hash_size) &&
+		       hash_equal(a->value.val2.target_value,
+				  b->value.val2.target_value, hash_size);
+	case REFTABLE_REF_VAL1:
+		return hash_equal(a->value.val1, b->value.val1, hash_size);
+	case REFTABLE_REF_DELETION:
+		return 1;
+	default:
+		abort();
+	}
 }
 
 int reftable_ref_record_compare_name(const void *a, const void *b)
@@ -1084,8 +1126,7 @@ int reftable_ref_record_compare_name(const void *a, const void *b)
 
 int reftable_ref_record_is_deletion(const struct reftable_ref_record *ref)
 {
-	return ref->value == NULL && ref->target == NULL &&
-	       ref->target_value == NULL;
+	return ref->value_type == REFTABLE_REF_DELETION;
 }
 
 int reftable_log_record_compare_key(const void *a, const void *b)

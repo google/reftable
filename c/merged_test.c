@@ -153,11 +153,13 @@ static void test_merged_between(void)
 	struct reftable_ref_record r1[] = { {
 		.refname = "b",
 		.update_index = 1,
-		.value = hash1,
+		.value_type = REFTABLE_REF_VAL1,
+		.value.val1 = hash1,
 	} };
 	struct reftable_ref_record r2[] = { {
 		.refname = "a",
 		.update_index = 2,
+		.value_type = REFTABLE_REF_DELETION,
 	} };
 
 	struct reftable_ref_record *refs[] = { r1, r2 };
@@ -190,35 +192,43 @@ static void test_merged(void)
 {
 	uint8_t hash1[SHA1_SIZE] = { 1 };
 	uint8_t hash2[SHA1_SIZE] = { 2 };
-	struct reftable_ref_record r1[] = { {
-						    .refname = "a",
-						    .update_index = 1,
-						    .value = hash1,
-					    },
-					    {
-						    .refname = "b",
-						    .update_index = 1,
-						    .value = hash1,
-					    },
-					    {
-						    .refname = "c",
-						    .update_index = 1,
-						    .value = hash1,
-					    } };
+	struct reftable_ref_record r1[] = {
+		{
+			.refname = "a",
+			.update_index = 1,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
+		},
+		{
+			.refname = "b",
+			.update_index = 1,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
+		},
+		{
+			.refname = "c",
+			.update_index = 1,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
+		}
+	};
 	struct reftable_ref_record r2[] = { {
 		.refname = "a",
 		.update_index = 2,
+		.value_type = REFTABLE_REF_DELETION,
 	} };
 	struct reftable_ref_record r3[] = {
 		{
 			.refname = "c",
 			.update_index = 3,
-			.value = hash2,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash2,
 		},
 		{
 			.refname = "d",
 			.update_index = 3,
-			.value = hash1,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
 		},
 	};
 

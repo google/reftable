@@ -34,7 +34,9 @@ static void test_conflict(void)
 		reftable_new_writer(&strbuf_add_void, &buf, &opts);
 	struct reftable_ref_record rec = {
 		.refname = "a/b",
-		.target = "destination", /* make sure it's not a symref. */
+		.value_type = REFTABLE_REF_SYMREF,
+		.value.symref = "destination", /* make sure it's not a symref.
+						*/
 		.update_index = 1,
 	};
 	int err;

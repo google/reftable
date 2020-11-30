@@ -114,10 +114,15 @@ static int filtering_ref_iterator_next(void *iter_arg,
 			}
 		}
 
-		if ((ref->target_value != NULL &&
-		     !memcmp(fri->oid.buf, ref->target_value, fri->oid.len)) ||
-		    (ref->value != NULL &&
-		     !memcmp(fri->oid.buf, ref->value, fri->oid.len))) {
+		if (ref->value_type == REFTABLE_REF_VAL2 &&
+		    (!memcmp(fri->oid.buf, ref->value.val2.target_value,
+			     fri->oid.len) ||
+		     !memcmp(fri->oid.buf, ref->value.val2.value,
+			     fri->oid.len)))
+			return 0;
+
+		if (ref->value_type == REFTABLE_REF_VAL1 &&
+		    !memcmp(fri->oid.buf, ref->value.val1, fri->oid.len)) {
 			return 0;
 		}
 	}
@@ -195,9 +200,10 @@ static int indexed_table_ref_iter_next(void *p, struct reftable_record *rec)
 			}
 			continue;
 		}
-
-		if (!memcmp(it->oid.buf, ref->target_value, it->oid.len) ||
-		    !memcmp(it->oid.buf, ref->value, it->oid.len)) {
+		/* BUG */
+		if (!memcmp(it->oid.buf, ref->value.val2.target_value,
+			    it->oid.len) ||
+		    !memcmp(it->oid.buf, ref->value.val2.value, it->oid.len)) {
 			return 0;
 		}
 	}

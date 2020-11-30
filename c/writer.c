@@ -262,20 +262,25 @@ int reftable_writer_add_ref(struct reftable_writer *w,
 
 	reftable_record_from_ref(&rec, &copy);
 	copy.update_index -= w->min_update_index;
+
 	err = writer_add_record(w, &rec);
 	if (err < 0)
 		return err;
 
-	if (!w->opts.skip_index_objects && ref->value != NULL) {
+	if (!w->opts.skip_index_objects &&
+	    reftable_ref_record_val1(ref) != NULL) {
 		struct strbuf h = STRBUF_INIT;
-		strbuf_add(&h, (char *)ref->value, hash_size(w->opts.hash_id));
+		strbuf_add(&h, (char *)reftable_ref_record_val1(ref),
+			   hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
 		strbuf_release(&h);
 	}
 
-	if (!w->opts.skip_index_objects && ref->target_value != NULL) {
+	if (!w->opts.skip_index_objects &&
+	    reftable_ref_record_val2(ref) != NULL) {
 		struct strbuf h = STRBUF_INIT;
-		strbuf_add(&h, ref->target_value, hash_size(w->opts.hash_id));
+		strbuf_add(&h, reftable_ref_record_val2(ref),
+			   hash_size(w->opts.hash_id));
 		writer_index_hash(w, &h);
 		strbuf_release(&h);
 	}

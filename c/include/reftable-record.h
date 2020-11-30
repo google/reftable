@@ -22,23 +22,50 @@ https://developers.google.com/open-source/licenses/bsd
 struct reftable_ref_record {
 	char *refname; /* Name of the ref, malloced. */
 	uint64_t update_index; /* Logical timestamp at which this value is
-				  written */
-	uint8_t *value; /* SHA1, or NULL. malloced. */
-	uint8_t *target_value; /* peeled annotated tag, or NULL. malloced. */
-	char *target; /* symref, or NULL. malloced. */
+				* written */
+
+	enum {
+		/* tombstone to hide deletions from earlier tables */
+		REFTABLE_REF_DELETION = 0x0,
+
+		/* a simple ref */
+		REFTABLE_REF_VAL1 = 0x1,
+		/* a tag, plus its peeled hash */
+		REFTABLE_REF_VAL2 = 0x2,
+
+		/* a symbolic reference */
+		REFTABLE_REF_SYMREF = 0x3,
+#define REFTABLE_NR_REF_VALUETYPES 4
+	} value_type;
+	union {
+		uint8_t *val1; /* malloced hash. */
+		struct {
+			uint8_t *value; /* first value, malloced hash  */
+			uint8_t *target_value; /* second value, malloced hash */
+		} val2;
+		char *symref; /* referent, malloced 0-terminated string */
+	} value;
 };
+
+/* Returns the first hash, or NULL if `rec` is not of type
+ * REFTABLE_REF_VAL1 or REFTABLE_REF_VAL2. */
+uint8_t *reftable_ref_record_val1(struct reftable_ref_record *rec);
+
+/* Returns the second hash, or NULL if `rec` is not of type
+ * REFTABLE_REF_VAL2. */
+uint8_t *reftable_ref_record_val2(struct reftable_ref_record *rec);
 
 /* returns whether 'ref' represents a deletion */
 int reftable_ref_record_is_deletion(const struct reftable_ref_record *ref);
 
-/* prints a reftable_ref_record onto stdout */
+/* prints a reftable_ref_record onto stdout. Useful for debugging. */
 void reftable_ref_record_print(struct reftable_ref_record *ref,
 			       uint32_t hash_id);
 
-/* frees and nulls all pointer values. */
+/* frees and nulls all pointer values inside `ref`. */
 void reftable_ref_record_release(struct reftable_ref_record *ref);
 
-/* returns whether two reftable_ref_records are the same */
+/* returns whether two reftable_ref_records are the same. Useful for testing. */
 int reftable_ref_record_equal(struct reftable_ref_record *a,
 			      struct reftable_ref_record *b, int hash_size);
 

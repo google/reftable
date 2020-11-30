@@ -50,11 +50,13 @@ static void test_block_read_write(void)
 		memset(hash, i, sizeof(hash));
 
 		ref.refname = name;
-		ref.value = hash;
+		ref.value_type = REFTABLE_REF_VAL1;
+		ref.value.val1 = hash;
+
 		names[i] = xstrdup(name);
 		n = block_writer_add(&bw, &rec);
 		ref.refname = NULL;
-		ref.value = NULL;
+		ref.value_type = REFTABLE_REF_DELETION;
 		EXPECT(n == 0);
 	}
 

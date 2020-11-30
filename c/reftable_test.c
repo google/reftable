@@ -69,8 +69,9 @@ static void write_table(char ***names, struct strbuf *buf, int N,
 		snprintf(name, sizeof(name), "refs/heads/branch%02d", i);
 
 		ref.refname = name;
-		ref.value = hash;
 		ref.update_index = update_index;
+		ref.value_type = REFTABLE_REF_VAL1;
+		ref.value.val1 = hash;
 		(*names)[i] = xstrdup(name);
 
 		n = reftable_writer_add_ref(w, &ref);
@@ -369,7 +370,8 @@ static void test_table_read_write_seek(int index, int hash_id)
 		err = reftable_iterator_next_ref(&it, &ref);
 		EXPECT_ERR(err);
 		EXPECT(0 == strcmp(names[i], ref.refname));
-		EXPECT(i == ref.value[0]);
+		EXPECT(REFTABLE_REF_VAL1 == ref.value_type);
+		EXPECT(i == ref.value.val1[0]);
 
 		reftable_ref_record_release(&ref);
 		reftable_iterator_destroy(&it);
@@ -456,8 +458,9 @@ static void test_table_refs_for(int indexed)
 
 		set_test_hash(hash1, i / 4);
 		set_test_hash(hash2, 3 + i / 4);
-		ref.value = hash1;
-		ref.target_value = hash2;
+		ref.value_type = REFTABLE_REF_VAL2;
+		ref.value.val2.value = hash1;
+		ref.value.val2.target_value = hash2;
 
 		/* 80 bytes / entry, so 3 entries per block. Yields 17
 		 */
