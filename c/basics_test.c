@@ -49,8 +49,50 @@ static void test_binsearch(void)
 	}
 }
 
+static void test_names_length(void)
+{
+	char *a[] = { "a", "b", NULL };
+	EXPECT(names_length(a) == 2);
+}
+
+static void test_parse_names_normal(void)
+{
+	char in[] = "a\nb\n";
+	char **out = NULL;
+	parse_names(in, strlen(in), &out);
+	EXPECT(!strcmp(out[0], "a"));
+	EXPECT(!strcmp(out[1], "b"));
+	EXPECT(out[2] == NULL);
+	free_names(out);
+}
+
+static void test_parse_names_drop_empty(void)
+{
+	char in[] = "a\n\n";
+	char **out = NULL;
+	parse_names(in, strlen(in), &out);
+	EXPECT(!strcmp(out[0], "a"));
+	EXPECT(out[1] == NULL);
+	free_names(out);
+}
+
+static void test_common_prefix(void)
+{
+	struct strbuf s1 = STRBUF_INIT;
+	struct strbuf s2 = STRBUF_INIT;
+	strbuf_addstr(&s1, "abcdef");
+	strbuf_addstr(&s2, "abc");
+	EXPECT(common_prefix_size(&s1, &s2) == 3);
+	strbuf_release(&s1);
+	strbuf_release(&s2);
+}
+
 int basics_test_main(int argc, const char *argv[])
 {
+	test_common_prefix();
+	test_parse_names_normal();
+	test_parse_names_drop_empty();
 	test_binsearch();
+	test_names_length();
 	return 0;
 }

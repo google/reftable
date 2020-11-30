@@ -22,9 +22,12 @@ uint32_t get_be24(uint8_t *in);
 void put_be16(uint8_t *out, uint16_t i);
 
 /*
-  find smallest index i in [0, sz) at which f(i) is true, assuming
-  that f is ascending. Return sz if f(i) is false for all indices.
-*/
+ * find smallest index i in [0, sz) at which f(i) is true, assuming
+ * that f is ascending. Return sz if f(i) is false for all indices.
+ *
+ * Contrary to bsearch(3), this returns something useful if the argument is not
+ * found.
+ */
 int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args);
 
 /*
@@ -33,7 +36,8 @@ int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args);
  */
 void free_names(char **a);
 
-/* parse a newline separated list of names. Empty names are discarded. */
+/* parse a newline separated list of names. `size` is the length of the buffer,
+ * without terminating '\0'. Empty names are discarded. */
 void parse_names(char *buf, int size, char ***namesp);
 
 /* compares two NULL-terminated arrays of strings. */

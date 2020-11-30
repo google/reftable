@@ -28,12 +28,12 @@ const char *reftable_error_str(int err)
 		return "zlib failure";
 	case REFTABLE_NAME_CONFLICT:
 		return "file/directory conflict";
-	case REFTABLE_REFNAME_ERROR:
-		return "invalid refname";
 	case REFTABLE_EMPTY_TABLE_ERROR:
 		return "wrote empty table";
 	case REFTABLE_REFNAME_ERROR:
-		return "invalid refname" case -1 : return "general error";
+		return "invalid refname";
+	case -1:
+		return "general error";
 	default:
 		snprintf(buf, sizeof(buf), "unknown error code %d", err);
 		return buf;

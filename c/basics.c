@@ -32,53 +32,45 @@ int binsearch(size_t sz, int (*f)(size_t k, void *args), void *args)
 	size_t lo = 0;
 	size_t hi = sz;
 
-	/* invariant: (hi == sz) || f(hi) == true
-	   (lo == 0 && f(0) == true) || fi(lo) == false
+	/* Invariants:
+	 *
+	 *  (hi == sz) || f(hi) == true
+	 *  (lo == 0 && f(0) == true) || fi(lo) == false
 	 */
 	while (hi - lo > 1) {
 		size_t mid = lo + (hi - lo) / 2;
 
-		int val = f(mid, args);
-		if (val) {
+		if (f(mid, args))
 			hi = mid;
-		} else {
+		else
 			lo = mid;
-		}
 	}
 
-	if (lo == 0) {
-		if (f(0, args)) {
-			return 0;
-		} else {
-			return 1;
-		}
-	}
+	if (lo)
+		return hi;
 
-	return hi;
+	return f(0, args) ? 0 : 1;
 }
 
 void free_names(char **a)
 {
-	char **p = a;
-	if (p == NULL) {
+	char **p;
+	if (a == NULL) {
 		return;
 	}
-	while (*p) {
+	for (p = a; *p; p++) {
 		reftable_free(*p);
-		p++;
 	}
 	reftable_free(a);
 }
 
 int names_length(char **names)
 {
-	int len = 0;
 	char **p = names;
-	while (*p) {
-		p++;
-		len++;
+	for (; *p; p++) {
+		/* empty */
 	}
-	return len;
+	return p - names;
 }
 
 void parse_names(char *buf, int size, char ***namesp)
@@ -91,7 +83,7 @@ void parse_names(char *buf, int size, char ***namesp)
 	char *end = buf + size;
 	while (p < end) {
 		char *next = strchr(p, '\n');
-		if (next != NULL) {
+		if (next && next < end) {
 			*next = 0;
 		} else {
 			next = end;
@@ -100,44 +92,36 @@ void parse_names(char *buf, int size, char ***namesp)
 			if (names_len == names_cap) {
 				names_cap = 2 * names_cap + 1;
 				names = reftable_realloc(
-					names, names_cap * sizeof(char *));
+					names, names_cap * sizeof(*names));
 			}
 			names[names_len++] = xstrdup(p);
 		}
 		p = next + 1;
 	}
 
-	if (names_len == names_cap) {
-		names_cap = 2 * names_cap + 1;
-		names = reftable_realloc(names, names_cap * sizeof(char *));
-	}
-
+	names = reftable_realloc(names, (names_len + 1) * sizeof(*names));
 	names[names_len] = NULL;
 	*namesp = names;
 }
 
 int names_equal(char **a, char **b)
 {
-	while (*a && *b) {
-		if (strcmp(*a, *b)) {
+	int i = 0;
+	for (; a[i] && b[i]; i++) {
+		if (strcmp(a[i], b[i])) {
 			return 0;
 		}
-
-		a++;
-		b++;
 	}
 
-	return *a == *b;
+	return a[i] == b[i];
 }
 
 int common_prefix_size(struct strbuf *a, struct strbuf *b)
 {
 	int p = 0;
-	while (p < a->len && p < b->len) {
-		if (a->buf[p] != b->buf[p]) {
+	for (; p < a->len && p < b->len; p++) {
+		if (a->buf[p] != b->buf[p])
 			break;
-		}
-		p++;
 	}
 
 	return p;
