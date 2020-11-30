@@ -30,8 +30,10 @@ const char *reftable_error_str(int err)
 		return "file/directory conflict";
 	case REFTABLE_REFNAME_ERROR:
 		return "invalid refname";
-	case -1:
-		return "general error";
+	case REFTABLE_EMPTY_TABLE_ERROR:
+		return "wrote empty table";
+	case REFTABLE_REFNAME_ERROR:
+		return "invalid refname" case -1 : return "general error";
 	default:
 		snprintf(buf, sizeof(buf), "unknown error code %d", err);
 		return buf;
