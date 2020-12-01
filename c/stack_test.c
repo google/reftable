@@ -28,9 +28,18 @@ static void clear_dir(const char *dirname)
 	strbuf_release(&path);
 }
 
+static char *get_tmp_template(const char *prefix)
+{
+	const char *tmp = getenv("TMPDIR");
+	static char template[1024];
+	snprintf(template, sizeof(template) - 1, "%s/%s.XXXXXX",
+		 tmp ? tmp : "/tmp", prefix);
+	return template;
+}
+
 static void test_read_file(void)
 {
-	char fn[256] = "/tmp/stack.test_read_file.XXXXXX";
+	char *fn = get_tmp_template(__FUNCTION__);
 	int fd = mkstemp(fn);
 	char out[1024] = "line1\n\nline2\nline3";
 	int n, err;
@@ -99,7 +108,7 @@ static int write_test_log(struct reftable_writer *wr, void *arg)
 
 static void test_reftable_stack_add_one(void)
 {
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
@@ -133,7 +142,7 @@ static void test_reftable_stack_uptodate(void)
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st1 = NULL;
 	struct reftable_stack *st2 = NULL;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	int err;
 	struct reftable_ref_record ref1 = {
 		.refname = "HEAD",
@@ -162,19 +171,19 @@ static void test_reftable_stack_uptodate(void)
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
 	EXPECT(err == REFTABLE_LOCK_ERROR);
 
+	reftable_stack_destroy(st1);
 	err = reftable_stack_reload(st2);
 	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
 	EXPECT_ERR(err);
-	reftable_stack_destroy(st1);
 	reftable_stack_destroy(st2);
 	clear_dir(dir);
 }
 
 static void test_reftable_stack_transaction_api(void)
 {
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
@@ -221,7 +230,7 @@ static void test_reftable_stack_validate_refname(void)
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	int i;
 	struct reftable_ref_record ref = {
 		.refname = "a/b",
@@ -261,7 +270,7 @@ static int write_error(struct reftable_writer *wr, void *arg)
 
 static void test_reftable_stack_update_index_check(void)
 {
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
@@ -293,7 +302,7 @@ static void test_reftable_stack_update_index_check(void)
 
 static void test_reftable_stack_lock_failure(void)
 {
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err, i;
@@ -318,7 +327,7 @@ static void test_reftable_stack_add(void)
 		.exact_log_message = 1,
 	};
 	struct reftable_stack *st = NULL;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_ref_record refs[2] = { { NULL } };
 	struct reftable_log_record logs[2] = { { NULL } };
 	int N = ARRAY_SIZE(refs);
@@ -395,7 +404,7 @@ static void test_reftable_stack_log_normalize(void)
 		0,
 	};
 	struct reftable_stack *st = NULL;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 
 	uint8_t h1[SHA1_SIZE] = { 0x01 }, h2[SHA1_SIZE] = { 0x02 };
 
@@ -446,7 +455,7 @@ static void test_reftable_stack_log_normalize(void)
 static void test_reftable_stack_tombstone(void)
 {
 	int i = 0;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
@@ -522,7 +531,7 @@ static void test_reftable_stack_tombstone(void)
 
 static void test_reftable_stack_hash_id(void)
 {
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
@@ -630,7 +639,7 @@ static void test_suggest_compaction_segment_nothing(void)
 
 static void test_reflog_expire(void)
 {
-	char dir[256] = "/tmp/stack.test_reflog_expire.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	struct reftable_log_record logs[20] = { { NULL } };
@@ -710,7 +719,7 @@ static void test_empty_add(void)
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
 	int err;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	struct reftable_stack *st2 = NULL;
 
 	EXPECT(mkdtemp(dir));
@@ -732,7 +741,7 @@ static void test_reftable_stack_auto_compaction(void)
 {
 	struct reftable_write_options cfg = { 0 };
 	struct reftable_stack *st = NULL;
-	char dir[256] = "/tmp/stack_test.XXXXXX";
+	char *dir = get_tmp_template(__FUNCTION__);
 	int err, i;
 	int N = 100;
 	EXPECT(mkdtemp(dir));
