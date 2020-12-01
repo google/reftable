@@ -398,7 +398,7 @@ struct reftable_addition {
 	int lock_file_fd;
 	struct strbuf lock_file_name;
 	struct reftable_stack *stack;
-	char **names;
+
 	char **new_tables;
 	int new_tables_len;
 	uint64_t next_update_index;
@@ -452,7 +452,7 @@ static void reftable_addition_close(struct reftable_addition *add)
 	struct strbuf nm = STRBUF_INIT;
 	for (i = 0; i < add->new_tables_len; i++) {
 		strbuf_reset(&nm);
-		strbuf_addstr(&nm, add->stack->list_file);
+		strbuf_addstr(&nm, add->stack->reftable_dir);
 		strbuf_addstr(&nm, "/");
 		strbuf_addstr(&nm, add->new_tables[i]);
 		unlink(nm.buf);
@@ -472,8 +472,6 @@ static void reftable_addition_close(struct reftable_addition *add)
 		strbuf_release(&add->lock_file_name);
 	}
 
-	free_names(add->names);
-	add->names = NULL;
 	strbuf_release(&nm);
 }
 
@@ -523,8 +521,16 @@ int reftable_addition_commit(struct reftable_addition *add)
 		goto done;
 	}
 
-	err = reftable_stack_reload(add->stack);
+	/* success, no more state to clean up. */
+	strbuf_release(&add->lock_file_name);
+	for (i = 0; i < add->new_tables_len; i++) {
+		reftable_free(add->new_tables[i]);
+	}
+	reftable_free(add->new_tables);
+	add->new_tables = NULL;
+	add->new_tables_len = 0;
 
+	err = reftable_stack_reload(add->stack);
 done:
 	reftable_addition_close(add);
 	return err;
