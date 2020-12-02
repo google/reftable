@@ -159,6 +159,9 @@ static void test_reftable_stack_uptodate(void)
 
 	EXPECT(mkdtemp(dir));
 
+	/* simulate multi-process access to the same stack
+	   by creating two stacks for the same directory.
+	 */
 	err = reftable_new_stack(&st1, dir, cfg);
 	EXPECT_ERR(err);
 
@@ -171,12 +174,12 @@ static void test_reftable_stack_uptodate(void)
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
 	EXPECT(err == REFTABLE_LOCK_ERROR);
 
-	reftable_stack_destroy(st1);
 	err = reftable_stack_reload(st2);
 	EXPECT_ERR(err);
 
 	err = reftable_stack_add(st2, &write_test_ref, &ref2);
 	EXPECT_ERR(err);
+	reftable_stack_destroy(st1);
 	reftable_stack_destroy(st2);
 	clear_dir(dir);
 }
