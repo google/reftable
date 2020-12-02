@@ -15,8 +15,8 @@ https://developers.google.com/open-source/licenses/bsd
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ftw.h>
 #include <dirent.h>
+#include <ftw.h>
 
 void put_be32(void *p, uint32_t i)
 {
@@ -75,10 +75,7 @@ void sleep_millisec(int millisecs)
 
 static int removePath(const char *pathname, const struct stat *sbuf, int type)
 {
-	if (remove(pathname) < 0) {
-		perror("ERROR: remove");
-		return -1;
-	}
+	remove(pathname);
 	return 0;
 }
 
@@ -86,5 +83,7 @@ static int removePath(const char *pathname, const struct stat *sbuf, int type)
 // https://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c
 int remove_dir_recursively(struct strbuf *path, int flags)
 {
+	// Twice, because ftw visits dirs before subdirs.
+	ftw(path->buf, removePath, 10);
 	return ftw(path->buf, removePath, 10);
 }
