@@ -686,7 +686,7 @@ static int stack_compact_locked(struct reftable_stack *st, int first, int last,
 
 	format_name(&next_name,
 		    reftable_reader_min_update_index(st->readers[first]),
-		    reftable_reader_max_update_index(st->readers[first]));
+		    reftable_reader_max_update_index(st->readers[last]));
 
 	strbuf_reset(temp_tab);
 	strbuf_addstr(temp_tab, st->reftable_dir);
