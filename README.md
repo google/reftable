@@ -34,7 +34,7 @@ bazel test c/...
 ```
 
 API is documented in side the [reftable.h
-header](https://github.com/google/reftable/blob/master/c/reftable.h).
+header](https://github.com/google/reftable/blob/master/c/include/reftable.h).
 
 It includes a fragment of the zlib library to provide uncompress2(), which is a
 recent addition to the API. zlib is licensed as follows:
